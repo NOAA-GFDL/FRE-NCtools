@@ -9,16 +9,22 @@
 #
 set pkgName = fre-nctools
 set pkgVersion = $1
-set cvstag = $2
+### Not needed as we now use git
+#set cvstag = $2
 
 echo $pkgVersion
-echo $cvstag
+### Not needed as we now use git
+#echo $cvstag
 
 #Loop though these directories to build the tools there.
 set freNCToolsSrc = 'tools/{check_mask,fregrid,make_coupler_mosaic,make_hgrid,make_regional_mosaic,make_quick_mosaic,make_solo_mosaic,make_topog,make_vgrid,ncexists,remap_land,river_regrid,runoff_regrid,transfer_to_mosaic_grid,mppncscatter} postprocessing/{land_utils,list_ncvars,combine_blobs,mppnccombine,mppnccombine-2.1.7-memstats,ncx,plevel,timavg}'
 
 #Other source code used during those compiles.
 set freNCToolsOther = 'postprocessing/split_ncvars shared/mosaic tools/shared'
+
+# Save the srcdif
+# This first run assumes you are in the git directory
+set srcDir = `pwd`
 
 #Build in a temporary directory.
 set tmpDir = $HOME/tmp.$$
@@ -75,7 +81,8 @@ module list
 
 set echo
 
-alias cvs cvs -f
+### Not needed as we now use git
+#alias cvs cvs -f
 
 unset echo
 
@@ -85,10 +92,11 @@ echo "//////////////////////////////////////////////////////////////////////////
 echo "//////////////////////////////////////////////////////////// Directory Layout //"
 echo "////////////////////////////////////////////////////////////////////////////////"
 
-cvs co -r $cvstag $freNCToolsOther
-cvs co -r $cvstag $freNCToolsSrc
+### Not needed as we now use git
+#cvs co -r $cvstag $freNCToolsOther
+#cvs co -r $cvstag $freNCToolsSrc
 mkdir -p share/src
-mv postprocessing shared tools share/src
+cp -r ${srcDir}/{postprocessing,shared,tools} share/src
 mkdir -p $FRE_SYSTEM_SITE/bin
 mkdir -p share/bin
 
