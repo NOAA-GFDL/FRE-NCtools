@@ -1,0 +1,159 @@
+#!/bin/tcsh -f
+#
+# $Id: fre-nctools-chaco-test,v 1.2 2015/01/16 21:47:07 fms Exp $
+# ------------------------------------------------------------------------------
+# FMS/FRE Project: Program to Create the fre-nctools Package
+# ------------------------------------------------------------------------------
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2012
+# Designed and written by V Balaji, Amy Langenhorst and Aleksey Yakovlev
+#
+set pkgName = fre-nctools
+set pkgVersion = $1
+set cvstag = $2
+
+echo $pkgVersion
+echo $cvstag
+
+#Loop though these directories to build the tools there.
+set freNCToolsSrc = 'tools/{check_mask,fregrid,make_coupler_mosaic,make_hgrid,make_regional_mosaic,make_quick_mosaic,make_solo_mosaic,make_topog,make_vgrid,ncexists,remap_land,river_regrid,runoff_regrid,transfer_to_mosaic_grid,mppncscatter} postprocessing/{land_utils,list_ncvars,combine_blobs,mppnccombine,mppnccombine-2.1.7-memstats,ncx,plevel,timavg}'
+
+#Other source code used during those compiles.
+set freNCToolsOther = 'postprocessing/split_ncvars shared/mosaic tools/shared'
+
+#Build in a temporary directory.
+set tmpDir = $HOME/tmp.$$
+mkdir -p $tmpDir
+if ( $status ) then
+  echo "Error during mkdir '$tmpDir'..."
+  exit 1
+endif
+pushd $tmpDir
+
+echo "////////////////////////////////////////////////////////////////////////////////"
+echo "//////////////////////////////////////////////////////// Environment Settings //"
+echo "////////////////////////////////////////////////////////////////////////////////"
+
+set site = `perl -T -e "use Net::Domain(hostdomain); print hostdomain" | sed 's/\.$//'`
+if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
+  source /usr/local/Modules/default/init/tcsh
+  module use -a /home/fms/local/modulefiles
+  module load intel_compilers/11.1.073 mpich2/1.2.1p1 netcdf/4.2
+  module load fre-system/init
+  setenv CVSROOT /home/fms/cvs
+  alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
+else if ( "$site" == "gfdl.noaa.gov" ) then
+  source /usr/local/Modules/default/init/tcsh
+  module use -a /home/fms/local/modulefiles
+  module load intel_compilers/11.1.073 netcdf/4.2
+  module use /home/sdu/publicmodules
+  module load mpich2/1.5b1
+  module load fre-system/init
+  setenv CVSROOT /home/fms/cvs
+  alias make make HDF5_HOME=/usr/local/x64/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/x64/netcdf-4.2_optimized SITE=gfdl-ws -f fre-nctools.mk
+  set NOPARALLEL
+else if ( "$site" == "ncrc.gov" ) then
+  source $MODULESHOME/init/tcsh
+  module use -a /ncrc/home2/fms/local/modulefiles
+  module rm PrgEnv-pgi PrgEnv-pathscale
+  module load PrgEnv-intel
+  module swap intel intel/12.0.5.220
+  module load fre-system/init
+  setenv CVS_RSH gsissh
+  setenv CVSROOT :ext:cvs.princeton.rdhpcs.noaa.gov:/home/fms/cvs
+  setenv MPICH_UNEX_BUFFER_SIZE 256m
+  setenv MPICH_MAX_SHORT_MSG_SIZE 64000
+  setenv MPICH_PTL_UNEX_EVENTS 160k
+  setenv KMP_STACKSIZE 2g
+  setenv F_UFMTENDIAN big
+  alias make make HDF5_HOME=/opt/cray/hdf5/1.8.8/intel/120/ NETCDF_HOME=/opt/cray/netcdf/4.2.0/intel/120 NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
+else
+  echo "ERROR: Unsupported site '$site'"
+  exit 1
+endif
+
+module list
+
+set echo
+
+alias cvs cvs -f
+
+unset echo
+
+echo "Done..."
+
+echo "////////////////////////////////////////////////////////////////////////////////"
+echo "//////////////////////////////////////////////////////////// Directory Layout //"
+echo "////////////////////////////////////////////////////////////////////////////////"
+
+cvs co -r $cvstag $freNCToolsOther
+cvs co -r $cvstag $freNCToolsSrc
+mkdir -p share/src
+mv postprocessing shared tools share/src
+mkdir -p $FRE_SYSTEM_SITE/bin
+mkdir -p share/bin
+
+cp share/src/postprocessing/list_ncvars/list_ncvars.csh $tmpDir/share/bin
+cp share/src/postprocessing/plevel/plevel.sh $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/split_ncvars.csh $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/varlist.csh $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/split_into_months.csh $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/split_ncvars_plevel.sh $tmpDir/share/bin
+cp share/src/postprocessing/timavg/timavg.csh $tmpDir/share/bin
+
+echo "Done..."
+
+foreach freNCToolsDir ( $freNCToolsSrc )
+  echo "////////////////////////////////////////////////////////////////////////////////"
+  echo "////////////////////////////////////////////////////////////////// $freNCToolsDir:t"
+  echo "////////////////////////////////////////////////////////////////////////////////"
+
+  pushd share/src/$freNCToolsDir
+  set targets=` grep "TARGETS  :=" fre-nctools.mk | cut -f2 -d'=' `
+  if ( $?NOPARALLEL ) then
+     set targets=` grep "TARGETS  :=" fre-nctools.mk | cut -f2 -d'=' | sed 's/ \S*_parallel/ /'`
+  endif
+  echo "Making $targets"
+
+  make clean
+  make
+  if ( $status ) then
+   echo "Error: make failed for $targets"
+   exit 1
+  endif
+
+  foreach target ( $targets )
+    if ( -f $target ) then
+      mv $target $tmpDir/$FRE_SYSTEM_SITE/bin
+    else
+      echo "Error during '$target' build"
+      exit 1
+    endif
+  end
+  make clean
+  popd
+end
+
+echo "////////////////////////////////////////////////////////////////////////////////"
+echo "/////////////////////////////////////////////////////////////////// Archiving //"
+echo "////////////////////////////////////////////////////////////////////////////////"
+
+tar -cvzf $pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz *
+if ( $status ) then
+  echo "Error during archiving..."
+  exit 1
+endif
+
+echo "////////////////////////////////////////////////////////////////////////////////"
+echo "/////////////////////////////////////////////////////////////////// Finishing //"
+echo "////////////////////////////////////////////////////////////////////////////////"
+
+popd
+
+if ( -f $tmpDir/$pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz ) then
+  mv $tmpDir/$pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz .
+  echo "Success!"
+else
+  echo "Error..."
+endif
+exit
+rm -fr $tmpDir

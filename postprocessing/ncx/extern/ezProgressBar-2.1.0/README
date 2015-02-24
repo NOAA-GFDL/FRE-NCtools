@@ -1,0 +1,13 @@
+TEST and EXAMPLES
+make
+
+========================================================================
+DEVELOPER NOTES
+- For publishing, do:
+
+make html; make clean
+make dist VER=2.1.0
+scp *.html ez*Bar.hpp rsz@web.sourceforge.net://home/project-web/ezprogressbar/htdocs
+# Log on to manage webpage.
+ssh -t rsz,ezprogressbar@shell.sourceforge.net create
+cd /home/project-web/ezprogressbar/htdocs
