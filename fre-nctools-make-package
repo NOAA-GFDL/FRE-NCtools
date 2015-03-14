@@ -72,6 +72,13 @@ else if ( "$site" == "ncrc.gov" ) then
   setenv KMP_STACKSIZE 2g
   setenv F_UFMTENDIAN big
   alias make make HDF5_HOME=/opt/cray/hdf5/1.8.8/intel/120/ NETCDF_HOME=/opt/cray/netcdf/4.2.0/intel/120 NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
+else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
+  source $MODULESHOME/init/tcsh
+  module use -a /home/fms/local/modulefiles
+  module purge
+  module load fre-system/init
+  module load intel/13.0.079
+  module load mpt
 else
   echo "ERROR: Unsupported site '$site'"
   exit 1
