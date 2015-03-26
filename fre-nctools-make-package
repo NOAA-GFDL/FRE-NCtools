@@ -79,6 +79,8 @@ else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
   module load fre-system/init
   module load intel/13.0.079
   module load mpt
+  setenv LIBRARY_PATH ${LIBRARY_PATH}:/apps/intel/composer_xe_2013.0.079/compiler/lib/intel64
+  alias make make HDF5_HOME=/apps/hdf5/1.8.8-intel NETCDF_HOME=/apps/netcdf/4.1.3-intel SITE=zeus -f fre-nctools.mk
 else
   echo "ERROR: Unsupported site '$site'"
   exit 1
