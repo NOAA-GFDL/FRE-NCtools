@@ -46,6 +46,7 @@ if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
   module load intel_compilers/11.1.073 mpich2/1.2.1p1 netcdf/4.2
   module load fre-system/init
   setenv CVSROOT /home/fms/cvs
+  setenv LD_RUN_PATH $LD_LIBRARY_PATH  
   alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
 else if ( "$site" == "gfdl.noaa.gov" ) then
   source /usr/local/Modules/default/init/tcsh
@@ -55,6 +56,7 @@ else if ( "$site" == "gfdl.noaa.gov" ) then
   module load mpich2/1.5b1
   module load fre-system/init
   setenv CVSROOT /home/fms/cvs
+  setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/x64/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/x64/netcdf-4.2_optimized SITE=gfdl-ws -f fre-nctools.mk
   set NOPARALLEL
 else if ( "$site" == "ncrc.gov" ) then
