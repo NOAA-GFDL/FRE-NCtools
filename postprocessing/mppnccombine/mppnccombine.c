@@ -150,7 +150,7 @@ struct fileinfo
 void usage();
 int process_file(char *, unsigned char, struct fileinfo *, char *, int *,
                  int *, int *, int*, int, int, int, unsigned char,
-                 unsigned char);
+                 unsigned char,int,int);
 int process_vars(struct fileinfo *, struct fileinfo *, unsigned char, int *,
                  int *, int*, int, int, int, unsigned char, unsigned char);
 int flush_decomp(struct fileinfo *, int, int, int, unsigned char);
@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
                 }
               infileerror=process_file(infilename,appendnc,ncoutfile,
                                        outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                       headerpad,verbose,missing);
+                                       headerpad,verbose,missing,deflate,deflation);
               if (infileerror) infileerrors=1;
               appendnc=1; f++;
               if (f==nfiles || a==nend)
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
                  }
                infileerror=process_file(infilename,appendnc,ncoutfile,
                                         outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                        headerpad,verbose,missing);
+                                        headerpad,verbose,missing,deflate,deflation);
                if (infileerror) infileerrors=1;
                if (a==nstart && nfiles > 0) nend=nstart+nfiles;
                appendnc=1; f++;
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
            }
            infileerror=process_file(argv[a],appendnc,ncoutfile,
                                     outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                    headerpad,verbose,missing);
+                                    headerpad,verbose,missing,deflate,deflation);
            if (infileerror) infileerrors=1;
            appendnc=1; f++;
            if (f==nfiles || a==(argc-1))
@@ -708,7 +708,7 @@ inline int min(int a, int b)
 int process_file(char *ncname, unsigned char appendnc,
                  struct fileinfo *ncoutfile, char *outncname, int *nfiles,
                  int *nrecs, int *nblocks, int *bf, int block, int f, int headerpad,
-                 unsigned char verbose, unsigned char missing)
+                 unsigned char verbose, unsigned char missing, int deflate, int deflation)
   {
    struct fileinfo *ncinfile;  /* Information about an input netCDF file */
    int nfiles2;  /* Number of files in the decomposed domain */
@@ -910,20 +910,20 @@ int process_file(char *ncname, unsigned char appendnc,
 
       if (deflate==1 && deflation>0)
 	{
-	  if ( (format && NC_NETCDF4) == NC_NETCDF4 )
+	  /*	  if ( (format && NC_NETCDF4) == NC_NETCDF4 )
 	    {
-	      //deflate
+	    //deflate*/
 	      for (v=0; v < ncinfile->nvars; v++)
 		{//shuffle 0 for now
 		  if ( nc_def_var_deflate(ncoutfile->ncfid,v,0,deflate,deflation) != NC_NOERR ) 
 		      fprintf(stderr,"Error: nc_def_var_deflate failed!\n");
 		}
-	    }
+	      /*	    }
 	  else
 	    {
 	      fprintf(stderr,"Error: can only deflate NETCDF4 files!\n");
 	      usage();
-	    }
+	    }*/
 	}
 
       /* Definitions done */
