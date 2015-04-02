@@ -231,6 +231,9 @@ int main(int argc, char *argv[])
    int nblocks=1; /* nblocks=nrecs/bf = number of iterations of outer loop */
    int peWidth = -1; /* Width of PE number in uncombined file extension */
    size_t blksz=65536; /* netCDF block size */
+   int deflate=0; /* do not deflate by default */
+   int deflation=-1; /* do not deflate by default */
+
 
    /* Check the command-line arguments */
    if (argc < 2)
@@ -300,6 +303,19 @@ int main(int argc, char *argv[])
       else if (!strcmp(argv[a], "-n4"))
 	format=(NC_NOCLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
       else if (!strcmp(argv[a],"-m")) missing=1;
+      else if (!strcmp(argv[a], "-d"))
+	{
+	  a++;
+	  if ( a < argc) 
+	    {
+	      deflate = 1;
+	      deflation = atoi(argv[a]);
+	    }
+	  else
+	    {
+	      usage(); return(1);
+	    }
+	}
       else
         {
          outputarg=a; break;
@@ -655,6 +671,7 @@ void usage()
    printf("  -h #  Add a specified number of bytes of padding at the end of the header.\n");
    printf("  -64   Create netCDF output files with the 64-bit offset format.\n");
    printf("  -n4   Create netCDF output files in NETCDF4_CLASSIC mode (no v4 enhanced features).\n");
+   printf("  -d #  When in NETCDF4 mode, use deflation of level #.\n");
    printf("  -m    Initialize output variables with a \"missing_value\" from the variables\n");
    printf("        of the first input file instead of the default 0 value.\n");
    printf("  -x    Print an estimate for peak memory resident size in (MB) and exit.\n");
@@ -890,6 +907,24 @@ int process_file(char *ncname, unsigned char appendnc,
               }
            }
         }
+
+      if (deflate==1 && deflation>0)
+	{
+	  if ( (format && NC_NETCDF4) == NC_NETCDF4 )
+	    {
+	      //deflate
+	      for (v=0; v < ncinfile->nvars; v++)
+		{//shuffle 0 for now
+		  if ( nc_def_var_deflate(ncoutfile->ncfid,v,0,deflate,deflation) != NC_NOERR ) 
+		      fprintf(stderr,"Error: nc_def_var_deflate failed!\n");
+		}
+	    }
+	  else
+	    {
+	      fprintf(stderr,"Error: can only deflate NETCDF4 files!\n");
+	      usage();
+	    }
+	}
 
       /* Definitions done */
       nc__enddef(ncoutfile->ncfid,headerpad,4,0,4);
