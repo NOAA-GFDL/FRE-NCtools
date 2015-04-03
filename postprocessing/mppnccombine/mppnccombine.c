@@ -645,7 +645,7 @@ int main(int argc, char *argv[])
 void usage()
   {
    printf("mppnccombine %s - (written by Hans.Vahlenkamp@noaa.gov)\n\n", version);
-   printf("Usage:  mppnccombine [-v] [-V] [-M] [-a] [-r] [-n #] [-k #] [-e #] [-h #] [-64] [-n4] [-m]\n");
+   printf("Usage:  mppnccombine [-v] [-V] [-M] [-a] [-r] [-n #] [-k #] [-e #] [-h #] [-64] [-n4 [-d #] [-s]] [-m]\n");
    printf("                     output.nc [input ...]\n\n");
    printf("  -v    Print some progress information.\n");
    printf("  -V    Print version information.\n");
