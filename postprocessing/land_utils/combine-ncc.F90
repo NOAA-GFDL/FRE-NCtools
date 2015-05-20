@@ -35,7 +35,7 @@ program combine_res
   real   , allocatable :: buffer(:)
   logical, allocatable :: mask(:)
   integer :: nz, k, start(4), nread(4), nwrite(4), nrec
-  integer :: recsize, tlev, k_id, t_id
+  integer :: recsize, tlev, k_id, t_id, nz_saved
 
   ! get command line options and list of files
   call parse_command_line() ! modigies global data!
@@ -128,6 +128,7 @@ program combine_res
   ! ---- end of definition stage
   __NF_ASRT__(nf__enddef(ncid,HEADERPAD,4,0,4))
 
+  nz_saved = nz
   !--- loop through each record  
   do tlev = 1, nrec
 
@@ -153,6 +154,11 @@ program combine_res
            endif
         enddo
 
+        if(k_id == 0) then
+           nz = 1
+        else
+           nz = nz_saved
+        endif
         start = 1; nread = 1; nwrite = 1
         if(t_id > 0) start(t_id) = tlev      
 

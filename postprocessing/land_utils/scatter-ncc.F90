@@ -45,7 +45,7 @@ program combine_res
   logical, allocatable :: mask(:), mask_2d(:,:)
   integer :: nz, start(4), nread(4), nwrite(4), k, nrec, tlev
 
-  integer :: t_id, k_id
+  integer :: t_id, k_id, nz_saved
 
   ! get command line options and list of files
   call parse_command_line() ! modigies global data!
@@ -115,6 +115,7 @@ program combine_res
 
   ! clone all dimensions; for compressed dimensions calculate the length
   nrec = 1
+  nz_saved = nz
   __NF_ASRT__(nf_inq_ndims(in_ncid,ndims))
   do dimid = 1,ndims
      __NF_ASRT__(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen,is_unlim=has_records))
@@ -202,7 +203,6 @@ program combine_res
         endif
 
         __NF_ASRT__(nfu_inq_compressed_var(in_ncid,varid,name=varname,varsize=vsize, first_dim_only=.true.))
-        recsize = recsize/nz
 
         if(debug>0) &
              write(*,*)'processing var "'//trim(varname)//'"'
@@ -221,6 +221,13 @@ program combine_res
                  k_id = dimid
               endif
            enddo
+
+           if(k_id==0) then
+              nz = 1
+           else
+              nz = nz_saved
+           endif
+           recsize = recsize/nz
 
            start(:) = 1; nread(:) = 1
            nread(1) = recsize
