@@ -48,8 +48,8 @@ end interface
 ! ==== module constants ======================================================
 character(len=*), parameter :: &
      module_name = 'grid_mod', &
-     version     = '$Id: grid.F90,v 20.0 2013/12/14 00:20:48 fms Exp $', &
-     tagname     = '$Name: fre-nctools-bronx-10 $'
+     version     = '$Id: grid.F90,v 21.0 2014/12/15 22:14:00 fms Exp $', &
+     tagname     = '$Name: ulm $'
 
 character(len=*), parameter :: &
      grid_dir  = 'INPUT/',     &      ! root directory for all grid files
@@ -194,7 +194,7 @@ subroutine get_grid_cell_area(component, tile, cellarea, domain)
              FATAL)
      end select
      ! convert area to m2
-     cellarea = cellarea*4*PI*radius**2
+     cellarea = cellarea*4.*PI*radius**2
   case(VERSION_2)
      if (present(domain)) then
         call mpp_get_compute_domain(domain,xsize=nlon,ysize=nlat)
@@ -315,7 +315,7 @@ subroutine get_grid_comp_area(component,tile,area,domain)
            endif
         end if
      end do
-     area(:,:) = 0
+     area(:,:) = 0.
      if(field_exist(grid_file,xgrid_name)) then
         ! get the number of the exchange-grid files
         call field_size(grid_file,xgrid_name,siz)
@@ -362,7 +362,7 @@ subroutine get_grid_comp_area(component,tile,area,domain)
      deallocate(nest_tile_name)
   end select ! version
   ! convert area to m2
-  area = area*4*PI*radius**2
+  area = area*4.*PI*radius**2
 end subroutine
 
 ! ============================================================================
@@ -446,7 +446,7 @@ subroutine get_grid_cell_vertices_1D(component, tile, glonb, glatb)
 
      start = 1; nread = 1
      nread(2) = 2*nlat+1
-     call read_data(filename2, "x", tmp, start, nread, no_domain=.TRUE.)
+     call read_data(filename2, "y", tmp, start, nread, no_domain=.TRUE.)
      glatb(1:nlat+1) = tmp(1,1:2*nlat+1:2)
      deallocate(tmp)
   end select

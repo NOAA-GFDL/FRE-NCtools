@@ -130,10 +130,11 @@ void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, cons
 
 
 /*******************************************************************************
-  void get_mosaic_grid()
-
+  void get_input_grid()
+  To decrease memory usage, use grid_out latitude to decide the input grid to be stored.
 *******************************************************************************/
-void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file, unsigned int opcode, int *great_circle_algorithm)
+void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file,
+		    unsigned int opcode, int *great_circle_algorithm, int save_weight_only)
 {
   int         n, m1, m2, i, j, l, ind1, ind2, nlon, nlat;
   int         ts, tw, tn, te, halo, nbound;
@@ -144,6 +145,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   size_t        start[4], nread[4];
   Data_holder *dHold;
   Bound_config *bound_C;
+  int          read_tgrid;
   
   halo = 0;
   if(opcode & BILINEAR) halo = 1;
@@ -151,10 +153,13 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     start[n] = 0; nread[n] = 1;
   }
 
+  read_tgrid = 1;
+  if(save_weight_only || (opcode & CONSERVE_ORDER1) ) read_tgrid = 0;
+  
   bound_C = (Bound_config *)malloc(ntiles*sizeof(Bound_config));
   nx = (int *)malloc(ntiles * sizeof(int) );
   ny = (int *)malloc(ntiles * sizeof(int) );
-
+  
   *great_circle_algorithm = 0;
   m_fid = mpp_open(mosaic_file, MPP_READ);
   get_file_path(mosaic_file, dir);
@@ -186,8 +191,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     mpp_get_var_value(g_fid, vid, x);
     vid = mpp_get_varid(g_fid, "y");
     mpp_get_var_value(g_fid, vid, y);
-    grid[n].lont = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-    grid[n].latt = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+
     grid[n].lonc = (double *) malloc((nx[n]+1+2*halo)*(ny[n]+1+2*halo)*sizeof(double));
     grid[n].latc = (double *) malloc((nx[n]+1+2*halo)*(ny[n]+1+2*halo)*sizeof(double));
     grid[n].lont1D = (double *) malloc(nx[n]*sizeof(double));
@@ -205,24 +209,20 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       grid[n].lonc[ind1] = x[ind2]*D2R;
       grid[n].latc[ind1] = y[ind2]*D2R;
     }
-
-    for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
-      ind1 = (j+1)*(nx[n]+2)+i+1;
-      ind2 = (2*j+1)*(2*nx[n]+1)+2*i+1;
-      grid[n].lont[ind1] = x[ind2]*D2R;
-      grid[n].latt[ind1] = y[ind2]*D2R;
+    if(read_tgrid) {
+      grid[n].lont = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+      grid[n].latt = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+      for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
+	ind1 = (j+1)*(nx[n]+2)+i+1;
+	ind2 = (2*j+1)*(2*nx[n]+1)+2*i+1;
+	grid[n].lont[ind1] = x[ind2]*D2R;
+	grid[n].latt[ind1] = y[ind2]*D2R;
+      }
+    
+      init_halo(grid[n].lont, nx[n], ny[n], 1, 1);
+      init_halo(grid[n].latt, nx[n], ny[n], 1, 1);
     }
     
-    init_halo(grid[n].lont, nx[n], ny[n], 1, 1);
-    init_halo(grid[n].latt, nx[n], ny[n], 1, 1);
-    
-    if(opcode & CONSERVE_ORDER2 || opcode & BILINEAR ) {
-      grid[n].vlon_t = (double *) malloc(3*(nx[n]+2*halo)*(ny[n]+2*halo)*sizeof(double));
-      grid[n].vlat_t = (double *) malloc(3*(nx[n]+2*halo)*(ny[n]+2*halo)*sizeof(double));
-      grid[n].xt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-      grid[n].yt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-      grid[n].zt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-    }
     /* if vector, need to get rotation angle */
     /* we assume the grid is orthogonal */
     if( opcode & VECTOR ) {
@@ -250,42 +250,43 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   }
 
   mpp_close(m_fid);
-  
+
   /* get the boundary condition */
   setup_boundary(mosaic_file, ntiles, grid, bound_T, 1, CENTER);
-  if(opcode & BILINEAR)
-    setup_boundary(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
-
-  for(n=0; n<ntiles; n++) {
-    nlon = grid[n].nx;
-    nlat = grid[n].ny;
-    nbound = bound_T[n].nbound;
-    if(nbound > 0 ) {
-      dHold = (Data_holder *)malloc(nbound*sizeof(Data_holder));
-      for(l=0; l<nbound; l++) {
-	dHold[l].data = grid[bound_T[n].tile2[l]].lont;
-	dHold[l].nx = grid[bound_T[n].tile2[l]].nx+2;
-	dHold[l].ny = grid[bound_T[n].tile2[l]].ny+2;
-      }
-      update_halo(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
-      for(l=0; l<nbound; l++) dHold[l].data = grid[bound_T[n].tile2[l]].latt;
-      update_halo(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
+  if(read_tgrid) {
+    for(n=0; n<ntiles; n++) {
+      nlon = grid[n].nx;
+      nlat = grid[n].ny;
+      nbound = bound_T[n].nbound;
+      if(nbound > 0 ) {
+	dHold = (Data_holder *)malloc(nbound*sizeof(Data_holder));
+	for(l=0; l<nbound; l++) {
+	  dHold[l].data = grid[bound_T[n].tile2[l]].lont;
+	  dHold[l].nx = grid[bound_T[n].tile2[l]].nx+2;
+	  dHold[l].ny = grid[bound_T[n].tile2[l]].ny+2;
+	}
+	update_halo(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
+	for(l=0; l<nbound; l++) dHold[l].data = grid[bound_T[n].tile2[l]].latt;
+	update_halo(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
 	
-      for(l=0; l<nbound; l++) dHold[l].data = NULL;
-      free(dHold);
+	for(l=0; l<nbound; l++) dHold[l].data = NULL;
+	free(dHold);
+      }
     }
-  }
-  
-  if(opcode & BILINEAR) {
-
   }
   
   /* for bilinear interpolation, need to get cell-center grid */
   if(opcode & BILINEAR) {
+    setup_boundary(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
     /*--- fill the halo of corner cell */
     for(n=0; n<ntiles; n++) {
       nlon = grid[n].nx;
       nlat = grid[n].ny;
+      grid[n].vlon_t = (double *) malloc(3*(nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].vlat_t = (double *) malloc(3*(nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].xt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].yt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].zt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
       latlon2xyz((nlon+2)*(nlat+2), grid[n].lont, grid[n].latt, grid[n].xt, grid[n].yt, grid[n].zt);
       unit_vect_latlon((nlon+2)*(nlat+2), grid[n].lont, grid[n].latt, grid[n].vlon_t, grid[n].vlat_t);
       nbound = bound_C[n].nbound;
@@ -305,7 +306,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       }
     }
   }
-  else if(opcode & CONSERVE_ORDER2) {
+  else if(opcode & CONSERVE_ORDER2 && (!save_weight_only) ) {
     double p1[3], p2[3], p3[3], p4[3];
     
     for(n=0; n<ntiles; n++) {
@@ -322,6 +323,8 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       grid[n].edge_n = (double *)malloc((nlon+1)         *sizeof(double));
       grid[n].en_n   = (double *)malloc(3*nlon  *(nlat+1)*sizeof(double));
       grid[n].en_e   = (double *)malloc(3*(nlon+1)*nlat  *sizeof(double));
+      grid[n].vlon_t = (double *) malloc(3*nlon*nlat     *sizeof(double));
+      grid[n].vlat_t = (double *) malloc(3*nlon*nlat     *sizeof(double));
       calc_c2l_grid_info(&nlon, &nlat, grid[n].lont, grid[n].latt, grid[n].lonc, grid[n].latc,
 			 grid[n].dx, grid[n].dy, grid[n].area, grid[n].edge_w, grid[n].edge_e,
 			 grid[n].edge_s, grid[n].edge_n, grid[n].en_n, grid[n].en_e,

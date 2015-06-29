@@ -315,6 +315,23 @@ double get_mem_usage(void)
  
 }
 
+void print_time(const char* text, double t)
+{
+  double tmin, tmax, tavg;
+  
+  tmin=t;
+  tmax=t;
+  tavg=t;
+  mpp_min_double(1, &tmin);
+  mpp_max_double(1, &tmax);
+  mpp_sum_double(1, &tavg);
+  tavg /= mpp_npes();
+  if( mpp_pe() == mpp_root_pe() ) {
+    printf("Running time for %s, min=%g, max=%g, avg=%g\n", text, tmin, tmax, tavg); 
+  }
+
+}
+
 
 void print_mem_usage(const char* text)
 {
