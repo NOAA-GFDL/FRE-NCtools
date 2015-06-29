@@ -24,7 +24,7 @@ TARGETS  := fregrid fregrid_parallel
 
 SOURCES  := fregrid.c bilinear_interp.c conserve_interp.c fregrid_util.c
 SOURCES  += create_xgrid.c gradient_c2l.c interp.c read_mosaic.c
-SOURCES  += mpp_domain.c mpp_io.c tool_util.c
+SOURCES  += mpp_domain.c mpp_io.c tool_util.c affinity.c
 
 OBJECTS  := $(SOURCES:c=o)
 
@@ -60,6 +60,9 @@ mpp_io.o: ../shared/mpp_io.c $(HEADERS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
 
 mpp_domain.o: ../shared/mpp_domain.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+affinity.o: ../shared/affinity.c $(HEADERS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
 
 mpp.o: ../shared/mpp.c $(HEADERS)

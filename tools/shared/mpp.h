@@ -24,6 +24,7 @@ void mpp_sum_double(int count, double *data);
 void mpp_min_double(int count, double *data);
 void mpp_max_double(int count, double *data);
 void print_mem_usage(const char* text);
+void print_time(const char* text, double t);
 void mpp_sync_self();
 void mpp_sync();
 #endif
