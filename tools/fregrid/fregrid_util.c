@@ -803,7 +803,7 @@ void do_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_co
 void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2,
 		        Field_config *scalar, Field_config *u_comp, Field_config *v_comp,
 			const Grid_config *grid, int kbegin, int kend, int lbegin, int lend,
-			unsigned int opcode)
+			unsigned int opcode, char *associated_file_dir)
 {
   int     n, m, i, l, ll, nscalar, nvector, nfield;
   int     ndim, dimsize[5], nz;
@@ -958,7 +958,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	  else
 	    field[n].var[ll].cell_measures=0;
 	  if(field[n].var[ll].cell_measures==1) {
-            char associated_file[STRING];
+            char associated_file[512];
 	    	    
 	    /* make sure field[n].var[ll].area_name exist in the current file or associated file */
 	    if( mpp_var_exist(file[n].fid, field[n].var[ll].area_name) ) {
@@ -966,7 +966,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               field[n].var[ll].area_fid = file[n].fid;
             }
             else {
-	      char globalatt[1024], file1[STRING], str1[STRING], name[STRING];
+	      char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
               /* check if the variable is in associated_files or not */
               if( !mpp_global_att_exist(file[n].fid, "associated_files") ) {
                  sprintf(errmsg, "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
@@ -976,12 +976,17 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               }           
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
 	      sprintf(name, "%s:", field[n].var[ll].area_name);
-              status = parse_string(globalatt, name, file1, errout);
+              status = parse_string(globalatt, name, file2, errout);
 	      if(status==-1) {
 		sprintf(errmsg, "fregrid_util(get_input_metadata): %s for associated_files "
 			"global attribute in file %s", errout, file[n].name );
 		mpp_error(errmsg);
 	      }
+	      if(associated_file_dir)
+		sprintf(file1, "%s/%s", associated_file_dir, file2);
+	      else
+		strcpy(file1, file2);
+	      
               /* check if the file exist or not, if not add tile# */
               if(mpp_file_exist(file1)) 
                  strcpy(associated_file, file1);
@@ -2021,6 +2026,10 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	ny = grid[n].ny;
 	field[n].grad_x = (double *)malloc(nx*ny*nz*sizeof(double));
 	field[n].grad_y = (double *)malloc(nx*ny*nz*sizeof(double));
+	field[n].grad_mask = (int *)malloc(nx*ny*nz*sizeof(int));
+	for(k=0; k<nz; k++) for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
+	  field[n].grad_mask[k*nx*ny+j*nx+i] = 0;
+	}
 	for(k=0; k<nz; k++) {
 	  p = k*(nx+2)*(ny+2);
 	  grad_c2l(&(grid[n].nx), &(grid[n].ny), field[n].data+p, grid[n].dx, grid[n].dy, grid[n].area,
@@ -2033,7 +2042,6 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	  int ip1, im1, jp1, jm1,kk,ii,jj;
 	  double missing;
 	  missing = field[n].var[varid].missing;
-	  field[n].grad_mask = (int *)malloc(nx*ny*nz*sizeof(int));
 	  for(k=0; k<nz; k++) for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
 	    ii=i+1; ip1 = ii+1; im1 = ii-1; jj = j+1; jp1 = jj+1; jm1 = jj-1;
 	    l = k*(nx+2)*(ny+2);
@@ -2042,8 +2050,6 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	       field[n].data[l+jj *(nx+2)+ip1] == missing || field[n].data[l+jp1*(nx+2)+im1] == missing ||
 	       field[n].data[l+jp1*(nx+2)+ii ] == missing || field[n].data[l+jp1*(nx+2)+ip1] == missing  )
 	      field[n].grad_mask[k*nx*ny+j*nx+i] = 1;
-	    else
-	      field[n].grad_mask[k*nx*ny+j*nx+i] = 0;
 	  }
 	}
       }

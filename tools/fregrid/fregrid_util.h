@@ -12,7 +12,8 @@ void get_output_grid_by_size(int ntiles, Grid_config *grid, double lonbegin, dou
                              int nlon, int nlat, int finer_steps, int center_y, unsigned int opcode);
 void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2,
 		        Field_config *scalar, Field_config *u_comp, Field_config *v_comp,
-			const Grid_config *grid, int kbegin, int kend, int lbegin, int lend, unsigned int opcode);
+			const Grid_config *grid, int kbegin, int kend, int lbegin, int lend, unsigned int opcode,
+                        char *associated_file_dir);
 void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in, const File_config *file2_in,
 			  const Field_config *scalar_in, const Field_config *u_in, const Field_config *v_in,
 			  int ntiles_out, File_config *file1_out, File_config *file2_out, Field_config *scalar_out,

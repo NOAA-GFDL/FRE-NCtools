@@ -51,6 +51,7 @@ char *usage[] = {
   "          [--center_y] [--check_conserve] [--weight_file weight_file]                 ",
   "          [--weight_field --weight_field] [--dst_vgrid dst_vgrid]                     ",
   "          [--extrapolate] [--stop_crit #] [--standard_dimension]                      ",
+  "          [--associated_file_dir dir]                                                 ",
   "                                                                                      ",
   "fregrid remaps data (scalar or vector) from input_mosaic onto                         ",
   "output_mosaic.  Note that the target grid also could be specified                     ",
@@ -155,7 +156,8 @@ char *usage[] = {
   "                                                                                      ",
   "--interp_method interp_method specify the remapping algorithm to be used. Default is  ",
   "                              'conserve_order1'. Currently only 'conserve_order1',    ",
-  "                              'conserve_order2' and 'bilinear' remapping scheme are   ",
+  "                              'conserve_order2', 'conserve_order2_monotonic' and      ",
+  "                              'bilinear' remapping scheme are   ",
   "                              implemented in this tool. The bilinear scheme can only  ",
   "                              be used to remap data from cubic grid to regular latlon ",
   "                              grid. When interp_method is 'bilinear', nlon and nlat   ",
@@ -192,6 +194,9 @@ char *usage[] = {
   "--check_conserve              check the conservation of conservative interpolation.   ",
   "                              The area sum will be printed out for input and output   ",
   "                              mosaic.                                                 ",
+  "                                                                                      ",
+  "--monotonic                   When specified, use monotonic interpolation when        ",
+  "                              interp_method is 'conserve_order2'.                     ",
   "                                                                                      ",
   "--weight_file                 Specify the filename that store weight_field. The       ",
   "                              suffix '.tile#.nc' should not present for multiple-tile ",
@@ -238,7 +243,7 @@ char *usage[] = {
   NULL};
 #define EPSLN10  (1.e-10)
 const double D2R = M_PI/180.;
-char tagname[] = "$Name: fre-nctools-bronx-10 $";
+char tagname[] = "$Name: bronx-10_performance_z1l $";
 
 int main(int argc, char* argv[])
 {
@@ -259,6 +264,7 @@ int main(int argc, char* argv[])
   char    v_name     [NVAR] [STRING];
   char    *test_case = NULL;
   double  test_param = 1;
+  char    *associated_file_dir = NULL;
   int     check_conserve = 0; /* 0 means no check */
   double  lonbegin = 0, lonend = 360;
   double  latbegin = -90, latend = 90;			  
@@ -353,6 +359,7 @@ int main(int argc, char* argv[])
     {"standard_dimension", no_argument,     NULL, 'O'},
     {"debug",             no_argument,     NULL, 'P'},
     {"nthreads",         required_argument, NULL, 'Q'},
+    {"associated_file_dir", required_argument, NULL, 'R'},
     {"help",             no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
   };  
@@ -493,6 +500,9 @@ int main(int argc, char* argv[])
     case 'Q':
       nthreads = atoi(optarg);
       break;
+    case 'R':
+      associated_file_dir = optarg;
+      break;
     case '?':
       errflg++;
       break;
@@ -523,12 +533,17 @@ int main(int argc, char* argv[])
     if(mpp_pe() == mpp_root_pe())printf("****fregrid: second order conservative scheme will be used for regridding.\n");
     opcode |= CONSERVE_ORDER2;
   }
+  else if(!strcmp(interp_method, "conserve_order2_monotonic") ) {
+    if(mpp_pe() == mpp_root_pe())printf("****fregrid: second order monotonic conservative scheme will be used for regridding.\n");
+    opcode |= CONSERVE_ORDER2;
+    opcode |= MONOTONIC;
+  }
   else if(!strcmp(interp_method, "bilinear") ) {
     if(mpp_pe() == mpp_root_pe())printf("****fregrid: bilinear remapping scheme will be used for regridding.\n");  
     opcode |= BILINEAR;
   }
   else
-    mpp_error("fregrid: interp_method must be 'conserve_order1', 'conserve_order2' or 'bilinear'");
+    mpp_error("fregrid: interp_method must be 'conserve_order1', 'conserve_order2', 'conserve_order2_monotonic'  or 'bilinear'");
       
   if( nfiles == 0) {
     if(nvector > 0 || nscalar > 0 || nvector2 > 0)
@@ -787,7 +802,8 @@ int main(int argc, char* argv[])
       set_field_struct ( ntiles_out,  v_out,       nvector, v_name[0], file2_out);
     }
 
-    get_input_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in, grid_in, kbegin, kend, lbegin, lend, opcode);
+    get_input_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in, grid_in,
+		       kbegin, kend, lbegin, lend, opcode, associated_file_dir);
 
     set_weight_inf( ntiles_in, grid_in, weight_file, weight_field, file_in->has_cell_measure_att);
     
@@ -837,10 +853,11 @@ int main(int argc, char* argv[])
      time_setup_interp = 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
      print_mem_usage("After setup interp");
    }
-
-   print_time("get_input_grid", time_get_in_grid);
-   print_time("get_output_grid", time_get_out_grid);
-   print_time("setup_interp", time_setup_interp);
+   if(debug) {
+      print_time("get_input_grid", time_get_in_grid);
+      print_time("get_output_grid", time_get_out_grid);
+      print_time("setup_interp", time_setup_interp);
+   }
    if(save_weight_only) {
      if(mpp_pe() == mpp_root_pe() ) {
        printf("NOTE: Successfully running fregrid and the following files which store weight information are generated.\n");
@@ -890,16 +907,12 @@ int main(int argc, char* argv[])
 	if(extrapolate) {
 	  get_input_data(ntiles_in, scalar_in, grid_in, bound_T, l, -1, level_n, level_t, extrapolate, stop_crit);
 	  allocate_field_data(ntiles_out, scalar_out, grid_out, scalar_in->var[l].nz);
-
 	  if( opcode & BILINEAR ) 
 	    do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
 	  else
 	    do_scalar_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
-
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
-
 	  write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
-	  
 	  if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
 	    for(n=0; n<ntiles_in; n++) {
 	      free(scalar_in[n].grad_x);
@@ -943,7 +956,7 @@ int main(int argc, char* argv[])
 		for(n=0; n<ntiles_in; n++) {
 		  free(scalar_in[n].grad_x);
 		  free(scalar_in[n].grad_y);
-		  if(scalar_in[n].var[l].has_missing) free(scalar_in[n].grad_mask);
+		  free(scalar_in[n].grad_mask);
 		}
 	      }
 	      for(n=0; n<ntiles_in; n++) free(scalar_in[n].data);

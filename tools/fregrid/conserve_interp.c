@@ -14,7 +14,8 @@
 #include "read_mosaic.h"
 
 #define  AREA_RATIO (1.e-3)
-
+#define  MAXVAL (1.e20)
+#define  TOLERANCE  (1.e-10)
 /*******************************************************************************
   void setup_conserve_interp
   Setup the interpolation weight for conservative interpolation 
@@ -496,23 +497,34 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
   double area, missing, di, dj, area_missing;
   double *out_area;
   double gsum_out;
+  int monotonic;
+  Monotone_config *monotone_data;
   
   gsum_out = 0;
   interp_method = field_in->var[varid].interp_method;
   halo = 0;
-  if(interp_method == CONSERVE_ORDER2) halo = 1;
-
-  missing = field_in->var[varid].missing;
+  monotonic = 0;
+  if(interp_method == CONSERVE_ORDER2) {
+    halo = 1;
+    monotonic = opcode & MONOTONIC;
+  }
+    
   area_missing = field_in->var[varid].area_missing;
   has_missing = field_in->var[varid].has_missing;
   weight_exist = grid_in[0].weight_exist;
   cell_measures = field_in->var[varid].cell_measures;
   cell_methods = field_in->var[varid].cell_methods;
+
+  missing = -MAXVAL;
+  if(has_missing) missing = field_in->var[varid].missing;
   
   if( nz>1 && has_missing ) mpp_error("conserve_interp: has_missing should be false when nz > 1");
   if( nz>1 && cell_measures ) mpp_error("conserve_interp: cell_measures should be false when nz > 1");
   if( nz>1 && cell_methods == CELL_METHODS_SUM ) mpp_error("conserve_interp: cell_methods should not be sum when nz > 1");  
- 
+  /*  if( nz>1 && monotonic ) mpp_error("conserve_interp: monotonic should be false when nz > 1"); */
+  
+  if(monotonic) monotone_data = (Monotone_config *)malloc(ntiles_in*sizeof(Monotone_config));
+  
   for(m=0; m<ntiles_out; m++) {
     nx2 = grid_out[m].nxc;
     ny2 = grid_out[m].nyc;
@@ -575,6 +587,132 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	  }
 	}
       } 
+    }
+    else if(monotonic) {
+      int ii, jj;
+      double f_bar;
+      double *xdata;
+      for(n=0; n<ntiles_in; n++) {
+	nx1 =  grid_in[n].nx;
+	ny1 =  grid_in[n].ny;
+	monotone_data[n].f_bar_max = (double *)malloc(nx1*ny1*sizeof(double));
+	monotone_data[n].f_bar_min = (double *)malloc(nx1*ny1*sizeof(double));
+	monotone_data[n].f_max     = (double *)malloc(nx1*ny1*sizeof(double));
+	monotone_data[n].f_min     = (double *)malloc(nx1*ny1*sizeof(double));
+	for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
+	  n1 = j*nx1+i;
+	    
+	  monotone_data[n].f_bar_max[n1] = -MAXVAL;
+	  monotone_data[n].f_bar_min[n1] = MAXVAL;
+	  monotone_data[n].f_max[n1]     = -MAXVAL;
+	  monotone_data[n].f_min[n1]     = MAXVAL;
+	  n1 = j*nx1+i;
+	  for(jj=j-1; jj<=j+1; jj++) for(ii=i-1; ii<=i+1; ii++) {
+	    n2 = (jj+1)*(nx1+2)+ii+1;
+	    if( field_in[n].data[n2] != missing ) {
+	      if( field_in[n].data[n2] > monotone_data[n].f_bar_max[n1] ) monotone_data[n].f_bar_max[n1] = field_in[n].data[n2];
+	      if( field_in[n].data[n2] < monotone_data[n].f_bar_min[n1] ) monotone_data[n].f_bar_min[n1] = field_in[n].data[n2];
+	    }
+	  }
+	}
+      }      
+      
+      xdata = (double *)malloc(interp[m].nxgrid*sizeof(double));
+      for(n=0; n<interp[m].nxgrid; n++) {
+	i1   = interp[m].i_in [n];
+	j1   = interp[m].j_in [n];
+	di   = interp[m].di_in[n];
+	dj   = interp[m].dj_in[n];
+	tile = interp[m].t_in [n];
+	n1 = j1*nx1+i1;
+        n2 = (j1+1)*(nx1+2)+i1+1;
+	if( field_in[tile].data[n2] != missing ) {
+	  if( field_in[tile].grad_mask[n1] ) { /* use zero gradient */
+	    xdata[n] = field_in[tile].data[n2];
+	  }
+	  else {
+	    xdata[n] = field_in[tile].data[n2]+field_in[tile].grad_x[n1]*di+field_in[tile].grad_y[n1]*dj;
+	  }
+	  if(monotonic) {
+	    if( xdata[n] > monotone_data[tile].f_max[n1]) monotone_data[tile].f_max[n1] = xdata[n];
+	    if( xdata[n] < monotone_data[tile].f_min[n1]) monotone_data[tile].f_min[n1] = xdata[n];
+	  }
+	}
+	else
+	  xdata[n] = missing;
+      }
+
+      /* get the global f_max and f_min */
+      if(mpp_npes() >1) {
+	for(n=0; n<ntiles_in; n++) {
+	  mpp_min_double(nx1*ny1, monotone_data[n].f_min);
+	  mpp_max_double(nx1*ny1, monotone_data[n].f_max);
+	}
+      }
+
+      /* adjust the exchange grid cell data to make it monotonic */
+      for(n=0; n<interp[m].nxgrid; n++) {
+	i1   = interp[m].i_in [n];
+	j1   = interp[m].j_in [n];
+	tile = interp[m].t_in [n];
+	n1 = j1*nx1+i1;
+	n2 = (j1+1)*(nx1+2)+i1+1;
+	f_bar = field_in[tile].data[n2];
+	if(xdata[n] == missing) continue;
+	  
+	if( monotone_data[tile].f_max[n1] > monotone_data[tile].f_bar_max[n1] ) {
+	  /* z1l: Due to truncation error, we might get xdata[n] > f_bar_max[n1]. So
+	     we allow some tolerance. What is the suitable tolerance? */
+	  xdata[n] = f_bar + ((xdata[n]-f_bar)/(monotone_data[tile].f_max[n1]-f_bar))
+	    * (monotone_data[tile].f_bar_max[n1]-f_bar);
+	  if( xdata[n] > monotone_data[tile].f_bar_max[n1]) {
+	    if(xdata[n] - monotone_data[tile].f_bar_max[n1] < TOLERANCE ) xdata[n] = monotone_data[tile].f_bar_max[n1];
+	    if( xdata[n] > monotone_data[tile].f_bar_max[n1]) {
+	      printf(" n = %d, n1 = %d, xdata = %f, f_bar_max=%f\n", n, n1, xdata[n], monotone_data[tile].f_bar_max[n1]);
+	      mpp_error(" xdata is greater than f_bar_max ");
+	    }
+	  }
+	}
+	else if( monotone_data[tile].f_min[n1] < monotone_data[tile].f_bar_min[n1] ) {
+	  /* z1l: Due to truncation error, we might get xdata[n] < f_bar_min[n1]. So
+	     we allow some tolerance. What is the suitable tolerance? */
+	  xdata[n] = f_bar + ((xdata[n]-f_bar)/(monotone_data[tile].f_min[n1]-f_bar)) * (monotone_data[tile].f_bar_min[n1]-f_bar);
+	  if( xdata[n] < monotone_data[tile].f_bar_min[n1]) {
+	    if(monotone_data[tile].f_bar_min[n1] - xdata[n]< TOLERANCE ) xdata[n] = monotone_data[tile].f_bar_min[n1];
+	    if( xdata[n] < monotone_data[tile].f_bar_min[n1]) {
+	      printf(" n = %d, n1 = %d, xdata = %f, f_bar_min=%f\n", n, n1, xdata[n], monotone_data[tile].f_bar_min[n1]);
+	      mpp_error(" xdata is less than f_bar_min ");
+	    }
+	  }	     
+	}
+      }
+      for(n=0; n<ntiles_in; n++) {	
+	free(monotone_data[n].f_bar_max);
+	free(monotone_data[n].f_bar_min);
+	free(monotone_data[n].f_max);
+	free(monotone_data[n].f_min);
+      }
+
+      /* remap onto destination grid */
+      for(n=0; n<interp[m].nxgrid; n++) {
+	i2   = interp[m].i_out[n];
+	j2   = interp[m].j_out[n];
+	i1   = interp[m].i_in [n];
+	j1   = interp[m].j_in [n];
+	tile = interp[m].t_in [n];
+	area = interp[m].area [n];
+	if(xdata[n] == missing) continue;
+	if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	n1 = j1*nx1+i1;
+	n0 = j2*nx2+i2;
+	if( cell_measures )
+	  area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	else if( cell_methods == CELL_METHODS_SUM )
+	  area /= grid_in[tile].cell_area[n1];	    
+	field_out[m].data[n0] += xdata[n]*area;
+	out_area[n0] += area;
+      }
+      free(xdata);
     }
     else {
       if(has_missing) {
