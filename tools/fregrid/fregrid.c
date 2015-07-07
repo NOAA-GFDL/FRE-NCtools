@@ -223,6 +223,8 @@ char *usage[] = {
   "                              bound name. The dimension of lon_bounds is (2,nlon) and ",
   "                              the dimension of lat_bounds is (2,nlat).                "
   "                                                                                      ",
+  "--associated_file_dir dir     Specify the path of the associated files                ",
+  "                                                                                      ",
   "--debug                       Will print out memory usage and running time            ",
   "                                                                                      ",
   "--nthreads #                  Specify number of OpenMP threads.                       ",
