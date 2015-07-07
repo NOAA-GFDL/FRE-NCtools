@@ -233,7 +233,7 @@ void mpp_min_double(int count, double *data)
   int i;
   double *minval;
   minval = (double *)malloc(count*sizeof(double));
-  MPI_Allreduce(data, minval, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(data, minval, count, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
   for(i=0; i<count; i++) data[i] = minval[i];
   free(minval);
 #endif
@@ -248,7 +248,7 @@ void mpp_max_double(int count, double *data)
   int i;
   double *maxval;
   maxval = (double *)malloc(count*sizeof(double));
-  MPI_Allreduce(data, maxval, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(data, maxval, count, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   for(i=0; i<count; i++) data[i] = maxval[i];
   free(maxval);
 #endif
