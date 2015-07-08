@@ -233,7 +233,7 @@ void mpp_min_double(int count, double *data)
   int i;
   double *minval;
   minval = (double *)malloc(count*sizeof(double));
-  MPI_Allreduce(data, minval, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(data, minval, count, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
   for(i=0; i<count; i++) data[i] = minval[i];
   free(minval);
 #endif
@@ -248,7 +248,7 @@ void mpp_max_double(int count, double *data)
   int i;
   double *maxval;
   maxval = (double *)malloc(count*sizeof(double));
-  MPI_Allreduce(data, maxval, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(data, maxval, count, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   for(i=0; i<count; i++) data[i] = maxval[i];
   free(maxval);
 #endif
@@ -313,6 +313,23 @@ double get_mem_usage(void)
 
  return mem;
  
+}
+
+void print_time(const char* text, double t)
+{
+  double tmin, tmax, tavg;
+  
+  tmin=t;
+  tmax=t;
+  tavg=t;
+  mpp_min_double(1, &tmin);
+  mpp_max_double(1, &tmax);
+  mpp_sum_double(1, &tavg);
+  tavg /= mpp_npes();
+  if( mpp_pe() == mpp_root_pe() ) {
+    printf("Running time for %s, min=%g, max=%g, avg=%g\n", text, tmin, tmax, tavg); 
+  }
+
 }
 
 

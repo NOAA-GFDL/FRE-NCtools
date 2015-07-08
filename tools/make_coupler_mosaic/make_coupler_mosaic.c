@@ -219,7 +219,7 @@ void get_global_data(const char *data_file, const char *fieldname, int nx, int n
   
 }
  
-void get_global_area(int nx, int ny, const double *x, const double *y, double *area)
+void get_grid_global_area(int nx, int ny, const double *x, const double *y, double *area)
 {
   double *x_local, *y_local, *area_local;  
   int nxc, nyc, isc, iec, jsc, jec;
@@ -571,7 +571,7 @@ int main (int argc, char *argv[])
     else {
       for(n=0; n<ntile_atm; n++) {
 	int i, j;      
-	get_global_area(nxa[n], nya[n], xatm[n], yatm[n], area_atm[n]);
+	get_grid_global_area(nxa[n], nya[n], xatm[n], yatm[n], area_atm[n]);
 	for(j=0; j<nya[n]; j++) for(i=0; i<nxa[n]; i++) {
 	  if(area_atm[n][j*nxa[n]+i] <= 0 ) printf("n=%d, i=%d, j=%d, area=%f\n",n,i,j,area_atm[n][j*nxa[n]+i]);
 	}
@@ -693,7 +693,7 @@ int main (int argc, char *argv[])
     }
     else {    
       for(n=0; n<ntile_lnd; n++) {      
-	get_global_area(nxl[n], nyl[n], xlnd[n], ylnd[n], area_lnd[n]);
+	get_grid_global_area(nxl[n], nyl[n], xlnd[n], ylnd[n], area_lnd[n]);
       }
     }
     mpp_close(m_fid);
@@ -853,7 +853,7 @@ int main (int argc, char *argv[])
     }
     else {
       for(n=0; n<ntile_ocn; n++) {
-        get_global_area(nxo[n], nyo[n], xocn[n], yocn[n], area_ocn[n]);
+        get_grid_global_area(nxo[n], nyo[n], xocn[n], yocn[n], area_ocn[n]);
       }
     }
     mpp_close(m_fid);
@@ -993,7 +993,7 @@ int main (int argc, char *argv[])
     }
     else {
       for(n=0; n<ntile_wav; n++) {
-        get_global_area(nxw[n], nyw[n], xwav[n], ywav[n], area_wav[n]);
+        get_grid_global_area(nxw[n], nyw[n], xwav[n], ywav[n], area_wav[n]);
       }
     }
     mpp_close(m_fid);  
