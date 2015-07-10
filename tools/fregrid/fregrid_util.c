@@ -1072,30 +1072,33 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    field[n].var[ll].area_has_taxis = 0;
 	}
 	 
-	/* get the interp_method from the field attribute if existing */
-	if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
-          char    remap_method[STRING] = "";
-	  mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
-          if(!strcmp(remap_method, "conserve_order1") ) {
-	    use_conserve = 1;
-	    field[n].var[ll].interp_method = CONSERVE_ORDER1;
-	  }
-	  else if(!strcmp(remap_method, "conserve_order2") ) {
-	    use_conserve = 1;
-	    field[n].var[ll].interp_method = CONSERVE_ORDER2;
-	  }
-	  else if(!strcmp(remap_method, "bilinear") ) {
-	    use_bilinear = 1;
-	    field[n].var[ll].interp_method = BILINEAR;
-	  }
-	  else {
-	    sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
-		    "is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
-		    field[n].var[ll].name, remap_method);
-      	    mpp_error(errmsg);
+	/* get the interp_method from the field attribute if existing 
+           when interp_method is not conserve_order2_monotonic
+        */
+        if( !(opcode & MONOTONIC) ) {
+	  if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
+            char    remap_method[STRING] = "";
+	    mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
+            if(!strcmp(remap_method, "conserve_order1") ) {
+  	      use_conserve = 1;
+  	      field[n].var[ll].interp_method = CONSERVE_ORDER1;
+	    }
+  	    else if(!strcmp(remap_method, "conserve_order2") ) {
+	      use_conserve = 1;
+	      field[n].var[ll].interp_method = CONSERVE_ORDER2;
+	    }
+	    else if(!strcmp(remap_method, "bilinear") ) {
+	      use_bilinear = 1;
+	      field[n].var[ll].interp_method = BILINEAR;
+	    }
+	    else {
+	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
+ 		      "is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
+		      field[n].var[ll].name, remap_method);
+      	      mpp_error(errmsg);
+	    }
 	  }
 	}
-	
 	ndim = mpp_get_var_ndim(file[n].fid, field[n].var[ll].vid);
 	if(ndim <2 || ndim>5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no less than 2 and no larger than 5");	
 	for(i=0; i<ndim; i++) {
