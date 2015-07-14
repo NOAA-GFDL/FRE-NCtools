@@ -958,8 +958,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	  else
 	    field[n].var[ll].cell_measures=0;
 	  if(field[n].var[ll].cell_measures==1) {
-            char associated_file[512];
-	    	    
+            char associated_file[512], dimname[32];
+	    int vid2;
+	    char cart;
 	    /* make sure field[n].var[ll].area_name exist in the current file or associated file */
 	    if( mpp_var_exist(file[n].fid, field[n].var[ll].area_name) ) {
               strcpy(associated_file, file[n].name );
@@ -967,6 +968,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
             }
             else {
 	      char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
+
               /* check if the variable is in associated_files or not */
               if( !mpp_global_att_exist(file[n].fid, "associated_files") ) {
                  sprintf(errmsg, "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
@@ -1034,25 +1036,46 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    /* get the vid of area_name and check if area_name is time dependent or not */
 	    field[n].var[ll].area_vid = mpp_get_varid(field[n].var[ll].area_fid, field[n].var[ll].area_name);
 	    ndim = mpp_get_var_ndim(field[n].var[ll].area_fid, field[n].var[ll].area_vid);
-	    if(ndim == 2) {
-	      field[n].var[ll].area_has_taxis = 0;
-	    }
-	    else if( ndim == 3 ) {
-	      char dimname[32];
-	      char cart;
-	      int  vid2;
-	      /* make sure the first dimension is T-axis */
-	      mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
-	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
-	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
-	      if( cart != 'T' ) {
-		sprintf(errmsg, "fregrid_util.c: The cartesian should be 'T' for field %s in file %s", dimname, associated_file);
+	    /* check if it has T-axis */
+	    mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+	    vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+	    cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+    
+	    if( cart == 'T' ) {
+	      if(ndim <=2) {
+		sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s has t-axis and <3" ,
+		      field[n].var[ll].area_name, associated_file );
 		mpp_error(errmsg);
 	      }
 	      field[n].var[ll].area_has_taxis = 1;
 	    }
 	    else {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s should be 2 or 3" ,
+	      field[n].var[ll].area_has_taxis = 0;
+	    }
+	    /* check if has n-axis (diurnal data). */
+	    field[n].var[ll].area_has_naxis = 0;
+	    if(ndim>2) {
+	      if(field[n].var[ll].area_has_taxis)
+		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 1, dimname);
+	      else
+		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+	      if(cart == 'N') {
+		field[n].var[ll].area_has_naxis = 1;
+		if(ndim==3 && field[n].var[ll].area_has_taxis) {
+		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis=T for field %s in file %s",
+			  field[n].var[ll].area_name, associated_file );
+		}
+		else if(ndim==4 && !field[n].var[ll].area_has_taxis) {
+		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
+			  field[n].var[ll].area_name, associated_file );
+		}  
+	      }
+            }
+
+	    if(ndim>4) {
+	      sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s > 4" ,
 		      field[n].var[ll].area_name, associated_file );
 	      mpp_error(errmsg);
 	    }
@@ -1889,7 +1912,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
   Data_holder *dHold;
   int         interp_method;
   double      missing_value;
-  size_t      start2[3], nread2[3];
+  size_t      start2[4], nread2[4];
   
   missing_value = field->var[varid].missing;
   interp_method = field->var[varid].interp_method;
@@ -1995,9 +2018,10 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
       if( !field[n].area ) {
 	field[n].area = (double *) malloc(nx*ny*sizeof(double));
       }
-      for(i=0; i<3; i++) { start2[i] = 0; nread2[i] = 1; }
+      for(i=0; i<4; i++) { start2[i] = 0; nread2[i] = 1; }
       i = 0;
       if(field[n].var[varid].area_has_taxis) start2[i++] = level_t;
+      if(field[n].var[varid].area_has_naxis) start2[i++] = level_n;
       nread2[i] = ny;
       nread2[i+1] = nx;
       mpp_get_var_value_block(field[n].var[varid].area_fid, field[n].var[varid].area_vid, start2, nread2, field[n].area );
