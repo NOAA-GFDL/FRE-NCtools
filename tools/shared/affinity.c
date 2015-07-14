@@ -20,6 +20,7 @@ static pid_t gettid(void)
  */
 int get_cpu_affinity(void)
 {
+#ifdef use_libMPI
   cpu_set_t coremask;		/* core affinity mask */
 
   CPU_ZERO(&coremask);
@@ -41,6 +42,10 @@ int get_cpu_affinity(void)
   }
 
   return (last_cpu == -1) ? first_cpu : -1;
+#else
+  return 0;
+#endif
+
 }
 
 int get_cpu_affinity_(void) { return get_cpu_affinity(); }	/* Fortran interface */
