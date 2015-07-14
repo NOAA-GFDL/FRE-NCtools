@@ -69,6 +69,7 @@ typedef struct {
   int    area_vid;
   int    area_fid;
   int    area_has_taxis;
+  int    area_has_naxis;
   double area_missing;
   char   area_name[STRING];
   
