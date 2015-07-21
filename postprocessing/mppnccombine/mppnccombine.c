@@ -150,7 +150,7 @@ struct fileinfo
 void usage();
 int process_file(char *, unsigned char, struct fileinfo *, char *, int *,
                  int *, int *, int*, int, int, int, unsigned char,
-                 unsigned char);
+                 unsigned char,int,int,int);
 int process_vars(struct fileinfo *, struct fileinfo *, unsigned char, int *,
                  int *, int*, int, int, int, unsigned char, unsigned char);
 int flush_decomp(struct fileinfo *, int, int, int, unsigned char);
@@ -231,6 +231,9 @@ int main(int argc, char *argv[])
    int nblocks=1; /* nblocks=nrecs/bf = number of iterations of outer loop */
    int peWidth = -1; /* Width of PE number in uncombined file extension */
    size_t blksz=65536; /* netCDF block size */
+   int deflate=0; /* do not deflate by default */
+   int deflation=-1; /* do not deflate by default */
+   int shuffle=0;
 
    /* Check the command-line arguments */
    if (argc < 2)
@@ -300,6 +303,20 @@ int main(int argc, char *argv[])
       else if (!strcmp(argv[a], "-n4"))
 	format=(NC_NOCLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
       else if (!strcmp(argv[a],"-m")) missing=1;
+      else if (!strcmp(argv[a], "-d"))
+	{
+	  a++;
+	  if ( a < argc) 
+	    {
+	      deflate = 1;
+	      deflation = atoi(argv[a]);
+	    }
+	  else
+	    {
+	      usage(); return(1);
+	    }
+	}
+      else if (!strcmp(argv[a],"-s")) shuffle=1;
       else
         {
          outputarg=a; break;
@@ -409,7 +426,7 @@ int main(int argc, char *argv[])
                 }
               infileerror=process_file(infilename,appendnc,ncoutfile,
                                        outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                       headerpad,verbose,missing);
+                                       headerpad,verbose,missing,deflate,deflation,shuffle);
               if (infileerror) infileerrors=1;
               appendnc=1; f++;
               if (f==nfiles || a==nend)
@@ -488,7 +505,7 @@ int main(int argc, char *argv[])
                  }
                infileerror=process_file(infilename,appendnc,ncoutfile,
                                         outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                        headerpad,verbose,missing);
+                                        headerpad,verbose,missing,deflate,deflation,shuffle);
                if (infileerror) infileerrors=1;
                if (a==nstart && nfiles > 0) nend=nstart+nfiles;
                appendnc=1; f++;
@@ -541,7 +558,7 @@ int main(int argc, char *argv[])
            }
            infileerror=process_file(argv[a],appendnc,ncoutfile,
                                     outfilename,&nfiles,&nrecs,&nblocks,&bf,block,f,
-                                    headerpad,verbose,missing);
+                                    headerpad,verbose,missing,deflate,deflation,shuffle);
            if (infileerror) infileerrors=1;
            appendnc=1; f++;
            if (f==nfiles || a==(argc-1))
@@ -628,7 +645,7 @@ int main(int argc, char *argv[])
 void usage()
   {
    printf("mppnccombine %s - (written by Hans.Vahlenkamp@noaa.gov)\n\n", version);
-   printf("Usage:  mppnccombine [-v] [-V] [-M] [-a] [-r] [-n #] [-k #] [-e #] [-h #] [-64] [-n4] [-m]\n");
+   printf("Usage:  mppnccombine [-v] [-V] [-M] [-a] [-r] [-n #] [-k #] [-e #] [-h #] [-64] [-n4 [-d #] [-s]] [-m]\n");
    printf("                     output.nc [input ...]\n\n");
    printf("  -v    Print some progress information.\n");
    printf("  -V    Print version information.\n");
@@ -655,6 +672,8 @@ void usage()
    printf("  -h #  Add a specified number of bytes of padding at the end of the header.\n");
    printf("  -64   Create netCDF output files with the 64-bit offset format.\n");
    printf("  -n4   Create netCDF output files in NETCDF4_CLASSIC mode (no v4 enhanced features).\n");
+   printf("  -d #  When in NETCDF4 mode, use deflation of level #.\n");
+   printf("  -s    When in NETCDF4 mode, use shuffle.\n");
    printf("  -m    Initialize output variables with a \"missing_value\" from the variables\n");
    printf("        of the first input file instead of the default 0 value.\n");
    printf("  -x    Print an estimate for peak memory resident size in (MB) and exit.\n");
@@ -691,7 +710,7 @@ inline int min(int a, int b)
 int process_file(char *ncname, unsigned char appendnc,
                  struct fileinfo *ncoutfile, char *outncname, int *nfiles,
                  int *nrecs, int *nblocks, int *bf, int block, int f, int headerpad,
-                 unsigned char verbose, unsigned char missing)
+                 unsigned char verbose, unsigned char missing, int deflate, int deflation, int shuffle)
   {
    struct fileinfo *ncinfile;  /* Information about an input netCDF file */
    int nfiles2;  /* Number of files in the decomposed domain */
@@ -890,6 +909,19 @@ int process_file(char *ncname, unsigned char appendnc,
               }
            }
         }
+
+      if (deflate==1 && deflation>0)
+	{
+	  for (v=0; v < ncinfile->nvars; v++)
+	    {
+	      if ( nc_def_var_deflate(ncoutfile->ncfid,v,shuffle,deflate,deflation) != NC_NOERR ) 
+		{
+		  fprintf(stderr,"Error: nc_def_var_deflate failed! Are you setting NETCDF4?\n");
+		  usage();
+		}
+	    }
+	}
+
 
       /* Definitions done */
       nc__enddef(ncoutfile->ncfid,headerpad,4,0,4);
