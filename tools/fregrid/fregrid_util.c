@@ -155,7 +155,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 
   read_tgrid = 1;
   if(save_weight_only || (opcode & CONSERVE_ORDER1) ) read_tgrid = 0;
-  
+  if(opcode & EXTRAPOLATE ) read_tgrid = 1;
   bound_C = (Bound_config *)malloc(ntiles*sizeof(Bound_config));
   nx = (int *)malloc(ntiles * sizeof(int) );
   ny = (int *)malloc(ntiles * sizeof(int) );
