@@ -979,7 +979,13 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
 	      sprintf(name, "%s:", field[n].var[ll].area_name);
               status = parse_string(globalatt, name, file2, errout);
-	      if(status==-1) {
+	      if(status==0) {
+		sprintf(errmsg, "fregrid_util(get_input_metadata): global sttribute associated_files "
+			"does not contains string %s in file %s",
+			name, file[n].name );
+		mpp_error(errmsg);
+	      }
+	      else if(status==-1) {
 		sprintf(errmsg, "fregrid_util(get_input_metadata): %s for associated_files "
 			"global attribute in file %s", errout, file[n].name );
 		mpp_error(errmsg);
