@@ -41,7 +41,7 @@ void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, 
   size_t start[4], nread[4];
 
   len = strlen(filename); 
-  if( strstr(filename, ".nc") ) 
+  if( strcmp(filename+len-3, ".nc") ==0 ) 
     strncpy(str1, filename, len-3);
   else
     strcpy(str1, filename);
@@ -1005,7 +1005,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                  }
 
 		 len = strlen(file1);
-		 if( strstr(file1, ".nc") ) {
+		 if( strcmp(file1+len-3, ".nc") ==0 ) {
 		    strncpy(str1, file1, len-3);
 		    str1[len-3] = '\0';
 		 }
@@ -1826,7 +1826,7 @@ void set_remap_file( int ntiles, const char *mosaic_file, const char *remap_file
   
   len = strlen(remap_file);
   if(len >= STRING) mpp_error("setoutput_remap_file(fregrid_util): length of remap_file should be less than STRING");  
-  if( strstr(remap_file, ".nc") ) {
+  if( strcmp(remap_file+len-3, ".nc")==0 ) {
     strncpy(str1, remap_file, len-3);
     str1[len-3] = 0;
   }
