@@ -902,6 +902,36 @@ void mpp_def_var_att(int fid, int vid, const char *attname, const char *attval)
   
 } /* mpp_def_var_att */
 
+
+
+/**********************************************************************
+void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval)
+ define one field double attribute
+*********************************************************************/
+void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval)
+{
+  int ncid, fldid, status;
+  char errmsg[512];
+  
+  if( mpp_pe() != mpp_root_pe() ) return;
+
+  if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_var_att): invalid fid number, fid should be "
+				      "a nonnegative integer that less than nfiles");
+  if(vid<0 || vid >=files[fid].nvar) mpp_error("mpp_io(mpp_def_var_att): invalid vid number, vid should be "
+					       "a nonnegative integer that less than nvar");
+  ncid  = files[fid].ncid;
+  fldid = files[fid].var[vid].fldid;
+  status = nc_put_att_double(ncid,fldid,attname,NC_DOUBLE,1,&attval);
+  if(status != NC_NOERR ) {
+    sprintf(errmsg, "mpp_io(mpp_def_var_att_double): Error in put attribute %s of var %s of file %s",
+	    attname, files[fid].var[vid].name, files[fid].name );
+    netcdf_error(errmsg, status);
+  }
+  
+} /* mpp_def_var_att_double */
+
+
+
 /**********************************************************************
   void mpp_copy_var_att(fid_in, fid_out)
   copy all the field attribute from infile to outfile

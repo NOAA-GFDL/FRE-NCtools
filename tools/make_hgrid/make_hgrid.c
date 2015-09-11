@@ -31,6 +31,7 @@ const int STRINGLEN = 255;
 #define GNOMONIC_ED            7
 #define F_PLANE_GRID           8
 #define BETA_PLANE_GRID        9
+#define MISSING_VALUE           (-9999.)
 int my_grid_type = 0;
 
 char *usage[] = {
@@ -52,7 +53,7 @@ char *usage[] = {
   "                  --do_schmidt --stretch_fac # --target_lon # --target_lat #     ",
   "                  --nest_grid --parent_tile # --refine_ratio # --halo #          ",
   "                  --istart_nest # --iend_nest # --jstart_nest # --jend_nest #    ",
-  "                  --great_circle_algorithm                                       ",
+  "                  --great_circle_algorithm --out_halo #                          ",
   "                                                                                 ",
   "   This program can generate different types of horizontal grid. The             ",
   "   output data is on supergrid ( model grid size x refinement(=2) ).  For        ",
@@ -215,7 +216,10 @@ char *usage[] = {
   "                                                                                 ",
   "   --great_circle_algorithm   When specified, great_circle_algorithm will be     ",
   "                              used to compute grid cell area.                    ",
-  "                                                                                 ",  
+  "                                                                                 ",
+  "   --out_halo #               extra halo size data to be written out. This is    ",
+  "                              only works for gnomonic_ed.                        ",
+  "                                                                                 ",
   "   --verbose                  Will print out running time message when this      ",
   "                              option is set. Otherwise the run will be silent    ",
   "                              when there is no error.                            ",
@@ -324,6 +328,60 @@ char *usage[] = {
 char grid_version[] = "0.2";
 char tagname[] = "$Name: fre-nctools-bronx-10 $";
 
+
+void fill_cubic_grid_halo(int nx, int ny, int halo, double *data, double *data1_all,
+			  double *data2_all, int tile, int ioff, int joff)
+{
+  int lw, le, ls, ln;
+  int ntiles,nxp,nyp,nxph,nyph,i,j;
+
+  
+  nxp = nx+ioff;
+  nyp = ny+joff;
+  nxph = nx+ioff+2*halo;
+  nyph = ny+joff+2*halo;
+  
+  for(i=0; i<nxph*nyph; i++) data[i] = MISSING_VALUE;
+  
+  /* first copy computing domain data */
+  for(j=1; j<=nyp; j++)
+    for(i=1; i<=nxp; i++)
+      data[j*nxph+i] = data1_all[(j-1)*nxp+(i-1)];
+  
+  ntiles=6;
+  if(tile%2 == 1) { /* tile 2, 4, 6 */
+    lw = (tile+ntiles-1)%ntiles;
+    le = (tile+ntiles+2)%ntiles;
+    ls = (tile+ntiles-2)%ntiles;
+    ln = (tile+ntiles+1)%ntiles;
+    for(j=1; j<=nyp; j++) {
+      data[j*nxph] = data1_all[lw*nxp*nyp+(j-1)*nxp+nx]; /* west halo */
+      data[j*nxph+nxp+1] = data2_all[le*nxp*nyp+ioff*nxp+nyp-j]; /*east halo */
+    }
+
+    for(i=1; i<=nxp; i++) {
+      data[i] = data2_all[ls*nxp*nyp+(nxp-i)*nxp+(nx-1)]; /*south */
+      data[(nyp+1)*nxph+i] = data1_all[ln*nxp*nyp+joff*nxp+i-1]; /*north */
+    }
+  }
+  else { /* tile 1, 3, 5 */
+    lw = (tile+ntiles-2)%ntiles;
+    le = (tile+ntiles+1)%ntiles;
+    ls = (tile+ntiles-1)%ntiles;
+    ln = (tile+ntiles+2)%ntiles;
+    for(j=1; j<=nyp; j++) {
+      data[j*nxph] = data2_all[lw*nxp*nyp+(ny-1)*nxp+nyp-j]; /* west halo */
+      data[j*nxph+nxp+1] = data1_all[le*nxp*nyp+(j-1)*nxp+joff]; /*east halo */
+    }
+
+    for(i=1; i<=nxp; i++) {
+      data[i] = data1_all[ls*nxp*nyp+(ny-1)*nxp+i-1]; /*south */
+      data[(nyp+1)*nxph+i] = data2_all[ln*nxp*nyp+(nxp-i)*nxp+joff]; /*north */
+    }    
+
+  }
+}
+
 int main(int argc, char* argv[])
 {
   int  nratio = 1;
@@ -351,6 +409,7 @@ int main(int argc, char* argv[])
   int    jstart_nest  = 0;
   int    jend_nest    = 0;
   int    halo = 0;
+  int    out_halo=0;
   int    present_stretch_factor = 0;
   int    present_target_lon = 0;
   int    present_target_lat = 0;
@@ -410,7 +469,8 @@ int main(int argc, char* argv[])
     {"jend_nest",       required_argument, NULL, 'G'},
     {"halo",            required_argument, NULL, 'H'},
     {"shift_fac",       required_argument, NULL, 'I'},
-    {"great_circle_algorithm", no_argument, NULL, 'J'},    
+    {"great_circle_algorithm", no_argument, NULL, 'J'},
+    {"out_halo",        required_argument, NULL, 'K'},
     {"help",            no_argument,       NULL, 'h'},
     {"verbose",         no_argument,       NULL, 'v'},
     {0, 0, 0, 0},
@@ -534,6 +594,9 @@ int main(int argc, char* argv[])
     case 'J':
       use_great_circle_algorithm = 1;
       break;
+    case 'K':
+      out_halo = atoi(optarg);
+      break;      
     case 'v':
       verbose = 1;
       break;
@@ -584,6 +647,11 @@ int main(int argc, char* argv[])
 	      "'gnomonic_ed', 'conformal_cubic_grid', 'simple_cartesian_grid', "
               "'spectral_grid', 'f_plane_grid' and 'beta_plane_grid' is implemented");  
 
+  if(my_grid_type != GNOMONIC_ED && out_halo  != 0)
+    mpp_error("make_hgrid: out_halo should not be set when grid_type = gnomonic_ed");
+  if(out_halo !=0 && out_halo != 1)
+    mpp_error("make_hgrid: out_halo should be 0 or 1");
+  
  if( my_grid_type != GNOMONIC_ED && do_schmidt )
     mpp_error("make_hgrid: --do_schmidt should not be set when grid_type is not 'gnomonic_ed'");
   
@@ -885,10 +953,10 @@ int main(int argc, char* argv[])
       nxp = nx+1;
       nyp = ny+1;
       dimlist[0] = mpp_def_dim(fid, "string", STRINGLEN);
-      dimlist[1] = mpp_def_dim(fid, "nx", nx);
-      dimlist[2] = mpp_def_dim(fid, "ny", ny);
-      dimlist[3] = mpp_def_dim(fid, "nxp", nxp);
-      dimlist[4] = mpp_def_dim(fid, "nyp", nyp);
+      dimlist[1] = mpp_def_dim(fid, "nx", nx+2*out_halo);
+      dimlist[2] = mpp_def_dim(fid, "ny", ny+2*out_halo);
+      dimlist[3] = mpp_def_dim(fid, "nxp", nxp+2*out_halo);
+      dimlist[4] = mpp_def_dim(fid, "nyp", nyp+2*out_halo);
       /* define variable */
       if( strcmp(north_pole_tile, "none") == 0) /* no north pole, then no projection */
 	id_tile = mpp_def_var(fid, "tile", MPP_CHAR, 1, dimlist, 4, "standard_name", "grid_tile_spec",
@@ -904,24 +972,32 @@ int main(int argc, char* argv[])
       
       dims[0] = dimlist[4]; dims[1] = dimlist[3];
       id_x = mpp_def_var(fid, "x", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_longitude",
-			 "units", "degree_east");
+        		 "units", "degree_east");
+      if(out_halo>0) mpp_def_var_att_double(fid, id_x, "_FillValue", MISSING_VALUE);
       id_y = mpp_def_var(fid, "y", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_latitude",
 			 "units", "degree_north");
+      if(out_halo>0) mpp_def_var_att_double(fid, id_y, "_FillValue", MISSING_VALUE);
       dims[0] = dimlist[4]; dims[1] = dimlist[1];
       id_dx = mpp_def_var(fid, "dx", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_x_distance",
 			  "units", "meters");
+      if(out_halo>0) mpp_def_var_att_double(fid, id_dx, "_FillValue", MISSING_VALUE);
       dims[0] = dimlist[2]; dims[1] = dimlist[3];
       id_dy = mpp_def_var(fid, "dy", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_y_distance",
 			  "units", "meters");
+      if(out_halo>0) mpp_def_var_att_double(fid, id_dy, "_FillValue", MISSING_VALUE);
       dims[0] = dimlist[2]; dims[1] = dimlist[1];
       id_area = mpp_def_var(fid, "area", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_cell_area",
 			    "units", "m2" );
+      if(out_halo>0) mpp_def_var_att_double(fid, id_area, "_FillValue", MISSING_VALUE);
       dims[0] = dimlist[4]; dims[1] = dimlist[3];
       id_angle_dx = mpp_def_var(fid, "angle_dx", MPP_DOUBLE, 2, dims, 2, "standard_name",
 				    "grid_vertex_x_angle_WRT_geographic_east", "units", "degrees_east");
-      if(strcmp(conformal, "true") != 0)
+      if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dx, "_FillValue", MISSING_VALUE);
+      if(strcmp(conformal, "true") != 0) {
 	id_angle_dy = mpp_def_var(fid, "angle_dy", MPP_DOUBLE, 2, dims, 2, "standard_name",
 				  "grid_vertex_y_angle_WRT_geographic_north", "units", "degrees_north");
+	if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dy, "_FillValue", MISSING_VALUE);
+      }
       if( strcmp(north_pole_arcx, "none") == 0)
 	id_arcx = mpp_def_var(fid, "arcx", MPP_CHAR, 1, dimlist, 1, "standard_name", "grid_edge_x_arc_type" );
       else
@@ -938,14 +1014,39 @@ int main(int argc, char* argv[])
       nwrite[0] = strlen(tilename);
       mpp_put_var_value_block(fid, id_tile, start, nwrite, tilename );
 
-      mpp_put_var_value(fid, id_x, x+pos_c);
-      mpp_put_var_value(fid, id_y, y+pos_c);
-      mpp_put_var_value(fid, id_dx, dx+pos_n);
-      mpp_put_var_value(fid, id_dy, dy+pos_e);
-      mpp_put_var_value(fid, id_area, area+pos_t);
-      mpp_put_var_value(fid, id_angle_dx, angle_dx+pos_c);
-      if(strcmp(conformal, "true") != 0) mpp_put_var_value(fid, id_angle_dy, angle_dy+pos_c);
-	  
+      if(out_halo ==0) {
+        mpp_put_var_value(fid, id_x, x+pos_c);
+	mpp_put_var_value(fid, id_y, y+pos_c);
+	mpp_put_var_value(fid, id_dx, dx+pos_n);
+	mpp_put_var_value(fid, id_dy, dy+pos_e);
+	mpp_put_var_value(fid, id_area, area+pos_t);
+	mpp_put_var_value(fid, id_angle_dx, angle_dx+pos_c);
+	if(strcmp(conformal, "true") != 0) mpp_put_var_value(fid, id_angle_dy, angle_dy+pos_c);
+      }
+      else {
+	double *tmp;
+
+	tmp = (double *)malloc((nxp+2*out_halo)*(nyp+2*out_halo)*sizeof(double));
+	fill_cubic_grid_halo(nx,ny,out_halo,tmp,x,x,n,1,1);
+	mpp_put_var_value(fid, id_x, tmp);
+	fill_cubic_grid_halo(nx,ny,out_halo,tmp,y,y,n,1,1);
+	mpp_put_var_value(fid, id_y, tmp);
+        fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dx,angle_dx,n,1,1);
+	mpp_put_var_value(fid, id_angle_dx, tmp);
+	if(strcmp(conformal, "true") != 0) {
+	  fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dy,angle_dy,n,1,1);
+	mpp_put_var_value(fid, id_angle_dy, tmp);
+	}
+	
+        fill_cubic_grid_halo(nx,ny,out_halo,tmp,dx,dy,n,0,1);
+	mpp_put_var_value(fid, id_dx, tmp);
+        fill_cubic_grid_halo(nx,ny,out_halo,tmp,dy,dx,n,1,0);
+	mpp_put_var_value(fid, id_dy, tmp);
+        fill_cubic_grid_halo(nx,ny,out_halo,tmp,area,area,n,0,1);
+	mpp_put_var_value(fid, id_area, tmp);
+	free(tmp);
+      }
+	
       nwrite[0] = strlen(arcx);
       mpp_put_var_value_block(fid, id_arcx, start, nwrite, arcx );
       mpp_close(fid);
