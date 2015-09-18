@@ -17,6 +17,9 @@ char *usage[] = {
   "",
   "  make_quick_mosaic --input_mosaic input_mosaic.nc [--mosaic_name mosaic_name]",
   "                    [--ocean_topog ocean_topog.nc] [--sea_level #]            ",
+  "                    [--reproduce_siena] [--land_frac_file frac_file]          ",
+  "                    [--land_frac_field frac_field]                            ",
+  " ",
   "make_quick_mosaic generate a complete grid a FMS coupler. When --ocean_topog  ",
   "is not specified, it takes a coupled mosaic as input_mosaic. Otherwise it     ",
   "takes a solo mosaic as input_mosaic. The atmosphere, ocean and land grid will ",
@@ -44,6 +47,8 @@ char *usage[] = {
   "                              it will be ocean. Default value is 0.           ",
   "--land_frac_file frac_file  : land fraction file.                             ",
   "--land_frac_field frac_field: land fraction field.                            ",
+  " ",
+  "--reproduce_siena              Set to reproduce siena shared codes results    ",
   " ",
   "",
   NULL };
@@ -87,6 +92,7 @@ int main (int argc, char *argv[])
   char *land_frac_file=NULL;
   char *land_frac_field=NULL;
   double sea_level = 0.;
+  int    reproduce_siena=0;
   char mosaic_name[STRING] = "mosaic", mosaic_file[STRING];
   char griddir[STRING], solo_mosaic[STRING], filepath[STRING];
   char solo_mosaic_full_path[STRING] = "./";
@@ -107,6 +113,7 @@ int main (int argc, char *argv[])
     {"ocean_topog",        required_argument, NULL, 'o'},
     {"land_frac_file",     required_argument, NULL, 'l'},
     {"land_frac_field",    required_argument, NULL, 'f'},
+    {"reproduce_siena",      no_argument,     NULL, 'q'},
     {NULL, 0, NULL, 0}
   };
 
@@ -135,6 +142,9 @@ int main (int argc, char *argv[])
     case 'f':
       land_frac_field = optarg;
       break;      
+    case 'q':
+      reproduce_siena = 1;
+      break;
     case '?':
       errflg++;
     }
@@ -175,6 +185,9 @@ int main (int argc, char *argv[])
       mpp_error("make_quick_mosaic: field lnd_mosaic_file does not exist in input_mosaic");
     }
   }
+
+  if(reproduce_siena) set_reproduce_siena_true();
+
   /* First get land grid information */
   
   mpp_init(&argc, &argv);

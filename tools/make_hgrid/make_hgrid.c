@@ -346,7 +346,7 @@ void fill_cubic_grid_halo(int nx, int ny, int halo, double *data, double *data1_
   /* first copy computing domain data */
   for(j=1; j<=nyp; j++)
     for(i=1; i<=nxp; i++)
-      data[j*nxph+i] = data1_all[(j-1)*nxp+(i-1)];
+      data[j*nxph+i] = data1_all[tile*nxp*nyp+(j-1)*nxp+(i-1)];
   
   ntiles=6;
   if(tile%2 == 1) { /* tile 2, 4, 6 */
@@ -355,12 +355,12 @@ void fill_cubic_grid_halo(int nx, int ny, int halo, double *data, double *data1_
     ls = (tile+ntiles-2)%ntiles;
     ln = (tile+ntiles+1)%ntiles;
     for(j=1; j<=nyp; j++) {
-      data[j*nxph] = data1_all[lw*nxp*nyp+(j-1)*nxp+nx]; /* west halo */
+      data[j*nxph] = data1_all[lw*nxp*nyp+(j-1)*nxp+nx-1]; /* west halo */
       data[j*nxph+nxp+1] = data2_all[le*nxp*nyp+ioff*nxp+nyp-j]; /*east halo */
     }
 
     for(i=1; i<=nxp; i++) {
-      data[i] = data2_all[ls*nxp*nyp+(nxp-i)*nxp+(nx-1)]; /*south */
+      data[i] = data2_all[ls*nxp*nyp+(nxp-i)*nyp+(nx-1)]; /*south */
       data[(nyp+1)*nxph+i] = data1_all[ln*nxp*nyp+joff*nxp+i-1]; /*north */
     }
   }
@@ -371,12 +371,12 @@ void fill_cubic_grid_halo(int nx, int ny, int halo, double *data, double *data1_
     ln = (tile+ntiles+2)%ntiles;
     for(j=1; j<=nyp; j++) {
       data[j*nxph] = data2_all[lw*nxp*nyp+(ny-1)*nxp+nyp-j]; /* west halo */
-      data[j*nxph+nxp+1] = data1_all[le*nxp*nyp+(j-1)*nxp+joff]; /*east halo */
+      data[j*nxph+nxp+1] = data1_all[le*nxp*nyp+(j-1)*nxp+ioff]; /*east halo */
     }
 
     for(i=1; i<=nxp; i++) {
       data[i] = data1_all[ls*nxp*nyp+(ny-1)*nxp+i-1]; /*south */
-      data[(nyp+1)*nxph+i] = data2_all[ln*nxp*nyp+(nxp-i)*nxp+joff]; /*north */
+      data[(nyp+1)*nxph+i] = data2_all[ln*nxp*nyp+(nxp-i)*nyp+joff]; /*north */
     }    
 
   }
@@ -1042,7 +1042,7 @@ int main(int argc, char* argv[])
 	mpp_put_var_value(fid, id_dx, tmp);
         fill_cubic_grid_halo(nx,ny,out_halo,tmp,dy,dx,n,1,0);
 	mpp_put_var_value(fid, id_dy, tmp);
-        fill_cubic_grid_halo(nx,ny,out_halo,tmp,area,area,n,0,1);
+        fill_cubic_grid_halo(nx,ny,out_halo,tmp,area,area,n,0,0);
 	mpp_put_var_value(fid, id_area, tmp);
 	free(tmp);
       }
