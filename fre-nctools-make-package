@@ -116,6 +116,7 @@ cp share/src/postprocessing/split_ncvars/varlist.csh $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/split_into_months.csh $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/split_ncvars_plevel.sh $tmpDir/share/bin
 cp share/src/postprocessing/timavg/timavg.csh $tmpDir/share/bin
+cp share/src/postprocessing/iceberg_comb/iceberg_comb.sh $tmpDir/share/bin
 
 echo "Done..."
 
