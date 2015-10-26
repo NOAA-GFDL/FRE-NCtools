@@ -112,9 +112,8 @@ mkdir -p share/bin
 cp share/src/postprocessing/list_ncvars/list_ncvars.csh $tmpDir/share/bin
 cp share/src/postprocessing/plevel/plevel.sh $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/split_ncvars.csh $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/split_ncvars.py $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/varlist.csh $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/split_into_months.csh $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/split_ncvars_plevel.sh $tmpDir/share/bin
 cp share/src/postprocessing/timavg/timavg.csh $tmpDir/share/bin
 
 echo "Done..."
