@@ -926,7 +926,7 @@ void mpp_set_deflation(int fid_in, int fid_out, int deflation, int shuffle) {
         netcdf_error(errmsg, status);
     }
     printf("Input: filename=%s, nvar=%i, format=%i\n", files[fid_in].name, files[fid_in].nvar, format);
-    if (format < 3) {
+    if (format == NC_FORMAT_CLASSIC || format == NC_FORMAT_64BIT) {
         printf("Not compressing because input file is NetCDF3\n");
         return;
     }
