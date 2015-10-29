@@ -518,12 +518,12 @@ int main(int argc, char* argv[])
     case 'R':
       associated_file_dir = optarg;
       break;
-    case 'S'
+    case 'S':
       deflation = atoi(optarg);
       break;
     case 'T':
       shuffle = atoi(optarg);
-	break
+	break;
     case '?':
       errflg++;
       break;
