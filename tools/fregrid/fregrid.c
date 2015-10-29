@@ -664,6 +664,8 @@ int main(int argc, char* argv[])
   else 
     y_at_center = 1;
 
+  if(extrapolate) opcode |= EXTRAPOLATE;
+  
   /* memory allocation for data structure */
   grid_in   = (Grid_config *)malloc(ntiles_in *sizeof(Grid_config));
   grid_out  = (Grid_config *)malloc(ntiles_out*sizeof(Grid_config));

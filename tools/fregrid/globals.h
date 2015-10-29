@@ -39,6 +39,7 @@
 #define GREAT_CIRCLE    4096
 #define STANDARD_DIMENSION 8192
 #define MONOTONIC       16384
+#define EXTRAPOLATE     32768
 
 /* constant for cell_methods */
 #define CELL_METHODS_MEAN  0
