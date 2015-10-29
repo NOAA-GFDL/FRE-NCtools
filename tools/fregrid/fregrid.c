@@ -582,6 +582,11 @@ int main(int argc, char* argv[])
     else if(grid_type == BGRID)
       opcode |= BGRID;
   }
+
+  if (shuffle < -1 || shuffle > 1)
+    mpp_error("fregrid: shuffle must be 0 (off) or 1 (on)");
+  if (deflation < -1 || deflation > 9)
+    mpp_error("fregrid: deflation must be between 0 (off) and 9");
   
   /* define history to be the history in the grid file */
   strcpy(history,argv[0]);
@@ -768,7 +773,7 @@ int main(int argc, char* argv[])
     
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
 			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
-            deflation, shuffle);
+			deflation, shuffle);
     /* when the interp_method specified through command line is CONSERVE_ORDER1, but the interp_method in the source file
        field attribute is CONSERVE_ORDER2, need to modify the interp_method value */
     if(opcode & CONSERVE_ORDER1) {

@@ -1698,8 +1698,8 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	    file_out[n].dt[ll] = file_in[0].dt[ll];
 	  }
 	}
-    /* set deflation and shuffle */
-    mpp_set_deflation(file_in[0].fid, file_out[n].fid, deflation, shuffle);
+	/* set deflation and shuffle */
+	mpp_set_deflation(file_in[0].fid, file_out[n].fid, deflation, shuffle);
 	mpp_end_def(file_out[n].fid);
 	for(i=0; i<ndim; i++) {
 	  if(file_out[n].axis[i].cart == 'T') continue;
