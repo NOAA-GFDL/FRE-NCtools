@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -43,13 +42,15 @@ char *usage[] = {
   "                              When topography of a grid cell is less than sea ",
   "                              level, this grid cell will be land, otherwise   ",
   "                              it will be ocean. Default value is 0.           ",
+  "--land_frac_file frac_file  : land fraction file.                             ",
+  "--land_frac_field frac_field: land fraction field.                            ",
   " ",
   "",
   NULL };
 
 
 char grid_version[] = "0.2";
-char tagname[] = "$Name: fre-nctools-bronx-10 $";
+char tagname[] = "$Name:  $";
 
 void get_file_name(char *file, char *filename)
 {
@@ -83,6 +84,8 @@ int main (int argc, char *argv[])
   char **ocn_topog_file = NULL;
   char *input_mosaic = NULL;
   char *ocean_topog = NULL;
+  char *land_frac_file=NULL;
+  char *land_frac_field=NULL;
   double sea_level = 0.;
   char mosaic_name[STRING] = "mosaic", mosaic_file[STRING];
   char griddir[STRING], solo_mosaic[STRING], filepath[STRING];
@@ -93,7 +96,8 @@ int main (int argc, char *argv[])
   char omosaic_name[STRING] = "ocean_mosaic";
   char lmosaic_name[STRING] = "land_mosaic";
   char history[512];
-  int  use_ocean_topog = 0;  
+  int  use_ocean_topog = 0;
+  int  use_land_frac=0;
   int  fid_solo_mosaic, tid_gridtile;
   
   static struct option long_options[] = {
@@ -101,6 +105,8 @@ int main (int argc, char *argv[])
     {"mosaic_name",        required_argument, NULL, 'm'},
     {"sea_level",          required_argument, NULL, 's'},
     {"ocean_topog",        required_argument, NULL, 'o'},
+    {"land_frac_file",     required_argument, NULL, 'l'},
+    {"land_frac_field",    required_argument, NULL, 'f'},
     {NULL, 0, NULL, 0}
   };
 
@@ -123,6 +129,12 @@ int main (int argc, char *argv[])
     case 'o':
       ocean_topog = optarg;
       break;
+    case 'l':
+      land_frac_file = optarg;
+      break;
+    case 'f':
+      land_frac_field = optarg;
+      break;      
     case '?':
       errflg++;
     }
@@ -147,7 +159,14 @@ int main (int argc, char *argv[])
   if( ocean_topog ) {
     use_ocean_topog = 1;
     if( ! mpp_field_exist(input_mosaic, "gridfiles") ) {
-      mpp_error("make_quick_mosaic: field gridfiles does not exist in input_mosaic");
+      mpp_error("make_quick_mosaic: field gridfiles does not exist in input_mosaic --ocean_topog is specified");
+    }
+  }
+  else if( land_frac_file ) {
+    use_land_frac = 1;
+    if( !land_frac_field ) mpp_error("make_quick_mosaic: --land_frac_field must be specified when --land_frac_file is specified");
+    if( ! mpp_field_exist(input_mosaic, "gridfiles") ) {
+      mpp_error("make_quick_mosaic: field gridfiles does not exist in input_mosaic when --land_frac_file is specified");
     }
   }
   else {/* check to make sure it is coupled mosaic */
@@ -161,7 +180,7 @@ int main (int argc, char *argv[])
   mpp_init(&argc, &argv);
   sprintf(mosaic_file, "%s.nc", mosaic_name);
   get_file_path(input_mosaic, griddir);
-  if( use_ocean_topog ) {
+  if( use_ocean_topog || use_land_frac ) {
     get_file_name( input_mosaic, solo_mosaic);
   }
   else {
@@ -187,7 +206,7 @@ int main (int argc, char *argv[])
   strcpy(solo_mosaic_full_path, filepath);
   ntiles = read_mosaic_ntiles(filepath);
   
-  if(use_ocean_topog ) nfile_aXl = ntiles;
+  if(use_ocean_topog || use_land_frac ) nfile_aXl = ntiles;
   /* copy the solo_mosaic file and grid file */
   {
     int fid2, vid2;
@@ -312,7 +331,58 @@ int main (int argc, char *argv[])
       free(omask);
     }
     mpp_close(t_fid);
-  }            
+  }
+  else if(use_land_frac) {
+    int t_fid, t_vid, len;
+    char str1[STRING], filename[STRING];
+    /* first read land fraction */
+    /* attach tile number if ntiles > 1 */
+    if(ntiles>1) {
+      len = strlen(land_frac_file); 
+      if( strstr(land_frac_file, ".nc") ) 
+	strncpy(str1, land_frac_file, len-3);
+      else
+	strcpy(str1, land_frac_file);
+    }
+    
+    for(n=0; n<ntiles; n++) {
+      char name[128];
+      char tile_name[128], dimname[128];
+      int i, j, ndim, dimsize[2];
+      double *lfrac;
+
+      if(ntiles>1) {
+	sprintf(tile_name, "tile%d", n+1);
+        sprintf(filename, "%s.%s.nc", str1, tile_name);
+      }
+      else
+	strcpy(filename, land_frac_file);
+      
+      /* read the dimension size of land_frac_field */
+      t_fid = mpp_open(filename, MPP_READ);
+      t_vid = mpp_get_varid(t_fid, land_frac_field);
+      ndim = mpp_get_var_ndim(t_fid, t_vid);
+      if(ndim !=2)mpp_error("make_quick_mosaic: number of dimension of land_frac_field must be 2");
+      for(i=0; i<ndim; i++) {
+	mpp_get_var_dimname(t_fid, t_vid, i, dimname);
+	dimsize[i] = mpp_get_dimlen(t_fid, dimname);
+      }
+      if(dimsize[0] != ny[n] || dimsize[1] != nx[n])
+	mpp_error("make_quick_mosaic: mismatch dimension size between mosaic grid and land_frac_file");
+
+      lfrac = (double *)malloc(nx[n]*ny[n]*sizeof(double));
+
+      mpp_get_var_value(t_fid, t_vid, lfrac);
+      
+      /* Now calculate the ocean and land grid cell area. */
+      for(i=0; i<nx[n]*ny[n]; i++) {
+	land_area[n][i] = cell_area[n][i]*lfrac[i];
+	ocean_area[n][i] = cell_area[n][i]*(1-lfrac[i]);
+      }
+      free(lfrac);
+      mpp_close(t_fid);
+    }
+  }
   else {
   
     /* read the exchange grid information and get the land/sea mask of land model*/
@@ -747,3 +817,5 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
   return 0;
 
 } /* main */  
+
+

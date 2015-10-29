@@ -41,7 +41,7 @@ void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, 
   size_t start[4], nread[4];
 
   len = strlen(filename); 
-  if( strstr(filename, ".nc") ) 
+  if( strcmp(filename+len-3, ".nc") ==0 ) 
     strncpy(str1, filename, len-3);
   else
     strcpy(str1, filename);
@@ -130,10 +130,11 @@ void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, cons
 
 
 /*******************************************************************************
-  void get_mosaic_grid()
-
+  void get_input_grid()
+  To decrease memory usage, use grid_out latitude to decide the input grid to be stored.
 *******************************************************************************/
-void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file, unsigned int opcode, int *great_circle_algorithm)
+void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file,
+		    unsigned int opcode, int *great_circle_algorithm, int save_weight_only)
 {
   int         n, m1, m2, i, j, l, ind1, ind2, nlon, nlat;
   int         ts, tw, tn, te, halo, nbound;
@@ -144,6 +145,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   size_t        start[4], nread[4];
   Data_holder *dHold;
   Bound_config *bound_C;
+  int          read_tgrid;
   
   halo = 0;
   if(opcode & BILINEAR) halo = 1;
@@ -151,10 +153,13 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     start[n] = 0; nread[n] = 1;
   }
 
+  read_tgrid = 1;
+  if(save_weight_only || (opcode & CONSERVE_ORDER1) ) read_tgrid = 0;
+  if(opcode & EXTRAPOLATE ) read_tgrid = 1;
   bound_C = (Bound_config *)malloc(ntiles*sizeof(Bound_config));
   nx = (int *)malloc(ntiles * sizeof(int) );
   ny = (int *)malloc(ntiles * sizeof(int) );
-
+  
   *great_circle_algorithm = 0;
   m_fid = mpp_open(mosaic_file, MPP_READ);
   get_file_path(mosaic_file, dir);
@@ -186,8 +191,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     mpp_get_var_value(g_fid, vid, x);
     vid = mpp_get_varid(g_fid, "y");
     mpp_get_var_value(g_fid, vid, y);
-    grid[n].lont = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-    grid[n].latt = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+
     grid[n].lonc = (double *) malloc((nx[n]+1+2*halo)*(ny[n]+1+2*halo)*sizeof(double));
     grid[n].latc = (double *) malloc((nx[n]+1+2*halo)*(ny[n]+1+2*halo)*sizeof(double));
     grid[n].lont1D = (double *) malloc(nx[n]*sizeof(double));
@@ -205,24 +209,20 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       grid[n].lonc[ind1] = x[ind2]*D2R;
       grid[n].latc[ind1] = y[ind2]*D2R;
     }
-
-    for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
-      ind1 = (j+1)*(nx[n]+2)+i+1;
-      ind2 = (2*j+1)*(2*nx[n]+1)+2*i+1;
-      grid[n].lont[ind1] = x[ind2]*D2R;
-      grid[n].latt[ind1] = y[ind2]*D2R;
+    if(read_tgrid) {
+      grid[n].lont = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+      grid[n].latt = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
+      for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
+	ind1 = (j+1)*(nx[n]+2)+i+1;
+	ind2 = (2*j+1)*(2*nx[n]+1)+2*i+1;
+	grid[n].lont[ind1] = x[ind2]*D2R;
+	grid[n].latt[ind1] = y[ind2]*D2R;
+      }
+    
+      init_halo(grid[n].lont, nx[n], ny[n], 1, 1);
+      init_halo(grid[n].latt, nx[n], ny[n], 1, 1);
     }
     
-    init_halo(grid[n].lont, nx[n], ny[n], 1, 1);
-    init_halo(grid[n].latt, nx[n], ny[n], 1, 1);
-    
-    if(opcode & CONSERVE_ORDER2 || opcode & BILINEAR ) {
-      grid[n].vlon_t = (double *) malloc(3*(nx[n]+2*halo)*(ny[n]+2*halo)*sizeof(double));
-      grid[n].vlat_t = (double *) malloc(3*(nx[n]+2*halo)*(ny[n]+2*halo)*sizeof(double));
-      grid[n].xt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-      grid[n].yt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-      grid[n].zt     = (double *) malloc((nx[n]+2)*(ny[n]+2)*sizeof(double));
-    }
     /* if vector, need to get rotation angle */
     /* we assume the grid is orthogonal */
     if( opcode & VECTOR ) {
@@ -250,42 +250,43 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   }
 
   mpp_close(m_fid);
-  
+
   /* get the boundary condition */
   setup_boundary(mosaic_file, ntiles, grid, bound_T, 1, CENTER);
-  if(opcode & BILINEAR)
-    setup_boundary(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
-
-  for(n=0; n<ntiles; n++) {
-    nlon = grid[n].nx;
-    nlat = grid[n].ny;
-    nbound = bound_T[n].nbound;
-    if(nbound > 0 ) {
-      dHold = (Data_holder *)malloc(nbound*sizeof(Data_holder));
-      for(l=0; l<nbound; l++) {
-	dHold[l].data = grid[bound_T[n].tile2[l]].lont;
-	dHold[l].nx = grid[bound_T[n].tile2[l]].nx+2;
-	dHold[l].ny = grid[bound_T[n].tile2[l]].ny+2;
-      }
-      update_halo(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
-      for(l=0; l<nbound; l++) dHold[l].data = grid[bound_T[n].tile2[l]].latt;
-      update_halo(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
+  if(read_tgrid) {
+    for(n=0; n<ntiles; n++) {
+      nlon = grid[n].nx;
+      nlat = grid[n].ny;
+      nbound = bound_T[n].nbound;
+      if(nbound > 0 ) {
+	dHold = (Data_holder *)malloc(nbound*sizeof(Data_holder));
+	for(l=0; l<nbound; l++) {
+	  dHold[l].data = grid[bound_T[n].tile2[l]].lont;
+	  dHold[l].nx = grid[bound_T[n].tile2[l]].nx+2;
+	  dHold[l].ny = grid[bound_T[n].tile2[l]].ny+2;
+	}
+	update_halo(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
+	for(l=0; l<nbound; l++) dHold[l].data = grid[bound_T[n].tile2[l]].latt;
+	update_halo(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
 	
-      for(l=0; l<nbound; l++) dHold[l].data = NULL;
-      free(dHold);
+	for(l=0; l<nbound; l++) dHold[l].data = NULL;
+	free(dHold);
+      }
     }
-  }
-  
-  if(opcode & BILINEAR) {
-
   }
   
   /* for bilinear interpolation, need to get cell-center grid */
   if(opcode & BILINEAR) {
+    setup_boundary(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
     /*--- fill the halo of corner cell */
     for(n=0; n<ntiles; n++) {
       nlon = grid[n].nx;
       nlat = grid[n].ny;
+      grid[n].vlon_t = (double *) malloc(3*(nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].vlat_t = (double *) malloc(3*(nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].xt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].yt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
+      grid[n].zt     = (double *) malloc(  (nlon+2)*(nlat+2)*sizeof(double));
       latlon2xyz((nlon+2)*(nlat+2), grid[n].lont, grid[n].latt, grid[n].xt, grid[n].yt, grid[n].zt);
       unit_vect_latlon((nlon+2)*(nlat+2), grid[n].lont, grid[n].latt, grid[n].vlon_t, grid[n].vlat_t);
       nbound = bound_C[n].nbound;
@@ -305,7 +306,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       }
     }
   }
-  else if(opcode & CONSERVE_ORDER2) {
+  else if(opcode & CONSERVE_ORDER2 && (!save_weight_only) ) {
     double p1[3], p2[3], p3[3], p4[3];
     
     for(n=0; n<ntiles; n++) {
@@ -322,6 +323,8 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
       grid[n].edge_n = (double *)malloc((nlon+1)         *sizeof(double));
       grid[n].en_n   = (double *)malloc(3*nlon  *(nlat+1)*sizeof(double));
       grid[n].en_e   = (double *)malloc(3*(nlon+1)*nlat  *sizeof(double));
+      grid[n].vlon_t = (double *) malloc(3*nlon*nlat     *sizeof(double));
+      grid[n].vlat_t = (double *) malloc(3*nlon*nlat     *sizeof(double));
       calc_c2l_grid_info(&nlon, &nlat, grid[n].lont, grid[n].latt, grid[n].lonc, grid[n].latc,
 			 grid[n].dx, grid[n].dy, grid[n].area, grid[n].edge_w, grid[n].edge_e,
 			 grid[n].edge_s, grid[n].edge_n, grid[n].en_n, grid[n].en_e,
@@ -800,7 +803,7 @@ void do_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_co
 void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2,
 		        Field_config *scalar, Field_config *u_comp, Field_config *v_comp,
 			const Grid_config *grid, int kbegin, int kend, int lbegin, int lend,
-			unsigned int opcode)
+			unsigned int opcode, char *associated_file_dir)
 {
   int     n, m, i, l, ll, nscalar, nvector, nfield;
   int     ndim, dimsize[5], nz;
@@ -955,15 +958,17 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	  else
 	    field[n].var[ll].cell_measures=0;
 	  if(field[n].var[ll].cell_measures==1) {
-            char associated_file[STRING];
-	    	    
+            char associated_file[512], dimname[32];
+	    int vid2;
+	    char cart;
 	    /* make sure field[n].var[ll].area_name exist in the current file or associated file */
 	    if( mpp_var_exist(file[n].fid, field[n].var[ll].area_name) ) {
               strcpy(associated_file, file[n].name );
               field[n].var[ll].area_fid = file[n].fid;
             }
             else {
-	      char globalatt[1024], file1[STRING], str1[STRING], name[STRING];
+	      char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
+
               /* check if the variable is in associated_files or not */
               if( !mpp_global_att_exist(file[n].fid, "associated_files") ) {
                  sprintf(errmsg, "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
@@ -973,12 +978,23 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               }           
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
 	      sprintf(name, "%s:", field[n].var[ll].area_name);
-              status = parse_string(globalatt, name, file1, errout);
-	      if(status==-1) {
+              status = parse_string(globalatt, name, file2, errout);
+	      if(status==0) {
+		sprintf(errmsg, "fregrid_util(get_input_metadata): global sttribute associated_files "
+			"does not contains string %s in file %s",
+			name, file[n].name );
+		mpp_error(errmsg);
+	      }
+	      else if(status==-1) {
 		sprintf(errmsg, "fregrid_util(get_input_metadata): %s for associated_files "
 			"global attribute in file %s", errout, file[n].name );
 		mpp_error(errmsg);
 	      }
+	      if(associated_file_dir)
+		sprintf(file1, "%s/%s", associated_file_dir, file2);
+	      else
+		strcpy(file1, file2);
+	      
               /* check if the file exist or not, if not add tile# */
               if(mpp_file_exist(file1)) 
                  strcpy(associated_file, file1);
@@ -989,7 +1005,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                  }
 
 		 len = strlen(file1);
-		 if( strstr(file1, ".nc") ) {
+		 if( strcmp(file1+len-3, ".nc") ==0 ) {
 		    strncpy(str1, file1, len-3);
 		    str1[len-3] = '\0';
 		 }
@@ -1026,25 +1042,46 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    /* get the vid of area_name and check if area_name is time dependent or not */
 	    field[n].var[ll].area_vid = mpp_get_varid(field[n].var[ll].area_fid, field[n].var[ll].area_name);
 	    ndim = mpp_get_var_ndim(field[n].var[ll].area_fid, field[n].var[ll].area_vid);
-	    if(ndim == 2) {
-	      field[n].var[ll].area_has_taxis = 0;
-	    }
-	    else if( ndim == 3 ) {
-	      char dimname[32];
-	      char cart;
-	      int  vid2;
-	      /* make sure the first dimension is T-axis */
-	      mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
-	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
-	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
-	      if( cart != 'T' ) {
-		sprintf(errmsg, "fregrid_util.c: The cartesian should be 'T' for field %s in file %s", dimname, associated_file);
+	    /* check if it has T-axis */
+	    mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+	    vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+	    cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+    
+	    if( cart == 'T' ) {
+	      if(ndim <=2) {
+		sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s has t-axis and <3" ,
+		      field[n].var[ll].area_name, associated_file );
 		mpp_error(errmsg);
 	      }
 	      field[n].var[ll].area_has_taxis = 1;
 	    }
 	    else {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s should be 2 or 3" ,
+	      field[n].var[ll].area_has_taxis = 0;
+	    }
+	    /* check if has n-axis (diurnal data). */
+	    field[n].var[ll].area_has_naxis = 0;
+	    if(ndim>2) {
+	      if(field[n].var[ll].area_has_taxis)
+		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 1, dimname);
+	      else
+		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+	      if(cart == 'N') {
+		field[n].var[ll].area_has_naxis = 1;
+		if(ndim==3 && field[n].var[ll].area_has_taxis) {
+		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis=T for field %s in file %s",
+			  field[n].var[ll].area_name, associated_file );
+		}
+		else if(ndim==4 && !field[n].var[ll].area_has_taxis) {
+		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
+			  field[n].var[ll].area_name, associated_file );
+		}  
+	      }
+            }
+
+	    if(ndim>4) {
+	      sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s > 4" ,
 		      field[n].var[ll].area_name, associated_file );
 	      mpp_error(errmsg);
 	    }
@@ -1064,30 +1101,33 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    field[n].var[ll].area_has_taxis = 0;
 	}
 	 
-	/* get the interp_method from the field attribute if existing */
-	if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
-          char    remap_method[STRING] = "";
-	  mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
-          if(!strcmp(remap_method, "conserve_order1") ) {
-	    use_conserve = 1;
-	    field[n].var[ll].interp_method = CONSERVE_ORDER1;
-	  }
-	  else if(!strcmp(remap_method, "conserve_order2") ) {
-	    use_conserve = 1;
-	    field[n].var[ll].interp_method = CONSERVE_ORDER2;
-	  }
-	  else if(!strcmp(remap_method, "bilinear") ) {
-	    use_bilinear = 1;
-	    field[n].var[ll].interp_method = BILINEAR;
-	  }
-	  else {
-	    sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
-		    "is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
-		    field[n].var[ll].name, remap_method);
-      	    mpp_error(errmsg);
+	/* get the interp_method from the field attribute if existing 
+           when interp_method is not conserve_order2_monotonic
+        */
+        if( !(opcode & MONOTONIC) ) {
+	  if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
+            char    remap_method[STRING] = "";
+	    mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
+            if(!strcmp(remap_method, "conserve_order1") ) {
+  	      use_conserve = 1;
+  	      field[n].var[ll].interp_method = CONSERVE_ORDER1;
+	    }
+  	    else if(!strcmp(remap_method, "conserve_order2") ) {
+	      use_conserve = 1;
+	      field[n].var[ll].interp_method = CONSERVE_ORDER2;
+	    }
+	    else if(!strcmp(remap_method, "bilinear") ) {
+	      use_bilinear = 1;
+	      field[n].var[ll].interp_method = BILINEAR;
+	    }
+	    else {
+	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
+ 		      "is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
+		      field[n].var[ll].name, remap_method);
+      	      mpp_error(errmsg);
+	    }
 	  }
 	}
-	
 	ndim = mpp_get_var_ndim(file[n].fid, field[n].var[ll].vid);
 	if(ndim <2 || ndim>5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no less than 2 and no larger than 5");	
 	for(i=0; i<ndim; i++) {
@@ -1788,7 +1828,7 @@ void set_remap_file( int ntiles, const char *mosaic_file, const char *remap_file
   
   len = strlen(remap_file);
   if(len >= STRING) mpp_error("setoutput_remap_file(fregrid_util): length of remap_file should be less than STRING");  
-  if( strstr(remap_file, ".nc") ) {
+  if( strcmp(remap_file+len-3, ".nc")==0 ) {
     strncpy(str1, remap_file, len-3);
     str1[len-3] = 0;
   }
@@ -1880,7 +1920,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
   Data_holder *dHold;
   int         interp_method;
   double      missing_value;
-  size_t      start2[3], nread2[3];
+  size_t      start2[4], nread2[4];
   
   missing_value = field->var[varid].missing;
   interp_method = field->var[varid].interp_method;
@@ -1986,9 +2026,10 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
       if( !field[n].area ) {
 	field[n].area = (double *) malloc(nx*ny*sizeof(double));
       }
-      for(i=0; i<3; i++) { start2[i] = 0; nread2[i] = 1; }
+      for(i=0; i<4; i++) { start2[i] = 0; nread2[i] = 1; }
       i = 0;
       if(field[n].var[varid].area_has_taxis) start2[i++] = level_t;
+      if(field[n].var[varid].area_has_naxis) start2[i++] = level_n;
       nread2[i] = ny;
       nread2[i+1] = nx;
       mpp_get_var_value_block(field[n].var[varid].area_fid, field[n].var[varid].area_vid, start2, nread2, field[n].area );
@@ -2020,6 +2061,10 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	ny = grid[n].ny;
 	field[n].grad_x = (double *)malloc(nx*ny*nz*sizeof(double));
 	field[n].grad_y = (double *)malloc(nx*ny*nz*sizeof(double));
+	field[n].grad_mask = (int *)malloc(nx*ny*nz*sizeof(int));
+	for(k=0; k<nz; k++) for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
+	  field[n].grad_mask[k*nx*ny+j*nx+i] = 0;
+	}
 	for(k=0; k<nz; k++) {
 	  p = k*(nx+2)*(ny+2);
 	  grad_c2l(&(grid[n].nx), &(grid[n].ny), field[n].data+p, grid[n].dx, grid[n].dy, grid[n].area,
@@ -2032,7 +2077,6 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	  int ip1, im1, jp1, jm1,kk,ii,jj;
 	  double missing;
 	  missing = field[n].var[varid].missing;
-	  field[n].grad_mask = (int *)malloc(nx*ny*nz*sizeof(int));
 	  for(k=0; k<nz; k++) for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
 	    ii=i+1; ip1 = ii+1; im1 = ii-1; jj = j+1; jp1 = jj+1; jm1 = jj-1;
 	    l = k*(nx+2)*(ny+2);
@@ -2041,8 +2085,6 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	       field[n].data[l+jj *(nx+2)+ip1] == missing || field[n].data[l+jp1*(nx+2)+im1] == missing ||
 	       field[n].data[l+jp1*(nx+2)+ii ] == missing || field[n].data[l+jp1*(nx+2)+ip1] == missing  )
 	      field[n].grad_mask[k*nx*ny+j*nx+i] = 1;
-	    else
-	      field[n].grad_mask[k*nx*ny+j*nx+i] = 0;
 	  }
 	}
       }

@@ -38,6 +38,8 @@
 #define LEGACY_CLIP     2048
 #define GREAT_CIRCLE    4096
 #define STANDARD_DIMENSION 8192
+#define MONOTONIC       16384
+#define EXTRAPOLATE     32768
 
 /* constant for cell_methods */
 #define CELL_METHODS_MEAN  0
@@ -68,6 +70,7 @@ typedef struct {
   int    area_vid;
   int    area_fid;
   int    area_has_taxis;
+  int    area_has_naxis;
   double area_missing;
   char   area_name[STRING];
   
@@ -198,5 +201,12 @@ typedef struct{
   int nx;
   int ny;
 } Data_holder;
+
+typedef struct{
+  double *f_bar_max;
+  double *f_bar_min;
+  double *f_max;
+  double *f_min;
+} Monotone_config;
 
 #endif
