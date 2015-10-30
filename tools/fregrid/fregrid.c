@@ -52,6 +52,7 @@ char *usage[] = {
   "          [--weight_field --weight_field] [--dst_vgrid dst_vgrid]                     ",
   "          [--extrapolate] [--stop_crit #] [--standard_dimension]                      ",
   "          [--associated_file_dir dir]                                                 ",
+  "          [--deflation #] [--shuffle 1|0]                                             ",
   "                                                                                      ",
   "fregrid remaps data (scalar or vector) from input_mosaic onto                         ",
   "output_mosaic.  Note that the target grid also could be specified                     ",
@@ -65,6 +66,8 @@ char *usage[] = {
   "to latlon grid. Alternative schemes can be added if needed. fregrid                   ",
   "expects NetCDF format input. scalar_field and/or u_field/v_field must                 ",
   "be specified. u_fld and v_fld must be paired together.                                ",
+  "If using NetCDF4, output will have the same deflation and shuffle settings            ",
+  "unless specified.                                                                     ",
   "                                                                                      ",
   "fregrid takes the following flags:                                                    ",
   "                                                                                      ",
@@ -221,13 +224,19 @@ char *usage[] = {
   "                              longitude and latitude axis will be 'lon' and 'lat'.    ",
   "                              'lon_bnd' and 'lat_bnd' will be longitude and latitude  ",
   "                              bound name. The dimension of lon_bounds is (2,nlon) and ",
-  "                              the dimension of lat_bounds is (2,nlat).                "
+  "                              the dimension of lat_bounds is (2,nlat).                ",
   "                                                                                      ",
   "--associated_file_dir dir     Specify the path of the associated files                ",
   "                                                                                      ",
   "--debug                       Will print out memory usage and running time            ",
   "                                                                                      ",
   "--nthreads #                  Specify number of OpenMP threads.                       ",
+  "                                                                                      ",
+  "--deflation #                 If using NetCDF4 , use deflation of level #.            ",
+  "                              Defaults to input file settings.                        ",
+  "                                                                                      ",
+  "--shuffle #                   If using NetCDF4 , use shuffle if 1 and don't use if 0  ",
+  "                              Defaults to input file settings.                        ",
   "                                                                                      ",
   "  Example 1: Remap C48 data onto N45 grid.                                            ",          
   "             (use GFDL-CM3 data as example)                                           ",
@@ -291,6 +300,8 @@ int main(int argc, char* argv[])
   unsigned int  finer_step = 0;
   int     debug = 0;
   int     great_circle_algorithm_in, great_circle_algorithm_out;
+  int     deflation = -1;
+  int     shuffle = -1;
   
   char          wt_file_obj[512];
   char          *weight_file=NULL;
@@ -362,6 +373,8 @@ int main(int argc, char* argv[])
     {"debug",             no_argument,     NULL, 'P'},
     {"nthreads",         required_argument, NULL, 'Q'},
     {"associated_file_dir", required_argument, NULL, 'R'},
+    {"deflation",        required_argument, NULL, 'S'},
+    {"shuffle",          required_argument, NULL, 'T'},
     {"help",             no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
   };  
@@ -505,6 +518,12 @@ int main(int argc, char* argv[])
     case 'R':
       associated_file_dir = optarg;
       break;
+    case 'S':
+      deflation = atoi(optarg);
+      break;
+    case 'T':
+      shuffle = atoi(optarg);
+	break;
     case '?':
       errflg++;
       break;
@@ -599,6 +618,11 @@ int main(int argc, char* argv[])
     else if(grid_type == BGRID)
       opcode |= BGRID;
   }
+
+  if (shuffle < -1 || shuffle > 1)
+    mpp_error("fregrid: shuffle must be 0 (off) or 1 (on)");
+  if (deflation < -1 || deflation > 9)
+    mpp_error("fregrid: deflation must be between 0 (off) and 9");
   
   /* define history to be the history in the grid file */
   strcpy(history,argv[0]);
@@ -812,7 +836,8 @@ int main(int argc, char* argv[])
     set_weight_inf( ntiles_in, grid_in, weight_file, weight_field, file_in->has_cell_measure_att);
     
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
-			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode);
+			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
+			deflation, shuffle);
 
     if(debug) print_mem_usage("After set_output_metadata");
     /* when the interp_method specified through command line is CONSERVE_ORDER1, but the interp_method in the source file

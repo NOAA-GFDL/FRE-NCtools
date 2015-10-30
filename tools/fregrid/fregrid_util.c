@@ -1386,7 +1386,7 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 			  const Field_config *scalar_in, const Field_config *u_in, const Field_config *v_in,
 			  int ntiles_out, File_config *file1_out, File_config *file2_out, Field_config *scalar_out,
 			  Field_config *u_out, Field_config *v_out, const Grid_config *grid_out, const VGrid_config *vgrid_out,
-			  const char *history, const char *tagname, unsigned int opcode)
+			  const char *history, const char *tagname, unsigned int opcode, int deflation, int shuffle)
 {
   int j;
   int m, n, ndim, i, l, dims[5];
@@ -1738,6 +1738,8 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	    file_out[n].dt[ll] = file_in[0].dt[ll];
 	  }
 	}
+	/* set deflation and shuffle */
+	mpp_set_deflation(file_in[0].fid, file_out[n].fid, deflation, shuffle);
 	mpp_end_def(file_out[n].fid);
 	for(i=0; i<ndim; i++) {
 	  if(file_out[n].axis[i].cart == 'T') continue;
