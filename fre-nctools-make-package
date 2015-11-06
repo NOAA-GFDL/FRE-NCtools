@@ -46,6 +46,7 @@ if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
   module load intel_compilers/11.1.073 mpich2/1.2.1p1 netcdf/4.2
   module load fre-system/init
   setenv CVSROOT /home/fms/cvs
+  setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
 else if ( "$site" == "gfdl.noaa.gov" ) then
   source /usr/local/Modules/default/init/tcsh
@@ -55,6 +56,7 @@ else if ( "$site" == "gfdl.noaa.gov" ) then
   module load mpich2/1.5b1
   module load fre-system/init
   setenv CVSROOT /home/fms/cvs
+  setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/x64/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/x64/netcdf-4.2_optimized SITE=gfdl-ws -f fre-nctools.mk
   set NOPARALLEL
 else if ( "$site" == "ncrc.gov" ) then
@@ -80,7 +82,20 @@ else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
   module load intel/13.0.079
   module load mpt
   setenv LIBRARY_PATH ${LIBRARY_PATH}:/apps/intel/composer_xe_2013.0.079/compiler/lib/intel64
+  setenv LD_RUN_PATH ${LD_LIBRARY_PATH}:/apps/hdf5/1.8.8-intel/lib:/apps/netcdf/4.1.3-intel/lib
   alias make make HDF5_HOME=/apps/hdf5/1.8.8-intel NETCDF_HOME=/apps/netcdf/4.1.3-intel SITE=zeus -f fre-nctools.mk
+else if ( "$site" == "theia.fairmont.rdhpcs.noaa.gov") then
+  source $MODULESHOME/init/tcsh
+  module use -a /home/fms/local/modulefiles
+  module purge
+  module load intel/15.1.133
+  module load impi
+  module load fre/bronx-9
+  setenv LIBRARY_PATH ${LIBRARY_PATH}:/apps/intel/composer_xe_2015.1.133/compiler/lib/intel64
+  setenv LD_RUN_PATH ${LD_LIBRARY_PATH}:/apps/hdf5/1.8.14-intel/lib:/apps/netcdf/4.3.0-intel/lib
+  echo $LD_RUN_PATH
+	
+  alias make make HDF5_HOME=/apps/hdf5/1.8.14-intel NETCDF_HOME=/apps/netcdf/4.3.0-intel SITE=theia LDFLAGS='-Wl,-rpath=/apps/intel/composer_xe_2015.1.133/compiler/lib/intel64,-rpath=/apps/hdf5/1.8.14-intel/lib,-rpath=/apps/netcdf/4.3.0-intel/lib' -f fre-nctools.mk
 else
   echo "ERROR: Unsupported site '$site'"
   exit 1

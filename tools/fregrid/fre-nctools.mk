@@ -15,10 +15,10 @@ include ./env.$(SITE)
 
 #MPICC    := mpicc
 #CC       := icc
-CFLAGS   := -O3 -g -traceback
-CFLAGS_O2:= -O2 -g -traceback
+CFLAGS   := -O3 -g -traceback $(CFLAGS2)
+CFLAGS_O2:= -O2 -g -traceback $(CFLAGS2)
 INCLUDES := -I${NETCDF_HOME}/include -I./ -I../shared -I../../shared/mosaic
-CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(CLIBS2) $(STATIC)
+CLIBS     := $(LDFLAGS) -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(CLIBS2) $(STATIC)
 
 TARGETS  := fregrid fregrid_parallel
 

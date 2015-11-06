@@ -27,7 +27,7 @@ EZSTR=./extern/ezStringUtil-0.1.0
 EZTEST=./extern/ezTest-0.0.0
 
 INCLUDES := -I${NETCDF_HOME}/include -I. -I$(EZBAR) -I$(EZNC) -I$(EZODO) -I$(EZOPT) -I$(EZSLICE) -I$(EZSTR)
-CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz  -Wl,-rpath,$(NETCDF_HOME)/lib -lirc $(CLIBS2) $(STATIC)
+CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz  -lirc $(CLIBS2) $(STATIC)
 
 TARGETS  := ncx
 
