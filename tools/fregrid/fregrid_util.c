@@ -1312,6 +1312,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	file[n].id_t1 = mpp_get_varid(file[n].fid, "average_T1");
 	file[n].id_t2 = mpp_get_varid(file[n].fid, "average_T2");
 	file[n].id_dt = mpp_get_varid(file[n].fid, "average_DT");
+	file[n].tavg_type = mpp_get_var_type(file[n].fid, file[n].id_t1);
 	if(lbegin > 0) 
 	  start[0] = lbegin-1;
 	else
@@ -1673,7 +1674,7 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	for(l=0; l<nscalar; l++) {
 	  int natts, i;
 	  for(i=0; i<scalar_out[n].var[l].ndim; i++) dims[i] = file_out[n].axis[scalar_out[n].var[l].index[i]].dimid;
-	  scalar_out[n].var[l].vid = mpp_def_var(file_out[n].fid, scalar_out[n].var[l].name, scalar_out[n].var[l].type,
+	    scalar_out[n].var[l].vid = mpp_def_var(file_out[n].fid, scalar_out[n].var[l].name, scalar_out[n].var[l].type,
 						   scalar_out[n].var[l].ndim, dims, 0);
 	  /* when standard_dimension is true and output grid is lat-lon grid, do not output attribute coordinates */
 	  natts = mpp_get_var_natts(file_in[0].fid, scalar_in[0].var[l].vid);
@@ -1723,11 +1724,11 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	/* define time avg info variables */
 	if(file_out[n].has_tavg_info) {
 	  int ll;
-	  file_out[n].id_t1 = mpp_def_var(file_out[n].fid, "average_T1", NC_DOUBLE, 1, &dim_time, 0);
+	  file_out[n].id_t1 = mpp_def_var(file_out[n].fid, "average_T1", file_in[0].tavg_type, 1, &dim_time, 0);
 	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_t1, file_out[n].fid, file_out[n].id_t1);
-	  file_out[n].id_t2 = mpp_def_var(file_out[n].fid, "average_T2", NC_DOUBLE, 1, &dim_time, 0);
+	  file_out[n].id_t2 = mpp_def_var(file_out[n].fid, "average_T2", file_in[0].tavg_type, 1, &dim_time, 0);
 	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_t2, file_out[n].fid, file_out[n].id_t2);	  
-	  file_out[n].id_dt = mpp_def_var(file_out[n].fid, "average_DT", NC_DOUBLE, 1, &dim_time, 0);
+	  file_out[n].id_dt = mpp_def_var(file_out[n].fid, "average_DT", file_in[0].tavg_type, 1, &dim_time, 0);
 	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_dt, file_out[n].fid, file_out[n].id_dt);
 	  file_out[n].t1 = (double *)malloc(file_out[n].nt*sizeof(double));
 	  file_out[n].t2 = (double *)malloc(file_out[n].nt*sizeof(double));
@@ -1739,8 +1740,8 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	  }
 	}
 	mpp_end_def(file_out[n].fid);
-	for(i=0; i<ndim; i++) {
-	  if(file_out[n].axis[i].cart == 'T') continue;
+       	for(i=0; i<ndim; i++) {
+	  if(file_out[n].axis[i].cart == 'T') continue; 
 	  mpp_put_var_value(file_out[n].fid, file_out[n].axis[i].vid, file_out[n].axis[i].data);
 	  if( file_out[n].axis[i].bndtype > 0 )
 	    mpp_put_var_value(file_out[n].fid, file_out[n].axis[i].bndid, file_out[n].axis[i].bnddata);
@@ -1882,8 +1883,8 @@ void write_output_time(int ntiles, File_config *file, int level)
       for(i=0; i<file[n].ndim; i++) {
 	if(file[n].axis[i].cart == 'T') {
 	  nwrite[1] = 1;
-	  mpp_put_var_value_block(file[n].fid, file[n].axis[i].vid, start,
-				 nwrite, &(file[n].axis[i].data[level]));
+          mpp_put_var_value_block(file[n].fid, file[n].axis[i].vid, start,
+				  nwrite, &(file[n].axis[i].data[level]) );
 	  if(strcmp(file[n].axis[i].bndname, "none") ) {
 	    nwrite[1] = 2;
 	    mpp_put_var_value_block(file[n].fid, file[n].axis[i].bndid, start,
