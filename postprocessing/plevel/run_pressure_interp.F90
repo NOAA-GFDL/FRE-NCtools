@@ -16,7 +16,8 @@ use    plev_constants_mod, only: GRAV, RDGAS, RVGAS
 use pinterp_utilities_mod, only: copy_axis, copy_variable,  &
                                  set_verbose_level,         &
                                  define_new_variable,       &
-                                 error_handler
+                                 error_handler,             &
+                                 set_compression_parameters
 use pressure_interp_mod
 
 
@@ -80,6 +81,8 @@ logical :: allow_zero_sphum = .false.
 
 integer :: time_beg=1, time_end=0, time_inc=1
 
+integer :: deflate_level=-1, shuffle=-1         ! -1 means use input file settings
+
 !#######################################################################
 !         -------- NAMELIST -------
 !
@@ -124,7 +127,8 @@ namelist /input/ in_file_name, out_file_name,  field_names,  pout, &
                  mask_extrap,                          &
                  time_beg, time_end, time_inc,                     &
                  allow_zero_topog, allow_zero_sphum,               &
-                 use_default_missing_value, verbose
+                 use_default_missing_value, verbose,               &
+                 deflate_level, shuffle
 
 !----- axis names -----
 
@@ -354,6 +358,32 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
      else
         pk = 0.0
      endif
+
+    ! verify requested compression parameters
+    !print *, deflate_level, shuffle
+    if (deflate_level < -1 .or. deflate_level > 9) &
+        call error_handler ('deflation level must be 0 to 9')
+    if (shuffle < -1 .or. shuffle > 1) call error_handler ('shuffle must be 0 or 1')
+    if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
+        if (deflate_level > 0) then
+            print *, 'Not using compression on NetCDF3 file'
+            deflate_level = 0
+        endif
+    else
+        if (verbose > 0) then
+            if (deflate_level == -1) then
+                print *, 'Will use input file settings for NetCDF4 deflation level'
+            else
+                print *, 'Will use NetCDF4 deflation level=', deflate_level
+            endif
+            if (shuffle == -1) then
+                print *, 'Will use input file settings for NetCDF4 shuffle'
+            else
+                print *, 'Will use NetCDF4 shuffle=', shuffle
+            endif
+        endif
+    endif
+    call set_compression_parameters (deflate_level, shuffle)
 
 !-----------------------------------------------------------------------
 !----------------- output file header info -----------------------------
@@ -594,6 +624,12 @@ endif
                                   (/dimids_mass(4)/), varid_tavg_out(i) )
           enddo
        endif
+
+!-----------------------------------------------------------------------
+! ---- define compression parameters ----
+! what to do for default cases, since there's no corresponding variable
+     !istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_pout, 1, 1, 2)
+     !if (istat /= NF90_NOERR) call error_handler (ncode=istat)
           
 !-----------------------------------------------------------------------
 ! ---- write header info for output file ----

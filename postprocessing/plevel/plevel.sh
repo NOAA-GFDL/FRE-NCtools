@@ -29,7 +29,7 @@ plevs="100000 92500 85000 70000 60000 50000 40000 30000 25000 \
 
 #-----------------------------------------------------------------------
 
-while getopts 03amxi:o:d:p:t: arg
+while getopts 03amxi:o:d:p:t:z:s: arg
 do
     case $arg in
        0) allow_zero=.true.;;
@@ -42,6 +42,8 @@ do
        d) more_output=$OPTARG;;
        p) plevs=$OPTARG;;
        t) tlist=$OPTARG;;
+       z) deflation=$OPTARG;;
+       s) shuffle=$OPTARG;;
        *) exit 1;;
     esac
 done
@@ -59,7 +61,7 @@ The input model grid is a hybrid sigma-pressure coordinate
 and the output pressure levels may be specified.
 The minimum required input fields are "bk", "pk", and "ps".
 
-Usage:  $name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [fields.....]
+Usage:  $name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [-z #] [-s] [fields.....]
 
         -a        = Output all fields converting 3d fields to pressure levels.
         -3        = Output and convert all 3d fields to pressure levels.
@@ -78,6 +80,10 @@ Usage:  $name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [fields.....]
         -t #,#,#    The starting, ending, and increment index for time axis processing
                     where # is a positive number.
                     (The default is to process all time indices.)
+        -z #        If using NetCDF4, use deflation of level #.
+                    Defaults to input file settings.
+        -s          If using NetCDF4, use shuffle if 1 and don't use if 0.
+                    Defaults to input file settings.
 
         fields    = A list of (additional) output fields. If this list is not supplied,
                     then the "-a" or "-3" option must be specified.  Possible list entries
@@ -161,6 +167,14 @@ cat >> $namelist << EOF
     use_default_missing_value = $default_missval,
     verbose = $more_output,
 EOF
+
+# NetCDF4 compression parameters
+if [ -n "$deflation" ]; then
+    echo "    deflate_level = $deflation," >> $namelist
+fi
+if [ -n "$shuffle" ]; then
+    echo "    shuffle = $shuffle," >> $namelist
+fi
 
 #--- time loop limits ---
 i=0
