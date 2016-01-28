@@ -25,10 +25,13 @@ logical :: add_cell_methods = .false.
 logical :: skip_tavg_errors = .false.
 logical :: suppress_warnings = .false.
 real    :: frac_valid_data = 0.
+integer :: user_deflation = -1, user_shuffle = -1   ! user requests, -1 means use defaults
+integer :: deflate_in, deflation_in, shuffle_in, deflation_out, shuffle_out
+integer :: max_input_deflation = 0, max_input_shuffle = 0   ! to use for new variables
 
 namelist /input/   file_names, file_name_out, use_end_time, verbose, &
                    add_cell_methods, skip_tavg_errors, frac_valid_data, &
-                   suppress_warnings
+                   suppress_warnings, user_deflation, user_shuffle
 !-----------------------------------------------------------------------
 ! data structure for storing information about individual variables
  type variable_type
@@ -100,6 +103,10 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
               call error_handler ('No input file names specified')
     if (file_name_out(1:1) == ' ')  &
               call error_handler ('No output file name specified')
+    if (user_deflation < -1 .or. user_deflation > 9) &
+              call error_handler ('Deflation level must be 0 to 9')
+    if (user_shuffle < -1 .or. user_shuffle > 1) &
+              call error_handler ('Shuffle must be 0 or 1')
 
   ! string used for time_avg_info attribute
   ! all input file strings must match this
@@ -125,6 +132,24 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
      if (istat /= NF90_NOERR) call error_handler (ncode=istat)
      istat = NF90_INQ_VARID (ncid_in, name_recdim, varid_recdim)
      if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+
+     if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
+         if (user_deflation > 0) then
+             print *, 'Not using compression on NetCDF3 file'
+             user_deflation = 0
+         endif
+     else
+         if (user_deflation == -1) then
+             print *, 'Will use input file settings for NetCDF4 deflation level'
+         else
+             print *, 'Will use NetCDF4 deflation level=', user_deflation
+         endif
+         if (user_shuffle == -1) then
+             print *, 'Will use input file settings for NetCDF4 shuffle'
+         else
+             print *, 'Will use NetCDF4 shuffle=', user_shuffle
+         endif
+    endif
 
      if (verbose) then
          write (*,*) '    ncid=', ncid_in
@@ -387,6 +412,24 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
             if (istat /= NF90_NOERR) call error_handler &
                            ('defining output variable '//trim(Vars(ivar)%name), ncode=istat)
             if (verbose) write (*,*) 'Defining output variable: '//trim(Vars(ivar)%name)
+
+            ! get compression
+            istat = NF90_INQ_VAR_DEFLATE (ncid_in, Vars(ivar)%varid_out, shuffle_in, &
+                deflate_in, deflation_in)
+                if (istat /= NF90_NOERR) call error_handler &
+                           ('getting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+            if (deflation_in > max_input_deflation) max_input_deflation = deflation_in
+            if (shuffle_in > max_input_shuffle) max_input_shuffle = shuffle_in
+
+            ! set compression
+            call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
+            if (deflation_out > 0) then
+                istat = NF90_DEF_VAR_DEFLATE (ncid_out, Vars(ivar)%varid_out, shuffle_out, 1, &
+                    deflation_out)
+                if (istat /= NF90_NOERR) call error_handler &
+                           ('setting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+            endif
+            
             ! copy variable attributes
             do i=1,NF90_MAX_NAME; cell_methods(i:i) = ' '; enddo
             do i=1,NF90_MAX_NAME; name_bnds   (i:i) = ' '; enddo
@@ -474,6 +517,17 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
              if (verbose) write (*,*) 'Defining output variable: '//trim(Vars(ivar)%name)
              if (istat /= NF90_NOERR) call error_handler &
                        ('defining output variable '//trim(Vars(ivar)%name), ncode=istat)
+
+            ! set compression
+            call apply_compression_defaults (max_input_deflation, max_input_shuffle, &
+                deflation_out, shuffle_out )
+            if (deflation_out > 0) then
+                istat = NF90_DEF_VAR_DEFLATE (ncid_out, Vars(ivar)%varid_out, shuffle_out, 1, &
+                    deflation_out)
+                if (istat /= NF90_NOERR) call error_handler &
+                           ('setting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+            endif
+
              ! plus attributes
              istat = NF90_PUT_ATT (ncid_out, Vars(ivar)%varid_out, 'long_name', &
                                       trim(name_recdim)//' axis boundaries')
@@ -488,6 +542,17 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
          do i = 1, 3
             istat = NF90_DEF_VAR (ncid_out, trim(tavg_names(i)), NF90_REAL8, (/recdim/), tid(i))
             if (istat /= NF90_NOERR) call error_handler ('defining time_avg_info variables', ncode=istat)
+
+            ! set compression
+            call apply_compression_defaults (max_input_deflation, max_input_shuffle, &
+                deflation_out, shuffle_out )
+            if (deflation_out > 0) then
+                istat = NF90_DEF_VAR_DEFLATE (ncid_out, tid(i), shuffle_out, 1, &
+                    deflation_out)
+                if (istat /= NF90_NOERR) call error_handler &
+                           ('setting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+            endif
+
             ! attributes (long_name and units)
             istat = NF90_PUT_ATT (ncid_out, tid(i), 'long_name', trim(tavg_long_names(i)))
             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
@@ -1192,6 +1257,39 @@ contains
 
  end subroutine alloc_variable_type
 
+!#######################################################################
+
+! apply_compression_defaults -- applies the user-specified settings
+!   deflation and shuffle to the input variable parameters.
+!   If the user-specified settings are -1, use the input file settings.
+
+subroutine apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
+    integer, intent(in) :: deflation_in, shuffle_in
+    integer, intent(out) :: deflation_out, shuffle_out
+
+    if (user_deflation == -1) then
+        deflation_out = deflation_in
+    else if (user_deflation == 0) then
+        deflation_out = 0
+    else
+        deflation_out = user_deflation
+    endif
+
+    if (user_shuffle == -1) then
+        shuffle_out = shuffle_in
+    else
+        shuffle_out = user_shuffle
+    endif
+
+    if (verbose > 1) then
+        if (deflation_out > 0) then
+            print *, 'Using deflation=', deflation_out, 'and shuffle=', shuffle_out
+        else
+            print *, 'Not using deflation'
+        endif
+    endif
+
+end subroutine apply_compression_defaults
 !#######################################################################
 
 end program time_average
