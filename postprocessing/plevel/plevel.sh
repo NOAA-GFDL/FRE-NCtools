@@ -170,10 +170,10 @@ EOF
 
 # NetCDF4 compression parameters
 if [ -n "$deflation" ]; then
-    echo "    deflate_level = $deflation," >> $namelist
+    echo "    user_deflation = $deflation," >> $namelist
 fi
 if [ -n "$shuffle" ]; then
-    echo "    shuffle = $shuffle," >> $namelist
+    echo "    user_shuffle = $shuffle," >> $namelist
 fi
 
 #--- time loop limits ---

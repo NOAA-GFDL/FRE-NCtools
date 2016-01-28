@@ -17,7 +17,8 @@ use pinterp_utilities_mod, only: copy_axis, copy_variable,  &
                                  set_verbose_level,         &
                                  define_new_variable,       &
                                  error_handler,             &
-                                 set_compression_parameters
+                                 share_compression_parameters, &
+                                 apply_compression_defaults
 use pressure_interp_mod
 
 
@@ -81,7 +82,11 @@ logical :: allow_zero_sphum = .false.
 
 integer :: time_beg=1, time_end=0, time_inc=1
 
-integer :: deflate_level=-1, shuffle=-1         ! -1 means use input file settings
+! user-requested deflation and shuffle settings, -1 means use input file settings
+integer :: user_deflation=-1, user_shuffle=-1
+! for new variables, use the maximum deflation/shuffle settings of any input
+! variable if user is relying on defaults
+integer :: new_var_deflation, new_var_shuffle
 
 !#######################################################################
 !         -------- NAMELIST -------
@@ -128,7 +133,7 @@ namelist /input/ in_file_name, out_file_name,  field_names,  pout, &
                  time_beg, time_end, time_inc,                     &
                  allow_zero_topog, allow_zero_sphum,               &
                  use_default_missing_value, verbose,               &
-                 deflate_level, shuffle
+                 user_deflation, user_shuffle
 
 !----- axis names -----
 
@@ -360,30 +365,36 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
      endif
 
     ! verify requested compression parameters
-    !print *, deflate_level, shuffle
-    if (deflate_level < -1 .or. deflate_level > 9) &
+    if (user_deflation < -1 .or. user_deflation > 9) &
         call error_handler ('deflation level must be 0 to 9')
-    if (shuffle < -1 .or. shuffle > 1) call error_handler ('shuffle must be 0 or 1')
+    if (user_shuffle < -1 .or. user_shuffle > 1) call error_handler ('shuffle must be 0 or 1')
     if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
-        if (deflate_level > 0) then
+        if (user_deflation > 0) then
             print *, 'Not using compression on NetCDF3 file'
-            deflate_level = 0
+            user_deflation = 0
         endif
     else
         if (verbose > 0) then
-            if (deflate_level == -1) then
+            if (user_deflation == -1) then
                 print *, 'Will use input file settings for NetCDF4 deflation level'
             else
-                print *, 'Will use NetCDF4 deflation level=', deflate_level
+                print *, 'Will use NetCDF4 deflation level=', user_deflation
             endif
-            if (shuffle == -1) then
+            if (user_shuffle == -1) then
                 print *, 'Will use input file settings for NetCDF4 shuffle'
             else
-                print *, 'Will use NetCDF4 shuffle=', shuffle
+                print *, 'Will use NetCDF4 shuffle=', user_shuffle
             endif
         endif
     endif
-    call set_compression_parameters (deflate_level, shuffle)
+    call share_compression_parameters (user_deflation, user_shuffle)
+
+    ! get maximum compression and shuffle of input fields
+    call get_new_var_compression_settings (new_var_deflation, new_var_shuffle)
+    if (verbose > 1) print *, 'Will use NetCDF4 deflation level=', new_var_deflation, &
+        "and shuffle=", new_var_shuffle, "for new variables"
+    call share_compression_parameters (user_deflation, user_shuffle, &
+        new_var_deflation, new_var_shuffle)
 
 !-----------------------------------------------------------------------
 !----------------- output file header info -----------------------------
@@ -627,9 +638,10 @@ endif
 
 !-----------------------------------------------------------------------
 ! ---- define compression parameters ----
-! what to do for default cases, since there's no corresponding variable
-     !istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_pout, 1, 1, 2)
-     !if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      if (new_var_deflation > 0) then
+          istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_pout, new_var_shuffle, 1, new_var_deflation)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      endif
           
 !-----------------------------------------------------------------------
 ! ---- write header info for output file ----
@@ -1784,6 +1796,40 @@ flag = count(phalf(:,:,1)<=0.) > 0
  enddo
 
  end subroutine compute_height
+
+!#######################################################################
+! get_new_var_compression_settings -- return the deflation and shuffle
+!   to use for new variables. If there are user settings, those will be used.
+!   Otherwise they'll be the maximum settings among all variables in the
+!   input file.
+
+subroutine get_new_var_compression_settings (deflation, shuffle)
+
+integer, intent(out) :: deflation, shuffle
+integer :: numvars
+integer :: max_deflation=0, max_shuffle=0
+integer :: deflate_temp, deflation_temp, shuffle_temp
+
+istat = NF90_INQUIRE ( ncid_in, nvariables=numvars )
+if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+!print *, "Total number of variables is", numvars
+
+do i = 1, numvars
+    istat = NF90_INQ_VAR_DEFLATE (ncid_in, i, shuffle_temp, deflate_temp, deflation_temp)
+    if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+    !print *, i, deflate_temp, deflation_temp, shuffle_temp
+
+    if (deflate_temp > 0) then
+        if (deflation_temp > max_deflation) max_deflation = deflation_temp
+        if (shuffle_temp > max_shuffle) max_shuffle = shuffle_temp
+    endif
+enddo
+
+!print *, "Max deflation=", max_deflation, ", max shuffle=", max_shuffle
+call apply_compression_defaults (max_deflation, max_shuffle, deflation, shuffle)
+!print *, "After applying user settings, deflation=", deflation, ", shuffle=", shuffle
+
+end subroutine get_new_var_compression_settings
 
 !#######################################################################
 
