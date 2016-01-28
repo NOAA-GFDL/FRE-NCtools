@@ -37,7 +37,7 @@ contains
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, recdim, dimid_in, xtype, ndims, natts, attnum, i
     integer :: deflate_in, deflation_in, shuffle_in
-    integer :: deflate_out, deflation_out, shuffle_out
+    integer :: deflation_out, shuffle_out
     logical :: found_edges, found_bounds
     character(len=NF90_MAX_NAME) :: name_bounds
 
@@ -106,7 +106,6 @@ contains
     ! get compression parameters
       istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-      !print *, deflate_in, deflation_in, shuffle_in
 
     ! set compression parameters
       call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
@@ -152,7 +151,6 @@ contains
    end subroutine copy_axis
 
 !#######################################################################
-
 ! apply_compression_defaults -- applies the user-specified settings
 !       deflation and shuffle to the input variable parameters.
 !       If the user-specified settings are -1, use the input file settings.
@@ -202,7 +200,7 @@ end subroutine apply_compression_defaults
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, varid_in,  xtype, ndims, natts, attnum
     integer :: shuffle_in, deflate_in, deflation_in
-    integer :: shuffle_out, deflate_out, deflation_out
+    integer :: shuffle_out, deflation_out
     logical :: no_missing_value, no_valid_range, no_add_offset, no_scale_factor
 !-----------------------------------------------------------------------
       if (verbose > 1) print *, 'copy_variable name=', trim(name_in)
@@ -233,7 +231,6 @@ end subroutine apply_compression_defaults
     ! get compression parameters
       istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-      !print *, deflate_in, deflation_in, shuffle_in
 
     ! set compression parameters
       call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )

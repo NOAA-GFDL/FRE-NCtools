@@ -1812,12 +1812,10 @@ integer :: deflate_temp, deflation_temp, shuffle_temp
 
 istat = NF90_INQUIRE ( ncid_in, nvariables=numvars )
 if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-!print *, "Total number of variables is", numvars
 
 do i = 1, numvars
     istat = NF90_INQ_VAR_DEFLATE (ncid_in, i, shuffle_temp, deflate_temp, deflation_temp)
     if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-    !print *, i, deflate_temp, deflation_temp, shuffle_temp
 
     if (deflate_temp > 0) then
         if (deflation_temp > max_deflation) max_deflation = deflation_temp
@@ -1825,9 +1823,7 @@ do i = 1, numvars
     endif
 enddo
 
-!print *, "Max deflation=", max_deflation, ", max shuffle=", max_shuffle
 call apply_compression_defaults (max_deflation, max_shuffle, deflation, shuffle)
-!print *, "After applying user settings, deflation=", deflation, ", shuffle=", shuffle
 
 end subroutine get_new_var_compression_settings
 

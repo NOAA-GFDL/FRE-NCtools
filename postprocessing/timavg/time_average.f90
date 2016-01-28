@@ -1258,7 +1258,6 @@ contains
  end subroutine alloc_variable_type
 
 !#######################################################################
-
 ! apply_compression_defaults -- applies the user-specified settings
 !   deflation and shuffle to the input variable parameters.
 !   If the user-specified settings are -1, use the input file settings.

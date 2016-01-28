@@ -82,7 +82,7 @@ Usage:  $name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [-z #] [-s] [fi
                     (The default is to process all time indices.)
         -z #        If using NetCDF4, use deflation of level #.
                     Defaults to input file settings.
-        -s          If using NetCDF4, use shuffle if 1 and don't use if 0.
+        -s 1|0      If using NetCDF4, use shuffle if 1 and don't use if 0.
                     Defaults to input file settings.
 
         fields    = A list of (additional) output fields. If this list is not supplied,
