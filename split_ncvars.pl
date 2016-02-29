@@ -117,6 +117,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
            next;
          }
 
+         my $new_vert_dim;
+
          # add variable to list of variables to extract
          push @vlist, $var;
 
@@ -126,6 +128,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             push @vlist, get_variable_bounds   ($dump,$var);
             push @vlist, get_variables_from_att($dump,$var,"coordinates");
             push @vlist, get_variables_from_att($dump,$var,"associated_fields");
+            # check if the vertical dimension needs renamed
+            $new_vert_dim = get_variable_att($dump,$var,"vertical_dimension") if !$Opt{onefile};
          }
 
      #--- every time: need to extract time averaging strings ---
@@ -158,7 +162,9 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          # if a single file is desired then do not extract into single-field files
          next if $Opt{onefile};
 
-     #--- extract fields ---
+     #-----------------------
+     #--- extract fields ----
+     #-----------------------
          my $vlist = join ",",@vlist;
          print "var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
          my $appendopt = "";
@@ -166,6 +172,12 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          print "ncks -h $appendopt -v $vlist $file $odir/$var.nc\n" if !$Opt{QUIET};
          next if $TEST;
          $ncstatus += command_retry("ncks","-h $appendopt -v $vlist $file .var.nc");
+
+         # change vertical dimension to $new_vert_dim
+         if ($new_vert_dim) {
+           print  "ncrename -h -d pfull,$new_vert_dim -v pfull,$new_vert_dim .var.nc\n" if $Opt{VERBOSE} > 0;
+           system("ncrename -h -d pfull,$new_vert_dim -v pfull,$new_vert_dim .var.nc");
+         }
 
      #--- write to the output file ---
          if (-e "$odir/$var.nc") {
@@ -183,12 +195,29 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             #--- modify filename attribute ---
             #--- move to output directory ---
              my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var);
-             if (@ncatted_opts) {
-               print  "ncatted -h -O @ncatted_opts .var.nc\n" if $Opt{VERBOSE} > 1;
-               system("ncatted -h -O @ncatted_opts .var.nc");
+
+             if (!$new_vert_dim) {
+               print  "mv .var.nc $odir/$var.nc\n" if $Opt{VEROSE} > 2;
+               system("mv .var.nc $odir/$var.nc");
+             } else {
+               print  "ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc\n" if $Opt{VEROSE} > 0;
+               system("ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc");
+               push @ncatted_opts, "-a units,$new_vert_dim,m,c,\"1\"";
+               push @ncatted_opts, "-a long_name,$new_vert_dim,m,c,\"hybrid sigma pressure coordinate\"";
+              #push @ncatted_opts, "-a standard_name,$new_vert_dim,c,c,\"atmosphere_hybrid_sigma_pressure_coordinate\"";
+              #push @ncatted_opts, "-a formula,$new_vert_dim,c,c,\"p = a*p0 + b*ps\"";
+              #push @ncatted_opts, "-a formula_terms,$new_vert_dim,c,c,\"p0: p0 a: a b: b ps: ps\"";
+               push @ncatted_opts, "-a vertical_dimension,$var,d,,";
+               # klooge for adding attributes for fields on model levels
+               if ($dump =~ /\t\t$var:associated_fields = ".+" ;/) {
+                 push @ncatted_opts, attributes_for_model_levels($dump,$new_vert_dim);
+               }
              }
-             print  "mv .var.nc $odir/$var.nc\n" if $Opt{VEROSE} > 2;
-             system("mv .var.nc $odir/$var.nc");
+
+             if (@ncatted_opts) {
+               print  "ncatted -h -O @ncatted_opts $var.nc\n" if $Opt{VERBOSE} > 1;
+               system("ncatted -h -O @ncatted_opts $var.nc");
+             }
          }
 
      }   ### end of variable loop ###
@@ -362,9 +391,9 @@ sub set_ncatted_opts {
     push @opts, "-a time_avg_info,$var,d,,"          if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
   }
   # klooge for adding attributes for fields on model levels
-  if ($dump =~ /\t\t$svar:associated_fields = ".+" ;/ && $dump =~ /\t\w+ lev\(.+\)/) {
-    push @opts, attributes_for_model_levels($dump);
-  }
+  # if ($dump =~ /\t\t$svar:associated_fields = ".+" ;/ && $dump =~ /\t\w+ $levdim\(.+\)/) {
+  #   push @opts, attributes_for_model_levels($dump,$levdim);
+  # }
   return @opts;
 }
 
@@ -372,12 +401,13 @@ sub set_ncatted_opts {
 # add attributes to vertical dimension of fields on model levels
 
 sub attributes_for_model_levels {
-  my $dump = shift;
+  my ($dump,$levdim) = @_;
+  my $levbnds = $levdim."_bnds";
   my @opts;
-  push @opts, "-a bounds,lev,c,c,\"lev_bnds\"" if ($dump =~ /\t\w+ lev_bnds\(.+\)/);
+  push @opts, "-a bounds,$levdim,c,c,\"$levbnds\"" if ($dump =~ /\t\w+ $levbnds\(.+\)/);
   if ($dump =~ /\t\w+ a\(.+\)/ && $dump =~ /\t\w+ b\(.+\)/ && $dump =~ /\t\w+ p0\(.+\)/) {
-    push @opts, "-a formula,lev,c,c,\"p = a*p0 + b*ps\"";
-    push @opts, "-a formula_terms,lev,c,c,\"p0: p0 a: a b: b ps: ps\"";
+    push @opts, "-a formula,$levdim,c,c,\"p = a*p0 + b*ps\"";
+    push @opts, "-a formula_terms,$levdim,c,c,\"p0: p0 a: a b: b ps: ps\"";
   }
   return @opts;
 }
