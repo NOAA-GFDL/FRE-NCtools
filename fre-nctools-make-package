@@ -41,7 +41,6 @@ if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
   module use -a /home/fms/local/modulefiles
   module load intel_compilers/11.1.073 mpich2/1.2.1p1 netcdf/4.2
   module load fre-system/init
-  setenv CVSROOT /home/fms/cvs
   setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
 else if ( "$site" == "gfdl.noaa.gov" ) then
@@ -51,7 +50,6 @@ else if ( "$site" == "gfdl.noaa.gov" ) then
   module use /home/sdu/publicmodules
   module load mpich2/1.5b1
   module load fre-system/init
-  setenv CVSROOT /home/fms/cvs
   setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/x64/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/x64/netcdf-4.2_optimized SITE=gfdl-ws -f fre-nctools.mk
   set NOPARALLEL
@@ -59,17 +57,15 @@ else if ( "$site" == "ncrc.gov" ) then
   source $MODULESHOME/init/tcsh
   module use -a /ncrc/home2/fms/local/modulefiles
   module rm PrgEnv-pgi PrgEnv-pathscale
-  module load PrgEnv-intel
-  module swap intel intel/12.0.5.220
+  module load PrgEnv-intel/5.2.82
+  module swap intel intel/15.0.2.164
   module load fre-system/init
-  setenv CVS_RSH gsissh
-  setenv CVSROOT :ext:cvs.princeton.rdhpcs.noaa.gov:/home/fms/cvs
   setenv MPICH_UNEX_BUFFER_SIZE 256m
   setenv MPICH_MAX_SHORT_MSG_SIZE 64000
   setenv MPICH_PTL_UNEX_EVENTS 160k
   setenv KMP_STACKSIZE 2g
   setenv F_UFMTENDIAN big
-  alias make make HDF5_HOME=/opt/cray/hdf5/1.8.8/intel/120/ NETCDF_HOME=/opt/cray/netcdf/4.2.0/intel/120 NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
+  alias make make HDF5_HOME=/opt/cray/hdf5-parallel/1.8.14/CRAY/8.3 NETCDF_HOME=/opt/cray/netcdf-hdf5parallel/4.3.3.1/CRAY/8.3 NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
 else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
   source $MODULESHOME/init/tcsh
   module use -a /home/fms/local/modulefiles
@@ -99,22 +95,12 @@ endif
 
 module list
 
-set echo
-
-### Not needed as we now use git
-#alias cvs cvs -f
-
-unset echo
-
 echo "Done..."
 
 echo "////////////////////////////////////////////////////////////////////////////////"
 echo "//////////////////////////////////////////////////////////// Directory Layout //"
 echo "////////////////////////////////////////////////////////////////////////////////"
 
-### Not needed as we now use git
-#cvs co -r $cvstag $freNCToolsOther
-#cvs co -r $cvstag $freNCToolsSrc
 mkdir -p share/src
 cp -r ${srcDir}/{postprocessing,shared,tools} share/src
 mkdir -p $FRE_SYSTEM_SITE/bin
