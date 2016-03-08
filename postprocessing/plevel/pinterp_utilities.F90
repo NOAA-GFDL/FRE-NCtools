@@ -9,10 +9,13 @@ private
 public :: copy_axis, copy_variable,    &
           define_new_variable,         &
           set_verbose_level,           &
-          error_handler
+          error_handler,               &
+          share_compression_parameters, &
+          apply_compression_defaults
 
 integer, parameter :: max_char = 128
 integer :: verbose = 1
+integer :: user_deflation, user_shuffle, new_var_deflation, new_var_shuffle
 
 
 contains
@@ -33,6 +36,8 @@ contains
 
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, recdim, dimid_in, xtype, ndims, natts, attnum, i
+    integer :: deflate_in, deflation_in, shuffle_in
+    integer :: deflation_out, shuffle_out
     logical :: found_edges, found_bounds
     character(len=NF90_MAX_NAME) :: name_bounds
 
@@ -98,6 +103,17 @@ contains
       istat = NF90_DEF_VAR (ncid_out, trim(oname), xtype, (/dimid_out/), varid_out)
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
 
+    ! get compression parameters
+      istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+      if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+
+    ! set compression parameters
+      call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
+      if (deflation_out > 0) then
+          istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_out, shuffle_out, 1, deflation_out)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      endif
+
     ! copy attributes
       do attnum = 1, natts
          istat = NF90_INQ_ATTNAME (ncid_in, varid_in, attnum, attname)
@@ -135,6 +151,40 @@ contains
    end subroutine copy_axis
 
 !#######################################################################
+! apply_compression_defaults -- applies the user-specified settings
+!       deflation and shuffle to the input variable parameters.
+!       If the user-specified settings are -1, use the input file settings.
+
+subroutine apply_compression_defaults ( deflation_in, shuffle_in, deflation_out, shuffle_out )
+
+    integer, intent(in) :: deflation_in, shuffle_in
+    integer, intent(out) :: deflation_out, shuffle_out
+
+    if (user_deflation == -1) then
+        deflation_out = deflation_in
+    else if (user_deflation == 0) then
+        deflation_out = 0
+    else
+        deflation_out = user_deflation
+    endif
+
+    if (user_shuffle == -1) then
+        shuffle_out = shuffle_in
+    else
+        shuffle_out = user_shuffle
+    endif
+
+    if (verbose > 1) then
+        if (deflation_out > 0) then
+            print *, 'Using deflation=', deflation_out, 'and shuffle=', shuffle_out
+        else
+            print *, 'Not using deflation'
+        endif
+    endif
+
+end subroutine apply_compression_defaults
+
+!#######################################################################
 
    subroutine copy_variable ( ncid_in, name_in, ncid_out, dimids, varid_out, &
                               name_out, pack, range, missvalue    )
@@ -149,6 +199,8 @@ contains
 
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, varid_in,  xtype, ndims, natts, attnum
+    integer :: shuffle_in, deflate_in, deflation_in
+    integer :: shuffle_out, deflation_out
     logical :: no_missing_value, no_valid_range, no_add_offset, no_scale_factor
 !-----------------------------------------------------------------------
       if (verbose > 1) print *, 'copy_variable name=', trim(name_in)
@@ -175,6 +227,17 @@ contains
     ! define output variable 
       istat = NF90_DEF_VAR ( ncid_out, trim(oname), xtype, dimids, varid_out)
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+
+    ! get compression parameters
+      istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+      if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+
+    ! set compression parameters
+      call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
+      if (deflation_out > 0) then
+          istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_out, shuffle_out, 1, deflation_out)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      endif
 
     ! new missing value?
 
@@ -314,6 +377,12 @@ contains
     if (istat /= NF90_NOERR) call error_handler &
                 ('defining output variable '//trim(name), ncode=istat)
 
+  ! apply compression parameters
+    if (new_var_deflation > 0) then
+          istat = NF90_DEF_VAR_DEFLATE (ncid, varid, new_var_shuffle, 1, new_var_deflation)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+    endif
+
   ! new attributes
     if (present(units)) then
        istat = NF90_PUT_ATT (ncid, varid, 'units', trim(units))
@@ -377,6 +446,20 @@ contains
  integer, intent(in) :: verbose_level
    verbose = verbose_level
  end subroutine set_verbose_level
+
+!#######################################################################
+
+! make the namelist compression settings visible to code in this file
+subroutine share_compression_parameters (user_deflation2, user_shuffle2, &
+                                     new_var_deflation2, new_var_shuffle2)
+    integer, intent(in) :: user_deflation2, user_shuffle2
+    integer, intent(in), optional :: new_var_deflation2, new_var_shuffle2
+
+    user_deflation = user_deflation2
+    user_shuffle = user_shuffle2
+    if (present(new_var_deflation2)) new_var_deflation = new_var_deflation2
+    if (present(new_var_shuffle2)) new_var_shuffle = new_var_shuffle2
+end subroutine share_compression_parameters
 
 !#######################################################################
 
