@@ -33,7 +33,7 @@ set precision = 8
 
 #  ----- parse input argument list ------
 
-set argv = (`getopt abdmWo:v:w:r: $*`)
+set argv = (`getopt abdmWo:v:w:r:z:s: $*`)
 
 while ("$argv[1]" != "--")
     switch ($argv[1])
@@ -55,6 +55,10 @@ while ("$argv[1]" != "--")
             set ofile = $argv[2]; shift argv; breaksw
         case -v:
             set vers = $argv[2]; shift argv; breaksw
+	case -z:
+	    set deflation = $argv[2]; shift argv; breaksw
+	case -s:
+	    set shuffle = $argv[2]; shift argv; breaksw
     endsw
     shift argv
 end
@@ -81,6 +85,10 @@ Usage:  $name [-a] [-b] [-d] [-m] [-r prec] [-v vers] -o ofile  files.....
         -W       = suppress warning messages (use with caution)
         -w wght  = minimum fraction of missing data needed for valid data
         -o ofile = name of the output file
+	-z #	 = If using NetCDF4, use deflation of level #.
+		   Defaults to input file settings.
+	-s 1|0   = If using NetCDF4, use shuffle if 1 and don't use if 0.
+		   Defaults to input file settings.
 
         files... = list netcdf files, each file will be a time record
                    in the output file (the files should be in 
@@ -139,6 +147,14 @@ end
 
     if ($?weight) then
        echo "    frac_valid_data = " $weight ,   >> $nml_name
+    endif
+
+    if ($?deflation) then
+       echo "    user_deflation = " $deflation ,   >> $nml_name
+    endif
+
+    if ($?shuffle) then
+       echo "    user_shuffle = " $shuffle ,   >> $nml_name
     endif
 
     echo " &end"                                 >> $nml_name
