@@ -109,6 +109,7 @@ typedef struct {
   int ndim;
   Axis_config  *axis;
   int has_tavg_info;
+  nc_type tavg_type;
   int has_cell_measure_att;
   int id_t1, id_t2, id_dt;
   double *t1, *t2, *dt;

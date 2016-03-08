@@ -48,6 +48,7 @@ int mpp_def_var(int fid, const char* name, nc_type type, int ndim, const int *di
 void mpp_def_global_att(int fid, const char *name, const char *val);
 void mpp_def_global_att_double(int fid, const char *name, size_t len, const double *val);
 void mpp_def_var_att(int fid, int vid, const char *attname, const char *attval);
+void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval);
 void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out);
 void mpp_copy_global_att(int fid_in, int fid_out);
 void mpp_put_var_value(int fid, int vid, const void* data);
