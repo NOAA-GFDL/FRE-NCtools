@@ -16,9 +16,9 @@
 include ./env.$(SITE)
 
 FC       := ifort
-FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -r8 -traceback
+FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -r8 -traceback $(FFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include
-LIBS     :=  -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS2) $(STATIC)
+LIBS     :=  -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS_SITE) $(STATIC)
 
 TARGETS  := list_ncvars.exe
 

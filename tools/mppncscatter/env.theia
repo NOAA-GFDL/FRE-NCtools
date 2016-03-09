@@ -1,4 +1,4 @@
 LIBNETCDFF := -lnetcdff
 
-LIBS2  := 
-CLIBS2 := 
+LIBS_SITE  := 
+CLIBS_SITE := 

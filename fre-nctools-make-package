@@ -59,13 +59,15 @@ else if ( "$site" == "ncrc.gov" ) then
   module rm PrgEnv-pgi PrgEnv-pathscale
   module load PrgEnv-intel/5.2.82
   module swap intel intel/15.0.2.164
-  module load fre-system/init
+  module load cray-netcdf/4.3.3.1
+  module load cray-hdf5/1.8.14
+  setenv FRE_SYSTEM_SITE ncrc3
   setenv MPICH_UNEX_BUFFER_SIZE 256m
   setenv MPICH_MAX_SHORT_MSG_SIZE 64000
   setenv MPICH_PTL_UNEX_EVENTS 160k
   setenv KMP_STACKSIZE 2g
   setenv F_UFMTENDIAN big
-  alias make make HDF5_HOME=/opt/cray/hdf5-parallel/1.8.14/CRAY/8.3 NETCDF_HOME=/opt/cray/netcdf-hdf5parallel/4.3.3.1/CRAY/8.3 NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
+  alias make make HDF5_HOME=$HDF5_DIR NETCDF_HOME=$NETCDF_DIR NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
 else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
   source $MODULESHOME/init/tcsh
   module use -a /home/fms/local/modulefiles

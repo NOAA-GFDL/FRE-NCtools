@@ -16,7 +16,7 @@
 include ./env.$(SITE)
 
 CXX      := icpc
-CXXFLAGS := -O3 -g -traceback
+CXXFLAGS := -O3 -g -traceback $(CFLAGS_SITE)
 
 EZBAR=./extern/ezProgressBar-2.1.0
 EZNC=./extern/eznc-0.2.1/src
@@ -27,7 +27,7 @@ EZSTR=./extern/ezStringUtil-0.1.0
 EZTEST=./extern/ezTest-0.0.0
 
 INCLUDES := -I${NETCDF_HOME}/include -I. -I$(EZBAR) -I$(EZNC) -I$(EZODO) -I$(EZOPT) -I$(EZSLICE) -I$(EZSTR)
-CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz  -lirc $(CLIBS2) $(STATIC)
+CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz  -lirc $(CLIBS_SITE) $(STATIC)
 
 TARGETS  := ncx
 
