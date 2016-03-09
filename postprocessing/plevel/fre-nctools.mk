@@ -16,10 +16,10 @@
 include ./env.$(SITE)
 
 FC       := ifort
-FFLAGS   := -module ./modules.r8 -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 64 -traceback
-FFLAGS_r4:= -module ./modules.r4 -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 32 -traceback
+FFLAGS   := -module ./modules.r8 -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 64 -traceback $(FFLAGS_SITE)
+FFLAGS_r4:= -module ./modules.r4 -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 32 -traceback $(FFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include
-LIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS2) $(STATIC)
+LIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS_SITE) $(STATIC)
 
 TARGETS  := PLEV.exe PLEV.r4.exe
 

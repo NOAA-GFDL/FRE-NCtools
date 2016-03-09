@@ -16,13 +16,13 @@
 include ./env.$(SITE)
 
 CC       := icc
-CFLAGS   := -O3 -g -traceback
-CLIBS    := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(CLIBS2) $(STATIC)
+CFLAGS   := -O3 -g -traceback $(CFLAGS_SITE)
+CLIBS    := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(CLIBS_SITE) $(STATIC)
 
 FC       := ifort
-FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 64 -traceback
+FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -real_size 64 -traceback $(FFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include
-LIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS2) $(STATIC)
+LIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib $(LIBNETCDFF) -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(LIBS_SITE) $(STATIC)
 
 TARGETS  := scatter-ncc combine-ncc decompress-ncc is-compressed
 
