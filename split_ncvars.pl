@@ -205,8 +205,6 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                push @ncatted_opts, "-a units,$new_vert_dim,m,c,\"1\"";
                push @ncatted_opts, "-a long_name,$new_vert_dim,m,c,\"hybrid sigma pressure coordinate\"";
               #push @ncatted_opts, "-a standard_name,$new_vert_dim,c,c,\"atmosphere_hybrid_sigma_pressure_coordinate\"";
-              #push @ncatted_opts, "-a formula,$new_vert_dim,c,c,\"p = a*p0 + b*ps\"";
-              #push @ncatted_opts, "-a formula_terms,$new_vert_dim,c,c,\"p0: p0 a: a b: b ps: ps\"";
                push @ncatted_opts, "-a vertical_dimension,$var,d,,";
                # klooge for adding attributes for fields on model levels
                if ($dump =~ /\t\t$var:associated_fields = ".+" ;/) {
@@ -262,7 +260,8 @@ Split NetCDF Variables
 Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
 
         -l       = include readme log in output directory
-        -d       = debug option: turns on command echo
+        -V       = verbose option: increases standard output, multiple -V allowed
+        -c       = cmip option, time average info variable not written
         -i idir  = input (archive) directory path
         -o odir  = output directory path
         -f file  = one file output option
@@ -406,8 +405,8 @@ sub attributes_for_model_levels {
   my @opts;
   push @opts, "-a bounds,$levdim,c,c,\"$levbnds\"" if ($dump =~ /\t\w+ $levbnds\(.+\)/);
   if ($dump =~ /\t\w+ a\(.+\)/ && $dump =~ /\t\w+ b\(.+\)/ && $dump =~ /\t\w+ p0\(.+\)/) {
-    push @opts, "-a formula,$levdim,c,c,\"p = a*p0 + b*ps\"";
-    push @opts, "-a formula_terms,$levdim,c,c,\"p0: p0 a: a b: b ps: ps\"";
+    push @opts, "-a formula,$levdim,c,c,\"p(n,k,j,i) = ap(k) + b(k)*ps(n,j,i)\"";
+    push @opts, "-a formula_terms,$levdim,c,c,\"ap: ap b: b ps: ps\"";
   }
   return @opts;
 }
