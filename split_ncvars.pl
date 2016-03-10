@@ -194,13 +194,23 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             #--- create new file ---
             #--- modify filename attribute ---
             #--- move to output directory ---
+
              my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var);
 
+             # add scalar height variable for near-surface fields
+             if (get_variable_att($dump,$var,"near_surface_height")) {
+               create_height_file(get_variable_att($dump,$var,"near_surface_height"),"height");
+               print  "ncks -h -A height.nc .var.nc" if $Opt{VERBOSE} > 1;
+               system("ncks -h -A height.nc .var.nc");
+               unlink "height.nc";
+               push @ncatted_opts, "-a near_surface_height,$var,d,,";
+             }
+
              if (!$new_vert_dim) {
-               print  "mv .var.nc $odir/$var.nc\n" if $Opt{VEROSE} > 2;
+               print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
                system("mv .var.nc $odir/$var.nc");
              } else {
-               print  "ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc\n" if $Opt{VEROSE} > 0;
+               print  "ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc\n" if $Opt{VERBOSE} > 0;
                system("ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc");
                push @ncatted_opts, "-a units,$new_vert_dim,m,c,\"1\"";
                push @ncatted_opts, "-a long_name,$new_vert_dim,m,c,\"hybrid sigma pressure coordinate\"";
@@ -432,4 +442,37 @@ sub variable_log {
   close(OUT);
   return 0;
 }
+
+#-------------------------------------------
+# create a file containing a scalar height variable
+# this file can then be added to a file containing a near-surface field
+#   > ncks -A height_file.nc near_surface.nc
+
+sub create_height_file {
+  my ($height,$file) = @_;
+  my $cdl = <<EOF;
+netcdf $file {
+variables:
+     double height ;
+          height:units = "m" ;
+          height:axis = "Z" ;
+          height:positive = "up" ;
+          height:long_name = "height" ;
+          height:standard_name = "height" ;
+data:
+
+  height = $height ;
+}
+EOF
+  my $cdl_file = "height.cdl";
+  open (OUT,"> $cdl_file") || die "Cannot open $cdl_file for output";
+  print OUT $cdl;
+  close OUT;
+  print  "$cdl_file\n"          if $Opt{VERBOSE} > 3;
+  print  "ncgen -b $cdl_file\n" if $Opt{VERBOSE} > 2;
+  system("ncgen -b $cdl_file");
+  unlink $cdl_file;
+  return 1;
+}
+
 
