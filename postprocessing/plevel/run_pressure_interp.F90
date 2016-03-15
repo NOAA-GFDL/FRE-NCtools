@@ -1810,18 +1810,20 @@ integer :: numvars
 integer :: max_deflation=0, max_shuffle=0
 integer :: deflate_temp, deflation_temp, shuffle_temp
 
-istat = NF90_INQUIRE ( ncid_in, nvariables=numvars )
-if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-
-do i = 1, numvars
-    istat = NF90_INQ_VAR_DEFLATE (ncid_in, i, shuffle_temp, deflate_temp, deflation_temp)
+if (in_format /= NF90_FORMAT_64BIT .and. in_format /= NF90_FORMAT_CLASSIC) then
+    istat = NF90_INQUIRE ( ncid_in, nvariables=numvars )
     if (istat /= NF90_NOERR) call error_handler (ncode=istat)
 
-    if (deflate_temp > 0) then
-        if (deflation_temp > max_deflation) max_deflation = deflation_temp
-        if (shuffle_temp > max_shuffle) max_shuffle = shuffle_temp
-    endif
-enddo
+    do i = 1, numvars
+        istat = NF90_INQ_VAR_DEFLATE (ncid_in, i, shuffle_temp, deflate_temp, deflation_temp)
+        if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+
+        if (deflate_temp > 0) then
+            if (deflation_temp > max_deflation) max_deflation = deflation_temp
+            if (shuffle_temp > max_shuffle) max_shuffle = shuffle_temp
+        endif
+    enddo
+endif
 
 call apply_compression_defaults (max_deflation, max_shuffle, deflation, shuffle)
 
