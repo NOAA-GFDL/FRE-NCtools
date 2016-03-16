@@ -36,7 +36,7 @@ contains
 
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, recdim, dimid_in, xtype, ndims, natts, attnum, i
-    integer :: deflate_in, deflation_in, shuffle_in
+    integer :: deflate_in, deflation_in, shuffle_in, in_format
     integer :: deflation_out, shuffle_out
     logical :: found_edges, found_bounds
     character(len=NF90_MAX_NAME) :: name_bounds
@@ -104,8 +104,16 @@ contains
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
 
     ! get compression parameters
-      istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+      istat = NF90_INQUIRE ( ncid_in, formatnum=in_format )
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
+          shuffle_in = 0
+          deflate_in = 0
+          deflation_in = 0
+      else
+          istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      endif
 
     ! set compression parameters
       call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )
@@ -199,7 +207,7 @@ end subroutine apply_compression_defaults
 
     character(len=NF90_MAX_NAME) :: oname, attname
     integer :: istat, varid_in,  xtype, ndims, natts, attnum
-    integer :: shuffle_in, deflate_in, deflation_in
+    integer :: shuffle_in, deflate_in, deflation_in, in_format
     integer :: shuffle_out, deflation_out
     logical :: no_missing_value, no_valid_range, no_add_offset, no_scale_factor
 !-----------------------------------------------------------------------
@@ -229,8 +237,16 @@ end subroutine apply_compression_defaults
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
 
     ! get compression parameters
-      istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+      istat = NF90_INQUIRE ( ncid_in, formatnum=in_format )
       if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
+          shuffle_in = 0
+          deflate_in = 0
+          deflation_in = 0
+      else
+          istat = NF90_INQ_VAR_DEFLATE (ncid_in, varid_in, shuffle_in, deflate_in, deflation_in)
+          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+      endif
 
     ! set compression parameters
       call apply_compression_defaults (deflation_in, shuffle_in, deflation_out, shuffle_out )

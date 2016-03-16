@@ -414,10 +414,16 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
             if (verbose) write (*,*) 'Defining output variable: '//trim(Vars(ivar)%name)
 
             ! get compression
-            istat = NF90_INQ_VAR_DEFLATE (ncid_in, Vars(ivar)%varid_out, shuffle_in, &
-                deflate_in, deflation_in)
+            if (in_format == NF90_FORMAT_64BIT .or. in_format == NF90_FORMAT_CLASSIC) then
+                shuffle_in = 0
+                deflate_in = 0
+                deflation_in = 0
+            else
+                istat = NF90_INQ_VAR_DEFLATE (ncid_in, Vars(ivar)%varid_out, shuffle_in, &
+                    deflate_in, deflation_in)
                 if (istat /= NF90_NOERR) call error_handler &
-                           ('getting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+                    ('getting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
+            endif
             if (deflation_in > max_input_deflation) max_input_deflation = deflation_in
             if (shuffle_in > max_input_shuffle) max_input_shuffle = shuffle_in
 
