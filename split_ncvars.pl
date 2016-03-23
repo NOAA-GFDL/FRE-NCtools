@@ -108,6 +108,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 #### loop through variables ####
      print "processing ".scalar(@varlist)." variables\n" if $Opt{VERBOSE} > 2;
      my @vlist = @coords;
+     my @xlist;
 
      foreach my $var (@varlist) {
          $var =~ s/^\s+//; $var =~ s/\s+$//;
@@ -117,8 +118,6 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
            next;
          }
 
-         my $new_vert_dim;
-
          # add variable to list of variables to extract
          push @vlist, $var;
 
@@ -127,9 +126,19 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             # get axis names then edge names (may want to get bounds for CF compliance)
             push @vlist, get_variable_bounds   ($dump,$var);
             push @vlist, get_variables_from_att($dump,$var,"coordinates");
-            push @vlist, get_variables_from_att($dump,$var,"associated_fields");
-            # check if the vertical dimension needs renamed
-            $new_vert_dim = get_variable_att($dump,$var,"vertical_dimension") if !$Opt{onefile};
+            push @vlist, get_formula_terms     ($dump,$var);
+
+            # formula terms
+            # only add static terms to the vlist
+            # time-varying terms are "external_variables"
+            my @terms = get_formula_terms ($dump,$var);
+            foreach (@terms) {
+              if (is_static($dump,$_)) {
+                push @vlist, $_;
+              } else {
+                push @xlist, $_;
+              }
+            }
          }
 
      #--- every time: need to extract time averaging strings ---
@@ -155,6 +164,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             # skip this variable, reset the variable list
             if ($SKIPVAR) {
               @vlist = @coords;
+              #my @xlist;
               next;
             }
          }
@@ -173,12 +183,6 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          next if $TEST;
          $ncstatus += command_retry("ncks","-h $appendopt -v $vlist $file .var.nc");
 
-         # change vertical dimension to $new_vert_dim
-         if ($new_vert_dim) {
-           print  "ncrename -h -d pfull,$new_vert_dim -v pfull,$new_vert_dim .var.nc\n" if $Opt{VERBOSE} > 0;
-           system("ncrename -h -d pfull,$new_vert_dim -v pfull,$new_vert_dim .var.nc");
-         }
-
      #--- write to the output file ---
          if (-e "$odir/$var.nc") {
              die "ERROR: try to append to unlimited dimension when no unlimited dimension found" if !$timename;
@@ -196,31 +200,13 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             #--- move to output directory ---
 
              my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var);
-
-             # add scalar height variable for near-surface fields
-             if (get_variable_att($dump,$var,"near_surface_height")) {
-               create_height_file(get_variable_att($dump,$var,"near_surface_height"),"height");
-               print  "ncks -h -A height.nc .var.nc" if $Opt{VERBOSE} > 1;
-               system("ncks -h -A height.nc .var.nc");
-               unlink "height.nc";
-               push @ncatted_opts, "-a near_surface_height,$var,d,,";
+             # external_variables attribute (time-varying formula terms)
+             if (@xlist) {
+               push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
              }
 
-             if (!$new_vert_dim) {
-               print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
-               system("mv .var.nc $odir/$var.nc");
-             } else {
-               print  "ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc\n" if $Opt{VERBOSE} > 0;
-               system("ncap2 -s \"$new_vert_dim=$new_vert_dim/1000\" .var.nc $var.nc");
-               push @ncatted_opts, "-a units,$new_vert_dim,m,c,\"1\"";
-               push @ncatted_opts, "-a long_name,$new_vert_dim,m,c,\"hybrid sigma pressure coordinate\"";
-              #push @ncatted_opts, "-a standard_name,$new_vert_dim,c,c,\"atmosphere_hybrid_sigma_pressure_coordinate\"";
-               push @ncatted_opts, "-a vertical_dimension,$var,d,,";
-               # klooge for adding attributes for fields on model levels
-               if ($dump =~ /\t\t$var:associated_fields = ".+" ;/) {
-                 push @ncatted_opts, attributes_for_model_levels($dump,$new_vert_dim);
-               }
-             }
+             print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
+             system("mv .var.nc $odir/$var.nc");
 
              if (@ncatted_opts) {
                print  "ncatted -h -O @ncatted_opts $var.nc\n" if $Opt{VERBOSE} > 1;
@@ -340,6 +326,7 @@ sub get_variable_bounds {
   my $var = shift;
   my $timename = get_time_dimension($dump);
   my @bounds;
+  # find dimensions for this variable
   if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
     my @axes = split /, /, $1;
     foreach my $dim (@axes) {
@@ -355,6 +342,46 @@ sub get_variable_bounds {
   return @bounds;
 }
 
+#-------------------------------------------
+
+sub get_formula_terms {
+  my $dump = shift;
+  my $var = shift;
+  my @terms;
+  # find dimensions for this variable
+  if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
+    my @axes = split /, /, $1;
+    # check each axis for formula terms
+    foreach my $dim (@axes) {
+      my $form = get_variable_att($dump,$dim,"formula_terms");
+      foreach ($form =~ /\w+:\s+(\w+)/g) {
+        push @terms, $_ if (is_static($form,$_));
+      }
+      # also check bounds for formula terms
+      my $bnds = get_variable_att($dump,$dim,"bounds");
+      my $form = get_variable_att($dump,$bnds,"formula_terms");
+      foreach my $term ($form =~ /\w+:\s+(\w+)/g) {
+        push @terms, $term if (is_static($form,$term) && !grep{$_ eq $term} @terms);
+      }
+    }
+  }
+  return @terms;
+}
+
+#-------------------------------------------
+
+sub is_static {
+  my ($dump,$var);
+  my $timename = get_time_dimension($dump);
+  my $static = 0;
+  # find dimensions for this variable
+  if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
+    my @axes = split /, /, $1;
+    $static = grep{$_ eq $timename} @axes;
+  }
+  return $static;
+}
+  
 #-------------------------------------------
 
 sub tailname {
@@ -395,28 +422,8 @@ sub set_ncatted_opts {
   push @opts, "-a filename,global,m,c,\"$filename\"" if ($dump =~ /\t\t:filename = ".+" ;/);
   my $svar = $var;
   $svar = "\w+" if !$svar; # globally edit attributes
-  push @opts, "-a associated_fields,$var,d,,"        if ($dump =~ /\t\t$svar:associated_fields = ".+" ;/);
   if ($Opt{CMIP}) {
-    push @opts, "-a time_avg_info,$var,d,,"          if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
-  }
-  # klooge for adding attributes for fields on model levels
-  # if ($dump =~ /\t\t$svar:associated_fields = ".+" ;/ && $dump =~ /\t\w+ $levdim\(.+\)/) {
-  #   push @opts, attributes_for_model_levels($dump,$levdim);
-  # }
-  return @opts;
-}
-
-#-------------------------------------------
-# add attributes to vertical dimension of fields on model levels
-
-sub attributes_for_model_levels {
-  my ($dump,$levdim) = @_;
-  my $levbnds = $levdim."_bnds";
-  my @opts;
-  push @opts, "-a bounds,$levdim,c,c,\"$levbnds\"" if ($dump =~ /\t\w+ $levbnds\(.+\)/);
-  if ($dump =~ /\t\w+ a\(.+\)/ && $dump =~ /\t\w+ b\(.+\)/ && $dump =~ /\t\w+ p0\(.+\)/) {
-    push @opts, "-a formula,$levdim,c,c,\"p(n,k,j,i) = ap(k) + b(k)*ps(n,j,i)\"";
-    push @opts, "-a formula_terms,$levdim,c,c,\"ap: ap b: b ps: ps\"";
+    push @opts, "-a time_avg_info,$var,d,," if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
   }
   return @opts;
 }
@@ -442,37 +449,4 @@ sub variable_log {
   close(OUT);
   return 0;
 }
-
-#-------------------------------------------
-# create a file containing a scalar height variable
-# this file can then be added to a file containing a near-surface field
-#   > ncks -A height_file.nc near_surface.nc
-
-sub create_height_file {
-  my ($height,$file) = @_;
-  my $cdl = <<EOF;
-netcdf $file {
-variables:
-     double height ;
-          height:units = "m" ;
-          height:axis = "Z" ;
-          height:positive = "up" ;
-          height:long_name = "height" ;
-          height:standard_name = "height" ;
-data:
-
-  height = $height ;
-}
-EOF
-  my $cdl_file = "height.cdl";
-  open (OUT,"> $cdl_file") || die "Cannot open $cdl_file for output";
-  print OUT $cdl;
-  close OUT;
-  print  "$cdl_file\n"          if $Opt{VERBOSE} > 3;
-  print  "ncgen -b $cdl_file\n" if $Opt{VERBOSE} > 2;
-  system("ncgen -b $cdl_file");
-  unlink $cdl_file;
-  return 1;
-}
-
 
