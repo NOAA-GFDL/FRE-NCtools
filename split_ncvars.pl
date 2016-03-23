@@ -183,6 +183,14 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          next if $TEST;
          $ncstatus += command_retry("ncks","-h $appendopt -v $vlist $file .var.nc");
 
+         # remove dimensions called "scalar_axis" (i.e., length = 1)
+         # these are typically in the near-surface field files
+         my @commands = remove_degenerate_dimension(".var.nc","scalar_axis");
+         foreach my $cmd (@commands) {
+           print "$cmd\n" if $Opt{VERBOSE} > 0;
+           system($cmd);
+         }
+
      #--- write to the output file ---
          if (-e "$odir/$var.nc") {
              die "ERROR: try to append to unlimited dimension when no unlimited dimension found" if !$timename;
@@ -426,6 +434,22 @@ sub set_ncatted_opts {
     push @opts, "-a time_avg_info,$var,d,," if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
   }
   return @opts;
+}
+
+#-------------------------------------------
+
+sub remove_degenerate_dimension {
+  my ($file,$dim) = @_;
+  my $dump =`ncdump -h $file`;
+  my @cmds;
+  # is this a singleton dimension?
+  if ($dump =~ /\t$dim = 1;/) {
+    # remove dim by averaging, then (un)extract the unused dimension
+    push @cmds, "ncwa -h -a $dim $file $file.ztmp";
+    push @cmds, "ncks -h -O -x -v scalar_axis $file.ztmp $file";
+    push @cmds, "rm -f $file.ztmp";
+  }
+  return @cmds;
 }
 
 #-------------------------------------------
