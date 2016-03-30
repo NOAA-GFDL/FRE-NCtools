@@ -20,7 +20,7 @@ Getopt::Long::Configure("bundling");
 
 my $cwd = getcwd;
 my $ncstatus = 0;
-my $TEST = 1;
+my $TEST = 0;
 
 my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, odir=>$cwd );
 
@@ -106,17 +106,20 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      }
 
 #### loop through variables ####
-     print "processing ".scalar(@varlist)." variables\n" if $Opt{VERBOSE} > 2;
-     my @vlist = @coords;
-     my @xlist;
+     print "processing ".scalar(@varlist)." variables\n\n" if $Opt{VERBOSE} > 2;
+     my @vlist;
 
      foreach my $var (@varlist) {
+         @vlist = @coords;
+         my @xlist;
+
          $var =~ s/^\s+//; $var =~ s/\s+$//;
          # skip this variable if it does not exist
          if ($dump !~ /\t\w+ $var\(.+\)/) {
            print "WARNING: variable $var does not exist ... skipping.\n" if !$Opt{QUIET};
            next;
          }
+         print "Processing variable: $var\n" if $Opt{VERBOSE} > 1;
 
          # add variable to list of variables to extract
          push @vlist, $var;
@@ -124,46 +127,70 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      #--- first time: need to extract additional static fields ---
          if (!-e "$odir/$var.nc") {
             # get axis names then edge names (may want to get bounds for CF compliance)
-            push @vlist, get_variable_bounds   ($dump,$var);
-            push @vlist, get_variables_from_att($dump,$var,"coordinates");
-            push @vlist, get_formula_terms     ($dump,$var);
+            my @bounds = get_variable_bounds   ($dump,$var);
+            if (@bounds) {
+              print "   $var: bounds = ".join(", ",@bounds)."\n" if $Opt{VERBOSE} > 1;
+              push @vlist, @bounds;
+            }
+            # get variables specified by the coordinates attribute
+            my @coordinates = get_variables_from_att($dump,$var,"coordinates");
+            if (@coordinates) {
+              print "   $var: coordinates = ".join(", ",@bounds)."\n" if $Opt{VERBOSE} > 1;
+              push @vlist, @coordinates;
+            }
 
             # formula terms
             # only add static terms to the vlist
             # time-varying terms are "external_variables"
-            my @terms = get_formula_terms ($dump,$var);
-            foreach (@terms) {
+            my @all_terms = get_formula_terms ($dump,$var);
+            my (@vterms,@xterms);
+            foreach (@all_terms) {
               if (is_static($dump,$_)) {
-                push @vlist, $_;
+                push @vterms, $_;
               } else {
-                push @xlist, $_;
+                push @xterms, $_;
               }
+            }
+            if (@vterms) {
+              print "   $var: formula_terms(static) = ".join(", ",@vterms)."\n" if $Opt{VERBOSE} > 1;
+              push @vlist, @vterms;
+            }
+            if (@xterms) {
+              print "   $var: external_variables = ".join(", ",@xterms)."\n" if $Opt{VERBOSE} > 1;
+              push @xlist, @xterms;
             }
          }
 
-     #--- every time: need to extract time averaging strings ---
-        # fms-style time avg variable
+     #--- every time: need to extract time average/bounds variables ---
          if ($timename) {
-            push @vlist, get_time_avg_info($dump,$var) if !$Opt{CMIP};
+
+            # fms-style time avg variables
+            if (!$Opt{CMIP}) {
+              my @time_avg_info = get_time_avg_info($dump,$var);
+              if (@time_avg_info) {
+                print "   $var: time_avg_info = ".join(", ",@time_avg_info)."\n" if $Opt{VERBOSE} > 1;
+                push @vlist, @time_avg_info;
+              }
+            }
 
            # CF compliant time avg variables (bounds or climatology)
             my $SKIPVAR = 0;
             foreach my $tbound ( qw/bounds climatology/ ) {
                my $name = get_variable_att($dump,$timename,$tbound);
                if ($name) {
-                  print "var=$var; name=$name\n" if $Opt{VERBOSE} > 2;
                   if ($name eq $var) {
                     # skip this variable because it is a time bounds variable
-                    print "Skipping $var\n" if $Opt{VERBOSE} > 1;
+                    print "   $var: SKIPPING because it is a time bounds variable\n" if $Opt{VERBOSE} > 1;
                     $SKIPVAR = 1;
                     last;
                   }
+                  print "   $var: $timename: $tbound = $name\n" if $Opt{VERBOSE} > 1;
                   push @vlist, $name;
                }
             }
             # skip this variable, reset the variable list
             if ($SKIPVAR) {
-              @vlist = @coords;
+              #@vlist = @coords;
               #my @xlist;
               next;
             }
@@ -176,10 +203,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      #--- extract fields ----
      #-----------------------
          my $vlist = join ",",@vlist;
-         print "var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
+         print "   var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
          my $appendopt = "";
          $appendopt = "-A" if (-f "$cwd/.var.nc");
-         print "ncks -h $appendopt -v $vlist $file $odir/$var.nc\n" if !$Opt{QUIET};
+         print "ncks -h $appendopt -v $vlist $file .var.nc\n" if !$Opt{QUIET};
          next if $TEST;
          $ncstatus += command_retry("ncks","-h $appendopt -v $vlist $file .var.nc");
 
@@ -197,6 +224,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
             #--- append to existing file ---
             #push @commands, "dmget ".$Opt{odir}."/$var.nc";
+             print  "mv $odir/$var.nc $odir/.tmp.nc\n" if $Opt{VERBOSE} > 2;
              system("mv $odir/$var.nc $odir/.tmp.nc");
              print "ncrcat $odir/.tmp.nc .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 0;
              $ncstatus += command_retry("ncrcat","-h $odir/.tmp.nc .var.nc $odir/$var.nc");
@@ -217,11 +245,13 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
              system("mv .var.nc $odir/$var.nc");
 
              if (@ncatted_opts) {
-               print  "ncatted -h -O @ncatted_opts $var.nc\n" if $Opt{VERBOSE} > 1;
-               system("ncatted -h -O @ncatted_opts $var.nc");
+               print  "ncatted -h -O @ncatted_opts $odir/$var.nc\n" if $Opt{VERBOSE} > 1;
+               system("ncatted -h -O @ncatted_opts $odir/$var.nc");
              }
          }
 
+         #@vlist = @coords;
+         #my @xlist;
      }   ### end of variable loop ###
 
     #--- extract fields for single file option ---
@@ -338,7 +368,7 @@ sub get_variable_bounds {
   if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
     my @axes = split /, /, $1;
     foreach my $dim (@axes) {
-      next if ($dim == $timename);
+      next if ($dim eq $timename);
       my $bnds = get_variable_att($dump,$dim,"bounds");
       push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
       if (!$Opt{CMIP}) {
@@ -362,14 +392,16 @@ sub get_formula_terms {
     # check each axis for formula terms
     foreach my $dim (@axes) {
       my $form = get_variable_att($dump,$dim,"formula_terms");
-      foreach ($form =~ /\w+:\s+(\w+)/g) {
-        push @terms, $_ if (is_static($form,$_));
+     #print "   $dim:formula_terms = \"$form\"\n" if $form;
+      foreach my $term ($form =~ /\w+:\s+(\w+)/g) {
+        push @terms, $term if !grep{$_ eq $term} @terms;
       }
       # also check bounds for formula terms
       my $bnds = get_variable_att($dump,$dim,"bounds");
       my $form = get_variable_att($dump,$bnds,"formula_terms");
+     #print "   $bnds:formula_terms = \"$form\"\n" if $form;
       foreach my $term ($form =~ /\w+:\s+(\w+)/g) {
-        push @terms, $term if (is_static($form,$term) && !grep{$_ eq $term} @terms);
+        push @terms, $term if !grep{$_ eq $term} @terms;
       }
     }
   }
@@ -379,13 +411,13 @@ sub get_formula_terms {
 #-------------------------------------------
 
 sub is_static {
-  my ($dump,$var);
+  my ($dump,$var) = @_;
   my $timename = get_time_dimension($dump);
   my $static = 0;
   # find dimensions for this variable
   if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
     my @axes = split /, /, $1;
-    $static = grep{$_ eq $timename} @axes;
+    $static = !grep{$_ eq $timename} @axes;
   }
   return $static;
 }
@@ -443,7 +475,7 @@ sub remove_degenerate_dimension {
   my $dump =`ncdump -h $file`;
   my @cmds;
   # is this a singleton dimension?
-  if ($dump =~ /\t$dim = 1;/) {
+  if ($dump =~ /\t$dim = 1 ;/) {
     # remove dim by averaging, then (un)extract the unused dimension
     push @cmds, "ncwa -h -a $dim $file $file.ztmp";
     push @cmds, "ncks -h -O -x -v scalar_axis $file.ztmp $file";
@@ -459,7 +491,7 @@ sub variable_log {
   my $prtfile = shift;
   my $dump = `ncdump -h $ncfile`;
 
-  open (OUT,"< $prtfile") || die "Cannot open $prtfile for output";
+  open (OUT,"> $prtfile") || die "Cannot open $prtfile for output";
 
   foreach my $var (split /\n/, `$list_ncvars -t0123 $ncfile`) {
     my @out;
