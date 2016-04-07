@@ -91,6 +91,12 @@ alias varlist.csh `which varlist.csh`
      endif
   endif
 
+# -f option disallow >1 input files
+if ($?onefile && $#ifiles > 1) then
+    echo "ERROR: only one input file allowed when using -f option"
+    exit 1
+endif
+
 ##################################################################
 
 #  need to make output directory
