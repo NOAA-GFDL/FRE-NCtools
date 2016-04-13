@@ -61,7 +61,42 @@ int mpp_open(const char *file, int action) {
   char curfile[STRING];
   char errmsg[512];  
   int ncid, status, istat, n, fid;
-  size_t blksz=65536;
+  static int first_call = 1;
+  static size_t blksz=1048576;
+
+  /* read the blksz from environment variable for the first_call */
+  if(first_call) {
+    char *blkstr;
+    int len;
+    first_call = 0;
+    blkstr=getenv ("NC_BLKSZ");
+    if(blkstr) {
+      len=strlen(blkstr);
+      /* check to make sure each character is either number of 'K' or 'M' */
+      for(n=0; n<len; n++) {
+	if( n == len-1 ) { /* the last character might be K or M */
+	  if( (blkstr[n]  > '9' || blkstr[n] < '0') && blkstr[n] != 'K' &&  blkstr[n] != 'M'  ) {
+	    sprintf( errmsg, "mpp_io(mpp_open): the last charactor of environment variable NC_BLKSZ = %s "
+		     "should be digit, 'K' or 'M'", blkstr);
+	    mpp_error(errmsg);
+	  }
+	}
+	else if( blkstr[n] > '9' || blkstr[n] < '0' ) {
+	    sprintf( errmsg, "mpp_io(mpp_open): environment variable NC_BLKSZ = %s "
+		     "should only contain digit except the last character", blkstr);
+	    printf("error 2 = %s\n", errmsg);
+	    mpp_error(errmsg);
+	}
+      }
+      blksz = atoi(blkstr);
+      if( blkstr[len-1] == 'K' )
+	blksz *= 1024;
+      else if( blkstr[len-1] == 'M' )
+        blksz *= (1024*1024);
+    }
+    printf("blksz = %zu\n", blksz);
+
+  }      
   
   /* write only from root pe. */
   if(action != MPP_READ && mpp_pe() != mpp_root_pe() ) return -1;
