@@ -74,8 +74,8 @@ endif
 
 ##################################################################
 
-alias ncrcat `which ncrcat` --64bit -t 2 --header_pad 16384
-alias ncks `which ncks` --64bit --header_pad 16384
+alias ncrcat `which ncrcat` -t 2 --header_pad 16384
+alias ncks `which ncks` --header_pad 16384
 alias list_ncvars.csh `which list_ncvars.csh`
 alias varlist.csh `which varlist.csh`
 
@@ -90,6 +90,12 @@ alias varlist.csh `which varlist.csh`
         unset onefile
      endif
   endif
+
+# -f option disallow >1 input files
+if ($?onefile && $#ifiles > 1) then
+    echo "ERROR: only one input file allowed when using -f option"
+    exit 1
+endif
 
 ##################################################################
 
@@ -230,14 +236,14 @@ alias varlist.csh `which varlist.csh`
     #--- extract fields for single file option ---
      if ($?onefile) then
          set vlist = `echo $vlist | sed -e  "s/ /,/g"`
-         echo ncks -h -A -v $vlist $file $onefile
-         ncks -h -A -v $vlist $file $onefile
+         echo ncks -h -O -v $vlist $file $onefile
+         ncks -h -O -v $vlist $file $onefile
          set thisstatus = $status
          if ( $thisstatus != 0 ) then
             echo ERROR: ncks returned status $thisstatus
             set splitvarsstatus = $thisstatus
             sleep 30
-            ncks -h -A -v $vlist $file $onefile
+            ncks -h -O -v $vlist $file $onefile
             set thisstatus = $status
             if ( $thisstatus != 0 ) then
                echo ERROR ON RETRY: ncks returned status $thisstatus
