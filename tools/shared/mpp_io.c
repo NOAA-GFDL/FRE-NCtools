@@ -94,7 +94,6 @@ int mpp_open(const char *file, int action) {
       else if( blkstr[len-1] == 'M' )
         blksz *= (1024*1024);
     }
-    printf("blksz = %zu\n", blksz);
 
   }      
   
@@ -695,12 +694,13 @@ char mpp_get_var_cart(int fid, int vid)
   fldid = files[fid].var[vid].fldid;
   status = nc_get_att_text(ncid, fldid, "cartesian_axis", &cart);
   if(status != NC_NOERR)status = nc_get_att_text(ncid, fldid, "axis", &cart);
+  /*
   if(status != NC_NOERR){
     sprintf(errmsg, "mpp_io(mpp_get_var_cart): Error in getting attribute cartesian_axis/axis of "
 	    "dimension variable %s from file %s", files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
-    
+  */
   return cart;
 }
 
@@ -1068,9 +1068,55 @@ void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out)
     }
   }
 
-}; /* mpp_copy_field_att */
+} /* mpp_copy_field_att */
 
+/**********************************************************************
+  void mpp_copy_var(fid_in, vid_in, fid_out)
+  copy one field from fid_in to fid_out
+**********************************************************************/
+void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
+{
+  int status;
+  int ndim, dims[5], i;
+  size_t dsize, size;
+  char errmsg[512];
+  double *data=NULL;
+  if( mpp_pe() != mpp_root_pe() ) return;
+  
+  if(fid_in<0 || fid_in >=nfiles) mpp_error("mpp_io(mpp_copy_var): invalid fid_in number, fid should be "
+				      "a nonnegative integer that less than nfiles");
+  if(fid_out<0 || fid_out >=nfiles) mpp_error("mpp_io(mpp_copy_var): invalid fid_out number, fid should be "
+				      "a nonnegative integer that less than nfiles");
+  /*
+  ncid_in   = files[fid_in].ncid;
+  ncid_out  = files[fid_out].ncid;  
+  fldid_in  = files[fid_in].var[vid_in].fldid;
+  fldid_out = files[fid_out].var[vid_out].fldid;
+  */
+  ndim = mpp_get_var_ndim(fid_in, vid_in);
+  status = nc_inq_vardimid(files[fid_in].ncid, files[fid_in].var[vid_in].fldid,dims);
+  if(status != NC_NOERR) {
+    sprintf(errmsg, "mpp_io(mpp_copy_data): Error in getting dimid of var %s from file %s",
+	    files[fid_in].var[vid_in].name, files[vid_in].name );
+    netcdf_error(errmsg, status);
+  }
+  dsize = 1;
+  for(i=0; i<ndim; i++) {
+    status = nc_inq_dimlen(files[fid_in].ncid, dims[i], &size);
+    if(status != NC_NOERR) {
+      sprintf(errmsg, "mpp_io(mpp_copy_data): error in inquiring dimlen from file %s", files[fid_in].name);
+      netcdf_error(errmsg, status);
+    }
+    dsize *= size;
+  }
+  
+  data = (void *)malloc(dsize*sizeof(double));
 
+  mpp_get_var_value(fid_in, vid_in, data);
+  mpp_put_var_value(fid_out, vid_out, data);
+  free(data);
+}
+  
 int mpp_get_var_natts(int fid, int vid)
 {
   int natts, ncid, fldid, status;
