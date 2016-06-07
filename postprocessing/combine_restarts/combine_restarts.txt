@@ -1,21 +1,21 @@
-quick_combine(1)
+combine_restarts(1)
 ================
 
 NAME
 ----
-quick_combine - simple script to combine restart files
+combine_restarts - simple script to combine restart files
 
 SYNOPSIS
 --------
 [verse]
-quick_combine [options]
+combine_restarts [options]
 
 
 DESCRIPTION
 -----------
-*quick_combine* will use the correct combine utility (*mppnccombine*
+*combine_restarts* will use the correct combine utility (*mppnccombine*
 or *combine-ncc*) to combine any restart files that reside in the
-currrent working directory.  quick_combine uses the same options used
+currrent working directory.  *combine_restarts* uses the same options used
 in the FRE workflow.
 
 OPTIONS
