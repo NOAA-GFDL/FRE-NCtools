@@ -1,11 +1,11 @@
 #!/bin/sh -l
 usage () {
-    echo "Usage: combine_files [OPTIONS]"
+    echo "Usage: combine_restarts [OPTIONS]"
 }
 
 help () {
     echo "Usage:"
-    echo "     combine_files [OPTIONS]"
+    echo "     combine_restarts [OPTIONS]"
     echo ""
     echo "Options:"
     echo "     -h"
@@ -43,7 +43,7 @@ done
 # Determine if fre-nctools is loaded.  If not, load the default version
 which is-compressed > /dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    echo "FRE NC Tools not loaded.  Loading default version"
+    echo "FRE NC Tools module not loaded.  Loading the default version"
     module load fre-nctools
 fi
 
