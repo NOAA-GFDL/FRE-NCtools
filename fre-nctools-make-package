@@ -81,6 +81,13 @@ else if ( "$site" == "zeus.fairmont.rdhpcs.noaa.gov") then
   module load mpt
   setenv LIBRARY_PATH ${LIBRARY_PATH}:/apps/intel/composer_xe_2013.0.079/compiler/lib/intel64
   alias make make HDF5_HOME=/apps/hdf5/1.8.8-intel NETCDF_HOME=/apps/netcdf/4.1.3-intel SITE=zeus -f fre-nctools.mk
+else if ( "$site" == "ccs.ornl.gov" ) then
+  source $MODULESHOME/init/tcsh
+  module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
+  module load PrgEnv-intel 
+  module swap intel intel/14.0.2.144
+  module load netcdf/cray
+  alias make make HDF5_HOME=/opt/cray/hdf5/1.8.14/INTEL/140 NETCDF_HOME=/opt/cray/netcdf/4.3.3.1/INTEL/140 NC_BLKSZ=64K SITE=olcf -f fre-nctools.mk
 else
   echo "ERROR: Unsupported site '$site'"
   exit 1
