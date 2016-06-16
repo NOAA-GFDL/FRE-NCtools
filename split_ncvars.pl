@@ -111,7 +111,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      print "processing ".scalar(@varlist)." variables\n\n" if $Opt{VERBOSE} > 2;
 
      my @vlist = @coords;
-     my @xlist;
+     my @xlist = ();
 
      foreach my $var (@varlist) {
          $var =~ s/^\s+//; $var =~ s/\s+$//;
@@ -196,7 +196,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             # skip this variable, reset the variable list
             if ($SKIPVAR) {
               @vlist = @coords;
-              @xlist;
+              @xlist = ();
               next;
             }
          }
@@ -236,7 +236,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
              print "ncrcat $odir/.tmp.nc .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 0;
              system ("$ncrcat -h $odir/.tmp.nc .var.nc $odir/$var.nc");
              $ncstatus += $?;
-             print  "rm -f $odir/.tmp.nc .var.nc" if $Opt{VERBOSE} > 2;
+             print  "rm -f $odir/.tmp.nc .var.nc\n" if $Opt{VERBOSE} > 2;
              system("rm -f $odir/.tmp.nc .var.nc");
          } else {
             #--- create new file ---
@@ -247,6 +247,23 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
              # external_variables attribute (missin & time-varying formula terms)
              if (@xlist) {
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
+             }
+
+             # rename "height#" (coordinate) variables to just "height"
+             if (!$Opt{onefile}) {
+               my $vdump = `ncdump -h .var.nc`;
+               my @coordinates = get_variables_from_att($vdump,$var,"coordinates");
+               my @height = grep{/height\d+/} @coordinates;
+               if (@height == 1) {
+                 print  "ncrename -h -v $height[0],height .var.nc\n";
+                 system("ncrename -h -v $height[0],height .var.nc");
+                 for (@coordinates) {
+                   s/$height[0]/height/;
+                 }
+                 push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
+               } elsif (@height > 1) {
+                 die "ERROR: can not have more than one height coordinate attribute/variable";
+               }
              }
 
              print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
@@ -260,7 +277,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
          # reset the variable lists
          @vlist = @coords;
-         @xlist;
+         @xlist = ();
      }   ### end of variable loop ###
 
     #--- extract fields for single file option ---
@@ -367,7 +384,7 @@ sub get_variables_from_att {
   my $att = shift;
   my @attvars;
   foreach (split /\s+/, get_variable_att($dump,$var,$att)) {
-    push @attvars, $_ if ($dump =~ /\t\w+ $_\(.+\)/);
+    push @attvars, $_ if ($dump =~ /\t\w+ $_\(.+\)/ || $dump =~ /\t\w+ $_ ;/);
   }
   return @attvars;
 }
@@ -473,7 +490,65 @@ sub set_ncatted_opts {
   $svar = "\w+" if !$svar; # globally edit attributes
   if ($Opt{CMIP}) {
     push @opts, "-a time_avg_info,$var,d,," if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
+
+    # loop over dimensions for this variable
+    if ($dump =~ /\t\w+ $var\((.+)\)/ ) {
+      my @axes = split /, /, $1;
+      foreach my $dim (@axes) {
+        push @opts, cleanup_dim_atts($dump,$dim);
+        # also check bounds dimensions
+        my $bnds = get_variable_att($dump,$dim,"bounds");
+        if ($bnds) {
+          push @opts, cleanup_dim_atts($dump,$bnds);
+          if ($dump =~ /\t\w+ $bnds\((.+)\)/) {
+            foreach my $dim2 (split /, /, $1) {
+              push @opts, cleanup_dim_atts($dump,$dim2) if (!grep{$_ eq $dim2} @axes);
+            }
+          }
+        }
+      }
+    }
   }
+  # remove redundant values
+  my %seen;
+  my @unique = grep{!$seen{$_}++} @opts;
+  return @unique;
+}
+
+#-------------------------------------------
+
+sub cleanup_dim_atts {
+  my $dump = shift;
+  my $dim = shift;
+  my @opts;
+
+  # correct (dimension) attribute "cartesian_axis -> axis"
+  my $cart_axis = get_variable_att($dump,$dim,"cartesian_axis");
+  if ($cart_axis) {
+    if ($cart_axis ne "N") {
+      push @opts, "-a axis,$dim,c,c,\"$cart_axis\"" if !get_variable_att($dump,$dim,"axis");
+    }
+    push @opts, "-a cartesian_axis,$dim,d,,";
+  }
+
+  # correct (dimension) attribute "calendar_type -> calendar"
+  my $cal = get_variable_att($dump,$dim,"calendar");
+  my $calt = get_variable_att($dump,$dim,"calendar_type");
+  if ($cal) {
+     my $calc = lc($cal);
+     push @opts, "-a calendar,$dim,m,c,\"$calc\"" if ($cal ne $calc);
+  } elsif ($calt) {
+     my $calc = lc($cal);
+     push @opts, "-a calendar,$dim,c,c,\"$calc\"";
+  }
+  push @opts, "-a calendar_type,$dim,d,," if $calt;
+
+  # correct units from "none" -> "1"
+  my $units = get_variable_att($dump,$dim,"units");
+  if ($units) {
+    push @opts, "-a units,$dim,m,c,\"1\"" if (lc($units) eq "none");
+  }
+
   return @opts;
 }
 
