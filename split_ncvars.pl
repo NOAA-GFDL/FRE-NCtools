@@ -249,10 +249,12 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
              }
 
-             # rename "height#" (coordinate) variables to just "height"
+             # rename coordinate variables
              if (!$Opt{onefile}) {
                my $vdump = `ncdump -h .var.nc`;
                my @coordinates = get_variables_from_att($vdump,$var,"coordinates");
+
+               # rename "height#" (coordinate) variables to just "height"
                my @height = grep{/height\d+/} @coordinates;
                if (@height == 1) {
                  print  "ncrename -h -v $height[0],height .var.nc\n";
@@ -263,6 +265,21 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
                } elsif (@height > 1) {
                  die "ERROR: can not have more than one height coordinate attribute/variable";
+               }
+
+               # rename "p###" (coordinate) variables to just "plev"
+               my @plev = grep{/p\d+/} @coordinates;
+               if (@plev == 1) {
+                 if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
+                   print  "ncrename -h -v $plev[0],plev .var.nc\n";
+                   system("ncrename -h -v $plev[0],plev .var.nc");
+                   for (@coordinates) {
+                     s/$plev[0]/plev/;
+                   }
+                   push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
+                 }
+               } elsif (@plev > 1) {
+                 die "ERROR: can not have more than one plev coordinate attribute/variable";
                }
              }
 
