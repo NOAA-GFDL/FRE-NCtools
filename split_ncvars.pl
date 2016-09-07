@@ -22,7 +22,7 @@ my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 
-my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, odir=>$cwd );
+my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
 
@@ -32,6 +32,7 @@ my $status = GetOptions ('h|help!'     => \$Opt{HELP},
                          'l|log!'      => \$Opt{LOG},
                          's|static!'   => \$Opt{STATIC},
                          'c|cmip!'     => \$Opt{CMIP},
+                         'a|auto!'     => \$Opt{AUTO},
                          'f|onefile=s' => \$Opt{onefile},
                          'i|idir=s'    => \$Opt{idir},
                          'o|odir=s'    => \$Opt{odir},
@@ -127,6 +128,12 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          # add variable to list of variables to extract
          push @vlist, $var;
 
+         # automatically detect if this a a cmip variable - if attrib standard_name exists
+         my $CMIP = $Opt{CMIP};
+         if ($Opt{AUTO} && !$Opt{CMIP}) {
+           $CMIP = 1 if (get_variable_att($dump,$var,"standard_name"));
+         }
+
         #------------------------------------------------------------
         # FIRST TIME ONLY (when output file does not exist)
         # need to extract additional static fields
@@ -135,7 +142,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          if (!-e "$odir/$var.nc") {
 
             # get variable names of all dimension bounds/edges (except for time)
-            my @bounds = get_variable_bounds   ($dump,$var);
+            my @bounds = get_variable_bounds   ($dump,$var,$CMIP);
             if (@bounds) {
               print "   $var: bounds = ".join(", ",@bounds)."\n" if $Opt{VERBOSE} > 1;
               push @vlist, @bounds;
@@ -169,7 +176,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          if ($timename) {
 
             # fms-style time avg variables
-            if (!$Opt{CMIP}) {
+            if (!$CMIP) {
               my @time_avg_info = get_time_avg_info($dump,$var);
               if (@time_avg_info) {
                 print "   $var: time_avg_info = ".join(", ",@time_avg_info)."\n" if $Opt{VERBOSE} > 1;
@@ -243,7 +250,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             #--- modify filename attribute ---
             #--- move to output directory ---
 
-             my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var);
+             my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var,$CMIP);
              # external_variables attribute (missin & time-varying formula terms)
              if (@xlist) {
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
@@ -304,7 +311,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          system ("$ncks -h -A -v $vlist $file ".$Opt{onefile});
          $ncstatus += $?;
 
-         my @ncatted_opts = set_ncatted_opts($Opt{onefile},tailname($Opt{onefile}),"");
+         my @ncatted_opts = set_ncatted_opts($Opt{onefile},tailname($Opt{onefile}));
          # external_variables attribute (missin & time-varying formula terms)
          if (@xlist) {
             push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
@@ -411,6 +418,7 @@ sub get_variables_from_att {
 sub get_variable_bounds {
   my $dump = shift;
   my $var = shift;
+  my $CMIPVAR = shift; # cmip flag
   my $timename = get_time_dimension($dump);
   my @bounds;
   # find dimensions for this variable
@@ -420,7 +428,7 @@ sub get_variable_bounds {
       next if ($dim eq $timename);
       my $bnds = get_variable_att($dump,$dim,"bounds");
       push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-      if (!$Opt{CMIP}) {
+      if (!$CMIPVAR) {
         my $bnds = get_variable_att($dump,$dim,"edges");
         push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
       }
@@ -498,14 +506,16 @@ sub tailname {
 #-------------------------------------------
 # cleanup attributes in the output file
 
-sub set_ncatted_opts {
-  my ($file,$filename,$var) = @_;
+sub set_ncatted_opts ($$;$$) {
+  my ($file,$filename,$var,$CMIPVAR) = @_;
   my @opts;
   my $dump = `ncdump -h $file`;
   push @opts, "-a filename,global,m,c,\"$filename\"" if ($dump =~ /\t\t:filename = ".+" ;/);
-  my $svar = $var;
-  $svar = "\w+" if !$svar; # globally edit attributes
-  if ($Opt{CMIP}) {
+
+  my $svar = "\w+"; # globally edit attributes
+  $svar = $var if $var;
+
+  if ($CMIPVAR) {
     push @opts, "-a time_avg_info,$var,d,," if ($dump =~ /\t\t$svar:time_avg_info = ".+" ;/);
 
     # loop over dimensions for this variable
