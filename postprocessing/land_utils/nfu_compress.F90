@@ -46,7 +46,7 @@ type diminfo_type
    integer, pointer :: idx(:)=>NULL() ! packing information
    integer :: length  ! size of the dimension in the input array
    integer :: stride  ! stide along the dimension in the output array
-end type 
+end type
 
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -65,7 +65,7 @@ function nfu_get_compressed_var_r8n(ncid,name,data,mask,start,count) result (ire
   iret = nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count)
 7 return
 
-end function 
+end function
 
 ! ===========================================================================
 function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (iret)
@@ -114,10 +114,10 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (ire
      diminfo(i)%stride = stride
      stride = stride*length
   enddo
- 
+
   if(present(start) .and. present(count) ) then
     do i = 2, size(count(:))
-       call assert(count(i)==1, "count(i) must be 1 when i>1") 
+       call assert(count(i)==1, "count(i) must be 1 when i>1")
     enddo
     varsize = count(1)
   endif
@@ -216,7 +216,7 @@ function nfu_get_compressed_var_int(ncid,varid,data,mask) result (iret)
      diminfo(i)%stride = stride
      stride = stride*length
   enddo
-        
+
   ! get the entire variable
   allocate(buffer(varsize))
   __NF_TRY__(nf_get_var_int(ncid,varid,buffer),iret,7)
@@ -319,7 +319,7 @@ function nfu_put_compressed_var_r8(ncid,varid,src) result (iret)
      diminfo(i)%stride = stride
      stride = stride*length
   enddo
-        
+
   ! get the entire variable
   allocate(buffer(varsize))
 
@@ -402,7 +402,7 @@ function nfu_put_compressed_var_int(ncid,varid,src) result (iret)
      diminfo(i)%stride = stride
      stride = stride*length
   enddo
-        
+
   ! get the entire variable
   allocate(buffer(varsize))
 
@@ -465,7 +465,7 @@ function inq_compressed_dim_i(ncid,dimid,ndims,dimids,dimlens,dimname) result (i
   integer, intent(out), optional :: dimids(:)
   integer, intent(out), optional :: dimlens(:)
   character(*), intent(out), optional :: dimname
-  
+
   character(NF_MAX_NAME) :: dimname_
   character(1024) :: compress ! should be more than enough to hold the compression info
   integer :: dimlen,dimid0,n,is,ie
@@ -522,7 +522,7 @@ function inq_compressed_var_n(ncid, name, id, xtype, ndims, dimids, dimlens, nat
   iret = inq_compressed_var_i(ncid,vid,vname,xtype,ndims,dimids,dimlens,natts,&
        is_dim,has_records,varsize,recsize,nrec,is_compressed)
 
-7 return  
+7 return
 end function
 
 ! ============================================================================
@@ -545,7 +545,7 @@ function inq_compressed_var_i(ncid, vid, name, xtype, ndims, dimids, dimlens, &
   logical, intent(out), optional :: is_compressed ! true if variable is actually compressed
   logical, intent(in) , optional :: first_dim_only
 
-  
+
   integer :: nd0, dids0(NF_MAX_VAR_DIMS),dlens0(NF_MAX_VAR_DIMS)
   integer :: nd1, dids1(NF_MAX_VAR_DIMS),dlens1(NF_MAX_VAR_DIMS)
   integer :: i,n,unlimdim,vsize,rsize
@@ -596,7 +596,7 @@ end function
 subroutine assert(cond,message)
   logical     , intent(in) :: cond    ! condition to check
   character(*), intent(in) :: message ! error message to print if condition is not satisfied
-  
+
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
      call exit(1)

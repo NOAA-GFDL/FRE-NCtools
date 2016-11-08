@@ -160,7 +160,7 @@ function inq_dim_i(ncid,dimid,dimlen,is_unlim,dimname) result (iret)
   logical     , optional, intent(out) :: is_unlim
   integer     , optional, intent(out) :: dimlen
   integer :: iret
-  
+
   integer :: unlimdimid
 
   if(present(dimname)) then
@@ -203,7 +203,7 @@ function inq_var_n(ncid, name, id, xtype, ndims, dimids, dimlens, natts, &
   iret = inq_var_i(ncid,vid,vname,xtype,ndims,dimids,dimlens,natts,&
        is_dim,has_records,varsize,recsize,nrec)
 
-7 return  
+7 return
 end function
 
 ! ============================================================================
@@ -252,7 +252,7 @@ function inq_var_i(ncid, vid, name, xtype, ndims, dimids, dimlens,natts, &
         if(present(dimlens)) dimlens(i)=dlen
      enddo
      if(present(varsize)) varsize=vsize
-     if(present(recsize)) recsize=vrecsize 
+     if(present(recsize)) recsize=vrecsize
   endif
   if(present(nrec)) then
      nrec=1
@@ -261,7 +261,7 @@ function inq_var_i(ncid, vid, name, xtype, ndims, dimids, dimlens,natts, &
      endif
   endif
 
-7 return  
+7 return
 end function
 
 ! ============================================================================
@@ -282,7 +282,7 @@ function inq_att_i_n(ncid, varid, att, xtype, len, attid) result (iret)
   endif
   if(present(xtype)) xtype = xtype_
   if(present(len))   len   = len_
-  
+
 7 return
 end function
 
@@ -341,7 +341,7 @@ end function
 ! ============================================================================
 function nfu_def_dim(ncid,name,size,xtype,long_name,units,bounds,dimid,varid) &
      result (iret)
-  integer         , intent(in) :: ncid  ! id of NetCDF file to create 
+  integer         , intent(in) :: ncid  ! id of NetCDF file to create
   character(len=*), intent(in) :: name  ! name of the dimension
   integer         , intent(in) :: size  ! size of the dimension
   integer,optional, intent(in) :: xtype ! external type of the associated variable
@@ -382,7 +382,7 @@ function nfu_def_var_0(ncid,name,xtype,dimc,dimv) result(iret)
   character(len=*), intent(in) :: name       ! name of the variable
   integer         , intent(in) :: xtype      ! external type of the var
   integer         , intent(in) :: dimc       ! number of dimensions
-  character(len=*), intent(in) :: dimv(dimc) ! vector of dimension names 
+  character(len=*), intent(in) :: dimv(dimc) ! vector of dimension names
   integer :: iret
 
   integer :: i,dimids(NF_MAX_VAR_DIMS),varid
@@ -399,7 +399,7 @@ function nfu_def_var_1(ncid,name,xtype,dimv) result(iret)
   integer         , intent(in) :: ncid
   character(len=*), intent(in) :: name       ! name of the variable
   integer         , intent(in) :: xtype      ! external type of the var
-  character(len=*), intent(in) :: dimv(:)    ! vector of dimension names 
+  character(len=*), intent(in) :: dimv(:)    ! vector of dimension names
   integer :: iret
 
   integer :: i,dimids(NF_MAX_VAR_DIMS),varid
@@ -433,10 +433,10 @@ function clone_var_i(incid,ivarid,oncid,name) result(iret)
   integer      , intent(in) :: incid, oncid
   integer      , intent(in) :: ivarid
   character*(*), intent(in), optional :: name
-  
+
   character(len=NF_MAX_NAME) :: vname ! name of the var to be cloned
   character(len=NF_MAX_NAME) :: oname ! resulting name of the variable
-  character(len=NF_MAX_NAME) :: str   ! name of the dimension or attribute 
+  character(len=NF_MAX_NAME) :: str   ! name of the dimension or attribute
   integer :: xtype,ndims,dimids(NF_MAX_VAR_DIMS),natts,i,ovarid
 
   ! get the info about variable to be cloned
@@ -470,12 +470,12 @@ function clone_dim_n(incid,iname,oncid,name) result(iret)
   integer, intent(in) :: incid,oncid
   character*(*),intent(in) :: iname
   character*(*),intent(in),optional :: name
-  
+
   integer :: dimid
-  
+
   __NF_TRY__(nf_inq_dimid(incid,iname,dimid),iret,7)
   iret = clone_dim_i(incid,dimid,oncid,name)
-7 return  
+7 return
 end function
 
 ! ===========================================================================
@@ -483,7 +483,7 @@ function clone_dim_i(incid,dimid,oncid,name) result(iret)
   integer :: iret
   integer, intent(in) :: incid,dimid,oncid
   character*(*), intent(in), optional :: name ! name of the dimension copy
-    
+
   character(len=NF_MAX_NAME) :: dname
   integer :: unlimid,len,newdimid,newlen,newunlimid
 
@@ -501,7 +501,7 @@ function clone_dim_i(incid,dimid,oncid,name) result(iret)
     ! or both are unlimited dimensions
     __NF_TRY__(nf_inq_dimlen(oncid,newdimid,newlen),iret,7)
     __NF_TRY__(nf_inq_unlimdim(oncid,newunlimid),iret,7)
-    
+
     if((dimid==unlimid).neqv.(newdimid==newunlimid)) then
        __NF_TRY__(nfu_elimunlim,iret,7)
     endif
@@ -511,7 +511,7 @@ function clone_dim_i(incid,dimid,oncid,name) result(iret)
   else
     __NF_TRY__(nf_def_dim(oncid,dname,len,newdimid),iret,7)
   endif
-7 return  
+7 return
 end function
 
 ! ============================================================================
@@ -521,32 +521,32 @@ function copy_var_data_n(ncid,varname,ncid1,name) result (iret)
   character(*), intent(in) :: varname
   integer     , intent(in) :: ncid1
   character(*), intent(in), optional :: name ! name of output variable
-  
+
   integer :: varid, varid1
-  
+
   __NF_TRY__(nf_inq_varid(ncid,varname,varid),iret,7)
   if(present(name)) then
      __NF_TRY__(nf_inq_varid(ncid1,name,varid1),iret,7)
   else
      __NF_TRY__(nf_inq_varid(ncid1,varname,varid1),iret,7)
   endif
-  
+
   __NF_TRY__(copy_var_data_i(ncid,varid,ncid1,varid1),iret,7)
 7 continue
 end function
-  
+
 
 function copy_var_data_i(ncid,varid,ncid1,varid1) result (iret)
   integer :: iret
   integer, intent(in) :: ncid,  varid
   integer, intent(in) :: ncid1, varid1
-  
+
   integer :: recsize,nrec,rec
   real(kind=8), allocatable :: buffer(:)
-  
+
   __NF_TRY__(nfu_inq_var(ncid,varid,recsize=recsize,nrec=nrec),iret,7)
   allocate(buffer(recsize))
-  
+
   if(ncid/=ncid1.or.varid/=varid1) then
     do rec=1,nrec
        __NF_TRY__(nfu_get_rec_r8(ncid,varid,rec,buffer),iret,7)
@@ -657,7 +657,7 @@ function get_r8_n_rec(ncid, name, rec, data) result(iret)
   real(kind=8), intent(out) :: data(*)
 
   integer :: varid
-  
+
   __NF_TRY__(nf_inq_varid(ncid, name, varid), iret, 7)
   iret=get_r8_rec(ncid, varid, rec, data)
 7 return
@@ -673,7 +673,7 @@ function get_r4_n_rec(ncid, name, rec, data) result(iret)
   real(kind=4), intent(out) :: data(*)
 
   integer :: varid
-  
+
   __NF_TRY__(nf_inq_varid(ncid, name, varid), iret, 7)
   iret=get_r4_rec(ncid, varid, rec, data)
 7 return
@@ -688,12 +688,12 @@ function get_r8_rec(ncid, varid, rec, var) result(iret)
   integer, intent(in) :: varid  ! id of the variable           [in]
   integer, intent(in) :: rec       ! number of the record to get  [in]
   real(kind=8), intent(out) :: var(*) ! storage for the variable     [out]
- 
+
   integer :: dimids(NF_MAX_VAR_DIMS), ndims, unlimdim
   integer :: start(NF_MAX_VAR_DIMS)
   integer :: count(NF_MAX_VAR_DIMS)
   integer :: i
-      
+
   __NF_TRY__(nf_inq_unlimdim(ncid,unlimdim),iret,7)
   __NF_TRY__(nf_inq_varndims(ncid,varid,ndims),iret,7)
   __NF_TRY__(nf_inq_vardimid(ncid,varid,dimids),iret,7)
@@ -721,12 +721,12 @@ function get_r4_rec(ncid, varid, rec, var) result(iret)
   integer, intent(in) :: varid  ! id of the variable           [in]
   integer, intent(in) :: rec       ! number of the record to get  [in]
   real(kind=4), intent(out) :: var(*) ! storage for the variable     [out]
- 
+
   integer :: dimids(NF_MAX_VAR_DIMS), ndims, unlimdim
   integer :: start(NF_MAX_VAR_DIMS)
   integer :: count(NF_MAX_VAR_DIMS)
   integer :: i
-      
+
   __NF_TRY__(nf_inq_unlimdim(ncid,unlimdim),iret,7)
   __NF_TRY__(nf_inq_varndims(ncid,varid,ndims),iret,7)
   __NF_TRY__(nf_inq_vardimid(ncid,varid,dimids),iret,7)
@@ -798,13 +798,13 @@ function put_r4_rec(ncid, varid, rec, data) result(iret)
   integer, intent(in) :: varid
   integer, intent(in) :: rec
   real(4), intent(in) :: data(*)
-      
+
   integer :: dimids(NF_MAX_VAR_DIMS), ndims
   integer :: unlimdim, unlimlen
   integer :: start(NF_MAX_VAR_DIMS)
   integer :: count(NF_MAX_VAR_DIMS)
   integer :: i
-      
+
   __NF_TRY__(nf_inq_unlimdim(ncid,unlimdim),iret,7)
   __NF_TRY__(nf_inq_varndims(ncid,varid,ndims),iret,7)
   __NF_TRY__(nf_inq_vardimid(ncid,varid,dimids),iret,7)
@@ -830,13 +830,13 @@ function put_r8_rec(ncid, varid, rec, data) result(iret)
   integer, intent(in) :: varid
   integer, intent(in) :: rec
   real(8), intent(in) :: data(*)
-      
+
   integer :: dimids(NF_MAX_VAR_DIMS), ndims
   integer :: unlimdim, unlimlen
   integer :: start(NF_MAX_VAR_DIMS)
   integer :: count(NF_MAX_VAR_DIMS)
   integer :: i
-      
+
   __NF_TRY__(nf_inq_unlimdim(ncid,unlimdim),iret,7)
   __NF_TRY__(nf_inq_varndims(ncid,varid,ndims),iret,7)
   __NF_TRY__(nf_inq_vardimid(ncid,varid,dimids),iret,7)
@@ -862,12 +862,12 @@ function get_att_text(ncid, name, att, text) result(iret)
   character(*),intent(in) :: name   ! name of the variable  [in]
   character(*),intent(in) :: att    ! attribute name [in]
   character(*),intent(out) :: text   ! attribute value [out]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_get_att_text(ncid, varid, att, text)
-      
+
 7 return
 end function
 
@@ -878,7 +878,7 @@ function get_att_int(ncid, name, att, d) result(iret)
   character(*),intent(in)  :: name   ! name of the variable  [in]
   character(*),intent(in)  :: att    ! attribute name [in]
   integer     ,intent(inout) :: d(:)   ! attribute value [out]
-  
+
   integer :: varid,len
   integer, allocatable :: data(:)
 
@@ -897,7 +897,7 @@ function get_att_r4(ncid, name, att, d) result(iret)
   character(*),intent(in)  :: name   ! name of the variable  [in]
   character(*),intent(in)  :: att    ! attribute name [in]
   real(4)     ,intent(inout) :: d(:)   ! attribute value [out]
-  
+
   integer :: varid,len
   real(4), allocatable :: data(:)
 
@@ -917,7 +917,7 @@ function get_att_r8(ncid, name, att, d) result(iret)
   character(*),intent(in)  :: name   ! name of the variable  [in]
   character(*),intent(in)  :: att    ! attribute name [in]
   real(8)     ,intent(out) :: d(:)   ! attribute value [out]
-  
+
   integer :: varid,len
   real(8), allocatable :: data(:)
 
@@ -980,12 +980,12 @@ function put_att_text(ncid,name,att,text) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   character*(*),intent(in) :: text   ! text to put in attribute [in]
-  
+
   integer :: varid
-      
+
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_text(ncid,varid,att,len(text),text)
-      
+
 7 return
 end function
 
@@ -996,12 +996,12 @@ function put_att_int(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   integer      ,intent(in) :: data(:)! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_int(ncid,varid,att,NF_INT,size(data),data)
-      
+
 7 return
 end function
 
@@ -1012,12 +1012,12 @@ function put_att_r4(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   real(4)      ,intent(in) :: data(:)! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_real(ncid,varid,att,NF_REAL,size(data),data)
-      
+
 7 return
 end function
 
@@ -1028,12 +1028,12 @@ function put_att_r8(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   real(8)      ,intent(in) :: data(:)! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_double(ncid,varid,att,NF_DOUBLE,size(data),data)
-      
+
 7 return
 end function
 
@@ -1044,12 +1044,12 @@ function put_att_int_1(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   integer      ,intent(in) :: data   ! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_int(ncid,varid,att,NF_INT,1,data)
-      
+
 7 return
 end function
 
@@ -1060,12 +1060,12 @@ function put_att_r4_1(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   real(4)      ,intent(in) :: data   ! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_real(ncid,varid,att,NF_REAL,1,data)
-      
+
 7 return
 end function
 
@@ -1076,12 +1076,12 @@ function put_att_r8_1(ncid,name,att,data) result(iret)
   character*(*),intent(in) :: name   ! name of the variable  [in]
   character*(*),intent(in) :: att    ! attribute name [in]
   real(8)      ,intent(in) :: data   ! text to put in attribute [in]
-  
+
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
   iret = nf_put_att_double(ncid,varid,att,NF_DOUBLE,1,data)
-      
+
 7 return
 end function
 
@@ -1146,7 +1146,7 @@ function nfu_copy_att(incid,iname,oncid,oname,aname) result(iret)
 end function
 
 ! ========================================================================
-! based on presence/absence of attributes, defines valid range or missing 
+! based on presence/absence of attributes, defines valid range or missing
 ! value. For details, see section 8.1 of NetCDF User Guide
 function nfu_get_valid_range(ncid, name, v) result (iret)
   integer     , intent(in) :: ncid
@@ -1154,10 +1154,10 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
   type(validtype),intent(out) :: v ! validator
 
   integer :: iret
-  
+
   integer :: var_T, valid_T, scale_T, T ! types variable and of attributes
   real(kind=8) :: scale, offset, fill, r(2)
-  
+
   ! find the type of the variable
   __NF_TRY__(nfu_inq_var(ncid,name,xtype=var_T),iret,7)
 
@@ -1174,7 +1174,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
      __NF_TRY__(nfu_get_att(ncid,name,'add_offset',offset),iret,7)
      scale_T = max(scale_T,T)
   endif
-     
+
   ! examine possible range attributes
   valid_T = 0; v%hasmax=.false. ; v%hasmin=.false.
   if (nfu_inq_att(ncid,name,'valid_range',xtype=T)==NF_NOERR) then
@@ -1191,7 +1191,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
      v%hasmin = .true.
      valid_T = max(valid_T,T)
   else if(nfu_inq_att(ncid,name,'missing_value',xtype=T)==NF_NOERR) then
-     ! here we always scale, since missing_value is supposed to be in 
+     ! here we always scale, since missing_value is supposed to be in
      ! external representation
      __NF_TRY__(nfu_get_att(ncid,name,'missing_value',v%min),iret,7)
      v%min = v%min*scale + offset
@@ -1242,7 +1242,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
         end select
      endif
      ! NOTE: if we go through _FillValue branch, valid_T is 0, so values
-     ! are always scaled, as it should be because _FillValue is in external 
+     ! are always scaled, as it should be because _FillValue is in external
      ! representation
   endif
   ! If valid_range is the same type as scale_factor (actually the wider of
@@ -1255,7 +1255,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
   endif
 7 return
 end function
-   
+
 ! ========================================================================
 elemental function is_valid(x, v) result (lret)
   real           , intent(in) :: x ! real value to be examined
@@ -1264,7 +1264,7 @@ elemental function is_valid(x, v) result (lret)
 
 !  if (x is NaN) then
 !     lret = .false.
-!  else 
+!  else
   if (v%hasmin.or.v%hasmax) then
      lret = ((.not.v%hasmin).or.v%min<=x).and.((.not.v%hasmax).or.x<=v%max)
   else
@@ -1290,7 +1290,7 @@ subroutine cdfe(code, file, line, verb)
   character*(*), intent(in) :: file  ! file name
   integer      , intent(in) :: line  ! line number
   integer      , intent(in) :: verb  ! verbosity level
-      
+
   if((code/=NF_NOERR).and.(verb>0)) then
      write(*,'("File ",a," ; Line ",i5," # ",a)') file,line,nfu_strerror(code)
 !     write(*,*) file,line,nfu_strerror(code)

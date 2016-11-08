@@ -3,7 +3,7 @@
 ! This program is distributed under the terms of the GNU General Public
 ! License. See the file COPYING contained in this directory
 !
-! This program reads several input netcdf files, presumably containing 
+! This program reads several input netcdf files, presumably containing
 ! "compressed by gathering" data, and combines them into a single output file
 !
 !-----------------------------------------------------------------------
@@ -16,8 +16,8 @@ program combine_res
   implicit none
   include 'netcdf.inc'
 
-  integer, parameter :: PATH_MAX = 1024 ! max len of the file name; 
-  integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers; 
+  integer, parameter :: PATH_MAX = 1024 ! max len of the file name;
+  integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers;
   integer            ::  blksz = 65536  ! blksz must be writable for nf__create
 
   character(PATH_MAX), allocatable :: files(:) ! names of all files on the command line
@@ -36,6 +36,9 @@ program combine_res
   logical, allocatable :: mask(:)
   integer :: nz, k, start(4), nread(4), nwrite(4), nrec
   integer :: recsize, tlev, k_id, t_id, nz_saved
+  integer :: varid1, xtype
+  logical :: compressed
+  character, allocatable :: text(:)
 
   ! get command line options and list of files
   call parse_command_line() ! modigies global data!
@@ -94,7 +97,7 @@ program combine_res
            __NF_ASRT__(nfu_get_compressed_var_r8n(input(i),dimname,buffer,mask))
         enddo
         dimlen = max(count(mask),1)
-        ! can't have 0-length dimension, since it is (mis-)understood by netcdf as 
+        ! can't have 0-length dimension, since it is (mis-)understood by netcdf as
         ! a record one.
         deallocate(buffer,mask)
      endif
@@ -129,15 +132,24 @@ program combine_res
   __NF_ASRT__(nf__enddef(ncid,HEADERPAD,4,0,4))
 
   nz_saved = nz
-  !--- loop through each record  
+  !--- loop through each record
   do tlev = 1, nrec
 
      ! gather and copy data
      do varid = 1,nvars
-        __NF_ASRT__(nfu_inq_var(ncid,varid,ndims=ndims,dimids=dimids,dimlens=dimlens,has_records=has_records))
-        __NF_ASRT__(nfu_inq_compressed_var(ncid,varid,name=varname,varsize=vsize,first_dim_only=.true.))
+        __NF_ASRT__(nfu_inq_var(ncid,varid,xtype=xtype,ndims=ndims,dimids=dimids,dimlens=dimlens,has_records=has_records))
+        __NF_ASRT__(nfu_inq_compressed_var(ncid,varid,name=varname,varsize=vsize,is_compressed=compressed,first_dim_only=.true.))
         if(debug>0) &
              write(*,*)'processing var "'//trim(varname)//'"'
+        if (xtype==NF_CHAR) then
+           call assert(.not.compressed,'Compressed text variables ('//trim(varname)//') are currently not supported.')
+           __NF_ASRT__(nfu_inq_var(input(1),varname,id=varid1,varsize=vsize))
+           allocate(text(vsize))
+           __NF_ASRT__(nf_get_var_text(input(1),varid1,text))
+           __NF_ASRT__(nf_put_var_text(ncid,varid,text))
+           deallocate(text)
+           cycle
+        endif
         !--- for record field (ndims=1 and has_record=true, vsize will be 0
         if(ndims==1 .and. has_records) vsize = 1
         allocate(buffer(vsize),mask(vsize))
@@ -149,7 +161,7 @@ program combine_res
            __NF_ASRT__(nfu_inq_dim(input(1),dimids(dimid),dimname=dimname,is_unlim=has_records))
            if(has_records) then
               t_id = dimid
-           else if(trim(dimname) == "zfull") then 
+           else if(trim(dimname) == "zfull") then
               k_id = dimid
            endif
         enddo
@@ -160,7 +172,7 @@ program combine_res
            nz = nz_saved
         endif
         start = 1; nread = 1; nwrite = 1
-        if(t_id > 0) start(t_id) = tlev      
+        if(t_id > 0) start(t_id) = tlev
 
         do k = 1, nz
            if(k_id>0) start(k_id)=k
@@ -203,7 +215,7 @@ subroutine parse_command_line()
      call usage()
      call exit(1)
   endif
-  
+
   allocate(files(nargs))  ! allocate storage for all file names
   do_interpret_arguments = .true.
   i=1        ! counter of all command-line arguments
@@ -262,7 +274,7 @@ subroutine usage()
   write(*,'(a)')'out.nc           Output file name'
   write(*,'(a)')
   write(*,'(a)')'WARNING: output file is overwritten.'
-  
+
 end subroutine
 
 
@@ -271,7 +283,7 @@ end subroutine
 subroutine assert(cond,message)
   logical     , intent(in) :: cond    ! condition to check
   character(*), intent(in) :: message ! error message to print if condition is not satisfied
-  
+
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
      call exit(1)
