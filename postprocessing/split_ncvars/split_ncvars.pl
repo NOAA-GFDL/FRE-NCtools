@@ -16,7 +16,7 @@
 use strict;
 use Cwd;
 use Getopt::Long;
-use Data::Printer;
+use List::MoreUtils qw{uniq};
 Getopt::Long::Configure("bundling");
 
 my $cwd = getcwd;
@@ -107,7 +107,6 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      foreach my $coord (qw/geolat geolon/) {
        push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
      }
-
 #-------------------------------------
 #-----  loop through variables  ------
 #-------------------------------------
@@ -146,7 +145,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 	    # get the number of dimensions if ps is provided on the commandline
 	    if ( $Opt{PS} ){
-	      if ( scalar get_variable_coords($dump,$var) >= 4 ){
+	      if ( scalar get_variable_dimensions($dump,$var) >= 4 ){
 	        print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
 		$ps_includes{$var} = 1;
 	      } else {
@@ -398,12 +397,18 @@ sub get_time_dimension {
 
 #-------------------------------------------
 
-sub get_variable_coords {
+sub get_variable_dimensions {
   my $dump = shift;
   my $var = shift;
+  my %cartesian_coords;
   my @coords;
+  # Get a list of the cartesian coordinates that are in a file
+  while ( $dump =~ /\t\t(.*):cartesian_axis = "(.*)"/g ){
+      $cartesian_coords{$1} = $2;
+  }
+  # Compare the cartesian coords to those of the variables
   if ( $dump =~ /\t.*$var\((.+)\)/){
-    @coords =  split /,\s/, $1;
+    @coords = uniq map { grep $_, split /,\s/, $1 } keys %cartesian_coords;
   }
   return @coords;
 }
