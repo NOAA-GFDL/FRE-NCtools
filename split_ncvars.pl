@@ -570,10 +570,11 @@ sub cleanup_dim_atts {
   }
   push @opts, "-a calendar_type,$dim,d,," if $calt;
 
-  # correct units from "none" -> "1"
+  # "none" is not valid units
+  # CF-conventions allow dimensionless quantities to omit units
   my $units = get_variable_att($dump,$dim,"units");
   if ($units) {
-    push @opts, "-a units,$dim,m,c,\"1\"" if (lc($units) eq "none");
+    push @opts, "-a units,$dim,d,," if (lc($units) eq "none");
   }
 
   return @opts;
