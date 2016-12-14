@@ -16,13 +16,14 @@
 use strict;
 use Cwd;
 use Getopt::Long;
+use Data::Printer;
 Getopt::Long::Configure("bundling");
 
 my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 
-my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, AUTO=>0, odir=>$cwd );
+my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
 
@@ -32,6 +33,7 @@ my $status = GetOptions ('h|help!'     => \$Opt{HELP},
                          'l|log!'      => \$Opt{LOG},
                          's|static!'   => \$Opt{STATIC},
                          'c|cmip!'     => \$Opt{CMIP},
+			 'p|ps'        => \$Opt{PS},
                          'a|auto!'     => \$Opt{AUTO},
                          'f|onefile=s' => \$Opt{onefile},
                          'i|idir=s'    => \$Opt{idir},
@@ -71,6 +73,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 #  process each input file separately
 
+ my %ps_includes;
  foreach my $file (@ifiles) {
      if ($Opt{idir}) {
         my @commands;
@@ -141,6 +144,17 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
         #------------------------------------------------------------
          if (!-e "$odir/$var.nc") {
 
+	    # get the number of dimensions if ps is provided on the commandline
+	    if ( $Opt{PS} ){
+	      if ( scalar get_variable_coords($dump,$var) >= 4 ){
+	        print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
+		$ps_includes{$var} = 1;
+	      } else {
+		print "Not setting ps_includes of $var\n" if $Opt{VERBOSE} > 1;
+		$ps_includes{$var} = 0;
+	      }
+	    }
+
             # get variable names of all dimension bounds/edges (except for time)
             my @bounds = get_variable_bounds   ($dump,$var,$CMIP);
             if (@bounds) {
@@ -168,7 +182,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
               push @xlist, @$xterms;
             }
          }
-
+	 if ( $ps_includes{$var} ){
+	   print "Appending ps to variables to include.\n" if $Opt{VERBOSE} > 1;
+	   push @vlist, "ps";
+         }
         #-------------------------------------------------
         # EVERY TIME (when there is a time dimension)
         # need to extract time bounds/average_XX variables
@@ -352,6 +369,7 @@ Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
         -l       = include readme log in output directory
         -V       = verbose option: increases standard output, multiple -V allowed
         -c       = cmip option, time average info variable not written
+        -p       = includes ps variable in output files that will be zInterpolated
         -i idir  = input (archive) directory path
         -o odir  = output directory path
         -f file  = one file output option
@@ -376,6 +394,18 @@ sub get_time_dimension {
       $timeSize = $1; 
    }   
    return $timeName;
+}
+
+#-------------------------------------------
+
+sub get_variable_coords {
+  my $dump = shift;
+  my $var = shift;
+  my @coords;
+  if ( $dump =~ /\t.*$var\((.+)\)/){
+    @coords =  split /,\s/, $1;
+  }
+  return @coords;
 }
 
 #-------------------------------------------
