@@ -238,7 +238,35 @@ void mpp_get_varname(int fid, int varid, char *name)
   }  
  
 }
+
+int mpp_get_record_name(int fid, char *name)
+{
+  int dimid, status;
+  char errmsg[512];
+  int record_exist;
+  if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_record_name): invalid id number, id should be "
+				    "a nonnegative integer that less than nfiles");    
+  status = nc_inq_unlimdim(files[fid].ncid, &dimid);
+  if(status != NC_NOERR) {
+    sprintf(errmsg, "mpp_io(mpp_get_record_name): error in get record id from file %s", files[fid].name);
+    netcdf_error(errmsg, status);
+  }  
+  if(dimid >=0) {
+    record_exist = 1;
+    status = nc_inq_dimname(files[fid].ncid, dimid, name);
+    if(status != NC_NOERR) {
+      sprintf(errmsg, "mpp_io(mpp_get_record_name): error in get record name from file %s", files[fid].name);
+      netcdf_error(errmsg, status);
+    }
+  }
+  else {
+    record_exist = 0;
+  }
+  return record_exist;
+}
+
   
+
 /*******************************************************************************/
 /*                                                                             */
 /*           The following are routines that retrieve information              */

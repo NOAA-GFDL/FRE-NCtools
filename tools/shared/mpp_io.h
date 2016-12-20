@@ -41,6 +41,7 @@ char mpp_get_var_cart(int fid, int vid);
 void mpp_get_var_dimname(int fid, int vid, int ind, char *name);
 char mpp_get_dim_cart(int fid, const char *name);
 void mpp_get_var_bndname(int fid, int vid, char *bndname);
+int mpp_get_record_name(int fid, char *name);
 int mpp_var_att_exist(int fid, int vid, const char *att);
 int mpp_global_att_exist(int fid, const char *att);
 int mpp_def_dim(int fid, const char* name, int size);
