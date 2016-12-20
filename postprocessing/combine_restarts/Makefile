@@ -6,7 +6,7 @@ DATE := $(shell date +"%Y %B %d")
 A2X = a2x
 ASCIIDOC_CFG = asciidoc.conf
 
-TXTS = quick_combine.txt
+TXTS = combine_restarts.txt
 TXT_MAN1 = $(patsubst %.txt,%.1,$(TXTS))
 
 all: txtman
