@@ -136,23 +136,23 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
            $CMIP = 1 if (get_variable_att($dump,$var,"standard_name"));
          }
 
+	 # get the number of dimensions if ps is provided on the commandline
+	 if ( $Opt{PS} ){
+	     if ( scalar get_variable_dimensions($dump,$var) >= 4 ){
+		 print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
+		 $ps_includes{$var} = 1;
+	     } else {
+		 print "Not setting ps_includes of $var\n" if $Opt{VERBOSE} > 1;
+		 $ps_includes{$var} = 0;
+	     }
+	 }
+
         #------------------------------------------------------------
         # FIRST TIME ONLY (when output file does not exist)
         # need to extract additional static fields
         # 1) dimension bounds, 2) coordinate variables, 3) formula terms
         #------------------------------------------------------------
          if (!-e "$odir/$var.nc") {
-
-	    # get the number of dimensions if ps is provided on the commandline
-	    if ( $Opt{PS} ){
-	      if ( scalar get_variable_dimensions($dump,$var) >= 4 ){
-	        print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
-		$ps_includes{$var} = 1;
-	      } else {
-		print "Not setting ps_includes of $var\n" if $Opt{VERBOSE} > 1;
-		$ps_includes{$var} = 0;
-	      }
-	    }
 
             # get variable names of all dimension bounds/edges (except for time)
             my @bounds = get_variable_bounds   ($dump,$var,$CMIP);
