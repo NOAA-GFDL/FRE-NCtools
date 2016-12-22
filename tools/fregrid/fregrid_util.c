@@ -17,6 +17,7 @@
 #define EPSLN10 (1.e-10)
 #define REL_COEF ( 0.9 )
 #define MAX_ITER 4000
+#define MAX_NUM_VARS 5
 
 void init_halo(double *var, int nx, int ny, int nz, int halo);
 void update_halo(int nx, int ny, int nz, double *data, Bound_config *bound, Data_holder *dHold);
@@ -814,9 +815,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
   Field_config *field = NULL;
   size_t start[4], nread[4];
   int interp_method, use_bilinear, use_conserve;
-  int len, found;
+  int len, found, standard_dimension;
   
-  
+  standard_dimension = opcode & STANDARD_DIMENSION;  
   use_bilinear = 0;
   use_conserve = 0;
   if(opcode & CONSERVE_ORDER1) {
@@ -870,7 +871,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
       char file_list[MAXLIST][STRING];
       char file_id[MAXLIST];
       int nfile_list;
-
+      char orig_bnd_dimname[STRING]="";
       for(i=0; i<MAXLIST; i++) {
 	file_list[i][0] = '\0';
 	file_id[i] = 0;
@@ -906,6 +907,26 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 		  "the type should be NC_DOUBLE, NC_FLOAT, NC_INT or NC_SHORT", field[n].var[ll].name, file[n].name );
 	  mpp_error(errmsg);
 	}
+	/* check if the variable needs to be remapped */
+        ndim = mpp_get_var_ndim(file[n].fid, field[n].var[ll].vid);
+	field[n].var[ll].ndim = ndim;
+	if(ndim>5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no larger than 5");		
+        field[n].var[ll].do_regrid = 0;
+	if(ndim>1) {
+	  for(i=0; i<ndim; i++) {
+	    int vid;
+	    char xcart, ycart;
+	    char localname[STRING];
+	    mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim-1, localname);
+	    vid = mpp_get_varid(file[n].fid, localname);
+	    xcart = mpp_get_var_cart(file[n].fid, vid);
+	    mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim-2, localname);
+	    vid = mpp_get_varid(file[n].fid, localname);
+	    ycart = mpp_get_var_cart(file[n].fid, vid);
+            if(xcart == 'X' && ycart == 'Y') field[n].var[ll].do_regrid = 1;
+	  }
+	}
+	
         /* check if time_avg_info attribute existed in any variables */
 	if(!file[n].has_tavg_info) {
 	  if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "time_avg_info") ) file[n].has_tavg_info = 1;
@@ -1048,11 +1069,6 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
     
 	    if( cart == 'T' ) {
-	      if(ndim <=2) {
-		sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s has t-axis and <3" ,
-		      field[n].var[ll].area_name, associated_file );
-		mpp_error(errmsg);
-	      }
 	      field[n].var[ll].area_has_taxis = 1;
 	    }
 	    else {
@@ -1128,8 +1144,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    }
 	  }
 	}
-	ndim = mpp_get_var_ndim(file[n].fid, field[n].var[ll].vid);
-	if(ndim <2 || ndim>5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no less than 2 and no larger than 5");	
+	ndim = field[n].var[ll].ndim;
 	for(i=0; i<ndim; i++) {
 	  int vid;
           mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, i, dimname[i]);
@@ -1139,63 +1154,63 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	  type[i] = mpp_get_var_type(file[n].fid, vid);
 	  mpp_get_var_bndname(file[n].fid, vid, bndname[i]);
       	}
-	field[n].var[ll].ndim = ndim;
-	if(cart[ndim-1] != 'X') mpp_error("get_input_metadata(fregrid_util.c): the last dimension cartesian should be 'X'");
-	if(cart[ndim-2] != 'Y') mpp_error("get_input_metadata(fregrid_util.c): the second last dimension cartesian should be 'Y'");
-	if(dimsize[ndim-1] != grid[n].nx) mpp_error("get_input_metadata(fregrid_util.c): x-size in grid file in not the same as in data file");
-	if(dimsize[ndim-2] != grid[n].ny) mpp_error("get_input_metadata(fregrid_util.c): y-size in grid file in not the same as in data file");
-        if(ndim > 2) {
-	  if(cart[ndim-3] == 'Z') {
-	    field[n].var[ll].has_zaxis = 1;
-	    field[n].var[ll].nz        = dimsize[ndim-3];
-	    if(kend > field[n].var[ll].nz) {
-	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
-		      "number of vertical levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
+	if(field[n].var[ll].do_regrid) {
+	  if(cart[ndim-1] != 'X') mpp_error("get_input_metadata(fregrid_util.c): the last dimension cartesian should be 'X'");
+	  if(cart[ndim-2] != 'Y') mpp_error("get_input_metadata(fregrid_util.c): the second last dimension cartesian should be 'Y'");
+	  if(dimsize[ndim-1] != grid[n].nx) mpp_error("get_input_metadata(fregrid_util.c): x-size in grid file in not the same as in data file");
+	  if(dimsize[ndim-2] != grid[n].ny) mpp_error("get_input_metadata(fregrid_util.c): y-size in grid file in not the same as in data file");
+	  if(ndim > 2) {
+	    if(cart[ndim-3] == 'Z') {
+	      field[n].var[ll].has_zaxis = 1;
+	      field[n].var[ll].nz        = dimsize[ndim-3];
+	      if(kend > field[n].var[ll].nz) {
+		sprintf(errmsg, "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
+			"number of vertical levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
+		mpp_error(errmsg);
+	      }
+	      if(kbegin>0) {
+		field[n].var[ll].kstart = kbegin - 1;
+		field[n].var[ll].kend   = kend - 1;
+		field[n].var[ll].nz     = kend - kbegin + 1;
+	      }
+	      else {
+		field[n].var[ll].kstart = 0;
+		field[n].var[ll].kend   = field[n].var[ll].nz - 1;
+	      }	    
+	    }
+	    else if(cart[ndim-3] == 'N') {
+	      field[n].var[ll].has_naxis = 1;
+	      field[n].var[ll].nn        = dimsize[ndim-3];
+	    }
+	  }
+	  if(ndim > 3) {
+	    if(cart[ndim-4] == 'Z') {
+	      mpp_error("get_input_metadata(fregrid_util.c): the Z-axis must be the third dimension");
+	    }
+	    if(cart[ndim-4] == 'N') {
+	      field[n].var[ll].has_naxis = 1;
+	      field[n].var[ll].nn        = dimsize[ndim-4];
+	    }
+	  }
+	  
+	  if(cart[0] == 'T') {
+	    field[n].var[ll].has_taxis = 1;
+	    if(lend > dimsize[0]) {
+	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
+		      "number of time levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
 	      mpp_error(errmsg);
 	    }
-	    if(kbegin>0) {
-	      field[n].var[ll].kstart = kbegin - 1;
-	      field[n].var[ll].kend   = kend - 1;
-	      field[n].var[ll].nz     = kend - kbegin + 1;
+	    if(lbegin>0) {
+	      field[n].var[ll].lstart = lbegin - 1;
+	      field[n].var[ll].lend   = lend - 1;
+	      file[n].nt              = lend - lbegin + 1;
 	    }
 	    else {
-	      field[n].var[ll].kstart = 0;
-	      field[n].var[ll].kend   = field[n].var[ll].nz - 1;
-	    }	    
+	      field[n].var[ll].lstart = 0;
+	      field[n].var[ll].lend   = dimsize[0] - 1;
+	      file[n].nt              = dimsize[0];
+	    }
 	  }
-	  else if(cart[ndim-3] == 'N') {
-	    field[n].var[ll].has_naxis = 1;
-	    field[n].var[ll].nn        = dimsize[ndim-3];
-	  }
-	}
-	if(ndim > 3) {
-	  if(cart[ndim-4] == 'Z') {
-	    mpp_error("get_input_metadata(fregrid_util.c): the Z-axis must be the third dimension");
-	  }
-	  if(cart[ndim-4] == 'N') {
-	    field[n].var[ll].has_naxis = 1;
-	    field[n].var[ll].nn        = dimsize[ndim-4];
-	  }
-	}
-	  
-	if(cart[0] == 'T') {
-	  field[n].var[ll].has_taxis = 1;
-	  if(lend > dimsize[0]) {
-	    sprintf(errmsg, "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
-		    "number of time levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
-	    mpp_error(errmsg);
-	  }
-	  if(lbegin>0) {
-	    field[n].var[ll].lstart = lbegin - 1;
-	    field[n].var[ll].lend   = lend - 1;
-	    file[n].nt              = lend - lbegin + 1;
-	  }
-	  else {
-	    field[n].var[ll].lstart = 0;
-	    field[n].var[ll].lend   = dimsize[0] - 1;
-	    file[n].nt              = dimsize[0];
-	  }
-	    
 	}
 	for(i=0; i<ndim; i++) {
 	  /* loop through all the file dimensions to see if the dimension already exist or not */
@@ -1219,18 +1234,22 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    strcpy(file[n].axis[j].name, dimname[i]);
 	    strcpy(file[n].axis[j].bndname, bndname[i]);
 	    file[n].axis[j].vid = mpp_get_varid(file[n].fid, dimname[i]);
-	    if(cart[i] == 'T') {
-	      start[0] = field[n].var[ll].lstart;
-	      file[n].axis[j].size = file[n].nt;
+	    if( field[n].var[ll].do_regrid ) {
+	      if(cart[i] == 'T') {
+		start[0] = field[n].var[ll].lstart;
+		file[n].axis[j].size = file[n].nt;
+	      }
+	      else if(cart[i] == 'Z') {
+		start[0] = field[n].var[ll].kstart;
+		file[n].axis[j].size = field[n].var[ll].nz;
+	      }
+	      else {
+		start[0] = 0;
+		file[n].axis[j].size = dimsize[i];
+	      }
 	    }
-	    else if(cart[i] == 'Z') {
-	      start[0] = field[n].var[ll].kstart;
-	      file[n].axis[j].size = field[n].var[ll].nz;
-	    }
-	    else {
-	      start[0] = 0;
-               file[n].axis[j].size = dimsize[i];
-	    }
+	    else
+	      file[n].axis[j].size = dimsize[i];
 	    file[n].axis[j].data = (double *)malloc(file[n].axis[j].size*sizeof(double));
 	    nread[0] = file[n].axis[j].size;
 	    mpp_get_var_value_block(file[n].fid, file[n].axis[j].vid, start, nread, file[n].axis[j].data);
@@ -1246,6 +1265,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	        file[n].axis[j].bndtype = 2;
 		file[n].axis[j].bnddata = (double *)malloc(2*file[n].axis[j].size*sizeof(double));
 		nread[0] = file[n].axis[j].size; nread[1] = 2;
+		/* find the bnd variable name */
+		mpp_get_var_dimname(file[n].fid,file[n].axis[j].bndid, 1, orig_bnd_dimname);
 	      }
 	      mpp_get_var_value_block(file[n].fid, file[n].axis[j].bndid, start, nread, file[n].axis[j].bnddata);
 	    }
@@ -1256,6 +1277,30 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	  }
 	} /*ndim*/
       }  /* nvar */
+      /* make sure the dimension name is bnds when standard_dimension is set */
+      {
+	int j;
+	for(j=0; j<file[n].ndim; j++) file[n].axis[j].is_defined = 0;
+      }
+      if(standard_dimension) {
+	int j;
+	for(j=0; j<file[n].ndim; j++) {
+	  if(!strcmp(file[n].axis[j].name,orig_bnd_dimname) ) strcpy(file[n].axis[j].name, "bnds");
+	}
+      }
+      
+      /* loop through each variable to see if will be axis data */
+      for(l=0; l<nfield; l++) {
+	field[n].var[l].is_axis_data = 0;
+	for(i=0; i<file[n].ndim; i++) {
+	  if(!strcmp(field[n].var[l].name, file[n].axis[i].name) || !strcmp(field[n].var[l].name, file[n].axis[i].bndname)
+	     || !strcmp(field[n].var[l].name, orig_bnd_dimname) ) {
+	    field[n].var[l].is_axis_data = 1;
+	    break;
+	  }
+	}
+      }
+      
     } /* ntile */
     /* make sure the consistency between tiles */
     for(n=1; n<ntiles; n++) {
@@ -1552,19 +1597,28 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	for(l=0; l<nscalar; l++)scalar_out[n].var[l].type = scalar_in[0].var[l].type;
       
       if(mpp_pe() == mpp_root_pe()) {
+	int found;
 	file_out[n].fid = mpp_open(file_out[n].name, MPP_WRITE);
 	mpp_copy_global_att(file_in[0].fid, file_out[n].fid);
 	mpp_def_global_att(file_out[n].fid, "history", history);
 	mpp_def_global_att(file_out[n].fid, "code_version", tagname);
-	/* define dim_bnds if bnds axis exist */
+	/* check if bnds exist in axis dimensions */
+	found = 0;
 	for(i=0; i<ndim; i++) {
-	  if(file_out[n].axis[i].bndtype == 2 || file_out[n].axis[i].bndtype == 3 ||
-	     (file_out[n].axis[i].bndtype == 1 && standard_dimension) ) {
-	    dim_bnds = mpp_def_dim(file_out[n].fid, "bnds", 2);
+	  if(!strcmp(file_out[n].axis[i].name, "bnds")) {
+	    found = 1;
 	    break;
 	  }
 	}
-	
+	if(!found){
+	  for(i=0; i<ndim; i++) {
+	    if(file_out[n].axis[i].bndtype == 2 || file_out[n].axis[i].bndtype == 3 ||
+	       (file_out[n].axis[i].bndtype == 1 && standard_dimension) ) {
+	      dim_bnds = mpp_def_dim(file_out[n].fid, "bnds", 2);
+	      break;
+	    }
+	  }
+	}
 	for(i=0; i<ndim; i++) {
 	  if(file_out[n].axis[i].cart=='T') {
 	    file_out[n].axis[i].dimid = mpp_def_dim(file_out[n].fid, file_out[n].axis[i].name, NC_UNLIMITED);
@@ -1575,8 +1629,10 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	      file_out[n].axis[i].dimid = mpp_def_dim(file_out[n].fid, "lon", file_out[n].axis[i].size);
 	    else if((file_out[n].axis[i].type == NC_INT || standard_dimension) && file_out[n].axis[i].cart == 'Y' ) 
 	      file_out[n].axis[i].dimid = mpp_def_dim(file_out[n].fid, "lat", file_out[n].axis[i].size);
-	    else 
+	    else {
 	      file_out[n].axis[i].dimid = mpp_def_dim(file_out[n].fid, file_out[n].axis[i].name, file_out[n].axis[i].size);
+              if(!strcmp(file_out[n].axis[i].name, "bnds")) dim_bnds = file_out[n].axis[i].dimid;
+	    }
 	  }
 	}
 	for(i=0; i<ndim; i++) {
@@ -1673,24 +1729,58 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	/* define the field meta data */
 	for(l=0; l<nscalar; l++) {
 	  int natts, i;
+	  if( scalar_in[0].var[l].is_axis_data ) continue;
 	  for(i=0; i<scalar_out[n].var[l].ndim; i++) dims[i] = file_out[n].axis[scalar_out[n].var[l].index[i]].dimid;
-	    scalar_out[n].var[l].vid = mpp_def_var(file_out[n].fid, scalar_out[n].var[l].name, scalar_out[n].var[l].type,
-						   scalar_out[n].var[l].ndim, dims, 0);
+	  scalar_out[n].var[l].vid = mpp_def_var(file_out[n].fid, scalar_out[n].var[l].name, scalar_out[n].var[l].type,
+						 scalar_out[n].var[l].ndim, dims, 0);
 	  /* when standard_dimension is true and output grid is lat-lon grid, do not output attribute coordinates */
 	  natts = mpp_get_var_natts(file_in[0].fid, scalar_in[0].var[l].vid);
-          for(i=0; i<natts; i++) {
-	    char name[256];
+	  
+	  for(i=0; i<natts; i++) {
+	    char name[256], coords[512];
+	    memset(coords,0,512);
 	    mpp_get_var_attname(file_in[0].fid, scalar_in[0].var[l].vid, i, name);
+	    /* check if we need to output coordinates attribute */
 	    if( !standard_dimension || !dst_is_latlon || strcmp(name, "coordinates") )
-	      mpp_copy_att_by_name(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid, scalar_out[n].var[l].vid,name);
+	      mpp_copy_att_by_name(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid,
+				   scalar_out[n].var[l].vid,name);
+            else if( !strcmp(name, "coordinates") ) {
+	      char coord_var[MAX_NUM_VARS][STRING];
+	      unsigned int  ncoord_var;
+	      int save_coord, found_var, jj;
+
+              /* read the coordinates variable and copy coordincates attribute only when the variable is 1-D */
+	      mpp_get_var_att(file_in[0].fid, scalar_in[0].var[l].vid, name, coords);
+	      tokenize(coords, ", ", STRING, MAX_NUM_VARS, (char *)coord_var, &ncoord_var);
+	      /* check if each variable in the output file */
+	      save_coord = 1;
+	      for(j=0; j<ncoord_var; j++) {
+		found_var = 0;
+		for(jj=0; jj<scalar_in->nvar; jj++) {
+		  if(!strcmp(coord_var[j], scalar_in->var[jj].name)) {
+		    found_var = 1;
+		    break;
+		  }
+		}
+		if(!found_var) {
+		  save_coord = 0;
+		  break;
+		}
+	      }
+	      
+	      if(save_coord)  mpp_copy_att_by_name(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid,
+						   scalar_out[n].var[l].vid,name);
+	    }
 	  }
-		
-	  if(scalar_out[n].var[l].interp_method == CONSERVE_ORDER1)
-             mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "conserve_order1");
-	  else if(scalar_out[n].var[l].interp_method == CONSERVE_ORDER2)
-             mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "conserve_order2");
-	  else if(scalar_out[n].var[l].interp_method == BILINEAR)
-             mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "bilinear");
+	  if( scalar_in[0].var[l].do_regrid ) {
+	    if(scalar_out[n].var[l].interp_method == CONSERVE_ORDER1)
+	      mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "conserve_order1");
+	    else if(scalar_out[n].var[l].interp_method == CONSERVE_ORDER2)
+	      mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "conserve_order2");
+	    else if(scalar_out[n].var[l].interp_method == BILINEAR)
+	      mpp_def_var_att(file_out[n].fid, scalar_out[n].var[l].vid, "interp_method", "bilinear");
+	  }
+	  
 	}
 	for(l=0; l<nvector; l++) {
 	  if(m==0) {
@@ -1741,12 +1831,26 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	}
 	/* set deflation and shuffle */
 	mpp_set_deflation(file_in[0].fid, file_out[n].fid, deflation, shuffle);
+	
 	mpp_end_def(file_out[n].fid);
+
        	for(i=0; i<ndim; i++) {
 	  if(file_out[n].axis[i].cart == 'T') continue; 
 	  mpp_put_var_value(file_out[n].fid, file_out[n].axis[i].vid, file_out[n].axis[i].data);
 	  if( file_out[n].axis[i].bndtype > 0 )
 	    mpp_put_var_value(file_out[n].fid, file_out[n].axis[i].bndid, file_out[n].axis[i].bnddata);
+	}
+
+	/* copy the data of non-regriddable varialbe */
+	/*
+	  for(l=0; l<nscalar; l++) {
+	  if( scalar_in[0].var[l].is_axis_data || scalar_in[0].var[l].do_regrid ) continue;
+	  mpp_copy_var(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid);
+	}
+	*/
+	for(l=0; l<nscalar; l++) {
+	  if( scalar_in[0].var[l].is_axis_data || scalar_in[0].var[l].do_regrid ) continue;
+	  mpp_copy_data(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid, scalar_out[n].var[l].vid);
 	}
       }
     }
@@ -1769,6 +1873,7 @@ void get_field_attribute( int ntiles, Field_config *field)
       field[n].var[l].missing = 0;
       field[n].var[l].scale   = 0;
       field[n].var[l].offset  = 0;
+      if(!field[n].var[l].do_regrid) continue;
       field[n].var[l].vid = mpp_get_varid(*(field[n].fid), field[n].var[l].name);
       if( field[n].var[l].has_missing = mpp_var_att_exist(*(field[n].fid), field[n].var[l].vid, "missing_value") ) {
 	mpp_get_var_att_double(*(field[n].fid), field[n].var[l].vid, "missing_value", &(field[n].var[l].missing));
@@ -2220,7 +2325,6 @@ void write_field_data(int ntiles, Field_config *field, Grid_config *grid, int va
   size_t *nwrite, *start;
 
   ndim = field->var[varid].ndim;
-  if(ndim < 2) mpp_error("fregrid_util(write_field_data): ndim must be no less than 2");
 
   nwrite = (size_t *)malloc(ndim*sizeof(size_t));
   start  = (size_t *)malloc(ndim*sizeof(size_t));

@@ -565,7 +565,8 @@ int main(int argc, char* argv[])
   }
   else
     mpp_error("fregrid: interp_method must be 'conserve_order1', 'conserve_order2', 'conserve_order2_monotonic'  or 'bilinear'");
-      
+
+  save_weight_only = 0;
   if( nfiles == 0) {
     if(nvector > 0 || nscalar > 0 || nvector2 > 0)
       mpp_error("fregrid: when --input_file is not specified, --scalar_field, --u_field and --v_field should also not be specified");
@@ -930,6 +931,7 @@ int main(int argc, char* argv[])
     /* first interp scalar variable */
     for(l=0; l<nscalar; l++) {
       if( !scalar_in->var[l].has_taxis && m>0) continue;
+      if( !scalar_in->var[l].do_regrid ) continue;
       level_t = m + scalar_in->var[l].lstart;
       /*--- to reduce memory usage, we are only do remapping for on horizontal level one time */
       for(level_n =0; level_n < scalar_in->var[l].nn; level_n++) {

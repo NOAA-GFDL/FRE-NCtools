@@ -73,7 +73,9 @@ typedef struct {
   int    area_has_naxis;
   double area_missing;
   char   area_name[STRING];
-  
+  int    do_regrid;
+  int    is_axis_data;
+  int    dimsize[5];  
 } Var_config;
 
 typedef struct {
@@ -91,6 +93,8 @@ typedef struct {
 typedef struct {
   char name[STRING];
   char bndname[STRING];
+  char orig_name[STRING];
+  char orig_bndname[STRING];
   int  dimid;
   int  vid;
   int  bndid;
@@ -98,6 +102,7 @@ typedef struct {
   nc_type type;
   char cart; 
   int  bndtype;
+  int  is_defined;
   double *bnddata;
   double *data; 
 } Axis_config;
