@@ -32,7 +32,7 @@ NETCDFPATH = /usr/local/netcdf-4.0.1
 ARCH = $(shell uname -m)
 
 ifeq ($(ARCH),ia64)
-FC       = ifort
+FC          = ifort
 FFLAGS      = -r8 -O2 -g
 INCLUDES    = -I. -I${NETCDFPATH}/include
 LIBS        = -L${NETCDFPATH}/lib/shared -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lmpi -lz
@@ -46,6 +46,16 @@ FC          = ifort
 FFLAGS      = -r8
 INCLUDES    = -I. -I/usr/local/include
 LIBS        = -L/usr/local/lib -lnetcdf
+F90         = ifort
+CXX         = c++ 
+CXXFLAGS    = -LANG:std 
+endif
+
+ifeq ($(ARCH),x86_64)
+FC          = ifort
+FFLAGS      = -r8 -fltconsistency -check bounds -check pointer -check uninit -fpe0 -O0 -ftrapuv -traceback -g
+INCLUDES    = -I. -I/opt/cray/netcdf/4.3.3.1/INTEL/14.0/include -I/opt/cray/hdf5/1.8.14/INTEL/14.0/include
+LIBS        = -L/opt/cray/netcdf/4.3.3.1/INTEL/14.0/lib -lnetcdf -lnetcdff
 F90         = ifort
 CXX         = c++ 
 CXXFLAGS    = -LANG:std 
