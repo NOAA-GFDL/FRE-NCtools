@@ -31,7 +31,7 @@ program combine_res
   character(PATH_MAX), allocatable :: files(:) ! names of all files on the command line
   character(PATH_MAX)              :: outfile  ! name of the output file
   integer :: nfiles    ! number of files on command line
-  integer :: debug = 0 ! debug output verbosity level
+  integer :: verbosity = 0 ! debug output verbosity level
   integer, allocatable :: input(:)             ! netcdf IDs of input files
   integer :: ncid,dimid,varid,varid1,ovarid,dimlen,ndims,nvars,ngatts,xtype
   integer :: dimids(NF_MAX_DIMS), start(NF_MAX_DIMS), cnt(NF_MAX_DIMS)
@@ -43,9 +43,9 @@ program combine_res
   real     , allocatable :: buffer(:), obuffer(:)
   character, allocatable :: text(:)
   integer  , allocatable :: rank(:) ! re-ordering of the indices
-  integer  , allocatable :: sizes(:)
+  integer  , allocatable :: sizes(:) ! length of compressed dimension for each of the files
   integer :: nrec, recsize
-  integer :: i,j,k,n,rec,ii,cdim, ifile
+  integer :: i,j,k,n,rec,ii,cdim,ifile
   type(dimtype), allocatable :: dim(:)
 
 
@@ -53,7 +53,7 @@ program combine_res
   call parse_command_line() ! modigies global data!
 
   call assert(nfiles>0,'at least one input file must be specified')
-  if(debug>0) then
+  if(verbosity>0) then
      do i = 1,nfiles
         write(*,'("input file",i3,":",a)')i, '"'//trim(files(i))//'"'
      enddo
@@ -75,10 +75,10 @@ program combine_res
      cmode=IOR(NF_NETCDF4,NF_CLASSIC_MODEL)
   elseif (in_format==NF_FORMAT_64BIT) then
      cmode=IOR(NF_CLOBBER,NF_64BIT_OFFSET)
-     if(debug>0)write(*,'("output file is 64-bit netcdf")')
+     if(verbosity>0)write(*,'("output file is 64-bit netcdf")')
   elseif (in_format==NF_FORMAT_CLASSIC) then
      cmode=IOR(NF_CLOBBER,NF_CLASSIC_MODEL)
-     if(debug>0)write(*,'("output file is 32-bit netcdf")')
+     if(verbosity>0)write(*,'("output file is 32-bit netcdf")')
   else
      call assert(.false.,'Unknown netCDF format')
   endif
@@ -112,7 +112,7 @@ program combine_res
      if(has_records)then
         dimlen = NF_UNLIMITED
      endif
-     if(debug>0)&
+     if(verbosity>0)&
            write(*,*)'defining dimension "'//trim(d%name)//'" with length',d%len
      __NF_ASRT__(nf_def_dim(ncid,d%name,dimlen,i)) ! i is just a dummy var for dimid, unused
      end associate
@@ -149,7 +149,7 @@ program combine_res
         call exit(255)
      endif
      if (n==0) then ! no compressed dims => variable is uncompressed
-        if(debug>0) write(*,*)'copy uncompressed variable "'//trim(varname)//'"'
+        if(verbosity>0) write(*,*)'copy uncompressed variable "'//trim(varname)//'"'
         if (xtype==NF_CHAR) then
            ! we are not bothering with writing CHAR variables by record since (1)
            ! they are relatively small (2) they are unlikely to have record
@@ -178,12 +178,12 @@ program combine_res
      associate(d=>dim(dimid))
      if (.not.d%compressed) cycle ! skip nonn-compressed dimensions
 
+     if (verbosity>0) write(*,*)'processing compressed dimension "'//trim(d%name)//'"'
+
      ! get the size of compressed dim in every file
      call inquire_dimension(input(:),d%name,sizes=sizes)
-
      ! allocate i/o and reordering buffers
      allocate(rank(d%buflen), buffer(d%buflen), obuffer(d%len))
-
      ! create re-ordering index
      call reorder_compressed_index(input,d%name,rank)
 
@@ -191,7 +191,7 @@ program combine_res
      do varid = 1, nvars
         __NF_ASRT__(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens))
         if (.not.any(dimids(1:ndims)==dimid)) cycle ! skip variables that do not depend on our compressed dim
-        if(debug>0) write(*,*)'copy compressed variable "'//trim(varname)//'"'
+        if(verbosity>0) write(*,*)'copy compressed variable "'//trim(varname)//'"'
 
         ! get the output variable ID
         __NF_ASRT__(nfu_inq_var(ncid,varname,id=ovarid))
@@ -224,7 +224,7 @@ program combine_res
               k = k+sizes(ifile)
            enddo
            ! reshuffle variable values in desired order
-           do k = 1,size(rank)
+           do k = 1,size(obuffer)
               obuffer(k) = buffer(rank(k))
            enddo
            ! write slice to output file
@@ -232,7 +232,7 @@ program combine_res
            __NF_ASRT__(nf_put_vara_double(ncid,ovarid,start,cnt,obuffer))
         enddo
      enddo
-     deallocate(rank, buffer)
+     deallocate(rank, buffer, obuffer)
      end associate
   enddo
 
@@ -422,18 +422,15 @@ subroutine parse_command_line()
   nfiles = 0 ! counter of input files
   do while (i<=nargs)
      call getarg(i,arg)
-     if(debug>1) write(*,*)'argument ',i, trim(arg)
+     if(verbosity>1) write(*,*)'argument ',i, trim(arg)
      if(arg(1:1)=='-'.and.do_interpret_arguments) then
         select case(trim(arg))
         case('--')
            do_interpret_arguments = .false.
 
-        case('-D','--debug-level')
+        case('-v','--verbose')
            call assert(i<nargs,trim(arg)//' flag must be followed by integer verbosity level')
-           call getarg(i+1,param)
-           read(param,*,iostat=iostat) debug
-           call assert(iostat==0,trim(arg)//' flag must be followed by integer verbosity level')
-           i=i+1
+           verbosity = verbosity+1
 
         case ('-h','-?','--help')
            call usage()
@@ -454,7 +451,7 @@ subroutine parse_command_line()
      outfile = files(nfiles)
      nfiles  = nfiles-1
   endif
-  if(debug>0) &
+  if(verbosity>0) &
        write(*,*) nfiles, ' input files'
 end subroutine
 
