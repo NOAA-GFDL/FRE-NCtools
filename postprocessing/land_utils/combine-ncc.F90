@@ -55,9 +55,9 @@ program combine_res
   call assert(nfiles>0,'at least one input file must be specified')
   if(verbosity>0) then
      do i = 1,nfiles
-        write(*,'("input file",i3,":",a)')i, '"'//trim(files(i))//'"'
+        write(*,'("input file",i4," : ",a)')i, '"'//trim(files(i))//'"'
      enddo
-     write(*,'("output file:",a)')'"'//trim(outfile)//'"'
+     write(*,'("output file : ",a)')'"'//trim(outfile)//'"'
   endif
 
   ! open all input files and determine the creation mode of output file:
@@ -111,9 +111,11 @@ program combine_res
 
      if(has_records)then
         dimlen = NF_UNLIMITED
+     else
+        dimlen = max(dimlen,1)
      endif
      if(verbosity>0)&
-           write(*,*)'defining dimension "'//trim(d%name)//'" with length',d%len
+           write(*,'(x,a,i8)')'defining dimension "'//trim(d%name)//'" with length',d%len
      __NF_ASRT__(nf_def_dim(ncid,d%name,dimlen,i)) ! i is just a dummy var for dimid, unused
      end associate
   enddo
@@ -149,7 +151,7 @@ program combine_res
         call exit(255)
      endif
      if (n==0) then ! no compressed dims => variable is uncompressed
-        if(verbosity>0) write(*,*)'copy uncompressed variable "'//trim(varname)//'"'
+        if(verbosity>0) write(*,'(2x,a)')'copy uncompressed variable "'//trim(varname)//'"'
         if (xtype==NF_CHAR) then
            ! we are not bothering with writing CHAR variables by record since (1)
            ! they are relatively small (2) they are unlikely to have record
@@ -174,11 +176,20 @@ program combine_res
   ! copy compressed vars
   allocate(sizes(nfiles))
   do dimid = 1,size(dim)
-
      associate(d=>dim(dimid))
      if (.not.d%compressed) cycle ! skip nonn-compressed dimensions
 
-     if (verbosity>0) write(*,*)'processing compressed dimension "'//trim(d%name)//'"'
+     if (d%len==0) then 
+        ! if compressed dimension has zero length, then the variables
+        ! that depend on it have no values; by skipping them we leave 
+        ! the output filled with respective _FillValues
+        if (verbosity>0) then
+           write(*,'(x,a)')'compressed dimension "'//trim(d%name)//'" has no values, skipping it and all variables that depend on it'
+           write(*,'(x,a)')'variables in output file will be filled with respective _FillValues'
+        endif
+        cycle
+     endif
+     if (verbosity>0) write(*,'(x,a)')'processing compressed dimension "'//trim(d%name)//'"'
 
      ! get the size of compressed dim in every file
      call inquire_dimension(input(:),d%name,sizes=sizes)
@@ -191,7 +202,7 @@ program combine_res
      do varid = 1, nvars
         __NF_ASRT__(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens))
         if (.not.any(dimids(1:ndims)==dimid)) cycle ! skip variables that do not depend on our compressed dim
-        if(verbosity>0) write(*,*)'copy compressed variable "'//trim(varname)//'"'
+        if(verbosity>0) write(*,'(2x,a)')'copy compressed variable "'//trim(varname)//'"'
 
         ! get the output variable ID
         __NF_ASRT__(nfu_inq_var(ncid,varname,id=ovarid))
