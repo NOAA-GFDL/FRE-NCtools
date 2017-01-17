@@ -769,17 +769,7 @@ int main(int argc, char* argv[])
       file2_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
       file2_out  = (File_config *)malloc(ntiles_out*sizeof(File_config));
     }
-    if(nscalar > 0) {
-      scalar_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
-      scalar_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
-    }
-    if(nvector > 0) {
-      u_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
-      u_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));    
-      v_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
-      v_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
-    }
-  
+
     set_mosaic_data_file(ntiles_in, mosaic_in, dir_in, file_in,  input_file[0]);
     set_mosaic_data_file(ntiles_out, mosaic_out, dir_out, file_out, output_file[0]);
 
@@ -818,6 +808,26 @@ int main(int argc, char* argv[])
           nscalar++;
       }
     }
+
+    /* when there is no scalar and vector to remap, simply return */
+    if(nscalar == 0 && nvector == 0) {
+      if(mpp_pe() == mpp_root_pe()) printf("NOTE from fregrid: no scalar and vector field need to be regridded.\n");
+      mpp_end();
+      return 0;   
+    }
+    
+    if(nscalar > 0) {
+      scalar_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
+      scalar_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
+    }
+    if(nvector > 0) {
+      mpp_error("fregrid: currently does not support vertical interpolation, contact developer");
+      u_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
+      u_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));    
+      v_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
+      v_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
+    }
+  
     set_field_struct ( ntiles_in,   scalar_in,   nscalar, scalar_name_remap[0], file_in);
     set_field_struct ( ntiles_out,  scalar_out,  nscalar, scalar_name_remap[0], file_out);
     set_field_struct ( ntiles_in,   u_in,        nvector, u_name[0], file_in);
