@@ -3566,9 +3566,9 @@ int main (int argc, char *argv[])
     if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
     mpp_def_global_att(fid, "history", history);
     dim_string = mpp_def_dim(fid, "string", STRING);
-    dim_axo = mpp_def_dim(fid, "nfile_aXo", nfile_axo);
-    dim_axl = mpp_def_dim(fid, "nfile_aXl", nfile_axl);
-    dim_lxo = mpp_def_dim(fid, "nfile_lXo", nfile_lxo);
+    if(nfile_axo >0) dim_axo = mpp_def_dim(fid, "nfile_aXo", nfile_axo);
+    if(nfile_axl >0) dim_axl = mpp_def_dim(fid, "nfile_aXl", nfile_axl);
+    if(nfile_lxo >0) dim_lxo = mpp_def_dim(fid, "nfile_lXo", nfile_lxo);
     if(nfile_wxo >0) dim_wxo = mpp_def_dim(fid, "nfile_wXo", nfile_wxo);
     
     id_amosaic_dir  = mpp_def_var(fid, "atm_mosaic_dir", MPP_CHAR, 1, &dim_string,
@@ -3605,15 +3605,18 @@ int main (int argc, char *argv[])
     /* since exchange grid is created in this tool, we may add command line option to specify where to store the output */
     /*    id_xgrids_dir = mpp_def_var(fid, "xgrids_dir", MPP_CHAR, 1, &dim_string,
 	  1, "standard_name", "directory_storing_xgrids"); */
-    dims[0] = dim_axo; dims[1] = dim_string;
-    id_axo_file = mpp_def_var(fid, "aXo_file", MPP_CHAR, 2, dims, 1, "standard_name", "atmXocn_exchange_grid_file");
-
-    dims[0] = dim_axl; dims[1] = dim_string;
-    id_axl_file = mpp_def_var(fid, "aXl_file", MPP_CHAR, 2, dims, 1, "standard_name", "atmXlnd_exchange_grid_file");
-
-    dims[0] = dim_lxo; dims[1] = dim_string;
-    id_lxo_file = mpp_def_var(fid, "lXo_file", MPP_CHAR, 2, dims, 1, "standard_name", "lndXocn_exchange_grid_file");
-
+    if(nfile_axo >0) {
+      dims[0] = dim_axo; dims[1] = dim_string;
+      id_axo_file = mpp_def_var(fid, "aXo_file", MPP_CHAR, 2, dims, 1, "standard_name", "atmXocn_exchange_grid_file");
+    }
+    if(nfile_axl >0) {  
+      dims[0] = dim_axl; dims[1] = dim_string;
+      id_axl_file = mpp_def_var(fid, "aXl_file", MPP_CHAR, 2, dims, 1, "standard_name", "atmXlnd_exchange_grid_file");
+    }
+    if(nfile_lxo >0) {
+      dims[0] = dim_lxo; dims[1] = dim_string;
+      id_lxo_file = mpp_def_var(fid, "lXo_file", MPP_CHAR, 2, dims, 1, "standard_name", "lndXocn_exchange_grid_file");
+    }
     if(nfile_wxo >0) {
       dims[0] = dim_wxo; dims[1] = dim_string;
       id_wxo_file = mpp_def_var(fid, "wXo_file", MPP_CHAR, 2, dims, 1, "standard_name", "wavXocn_exchange_grid_file");

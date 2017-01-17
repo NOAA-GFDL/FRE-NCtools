@@ -16,7 +16,6 @@
 #define  TILE_NAME "tile"
 #define  LON_NAME  "lon"
 #define  LAT_NAME  "lat"
-#define  TIMENAME  "time"
 #define  FRAC_NAME "frac"
 #define  SOIL_NAME "soil"
 #define  VEGN_NAME "vegn"
@@ -183,7 +182,7 @@ int main(int argc, char* argv[])
   double *z_axis_data=NULL;
   int    print_memory=0;
   int    use_all_tile;
-  
+  char   timename[32] = "NONE";  
   int    npes, nvar_src;
   int    option_index, c;
   int    errflg = (argc == 1);  
@@ -419,17 +418,19 @@ int main(int argc, char* argv[])
   /*-----------------------------------------------------------------------------
     Get the time information, time axis only exists for static vegetation.
     ---------------------------------------------------------------------------*/
-  time_exist = mpp_dim_exist(fid_src[0], TIMENAME);
+  time_exist = mpp_get_record_name(fid_src[0], timename);
   ntime = 1;
   if(time_exist) {
     int vid;
     
-    ntime = mpp_get_dimlen(fid_src[0], TIMENAME);
+    ntime = mpp_get_dimlen(fid_src[0], timename);
     time_data = (double *)malloc(ntime*sizeof(double));
-    vid = mpp_get_varid(fid_src[0], TIMENAME);
+    vid = mpp_get_varid(fid_src[0], timename);
     mpp_get_var_value(fid_src[0], vid, time_data);
   }
-
+  /* only static vegetation can have more than 1 time level */
+  if(ntime != 1 && filetype != VEGNTYPE) mpp_error("remap_land: ntime should be 1 when file_type is not vegn");
+  
   /* check if z-axis exist or not */
   zaxis_exist = mpp_dim_exist(fid_src[0], LEVEL_NAME);
   nz = 1;
@@ -453,7 +454,7 @@ int main(int argc, char* argv[])
 
   for(l=0; l<nvar_src; l++) {
     char varname[256];
-    int vid, m;
+    int vid, m, klev;
     
     has_taxis[l] = 0;
     nz_src[l] =1;
@@ -464,13 +465,20 @@ int main(int argc, char* argv[])
 	mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE");
     
     ndim_src[l] = mpp_get_var_ndim(fid_src[0], vid);
-    if(ndim_src[l] > 2) mpp_error("remap_land: number of dimensions for the field in src_restart is greater than 2");
+    if(ndim_src[l] > 3) mpp_error("remap_land: number of dimensions for the field in src_restart is greater than 3");
     for(m=0; m<ndim_src[l]; m++) {
       mpp_get_var_dimname(fid_src[0], vid, m, varname);
-      if( !strcmp(varname, TIMENAME) ) has_taxis[l] = 1;
+      if( !strcmp(varname, timename) ) has_taxis[l] = 1;
     }
-    if(ndim_src[l] == 2 && !has_taxis[l] ) {
-      mpp_get_var_dimname(fid_src[0], vid, 0, varname);
+    
+    if(ndim_src[l] == 3 && !has_taxis[l] ) mpp_error("remap_land: field must have time dimension when ndim = 3");
+    klev = -1;
+    if(ndim_src[l] == 3)
+      klev= 1;
+    else if(ndim_src[l] == 2 && !has_taxis[l] )
+      klev = 0;
+    if(klev >= 0 ) {
+      mpp_get_var_dimname(fid_src[0], vid, klev, varname);
       if( strcmp(varname, LEVEL_NAME) ) mpp_error("remap_land: The vertical dimension name should be zfull, contact developer");
       nz_src[l] = mpp_get_dimlen(fid_src[0], varname);
     }
@@ -1212,7 +1220,7 @@ int main(int argc, char* argv[])
 	  dim_cohort       = mpp_def_dim(fid_dst, COHORT_NAME, ncohort);
 	  dim_cohort_index = mpp_def_dim(fid_dst, COHORT_INDEX_NAME, max(nidx_dst_global,1)); 
 	}
-	if(time_exist)dim_time = mpp_def_dim(fid_dst, TIMENAME, NC_UNLIMITED);
+	if(time_exist)dim_time = mpp_def_dim(fid_dst, timename, NC_UNLIMITED);
 	
 	for(l=0; l<nvar_src; l++) {
 	  char varname[256], dimname[256];
@@ -1224,7 +1232,7 @@ int main(int argc, char* argv[])
 
 	  for(m=0; m<ndim; m++) {
 	    mpp_get_var_dimname(fid_src[0], vid1, m, dimname);
-	    if( !strcmp(dimname, TIMENAME) )
+	    if( !strcmp(dimname, timename) )
 	      dims[m] = dim_time;
 	    else if( !strcmp(dimname, COHORT_INDEX_NAME) )
 	      dims[m] = dim_cohort_index;
@@ -1291,7 +1299,7 @@ int main(int argc, char* argv[])
 	  vid_src = mpp_get_varid(fid_src[0], varname);
 
 	  if(time_exist) {
-	    if(strcmp(varname, TIMENAME) == 0) {
+	    if(strcmp(varname, timename) == 0) {
 	      /* copy the time data from src_restart_file to dst_restart_file */
 	      for(m=0; m<4; m++) {
 		start[m]=0; nwrite[m] = 1;
@@ -1363,16 +1371,17 @@ int main(int argc, char* argv[])
  
 	    for(k=0; k<nz_src[l]; k++) {
 	      pos = 0;
+	      int kid;
 	      /* read the source data */
 	      for(m=0; m<nface_src; m++) {
+
+		kid = 0;
 		if(has_taxis[l]) {
-		  start[0] = t; nread[1] = nidx_src[m];
+		  start[0] = t; kid = 1;
 		}
-		else {
-		  start[0] = k;
-		  start[ndim_src[l]-1] = 0;
-		  nread[ndim_src[l]-1] = nidx_src[m];
-		}
+		start[kid] = k;
+		start[ndim_src[l]-1] = 0;
+		nread[ndim_src[l]-1] = nidx_src[m];
 		vid_src = mpp_get_varid(fid_src[m], varname);
 		if(var_type[l] == MPP_INT)
 		  mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src+pos);
@@ -1383,12 +1392,15 @@ int main(int argc, char* argv[])
 	      for(m=0; m<4; m++) {
 		start[m]=0; nwrite[m] = 1;
 	      }
+	      kid = 0;
 	      if(has_taxis[l]){
-		start[0] = t; nwrite[1] = nidx_dst_global;
+		start[0] = t; kid = 1;
 	      }
-	      else {
-		start[0] = k; nwrite[ndim_src[l]-1] = nidx_dst_global;
-	      }
+	     
+	      start[kid] = k;
+	      start[ndim_src[l]-1] = 0;
+	      nwrite[ndim_src[l]-1] = nidx_dst_global;
+	      
 	      if(var_type[l] == MPP_INT) {
 		for(m=0; m<ntile_dst*nxc_dst; m++) {
 		  int face, lll;
@@ -1589,7 +1601,6 @@ void get_land_tile_info( )
 	  else
 	    idx[ntile*p+count[p]] = pos;
 	}
-	/*	if(p==192) printf("idx=%d,l=%d,pos=%d,count=%d\n", idx[ntile*p+count[p]], l, pos, count[p]); */
 	pos++;
 	count[p]++;
       }
