@@ -33,6 +33,8 @@ program decompress
   real   , allocatable :: buffer(:)
   logical, allocatable :: mask(:)
   real :: missing
+  real :: ocean_value !< the ocean fillvalue
+  logical :: do_oceanValue !< A flag to turn on the ocean fillvalue
 
   ! get command line options and list of files
   call parse_command_line() ! modigies global data!
@@ -154,6 +156,11 @@ program decompress
           write(*,*)'processing var "'//trim(varname)//'"'
      allocate(buffer(vsize),mask(vsize))
      mask(:) = .false.
+     do_oceanValue=.false.
+     ocean_value = 0  
+     if(nfu_get_att(ncid,varname,'ocean_fillvalue',ocean_value)==NF_NOERR) then
+       do_oceanValue=.true.
+     endif
 
      ! obtain the missing value 
      if(nfu_get_att(ncid,varname,'missing_value',missing)==NF_NOERR) then
@@ -176,7 +183,7 @@ program decompress
 
      ! read the variable
      do i=1,nfiles
-        __NF_ASRT__(nfu_get_compressed_var_r8n(input(i),varname,buffer,mask))
+        __NF_ASRT__(nfu_get_compressed_var_r8n(input(i),varname,buffer,mask,ocean=do_oceanValue,ocean_value=ocean_value))
      enddo
      ! write the variable
      __NF_ASRT__(nfu_put_var_r8(ncid,varname,buffer))
@@ -218,7 +225,7 @@ subroutine parse_command_line()
         case('--')
            do_interpret_arguments = .false.
 
-        case('-D','--debug-level')
+        case('-D','--debug-level','-v','--verbosity-level')
            call assert(i<nargs,trim(arg)//' flag must be followed by integer verbosity level')
            call getarg(i+1,param)
            read(param,*,iostat=iostat) debug
@@ -261,13 +268,13 @@ subroutine usage()
   write(*,'(a)')'form suitable for visualization applications.'
   write(*,'(a)')
   write(*,'(a)')'Usage:'
-  write(*,'(a)')'  '//trim(name)//' [-D debug-level] [-m] in.nc [...] out.nc'
+  write(*,'(a)')'  '//trim(name)//' [-v verbosity-level] [-m] in.nc [...] out.nc'
   write(*,'(a)')
-  write(*,'(a)')'-D debug-level   Specifies level of debug output verbosity'
-  write(*,'(a)')'-m               Forces adding a missing_value attribute to the variables'
-  write(*,'(a)')'                 that do not have it'
-  write(*,'(a)')'in.nc            Input file name(s)'
-  write(*,'(a)')'out.nc           Output file name'
+  write(*,'(a)')'-v verbosity-level   Specifies level of debug output verbosity'
+  write(*,'(a)')'-m                   Forces adding a missing_value attribute to the variables'
+  write(*,'(a)')'                     that do not have it'
+  write(*,'(a)')'in.nc                Input file name(s)'
+  write(*,'(a)')'out.nc               Output file name'
   write(*,'(a)')
   write(*,'(a)')'WARNING: output file is overwritten.'
 end subroutine

@@ -52,27 +52,32 @@ end type
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 ! ===========================================================================
-function nfu_get_compressed_var_r8n(ncid,name,data,mask,start,count) result (iret)
+function nfu_get_compressed_var_r8n(ncid,name,data,mask,start,count,ocean,ocean_value) result (iret)
   integer          , intent(in)    :: ncid
   character(*)     , intent(in)  :: name
-  real(kind=8)     , intent(inout) :: data(*)
-  logical, optional, intent(inout) :: mask(*)
+  real(kind=8)     , intent(inout) :: data(:)
+  logical, optional, intent(inout) :: mask(:)
   integer, optional, intent(in)    :: start(:), count(:)
+  logical, optional, intent(in)    :: ocean
+  real(kind=8)     , intent(in)    :: ocean_value
   integer :: iret
 
   integer :: varid
   __NF_TRY__(nf_inq_varid(ncid, name, varid), iret, 7)
-  iret = nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count)
+  iret = nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count,ocean,ocean_value)
 7 return
 
 end function
 
 ! ===========================================================================
-function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (iret)
+function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count,ocean,ocean_value) result (iret)
   integer          , intent(in)    :: ncid,varid
-  real(kind=8)     , intent(inout) :: data(*)
-  logical, optional, intent(inout) :: mask(*)
+  real(kind=8)     , intent(inout) :: data(:)
+  logical, optional, intent(inout) :: mask(:)
   integer, optional, intent(in)    :: start(:), count(:)
+  logical, optional, intent(in)    :: ocean
+  real(kind=8),optional, intent(in)    :: ocean_value
+  logical :: isOcean
   integer :: iret
 
   integer :: ndims,dimids(NF_MAX_VAR_DIMS),dimlen
@@ -82,12 +87,24 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (ire
   character(NF_MAX_NAME) :: dimname
 
   real(kind=8),allocatable :: buffer(:)
+  integer,allocatable :: ocean_index(:)
   integer :: i, ii, n, length, idx(NF_MAX_VAR_DIMS)
   integer :: stride
 
   type(diminfo_type) :: diminfo(NF_MAX_VAR_DIMS)
 
-  ! get the information for the compressed variable
+!> Set the flags for ocean_fillvalue
+  isOcean=.false.
+  if(present(ocean)) then
+    isOcean=ocean
+    i = size(data)
+    if (isOcean) then 
+      allocate(ocean_index(i) )
+      ocean_index=0
+    endif
+  endif  
+
+! get the information for the compressed variable
   iret = nfu_inq_var(ncid,varid,ndims=ndims,dimids=dimids,varsize=varsize, dimlens=dimlens)
   __NF_TRY__(iret,iret,7)
 
@@ -151,6 +168,9 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (ire
      if (ii > 0) then
         data(ii) = buffer(i)
         if(present(mask))mask(ii) = .true.
+        if (allocated(ocean_index)) then
+             ocean_index(ii) = ii
+        endif
      endif
 
      ! increment indices
@@ -160,6 +180,13 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (ire
         idx(n) = 0
      enddo
   enddo
+  if (isOcean) then
+     do i=1,size(ocean_index)
+          if (ocean_index(i) .eq. 0) then
+             data(i)=ocean_value
+          endif
+     enddo
+  endif
 
 7 continue
   ! clean up memory
@@ -169,6 +196,7 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count) result (ire
   enddo
   if (allocated(buffer)) &
        deallocate(buffer)
+  if (allocated(ocean_index)) deallocate(ocean_index)
 end function
 
 
