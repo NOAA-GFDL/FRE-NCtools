@@ -157,7 +157,7 @@ program decompress
      allocate(buffer(vsize),mask(vsize))
      mask(:) = .false.
      do_oceanValue=.false.
-     ocean_value = 0  
+     ocean_value = 0.0  
      if(nfu_get_att(ncid,varname,'ocean_fillvalue',ocean_value)==NF_NOERR) then
        do_oceanValue=.true.
      endif
