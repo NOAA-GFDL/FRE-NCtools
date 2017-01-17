@@ -59,7 +59,7 @@ function nfu_get_compressed_var_r8n(ncid,name,data,mask,start,count,ocean,ocean_
   logical, optional, intent(inout) :: mask(:)
   integer, optional, intent(in)    :: start(:), count(:)
   logical, optional, intent(in)    :: ocean
-  real(kind=8)     , intent(in)    :: ocean_value
+  real(kind=8),optional, intent(in)    :: ocean_value
   integer :: iret
 
   integer :: varid
