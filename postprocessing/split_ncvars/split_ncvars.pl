@@ -130,6 +130,11 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          # add variable to list of variables to extract
          push @vlist, $var;
 
+	 # Add the cell_measures to the list of variables to include
+	 my $cell_measures_variable = get_cell_measures($dump,$var);
+	 push @vlist, $cell_measures_variable
+	     if $dump =~ /\t\w+ $cell_measures_variable\(.+\)/;
+
          # automatically detect if this a a cmip variable - if attrib standard_name exists
          my $CMIP = $Opt{CMIP};
          if ($Opt{AUTO} && !$Opt{CMIP}) {
@@ -168,6 +173,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
               push @vlist, @coordinates;
             }
 
+	    
+
             # formula terms
             # only add static terms to the vlist
             # time-varying terms are "external_variables"
@@ -182,8 +189,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             }
          }
 	 if ( $ps_includes{$var} ){
-	   print "Appending ps to variables to include.\n" if $Opt{VERBOSE} > 1;
-	   push @vlist, "ps";
+	   print "Appending ps,pk,bk to variables to include.\n" if $Opt{VERBOSE} > 1;
+	   push @vlist, qw{ps pk bk};
          }
         #-------------------------------------------------
         # EVERY TIME (when there is a time dimension)
@@ -446,6 +453,21 @@ sub get_variables_from_att {
     push @attvars, $_ if ($dump =~ /\t\w+ $_\(.+\)/ || $dump =~ /\t\w+ $_ ;/);
   }
   return @attvars;
+}
+
+#-------------------------------------------
+
+sub get_cell_measures {
+  my $dump = shift;
+  my $var  = shift;
+  my $cell_measures;
+  if ( $dump =~ /\t\w+ $var\((.+)\)/ ){
+    my $cell_measures_att = get_variable_att($dump,$var,"cell_measures");
+    if ( $cell_measures_att ){
+      $cell_measures = (split(/\s/, $cell_measures_att))[-1];
+    }
+  }
+  return $cell_measures;
 }
 
 #-------------------------------------------
