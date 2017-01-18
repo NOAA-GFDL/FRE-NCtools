@@ -18,7 +18,7 @@ include ./env.$(SITE)
 CFLAGS   := -O3 -g -traceback $(CFLAGS_SITE)
 CFLAGS_O2:= -O2 -g -traceback $(CFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include -I./ -I../shared -I../../shared/mosaic
-CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz -limf $(CLIBS_SITE) $(STATIC)
+CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
 
 TARGETS  := river_regrid
 
