@@ -39,14 +39,17 @@ set site = `perl -T -e "use Net::Domain(hostdomain); print hostdomain" | sed 's/
 if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
   source /usr/local/Modules/default/init/tcsh
   module use -a /home/fms/local/modulefiles
-  module load intel_compilers/11.1.073 mpich2/1.2.1p1 netcdf/4.2
+  module load intel_compilers/15.0.1 mpich2/1.2.1p1 netcdf/4.2
   setenv FRE_SYSTEM_SITE gfdl
   setenv LD_RUN_PATH $LD_LIBRARY_PATH
   alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
 else if ( "$site" == "gfdl.noaa.gov" ) then
   source /usr/local/Modules/default/init/tcsh
   module use -a /home/fms/local/modulefiles
-  module load intel_compilers/11.1.073 netcdf/4.2
+  module load netcdf/4.2
+  # netcdf/4.2 loads intel-11, so unload it now
+  module unload intel_compilers/11.1.073
+  module load intel_compilers/15.0.0
   module use /home/sdu/publicmodules
   module load mpich2/1.5b1
   setenv FRE_SYSTEM_SITE gfdl-ws
