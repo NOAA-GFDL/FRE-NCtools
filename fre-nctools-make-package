@@ -13,7 +13,7 @@ set pkgVersion = $1
 echo $pkgVersion
 
 #Loop though these directories to build the tools there.
-set freNCToolsSrc = 'tools/{check_mask,fregrid,make_coupler_mosaic,make_hgrid,make_regional_mosaic,make_quick_mosaic,make_solo_mosaic,make_topog,make_vgrid,ncexists,remap_land,river_regrid,runoff_regrid,transfer_to_mosaic_grid,mppncscatter} postprocessing/{land_utils,list_ncvars,combine_blobs,mppnccombine,mppnccombine-2.1.7-memstats,ncx,plevel,timavg}'
+set freNCToolsSrc = 'tools/{check_mask,fregrid,make_coupler_mosaic,make_hgrid,make_regional_mosaic,make_quick_mosaic,make_solo_mosaic,make_topog,make_vgrid,ncexists,remap_land,river_regrid,runoff_regrid,transfer_to_mosaic_grid,mppncscatter,make_land_domain} postprocessing/{land_utils,list_ncvars,combine_blobs,mppnccombine,mppnccombine-2.1.7-memstats,ncx,plevel,timavg}'
 
 #Other source code used during those compiles.
 set freNCToolsOther = 'postprocessing/split_ncvars shared/mosaic tools/shared'
@@ -111,6 +111,7 @@ cp share/src/postprocessing/list_ncvars/list_ncvars.csh $tmpDir/share/bin
 cp share/src/postprocessing/plevel/plevel.sh $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/split_ncvars.csh $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/split_ncvars.py $tmpDir/share/bin
+cp share/src/postprocessing/split_ncvars/split_ncvars.pl $tmpDir/share/bin
 cp share/src/postprocessing/split_ncvars/varlist.csh $tmpDir/share/bin
 cp share/src/postprocessing/timavg/timavg.csh $tmpDir/share/bin
 cp share/src/postprocessing/iceberg_comb/iceberg_comb.sh $tmpDir/share/bin
