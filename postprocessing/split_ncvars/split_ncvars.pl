@@ -144,7 +144,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 	 # get the number of dimensions if ps is provided on the commandline
 	 if ( $Opt{PS} ){
 	     my $dimensions = get_variable_dimensions($dump,$var);
-	     if ( grep ( /(pfull|phalf)/, @{$dimensions} )) {
+	     if ( grep ( /(pfull|phalf)/, @{$dimensions} ) and scalar @{$dimensions} >= 4 ) {
 		 print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
 		 $ps_includes{$var} = 1;
 	     } else {
