@@ -143,7 +143,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 	 # get the number of dimensions if ps is provided on the commandline
 	 if ( $Opt{PS} ){
-	     if ( scalar get_variable_dimensions($dump,$var) >= 4 ){
+	     my $dimensions = get_variable_dimensions($dump,$var);
+	     if ( grep ( /(pfull|phalf)/, @{$dimensions} )) {
 		 print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
 		 $ps_includes{$var} = 1;
 	     } else {
@@ -417,7 +418,7 @@ sub get_variable_dimensions {
   if ( $dump =~ /\t.*$var\((.+)\)/){
     @coords = uniq map { grep $_, split /,\s/, $1 } keys %cartesian_coords;
   }
-  return @coords;
+  return \@coords;
 }
 
 #-------------------------------------------
