@@ -1138,7 +1138,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    }
 	    else {
 	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
- 		      "is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
+ 		      " is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
 		      field[n].var[ll].name, remap_method);
       	      mpp_error(errmsg);
 	    }

@@ -760,7 +760,7 @@ int main(int argc, char* argv[])
   }
   
   if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, interp, &opcode, save_weight_only);  
-  
+
   if(!save_weight_only) {
     file_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
     file_out  = (File_config *)malloc(ntiles_out*sizeof(File_config));
@@ -793,10 +793,10 @@ int main(int argc, char* argv[])
     nscalar = 0;
     for(n=0; n<nscalar_orig; n++) {
       int vid;
-      char remap_method[STRING];
 
       vid = mpp_get_varid(file_in[0].fid, scalar_name[n]);
       if(mpp_var_att_exist(file_in[0].fid, vid, "interp_method")) {
+        char remap_method[STRING] = "";
         mpp_get_var_att(file_in[0].fid, vid, "interp_method", remap_method);
         if(strcmp(remap_method, "none") && strcmp(remap_method, "NONE") && strcmp(remap_method, "None")) {
           strcpy(scalar_name_remap[nscalar], scalar_name[n]);
