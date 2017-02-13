@@ -502,7 +502,6 @@ function inq_compressed_dim_i(ncid,dimid,ndims,dimids,dimlens,dimname) result (i
   if(present(dimname)) dimname = dimname_
   compress = ''
   __NF_TRY__(nfu_get_att(ncid,dimname_,'compress',compress),iret,7)
-
   ! parse the description of the compression
   ie = len_trim(compress)
   n = 0
@@ -513,6 +512,11 @@ function inq_compressed_dim_i(ncid,dimid,ndims,dimids,dimlens,dimname) result (i
      else
         n = n+1
         iret = nfu_inq_dim(ncid,compress(is+1:ie),dimlen=dimlen,dimid=dimid0)
+        if (iret .ne. NF_NOERR)then
+          write(*,*)"The uncompressed dimensions "//compress(1:ie)//" are missing from the file. " // &
+          "Make sure diag_table has at least 1 variable writing out each structured dimension. " //&
+           "The missing dimension from the fatal error is one or all of "// compress(1:ie)
+         endif 
         __NF_TRY__(iret,iret,7)
         if(present(dimids)) dimids(n) = dimid0
         if(present(dimlens)) dimlens(n) = dimlen
