@@ -140,6 +140,7 @@ function nfu_get_compressed_var_r8(ncid,varid,data,mask,start,count,ocean,ocean_
   endif
   ! get the entire variable
   allocate(buffer(varsize))
+  buffer = 0.0d0
   if(present(start) .and. present(count)) then
      __NF_TRY__(nf_get_vara_double(ncid,varid,start,count,buffer),iret,7)
      ndims = 1
