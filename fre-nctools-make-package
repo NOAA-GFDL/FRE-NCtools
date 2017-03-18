@@ -39,6 +39,9 @@ usage () {
 	echo "     -n" 1>&2
 	echo "          Prepare the build directory only, do not attempt to build." 1>&2
 	echo "" 1>&2
+	echo "     -d" 1>&2
+	echo "          Do not build or install the documentation." 1>&2
+	echo "" 1>&2
     fi
     exit $1
 }
@@ -59,9 +62,10 @@ verbose=0
 site=''
 prefix=''
 doBuild='true'
+doDocus='true'
 
 # Parse the command line options
-while getopts ":hvs:nP:" opt; do
+while getopts ":hvs:dnP:" opt; do
     case "$opt" in
 	h)
 	    usage 0
@@ -74,6 +78,9 @@ while getopts ":hvs:nP:" opt; do
 	    ;;
 	n)
 	    doBuild='false'
+	    ;;
+	d)
+	    doDocus='false'
 	    ;;
 	P)
 	    prefix=${OPTARG}
@@ -133,14 +140,14 @@ fi
 
 # Check the build directory.  By default, the build directory is the current pwd (if empty),
 # If the current pwd is not empty, than the script will verify it can make a directory called
-# 'build.${package}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
+# 'build.${package}.${site}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
 buildDir=''
 if [[ $(ls -A $(pwd)) ]]; then
     # The directory is not empty, create a new directory
     #
     # Is the directory writable?
     if [ -w $(pwd) ]; then
-	buildDir=$(pwd)/$(mktemp -d build.${package}.${pkgName}.XXXXX)
+	buildDir=$(pwd)/$(mktemp -d build.${package}.${site}.${pkgName}.XXXXX)
 	if [[ $? -ne 0 ]]; then
 	    echo "$scriptName: Unable to create build directory \"${buildDir}\"" 1>&2
 	    exit 1
@@ -249,11 +256,11 @@ sed -i -e "/^SITE *:\?=/c\SITE := ${site}" ${buildDir}/Makefile
 
 # Perform the build (unless option -n given)
 if [ "${doBuild}" == "true" ]; then
-    # Read in the environment configuration:
-    . ${scriptDir}/site-configs/${site}/env.sh
-
     # Enter the build directory
     pushd ${buildDir}
+
+    # Read in the environment configuration:
+    . ./env.sh
 
     # Run make
     make
@@ -261,24 +268,36 @@ if [ "${doBuild}" == "true" ]; then
 	echo "${scriptName}: Error during build of ${package}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
 	popd
 	exit 1
-    fi
-
-    # Create the documentation
-    make docs
-    if [[ $? -ne 0 ]]; then
-	echo "${scriptName}: Error creating ${package}'s documentation.  What was completed is available in build directory \"${buildDir}\"." 1>&2
-	popd
-	exit 1
-    fi
-
-    # Install the package and documentation
-    make install install-docs
-    if [[ $? -ne 0 ]]; then
-	echo "${scriptName}: Error installing ${package} in ${prefix}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
-	popd
-	exit 1
     else
-	echo "Build and Install of ${package} complete, and available in ${prefix}."
+	# Install the package
+	make install
+	if [[ $? -ne 0 ]]; then
+	    echo "${scriptName}: Error installing ${package} in ${prefix}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	    popd
+	    exit 1
+	else
+	    echo "Build and Install of ${package} complete, and available in ${prefix}."
+	fi
+    fi
+
+    if [ "${doDocus}" == "true" ]; then
+	# Create the documentation
+	make docs
+	if [[ $? -ne 0 ]]; then
+	    echo "${scriptName}: Error creating ${package}'s documentation.  What was completed is available in build directory \"${buildDir}\"." 1>&2
+	    popd
+	    exit 1
+	fi
+    else
+	# Install the documentation
+	make install-docs
+	if [[ $? -ne 0 ]]; then
+	    echo "${scriptName}: Error installing ${package}'s documentation.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	    popd
+	    exit 1
+	else
+	    echo "Build and Install of ${package}'s documentation is complete and available in ${prefix}."
+	fi
     fi
 
     # Return to previous directory
