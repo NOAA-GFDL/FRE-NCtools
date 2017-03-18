@@ -33,6 +33,6 @@ install: all $(TARGET_SHARE)
 
 docs:
 
-docs-install: docs
+install-docs: docs
 
 clean:

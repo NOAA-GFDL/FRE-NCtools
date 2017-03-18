@@ -4,8 +4,7 @@
 # FMS/FRE Project: Script to create the fre-nctools package
 # ------------------------------------------------------------------------------
 # Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2017
-# Designed and written by V Balaji, Amy Langenhorst, Aleksey Yakovlev and
-# Seth Underwood
+# Designed and written by Seth Underwood
 #
 
 # **********************************************************************
@@ -37,6 +36,9 @@ usage () {
 	echo "     -P <prefix>" 1>&2
 	echo "          Set the install prefix." 1>&2
 	echo "" 1>&2
+	echo "     -n" 1>&2
+	echo "          Prepare the build directory only, do not attempt to build." 1>&2
+	echo "" 1>&2
     fi
     exit $1
 }
@@ -56,9 +58,10 @@ pkgName=''
 verbose=0
 site=''
 prefix=''
+doBuild='true'
 
 # Parse the command line options
-while getopts ":hvs:P:" opt; do
+while getopts ":hvs:nP:" opt; do
     case "$opt" in
 	h)
 	    usage 0
@@ -68,6 +71,9 @@ while getopts ":hvs:P:" opt; do
 	    ;;
 	s)
 	    site=${OPTARG}
+	    ;;
+	n)
+	    doBuild='false'
 	    ;;
 	P)
 	    prefix=${OPTARG}
@@ -125,12 +131,9 @@ if [[ $numMissing > 0 ]]; then
     exit 1
 fi
 
-# Read in the environment configuration:
-#. ${scriptDir}/site-configs/${site}/env.sh
-
 # Check the build directory.  By default, the build directory is the current pwd (if empty),
 # If the current pwd is not empty, than the script will verify it can make a directory called
-# 'build.${packate}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
+# 'build.${package}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
 buildDir=''
 if [[ $(ls -A $(pwd)) ]]; then
     # The directory is not empty, create a new directory
@@ -160,12 +163,15 @@ fi
 if [ "X${prefix}" == "X" ]; then
     prefix=${buildDir}
 fi
+# Append the pgkName to the prefix
+prefix=${prefix}/${pkgName}
 
 # If verbose, write out the configuration settings:
 if [[ ${verbose} -ge 1 ]]; then
     echo "Building ${package} with the following settings:" 1>&2
     echo "Build site: ${site}" 1>&2
     echo "Build dir:  ${buildDir}" 1>&2
+    echo "Install prefix: ${prefix}" 1>&2
 fi
 if [[ ${verbose} -ge 2 ]]; then
     echo "Using modules" 1>&2
@@ -173,9 +179,9 @@ if [[ ${verbose} -ge 2 ]]; then
 fi
 if [[ ${verbose} -ge 3 ]]; then
     echo "Full environment settings" 1>&2
-    env
-    echo "Shell options set"
-    set
+    env 1>&2
+    echo "Shell options set" 1>&2
+    set 1>&2
 fi
 
 # Directories in the 'tools' directory that need to be compiled
@@ -183,18 +189,18 @@ toolsSRC="check_mask \
           fregrid \
           make_coupler_mosaic \
           make_hgrid \
+          make_land_domain \
           make_regional_mosaic \
           make_quick_mosaic \
           make_solo_mosaic \
           make_topog \
           make_vgrid \
+          mppncscatter \
           ncexists \
           remap_land \
           river_regrid \
           runoff_regrid \
-          transfer_to_mosaic_grid \
-          mppncscatter \
-          make_land_domain"
+          transfer_to_mosaic_grid"
 # Directories in the 'postprocessing' directory that need to be compiled
 postpSRC="combine_blobs \
           combine_restarts \
@@ -206,22 +212,8 @@ postpSRC="combine_blobs \
           plevel \
           split_ncvars \
           timavg"
-# Additional scripts that need to be copied into the 'bin' directory
-postpScripts="postprocessing/list_ncvars/list_ncvars.csh \
-              postprocessing/plevel/plevel.sh \
-              postprocessing/split_ncvars/split_ncvars.csh \
-              postprocessing/split_ncvars/split_ncvars.py \
-              postprocessing/split_ncvars/split_ncvars.pl \
-              postprocessing/split_ncvars/varlist.csh \
-              postprocessing/timavg/timavg.csh \
-              postprocessing/iceberg_comb/iceberg_comb.sh \
-              postprocessing/combine_restarts/combine_restarts"
-# Other directories that contain source or scripts for the final package
-toolsOther="postprocessing/split_ncvars \
-            shared/mosaic \
-            tools/shared"
 
-# Begin the build process:
+# Setup the build directory:
 # Copy in the env and build.mk files:
 cp ${scriptDir}/site-configs/${site}/env.sh ${buildDir}
 cp ${scriptDir}/site-configs/${site}/build.mk ${buildDir}
@@ -229,11 +221,23 @@ cp ${scriptDir}/site-configs/${site}/build.mk ${buildDir}
 ppBuildDir=${buildDir}/postprocessing
 for dir in ${postpSRC}; do
     # Create the 'postprocessing' directory in the buildDir
-    # This will contain the Makefile required for building the 
+    # This will contain the Makefile required for building the
+    # tools in 'postprocessing'
     mkdir -p ${ppBuildDir}/${dir}
 
     # Bring in the Makefile
-    cp ${scriptDir}/postprocessing/${dir}/Makefile $ppBuildDir/${dir}/Makefile
+    cp ${scriptDir}/postprocessing/${dir}/Makefile ${ppBuildDir}/${dir}/Makefile
+done
+
+toolsBuildDir=${buildDir}/tools
+for dir in ${toolsSRC}; do
+    # Create the 'tools' directory in the buildDir
+    # This will contain the Makefile required for building the
+    # tools in 'tools'
+    mkdir -p ${toolsBuildDir}/${dir}
+
+    # Bring in the Makefile
+    cp ${scriptDir}/tools/${dir}/Makefile ${toolsBuildDir}/${dir}/Makefile
 done
 
 # Get and prepare the master Makefile
@@ -242,3 +246,43 @@ cp ${scriptDir}/Makefile ${buildDir}
 sed -i -e "/^SRCDIR *:\?=/c\SRCDIR := ${scriptDir}" ${buildDir}/Makefile
 sed -i -e "/^PREFIX *:\?=/c\PREFIX := ${prefix}" ${buildDir}/Makefile
 sed -i -e "/^SITE *:\?=/c\SITE := ${site}" ${buildDir}/Makefile
+
+# Perform the build (unless option -n given)
+if [ "${doBuild}" == "true" ]; then
+    # Read in the environment configuration:
+    . ${scriptDir}/site-configs/${site}/env.sh
+
+    # Enter the build directory
+    pushd ${buildDir}
+
+    # Run make
+    make
+    if [[ $? -ne 0 ]]; then
+	echo "${scriptName}: Error during build of ${package}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	popd
+	exit 1
+    fi
+
+    # Create the documentation
+    make docs
+    if [[ $? -ne 0 ]]; then
+	echo "${scriptName}: Error creating ${package}'s documentation.  What was completed is available in build directory \"${buildDir}\"." 1>&2
+	popd
+	exit 1
+    fi
+
+    # Install the package and documentation
+    make install install-docs
+    if [[ $? -ne 0 ]]; then
+	echo "${scriptName}: Error installing ${package} in ${prefix}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	popd
+	exit 1
+    else
+	echo "Build and Install of ${package} complete, and available in ${prefix}."
+    fi
+
+    # Return to previous directory
+    popd
+else
+    echo "Build directory ready: ${buildDir}"
+fi

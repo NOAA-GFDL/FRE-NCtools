@@ -8,7 +8,11 @@
 # Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
 # ------------------------------------------------------------------------------
 
+# Default compilers
+CXX      := icpc
+
 # Bring in settings for the site
+# Compilers may be overridden
 include ../../build.mk
 
 # Default Directories
@@ -21,7 +25,6 @@ PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
 
 VPATH = $(SRCDIR):.
 
-CXX      := icpc
 CXXFLAGS := -O3 -g -traceback $(CFLAGS_SITE)
 
 EZBAR=$(SRCDIR)/extern/ezProgressBar-2.1.0

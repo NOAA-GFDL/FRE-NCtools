@@ -54,6 +54,7 @@ clean:
 
 %.1: %.txt $(ASCIIDOC_CFG)
 	$(A2X) -v \
+               -D . \
                -d manpage \
                -f manpage \
                -afre_version=$(VERSION) \

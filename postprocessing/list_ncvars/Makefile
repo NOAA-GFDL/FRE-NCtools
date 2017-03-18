@@ -8,6 +8,11 @@
 # Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
 # ------------------------------------------------------------------------------
 
+# Default compilers
+FC       := ifort
+
+# Bring in the site build settings
+# Compiler may be overridden
 include ../../build.mk
 
 # Default Directories
@@ -20,7 +25,6 @@ PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
 
 VPATH = $(SRCDIR):.
 
-FC       := ifort
 FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -r8 -traceback $(FFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include
 LIBS     :=  -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz $(LIBS_SITE) $(STATIC)

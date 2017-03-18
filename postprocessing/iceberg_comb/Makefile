@@ -18,7 +18,7 @@ ASCIIDOC_CFG = $(SRCDIR)/asciidoc.conf
 
 TARGETS_SHARE = iceberg_comb.sh
 
-TXTS = iceberg_comb.txt
+TXTS = iceberg_comb.sh.txt
 TXT_MAN1 = $(patsubst %.txt,%.1,$(TXTS))
 
 all: 
@@ -54,6 +54,7 @@ clean:
 
 %.1: %.txt $(ASCIIDOC_CFG)
 	$(A2X) -v \
+               -D . \
                -d manpage \
                -f manpage \
                -afre_version=$(VERSION) \

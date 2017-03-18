@@ -1,15 +1,19 @@
 # ------------------------------------------------------------------------------
-# FMS/FRE Project: Makefile template to Build the 'combine_blobs' Program
+# FMS/FRE Project: Makefile to build ncexists
 # ------------------------------------------------------------------------------
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2012, 2017
-# Written by Kyle Olivo and Seth Underwood
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2011, 2017
+# This program is distributed under the terms of the GNU General Public
+# License. See the file COPYING contained in this directory
+# ------------------------------------------------------------------------------
+# Designed and written by V. Balaji, Amy Langenhorst, Aleksey Yakovlev and
+# Seth Underwood
 # ------------------------------------------------------------------------------
 
-# Default compilers
+# MPICC and CC default settings
+MPICC    := mpicc
 CC       := icc
 
-# Include the build settings for the site
-# Compilers may be overridden
+# Get the site specific settings, CC and MPICC may be overridden
 include ../../build.mk
 
 # Default Directories
@@ -23,21 +27,22 @@ PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
 VPATH = $(SRCDIR):.
 
 CFLAGS   := -O3 -g -traceback $(CFLAGS_SITE)
+CFLAGS_O2:= -O2 -g -traceback $(CFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include
 CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
 
-TARGETS  := combine_blobs
+TARGETS  := ncexists
 
-SOURCES  := combine_blobs.c
+SOURCES  := ncexists.c
 
 OBJECTS  := $(SOURCES:c=o)
 
 all: $(TARGETS)
 
-combine_blobs: $(OBJECTS)
+ncexists: $(OBJECTS)
 	$(CC) -o $@ $^ $(CLIBS)
 
-combine_blobs.o: combine_blobs.c
+ncexists.o: ncexists.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< 
 
 %.o: %.c

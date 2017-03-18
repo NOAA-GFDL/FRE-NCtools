@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# FMS/FRE Project: Makefile to build make_topog	
+# FMS/FRE Project: Makefile to build remap_land
 # ------------------------------------------------------------------------------
 # Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2011, 2017
 # This program is distributed under the terms of the GNU General Public
@@ -31,13 +31,13 @@ CFLAGS_O2:= -O2 -traceback $(CFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include -I$(SRCDIR)/ -I$(SRCDIR)/../shared -I$(SRCDIR)/../../shared/mosaic
 CLIBS     := $(LDFLAGS) -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
 
-TARGETS  := make_topog
-TARGETS_PARALLEL := make_topog_parallel 
+TARGETS  := remap_land
+TARGETS_PARALLEL := remap_land_parallel 
 ifndef NOPARALLEL
 TARGETS += $(TARGETS_PARALLEL)
 endif
 
-SOURCES  := make_topog.c topog.c
+SOURCES  := remap_land.c
 SOURCES  += mpp_domain.c mpp_io.c tool_util.c
 SOURCES  += create_xgrid.c interp.c read_mosaic.c
 
@@ -46,14 +46,14 @@ OBJECTS  := $(SOURCES:c=o)
 HEADERS = ../shared/mpp.h  ../shared/mpp_domain.h  ../shared/mpp_io.h ../shared/tool_util.h   \
 	  ../../shared/mosaic/constant.h ../../shared/mosaic/create_xgrid.h  \
 	  ../../shared/mosaic/interp.h  ../../shared/mosaic/mosaic_util.h  \
-	  ./topog.h ../../shared/mosaic/read_mosaic.h
+	  ../../shared/mosaic/read_mosaic.h
 
 all: $(TARGETS)
 
-make_topog: $(OBJECTS) mosaic_util.o mpp.o
+remap_land: $(OBJECTS) mosaic_util.o mpp.o
 	$(CC) -o $@ $^ $(CLIBS)
 
-make_topog_parallel: $(OBJECTS) mosaic_util_parallel.o mpp_parallel.o
+remap_land_parallel: $(OBJECTS) mosaic_util_parallel.o mpp_parallel.o
 	$(MPICC) -o $@ $^ $(CLIBS)
 
 

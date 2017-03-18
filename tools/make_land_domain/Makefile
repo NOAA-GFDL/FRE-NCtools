@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# FMS/FRE Project: Makefile to build make_topog	
+# FMS/FRE Project: Makefile to build make_land_domain
 # ------------------------------------------------------------------------------
 # Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2011, 2017
 # This program is distributed under the terms of the GNU General Public
@@ -26,49 +26,34 @@ PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
 
 VPATH = $(SRCDIR):.
 
-CFLAGS   := -O3 -traceback $(CFLAGS_SITE)
-CFLAGS_O2:= -O2 -traceback $(CFLAGS_SITE)
+CFLAGS   := -O3 -g -debug -traceback $(CFLAGS_SITE)
+CFLAGS_O2:= -O2 -g -debug -traceback $(CFLAGS_SITE)
 INCLUDES := -I${NETCDF_HOME}/include -I$(SRCDIR)/ -I$(SRCDIR)/../shared -I$(SRCDIR)/../../shared/mosaic
-CLIBS     := $(LDFLAGS) -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
+CLIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
 
-TARGETS  := make_topog
-TARGETS_PARALLEL := make_topog_parallel 
-ifndef NOPARALLEL
-TARGETS += $(TARGETS_PARALLEL)
-endif
+TARGETS  := make_land_domain
 
-SOURCES  := make_topog.c topog.c
-SOURCES  += mpp_domain.c mpp_io.c tool_util.c
-SOURCES  += create_xgrid.c interp.c read_mosaic.c
+SOURCES  := make_land_domain.c
+SOURCES  += mpp.c mpp_domain.c mpp_io.c tool_util.c
+SOURCES  += create_xgrid.c interp.c mosaic_util.c read_mosaic.c
 
 OBJECTS  := $(SOURCES:c=o)
 
 HEADERS = ../shared/mpp.h  ../shared/mpp_domain.h  ../shared/mpp_io.h ../shared/tool_util.h   \
 	  ../../shared/mosaic/constant.h ../../shared/mosaic/create_xgrid.h  \
 	  ../../shared/mosaic/interp.h  ../../shared/mosaic/mosaic_util.h  \
-	  ./topog.h ../../shared/mosaic/read_mosaic.h
+	  ../../shared/mosaic/read_mosaic.h
 
 all: $(TARGETS)
 
-make_topog: $(OBJECTS) mosaic_util.o mpp.o
+make_land_domain: $(OBJECTS)
 	$(CC) -o $@ $^ $(CLIBS)
 
-make_topog_parallel: $(OBJECTS) mosaic_util_parallel.o mpp_parallel.o
-	$(MPICC) -o $@ $^ $(CLIBS)
-
+make_land_domain.o: make_land_domain.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< 
 
 mosaic_util.o: ../../shared/mosaic/mosaic_util.c $(HEADERS)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< 
-
-mosaic_util_parallel.o: ../../shared/mosaic/mosaic_util.c $(HEADERS)
-	$(MPICC) -Duse_libMPI $(CFLAGS) $(INCLUDES) -o $@ -c $< 
-
-
-mpp.o: ../shared/mpp.c $(HEADERS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
-
-mpp_parallel.o: ../shared/mpp.c $(HEADERS)
-	$(MPICC) -Duse_libMPI $(CFLAGS) $(INCLUDES) -o $@ -c $< 
 
 read_mosaic.o: ../../shared/mosaic/read_mosaic.c $(HEADERS)
 	$(CC) -Duse_netCDF $(CFLAGS) $(INCLUDES) -c $< 
@@ -80,6 +65,9 @@ mpp_io.o: ../shared/mpp_io.c $(HEADERS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
 
 mpp_domain.o: ../shared/mpp_domain.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+mpp.o: ../shared/mpp.c $(HEADERS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
 
 tool_util.o: ../shared/tool_util.c $(HEADERS)
