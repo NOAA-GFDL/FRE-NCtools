@@ -1,0 +1,244 @@
+#!/bin/sh
+#
+# ------------------------------------------------------------------------------
+# FMS/FRE Project: Script to create the fre-nctools package
+# ------------------------------------------------------------------------------
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2017
+# Designed and written by V Balaji, Amy Langenhorst, Aleksey Yakovlev and
+# Seth Underwood
+#
+
+# **********************************************************************
+# Functions for use in script
+# **********************************************************************
+
+# Usage statement
+#
+# usage([<exit_value>])
+usage () {
+    echo "Usage: $( basename $0 ) [-v] [-P <prefix>] -s <site> <package_name>" 1>&2
+    if [[ $1 -eq 0 ]]; then
+        # If exiting with 0 status, print full help message.
+	# Otherwise, only the first Usage line is printed.
+	echo "       $( basename $0 ) -h" 1>&2   
+        echo "" 1>&2
+        echo "Options:" 1>&2
+        echo "" 1>&2
+        echo "     -h" 1>&2
+        echo "          Print help message." 1>&2
+        echo "" 1>&2
+        echo "     -v" 1>&2
+        echo "          Be verbose.  Can be repeated to increase the verbosity level." 1>&2
+	echo "" 1>&2
+        echo "     -s <site>" 1>&2
+        echo "          Use <site> configuration in directory site-configs to build" 1>&2
+	echo "          the package.  This option is required." 1>&2
+        echo "" 1>&2
+	echo "     -P <prefix>" 1>&2
+	echo "          Set the install prefix." 1>&2
+	echo "" 1>&2
+    fi
+    exit $1
+}
+
+
+# **********************************************************************
+# main script
+# **********************************************************************
+
+# Name of this script, and base directory where installed
+scriptName=$( basename $0 )
+scriptDir=$(dirname $(readlink -f "$0"))
+
+# Default script configuration settings
+package=fre-nctools
+pkgName=''
+verbose=0
+site=''
+prefix=''
+
+# Parse the command line options
+while getopts ":hvs:P:" opt; do
+    case "$opt" in
+	h)
+	    usage 0
+	    ;;
+	v)
+	    verbose=$[verbose+1]
+	    ;;
+	s)
+	    site=${OPTARG}
+	    ;;
+	P)
+	    prefix=${OPTARG}
+	    ;;
+	\?)
+	    echo "${scriptName}: Unknown option: -${OPTARG}" 1>&2
+	    usage 1
+	    ;;
+	:)
+	    echo "${scriptName}: Missing option argument for -${OPTARG}" 1>&2
+	    usage 1
+	    ;;
+    esac
+done
+
+shift $[OPTIND - 1]
+
+pkgName=$1
+
+if [ "X${pkgName}" == "X" ]; then
+    # pkgName is not set.  Needs to be set on the command line
+    echo "${scriptName}: Need to set the package name on the command line" 1>&2
+    echo "" 2>&1
+    usage 1
+fi
+
+if [ "X${site}" == "X" ]; then
+    # site is not set.  Needs to be set on the command line
+    echo "${scriptName}: Need to set the site name on the command line" 1>&2
+    echo "" 2>&1
+    usage 1
+fi
+
+# Check if the site is known.  This requires that:
+#  1. The directory "site-configs/${site} exists
+#  2. Two files exist in site-configs/${site}
+#     i. env.shrc -- The environment settings
+#     ii. build.mk -- Make macros needed for make
+if [ ! -d "${scriptDir}/site-configs/${site}" ]; then
+    echo "${scriptName}: Unknown site: ${site}.  Please refer to the installation instructions to create a site." 1>&2
+    exit 1
+fi
+# Report if the site files exist
+numMissing=0
+if [ ! -e "${scriptDir}/site-configs/${site}/env.sh" ]; then
+    echo "$scriptName: site file \"${scriptDir}/site-configs/${site}/env.sh\" is missing in the site configuration directory." 1>&2
+    numMissing=$[numMissing + 1]
+fi
+if [ ! -e "${scriptDir}/site-configs/${site}/build.mk" ]; then
+    echo "$scriptName: site file \"${scriptDir}/site-configs/${site}/build.mk\" is missing in the site configuration directory." 1>&2
+    numMissing=$[numMissing + 1]
+fi
+if [[ $numMissing > 0 ]]; then
+    # Exit b/c site files are missing.
+    exit 1
+fi
+
+# Read in the environment configuration:
+#. ${scriptDir}/site-configs/${site}/env.sh
+
+# Check the build directory.  By default, the build directory is the current pwd (if empty),
+# If the current pwd is not empty, than the script will verify it can make a directory called
+# 'build.${packate}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
+buildDir=''
+if [[ $(ls -A $(pwd)) ]]; then
+    # The directory is not empty, create a new directory
+    #
+    # Is the directory writable?
+    if [ -w $(pwd) ]; then
+	buildDir=$(pwd)/$(mktemp -d build.${package}.${pkgName}.XXXXX)
+	if [[ $? -ne 0 ]]; then
+	    echo "$scriptName: Unable to create build directory \"${buildDir}\"" 1>&2
+	    exit 1
+	fi
+    else
+	echo "$scriptName: Unable to create build directory in \"$(pwd)\".  Directory is not writable" 1>&2
+	exit 1
+    fi
+else
+    buildDir=$(pwd)
+fi
+
+# Last check that build directory is writable
+if [ ! -w ${buildDir} ]; then
+    echo "$scriptName: The build directory \"${buildDir}\" is not writable" 1>&2
+    exit 1
+fi
+
+# Set the prefix, if not set
+if [ "X${prefix}" == "X" ]; then
+    prefix=${buildDir}
+fi
+
+# If verbose, write out the configuration settings:
+if [[ ${verbose} -ge 1 ]]; then
+    echo "Building ${package} with the following settings:" 1>&2
+    echo "Build site: ${site}" 1>&2
+    echo "Build dir:  ${buildDir}" 1>&2
+fi
+if [[ ${verbose} -ge 2 ]]; then
+    echo "Using modules" 1>&2
+    module list
+fi
+if [[ ${verbose} -ge 3 ]]; then
+    echo "Full environment settings" 1>&2
+    env
+    echo "Shell options set"
+    set
+fi
+
+# Directories in the 'tools' directory that need to be compiled
+toolsSRC="check_mask \
+          fregrid \
+          make_coupler_mosaic \
+          make_hgrid \
+          make_regional_mosaic \
+          make_quick_mosaic \
+          make_solo_mosaic \
+          make_topog \
+          make_vgrid \
+          ncexists \
+          remap_land \
+          river_regrid \
+          runoff_regrid \
+          transfer_to_mosaic_grid \
+          mppncscatter \
+          make_land_domain"
+# Directories in the 'postprocessing' directory that need to be compiled
+postpSRC="combine_blobs \
+          combine_restarts \
+          iceberg_comb \
+          land_utils \
+          list_ncvars \
+          mppnccombine \
+          ncx \
+          plevel \
+          split_ncvars \
+          timavg"
+# Additional scripts that need to be copied into the 'bin' directory
+postpScripts="postprocessing/list_ncvars/list_ncvars.csh \
+              postprocessing/plevel/plevel.sh \
+              postprocessing/split_ncvars/split_ncvars.csh \
+              postprocessing/split_ncvars/split_ncvars.py \
+              postprocessing/split_ncvars/split_ncvars.pl \
+              postprocessing/split_ncvars/varlist.csh \
+              postprocessing/timavg/timavg.csh \
+              postprocessing/iceberg_comb/iceberg_comb.sh \
+              postprocessing/combine_restarts/combine_restarts"
+# Other directories that contain source or scripts for the final package
+toolsOther="postprocessing/split_ncvars \
+            shared/mosaic \
+            tools/shared"
+
+# Begin the build process:
+# Copy in the env and build.mk files:
+cp ${scriptDir}/site-configs/${site}/env.sh ${buildDir}
+cp ${scriptDir}/site-configs/${site}/build.mk ${buildDir}
+
+ppBuildDir=${buildDir}/postprocessing
+for dir in ${postpSRC}; do
+    # Create the 'postprocessing' directory in the buildDir
+    # This will contain the Makefile required for building the 
+    mkdir -p ${ppBuildDir}/${dir}
+
+    # Bring in the Makefile
+    cp ${scriptDir}/postprocessing/${dir}/Makefile $ppBuildDir/${dir}/Makefile
+done
+
+# Get and prepare the master Makefile
+cp ${scriptDir}/Makefile ${buildDir}
+# Set the SRCDIR, PREFIX and SITE in the master Makefile
+sed -i -e "/^SRCDIR *:\?=/c\SRCDIR := ${scriptDir}" ${buildDir}/Makefile
+sed -i -e "/^PREFIX *:\?=/c\PREFIX := ${prefix}" ${buildDir}/Makefile
+sed -i -e "/^SITE *:\?=/c\SITE := ${site}" ${buildDir}/Makefile
