@@ -10,13 +10,12 @@ module load cray-netcdf/4.3.3.1
 # **********************************************************************
 # Set environment variablesSetup and Load the Modules
 # **********************************************************************    
-FRE_SYSTEM_SITE=olcf
-export FRE_SYSTEM_SITE
+NC_BLKSZ=64K
+export NC_BLKSZ
 
 # **********************************************************************
 # Aliases
 # **********************************************************************    
-alias make="make HDF5_HOME=/opt/cray/hdf5/1.8.14/INTEL/140 NETCDF_HOME=/opt/cray/netcdf/4.3.3.1/INTEL/140 NC_BLKSZ=64K SITE=olcf -f fre-nctools.mk"
 
 # **********************************************************************
 # Other build configuration settings
