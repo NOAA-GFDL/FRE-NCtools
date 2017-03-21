@@ -40,7 +40,7 @@ usage () {
 	echo "          Prepare the build directory only, do not attempt to build." 1>&2
 	echo "" 1>&2
 	echo "     -d" 1>&2
-	echo "          Do not build or install the documentation." 1>&2
+	echo "          Build and install the documentation." 1>&2
 	echo "" 1>&2
     fi
     exit $1
@@ -62,7 +62,7 @@ verbose=0
 site=''
 prefix=''
 doBuild='true'
-doDocus='true'
+doDocus='false'
 
 # Parse the command line options
 while getopts ":hvs:dnP:" opt; do
@@ -80,7 +80,7 @@ while getopts ":hvs:dnP:" opt; do
 	    doBuild='false'
 	    ;;
 	d)
-	    doDocus='false'
+	    doDocus='true'
 	    ;;
 	P)
 	    prefix=${OPTARG}
@@ -287,17 +287,17 @@ if [ "${doBuild}" == "true" ]; then
 	    echo "${scriptName}: Error creating ${package}'s documentation.  What was completed is available in build directory \"${buildDir}\"." 1>&2
 	    popd
 	    exit 1
-	fi
-    else
-	# Install the documentation
-	make install-docs
-	if [[ $? -ne 0 ]]; then
-	    echo "${scriptName}: Error installing ${package}'s documentation.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
-	    popd
-	    exit 1
-	else
-	    echo "Build and Install of ${package}'s documentation is complete and available in ${prefix}."
-	fi
+        else
+	    # Install the documentation
+	    make install-docs
+	    if [[ $? -ne 0 ]]; then
+	        echo "${scriptName}: Error installing ${package}'s documentation.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	        popd
+	        exit 1
+	    else
+	        echo "Build and Install of ${package}'s documentation is complete and available in ${prefix}."
+	    fi
+        fi
     fi
 
     # Return to previous directory
