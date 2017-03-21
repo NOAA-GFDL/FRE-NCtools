@@ -1,48 +1,104 @@
-# The following three directory may need to set.
-NETCDFPATH = /usr/local/netcdf-3.6.2
-SHAREDIR = $(PWD)/../../shared/mosaic
-COREDIR  = $(PWD)
-TOOLSHAREDIR = $(PWD)/../shared
-CFLAGS = -O2 -fast -I$(TOOLSHAREDIR) -I$(COREDIR) -I$(SHAREDIR) -I${NETCDFPATH}/include -I/usr/include 
-LDFLAGS =  -L${NETCDFPATH}/lib -lm -lnetcdf 
-LNFLAGS = -v
-CC      = icc
+# ------------------------------------------------------------------------------
+# FMS/FRE Project: Makefile to build make_topog	
+# ------------------------------------------------------------------------------
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2011, 2017
+# This program is distributed under the terms of the GNU General Public
+# License. See the file COPYING contained in this directory
+# ------------------------------------------------------------------------------
+# Designed and written by V. Balaji, Amy Langenhorst, Aleksey Yakovlev and
+# Seth Underwood
+# ------------------------------------------------------------------------------
 
-OBJS = mosaic_util.o create_xgrid.o interp.o mpp.o mpp_domain.o mpp_io.o tool_util.o topog.o make_topog.o
+# MPICC and CC default settings
+MPICC    := mpicc
+CC       := icc
 
-HEADERS = Makefile $(TOOLSHAREDIR)/mpp.h  $(TOOLSHAREDIR)/mpp_domain.h   \
-          $(TOOLSHAREDIR)/mpp_io.h $(SHAREDIR)/mosaic_util.h                    \
-          $(SHAREDIR)/interp.h $(SHAREDIR)/create_xgrid.h 
-make_topog: $(OBJS)
-	$(CC) $(LNFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+# Get the site specific settings, CC and MPICC may be overridden
+include ../../build.mk
 
-make_topog.o: $(COREDIR)/make_topog.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(COREDIR)/make_topog.c 
+# Default Directories
+SRCDIR := .
+PREFIX := .
+PREFIX_EXEC = $(PREFIX)/$(SITE)/bin
+PREFIX_SHARE = $(PREFIX)/share
+PREFIX_DOCS = $(PREFIX_SHARE)
+PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
 
-mosaic_util.o: $(SHAREDIR)/mosaic_util.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SHAREDIR)/mosaic_util.c
+VPATH = $(SRCDIR):.
 
-create_xgrid.o: $(SHAREDIR)/create_xgrid.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SHAREDIR)/create_xgrid.c 
+CFLAGS   := -O3 -traceback $(CFLAGS_SITE)
+CFLAGS_O2:= -O2 -traceback $(CFLAGS_SITE)
+INCLUDES := -I${NETCDF_HOME}/include -I$(SRCDIR)/ -I$(SRCDIR)/../shared -I$(SRCDIR)/../../shared/mosaic
+CLIBS     := $(LDFLAGS) -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdf -lhdf5_hl -lhdf5 -lz $(CLIBS_SITE) $(STATIC)
 
-interp.o: $(SHAREDIR)/interp.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SHAREDIR)/interp.c 
+TARGETS  := make_topog
+TARGETS_PARALLEL := make_topog_parallel 
+ifndef NOPARALLEL
+TARGETS += $(TARGETS_PARALLEL)
+endif
 
-mpp.o: $(TOOLSHAREDIR)/mpp.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(TOOLSHAREDIR)/mpp.c 
+SOURCES  := make_topog.c topog.c
+SOURCES  += mpp_domain.c mpp_io.c tool_util.c
+SOURCES  += create_xgrid.c interp.c read_mosaic.c
 
-mpp_domain.o: $(TOOLSHAREDIR)/mpp_domain.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(TOOLSHAREDIR)/mpp_domain.c 
+OBJECTS  := $(SOURCES:c=o)
 
-mpp_io.o: $(TOOLSHAREDIR)/mpp_io.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(TOOLSHAREDIR)/mpp_io.c
+HEADERS = ../shared/mpp.h  ../shared/mpp_domain.h  ../shared/mpp_io.h ../shared/tool_util.h   \
+	  ../../shared/mosaic/constant.h ../../shared/mosaic/create_xgrid.h  \
+	  ../../shared/mosaic/interp.h  ../../shared/mosaic/mosaic_util.h  \
+	  ./topog.h ../../shared/mosaic/read_mosaic.h
 
-tool_util.o: $(TOOLSHAREDIR)/tool_util.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(TOOLSHAREDIR)/tool_util.c
+all: $(TARGETS)
 
-create_nomonic_cubic_grid.o: $(COREDIR)/create_nomonic_cubic_grid.c 
-	$(CC) $(CFLAGS) -c $(COREDIR)/create_nomonic_cubic_grid.c 
+make_topog: $(OBJECTS) mosaic_util.o mpp.o
+	$(CC) -o $@ $^ $(CLIBS)
+
+make_topog_parallel: $(OBJECTS) mosaic_util_parallel.o mpp_parallel.o
+	$(MPICC) -o $@ $^ $(CLIBS)
 
 
-topog.o: $(COREDIR)/topog.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(COREDIR)/topog.c
+mosaic_util.o: ../../shared/mosaic/mosaic_util.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< 
+
+mosaic_util_parallel.o: ../../shared/mosaic/mosaic_util.c $(HEADERS)
+	$(MPICC) -Duse_libMPI $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+
+mpp.o: ../shared/mpp.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+mpp_parallel.o: ../shared/mpp.c $(HEADERS)
+	$(MPICC) -Duse_libMPI $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+read_mosaic.o: ../../shared/mosaic/read_mosaic.c $(HEADERS)
+	$(CC) -Duse_netCDF $(CFLAGS) $(INCLUDES) -c $< 
+
+interp.o: ../../shared/mosaic/interp.c $(HEADERS)
+	$(CC) -Duse_netCDF $(CFLAGS) $(INCLUDES) -c $< 
+
+mpp_io.o: ../shared/mpp_io.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+mpp_domain.o: ../shared/mpp_domain.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+tool_util.o: ../shared/tool_util.c $(HEADERS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $< 
+
+create_xgrid.o: ../../shared/mosaic/create_xgrid.c $(HEADERS)
+	$(CC) $(CFLAGS_O2) $(INCLUDES) -c $< 
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
+
+install: all
+	install -m 755 -d $(PREFIX)
+	install -m 755 -d $(PREFIX_EXEC)
+	install -m 755 $(TARGETS) $(PREFIX_EXEC)
+
+docs:
+
+install-docs: docs
+
+clean:
+	-rm -f *.o $(TARGETS)

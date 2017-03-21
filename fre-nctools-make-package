@@ -1,179 +1,307 @@
-#!/bin/tcsh -f
+#!/bin/sh
 #
 # ------------------------------------------------------------------------------
-# FMS/FRE Project: Program to Create the fre-nctools Package
+# FMS/FRE Project: Script to create the fre-nctools package
 # ------------------------------------------------------------------------------
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2012, 2016
-# Designed and written by V Balaji, Amy Langenhorst, Aleksey Yakovlev and
-# Seth Underwood
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2017
+# Designed and written by Seth Underwood
 #
-set pkgName = fre-nctools
-set pkgVersion = $1
 
-echo $pkgVersion
+# **********************************************************************
+# Functions for use in script
+# **********************************************************************
 
-#Loop though these directories to build the tools there.
-set freNCToolsSrc = 'tools/{check_mask,fregrid,make_coupler_mosaic,make_hgrid,make_regional_mosaic,make_quick_mosaic,make_solo_mosaic,make_topog,make_vgrid,ncexists,remap_land,river_regrid,runoff_regrid,transfer_to_mosaic_grid,mppncscatter,make_land_domain} postprocessing/{land_utils,list_ncvars,combine_blobs,mppnccombine,mppnccombine-2.1.7-memstats,ncx,plevel,timavg}'
+# Usage statement
+#
+# usage([<exit_value>])
+usage () {
+    echo "Usage: $( basename $0 ) [-v] [-P <prefix>] -s <site> <package_name>" 1>&2
+    if [[ $1 -eq 0 ]]; then
+        # If exiting with 0 status, print full help message.
+	# Otherwise, only the first Usage line is printed.
+	echo "       $( basename $0 ) -h" 1>&2   
+        echo "" 1>&2
+        echo "Options:" 1>&2
+        echo "" 1>&2
+        echo "     -h" 1>&2
+        echo "          Print help message." 1>&2
+        echo "" 1>&2
+        echo "     -v" 1>&2
+        echo "          Be verbose.  Can be repeated to increase the verbosity level." 1>&2
+	echo "" 1>&2
+        echo "     -s <site>" 1>&2
+        echo "          Use <site> configuration in directory site-configs to build" 1>&2
+	echo "          the package.  This option is required." 1>&2
+        echo "" 1>&2
+	echo "     -P <prefix>" 1>&2
+	echo "          Set the install prefix." 1>&2
+	echo "" 1>&2
+	echo "     -n" 1>&2
+	echo "          Prepare the build directory only, do not attempt to build." 1>&2
+	echo "" 1>&2
+	echo "     -d" 1>&2
+	echo "          Build and install the documentation." 1>&2
+	echo "" 1>&2
+    fi
+    exit $1
+}
 
-#Other source code used during those compiles.
-set freNCToolsOther = 'postprocessing/split_ncvars shared/mosaic tools/shared'
 
-# Save the srcdif
-# This first run assumes you are in the git directory
-set srcDir = `pwd`
+# **********************************************************************
+# main script
+# **********************************************************************
 
-#Build in a temporary directory, inside the srcDir.
-set tmpDir = $srcDir/build.$pkgVersion.$$
-mkdir -p $tmpDir
-if ( $status ) then
-  echo "Error during mkdir '$tmpDir'..."
-  exit 1
-endif
-pushd $tmpDir
+# Name of this script, and base directory where installed
+scriptName=$( basename $0 )
+scriptDir=$(dirname $(readlink -f "$0"))
 
-echo "////////////////////////////////////////////////////////////////////////////////"
-echo "//////////////////////////////////////////////////////// Environment Settings //"
-echo "////////////////////////////////////////////////////////////////////////////////"
+# Default script configuration settings
+package=fre-nctools
+pkgName=''
+verbose=0
+site=''
+prefix=''
+doBuild='true'
+doDocus='false'
 
-set site = `perl -T -e "use Net::Domain(hostdomain); print hostdomain" | sed 's/\.$//'`
-if ( "$site" == "princeton.rdhpcs.noaa.gov" ) then
-  source /usr/local/Modules/default/init/tcsh
-  module use -a /home/fms/local/modulefiles
-  module load intel_compilers/15.0.1 mpich2/1.2.1p1 netcdf/4.2
-  setenv FRE_SYSTEM_SITE gfdl
-  setenv LD_RUN_PATH $LD_LIBRARY_PATH
-  alias make make HDF5_HOME=/usr/local/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/netcdf-4.2_optimized SITE=pan -f fre-nctools.mk
-else if ( "$site" == "gfdl.noaa.gov" ) then
-  source /usr/local/Modules/default/init/tcsh
-  module use -a /home/fms/local/modulefiles
-  module load netcdf/4.2
-  # netcdf/4.2 loads intel-11, so unload it now
-  module unload intel_compilers/11.1.073
-  module load intel_compilers/15.0.0
-  module use /home/sdu/publicmodules
-  module load mpich2/1.5b1
-  setenv FRE_SYSTEM_SITE gfdl-ws
-  setenv LD_RUN_PATH $LD_LIBRARY_PATH
-  alias make make HDF5_HOME=/usr/local/x64/hdf5-1.8.8_optimized NETCDF_HOME=/usr/local/x64/netcdf-4.2_optimized SITE=gfdl-ws -f fre-nctools.mk
-  set NOPARALLEL
-else if ( "$site" == "ncrc.gov" ) then
-  source $MODULESHOME/init/tcsh
-  module use -a /ncrc/home2/fms/local/modulefiles
-  module rm PrgEnv-pgi PrgEnv-pathscale
-  module load PrgEnv-intel/5.2.82
-  module swap intel intel/15.0.2.164
-  module load cray-netcdf/4.3.3.1
-  module load cray-hdf5/1.8.14
-  setenv FRE_SYSTEM_SITE ncrc3
-  setenv MPICH_UNEX_BUFFER_SIZE 256m
-  setenv MPICH_MAX_SHORT_MSG_SIZE 64000
-  setenv MPICH_PTL_UNEX_EVENTS 160k
-  setenv KMP_STACKSIZE 2g
-  setenv F_UFMTENDIAN big
-  alias make make HDF5_HOME=$HDF5_DIR NETCDF_HOME=$NETCDF_DIR NC_BLKSZ=64K SITE=gaea -f fre-nctools.mk
-else if ( "$site" == "ccs.ornl.gov" ) then
-  source $MODULESHOME/init/tcsh
-  module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
-  module load PrgEnv-intel
-  module swap intel intel/15.0.2.164
-  module load cray-netcdf/4.3.3.1
-  setenv FRE_SYSTEM_SITE olcf
-  alias make make HDF5_HOME=/opt/cray/hdf5/1.8.14/INTEL/140 NETCDF_HOME=/opt/cray/netcdf/4.3.3.1/INTEL/140 NC_BLKSZ=64K SITE=olcf -f fre-nctools.mk
-else if ( "$site" == "theia.fairmont.rdhpcs.noaa.gov") then
-  source $MODULESHOME/init/tcsh
-  module use -a /home/fms/local/modulefiles
-  module purge
-  module load intel/15.1.133
-  module load impi
-  module load fre/bronx-9
-  setenv FRE_SYSTEM_SITE theia
-  setenv LIBRARY_PATH ${LIBRARY_PATH}:/apps/intel/composer_xe_2015.1.133/compiler/lib/intel64
-  setenv LD_RUN_PATH ${LD_LIBRARY_PATH}:/apps/hdf5/1.8.14-intel/lib:/apps/netcdf/4.3.0-intel/lib
-  echo $LD_RUN_PATH
+# Parse the command line options
+while getopts ":hvs:dnP:" opt; do
+    case "$opt" in
+	h)
+	    usage 0
+	    ;;
+	v)
+	    verbose=$[verbose+1]
+	    ;;
+	s)
+	    site=${OPTARG}
+	    ;;
+	n)
+	    doBuild='false'
+	    ;;
+	d)
+	    doDocus='true'
+	    ;;
+	P)
+	    prefix=${OPTARG}
+	    ;;
+	\?)
+	    echo "${scriptName}: Unknown option: -${OPTARG}" 1>&2
+	    usage 1
+	    ;;
+	:)
+	    echo "${scriptName}: Missing option argument for -${OPTARG}" 1>&2
+	    usage 1
+	    ;;
+    esac
+done
 
-  alias make make HDF5_HOME=/apps/hdf5/1.8.14-intel NETCDF_HOME=/apps/netcdf/4.3.0-intel SITE=theia LDFLAGS='-Wl,-rpath=/apps/intel/composer_xe_2015.1.133/compiler/lib/intel64,-rpath=/apps/hdf5/1.8.14-intel/lib,-rpath=/apps/netcdf/4.3.0-intel/lib' -f fre-nctools.mk
-else
-  echo "ERROR: Unsupported site '$site'"
-  exit 1
-endif
+shift $[OPTIND - 1]
 
-module list
+pkgName=$1
 
-echo "Done..."
+if [ "X${pkgName}" == "X" ]; then
+    # pkgName is not set.  Needs to be set on the command line
+    echo "${scriptName}: Need to set the package name on the command line" 1>&2
+    echo "" 2>&1
+    usage 1
+fi
 
-echo "////////////////////////////////////////////////////////////////////////////////"
-echo "//////////////////////////////////////////////////////////// Directory Layout //"
-echo "////////////////////////////////////////////////////////////////////////////////"
+if [ "X${site}" == "X" ]; then
+    # site is not set.  Needs to be set on the command line
+    echo "${scriptName}: Need to set the site name on the command line" 1>&2
+    echo "" 2>&1
+    usage 1
+fi
 
-mkdir -p share/src
-cp -r ${srcDir}/{postprocessing,shared,tools} share/src
-mkdir -p $FRE_SYSTEM_SITE/bin
-mkdir -p share/bin
+# Check if the site is known.  This requires that:
+#  1. The directory "site-configs/${site} exists
+#  2. Two files exist in site-configs/${site}
+#     i. env.shrc -- The environment settings
+#     ii. build.mk -- Make macros needed for make
+if [ ! -d "${scriptDir}/site-configs/${site}" ]; then
+    echo "${scriptName}: Unknown site: ${site}.  Please refer to the installation instructions to create a site." 1>&2
+    exit 1
+fi
+# Report if the site files exist
+numMissing=0
+if [ ! -e "${scriptDir}/site-configs/${site}/env.sh" ]; then
+    echo "$scriptName: site file \"${scriptDir}/site-configs/${site}/env.sh\" is missing in the site configuration directory." 1>&2
+    numMissing=$[numMissing + 1]
+fi
+if [ ! -e "${scriptDir}/site-configs/${site}/build.mk" ]; then
+    echo "$scriptName: site file \"${scriptDir}/site-configs/${site}/build.mk\" is missing in the site configuration directory." 1>&2
+    numMissing=$[numMissing + 1]
+fi
+if [[ $numMissing > 0 ]]; then
+    # Exit b/c site files are missing.
+    exit 1
+fi
 
-cp share/src/postprocessing/list_ncvars/list_ncvars.csh $tmpDir/share/bin
-cp share/src/postprocessing/plevel/plevel.sh $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/split_ncvars.csh $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/split_ncvars.py $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/split_ncvars.pl $tmpDir/share/bin
-cp share/src/postprocessing/split_ncvars/varlist.csh $tmpDir/share/bin
-cp share/src/postprocessing/timavg/timavg.csh $tmpDir/share/bin
-cp share/src/postprocessing/iceberg_comb/iceberg_comb.sh $tmpDir/share/bin
-cp share/src/postprocessing/combine_restarts/combine_restarts $tmpDir/share/bin
-
-echo "Done..."
-
-foreach freNCToolsDir ( $freNCToolsSrc )
-  echo "////////////////////////////////////////////////////////////////////////////////"
-  echo "////////////////////////////////////////////////////////////////// $freNCToolsDir:t"
-  echo "////////////////////////////////////////////////////////////////////////////////"
-
-  pushd share/src/$freNCToolsDir
-  set targets=` grep "TARGETS  :=" fre-nctools.mk | cut -f2 -d'=' `
-  if ( $?NOPARALLEL ) then
-     set targets=` grep "TARGETS  :=" fre-nctools.mk | cut -f2 -d'=' | sed 's/ \S*_parallel/ /'`
-  endif
-  echo "Making $targets"
-
-  make clean
-  make
-  if ( $status ) then
-   echo "Error: make failed for $targets"
-   exit 1
-  endif
-
-  foreach target ( $targets )
-    if ( -f $target ) then
-      mv $target $tmpDir/$FRE_SYSTEM_SITE/bin
+# Check the build directory.  By default, the build directory is the current pwd (if empty),
+# If the current pwd is not empty, than the script will verify it can make a directory called
+# 'build.${package}.${site}.${pkgName}.XXXXX' where 'XXXXX' are the mktemp template characters.
+buildDir=''
+if [[ $(ls -A $(pwd)) ]]; then
+    # The directory is not empty, create a new directory
+    #
+    # Is the directory writable?
+    if [ -w $(pwd) ]; then
+	buildDir=$(pwd)/$(mktemp -d build.${package}.${site}.${pkgName}.XXXXX)
+	if [[ $? -ne 0 ]]; then
+	    echo "$scriptName: Unable to create build directory \"${buildDir}\"" 1>&2
+	    exit 1
+	fi
     else
-      echo "Error during '$target' build"
-      exit 1
-    endif
-  end
-  make clean
-  popd
-end
-
-echo "////////////////////////////////////////////////////////////////////////////////"
-echo "/////////////////////////////////////////////////////////////////// Archiving //"
-echo "////////////////////////////////////////////////////////////////////////////////"
-
-tar -cvzf $pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz *
-if ( $status ) then
-  echo "Error during archiving..."
-  exit 1
-endif
-
-echo "////////////////////////////////////////////////////////////////////////////////"
-echo "/////////////////////////////////////////////////////////////////// Finishing //"
-echo "////////////////////////////////////////////////////////////////////////////////"
-
-popd
-
-if ( -f $tmpDir/$pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz ) then
-  mv $tmpDir/$pkgName-$pkgVersion.$FRE_SYSTEM_SITE.tar.gz .
-  echo "Success!"
+	echo "$scriptName: Unable to create build directory in \"$(pwd)\".  Directory is not writable" 1>&2
+	exit 1
+    fi
 else
-  echo "Error..."
-endif
-exit
-rm -fr $tmpDir
+    buildDir=$(pwd)
+fi
+
+# Last check that build directory is writable
+if [ ! -w ${buildDir} ]; then
+    echo "$scriptName: The build directory \"${buildDir}\" is not writable" 1>&2
+    exit 1
+fi
+
+# Set the prefix, if not set
+if [ "X${prefix}" == "X" ]; then
+    prefix=${buildDir}
+fi
+# Append the pgkName to the prefix
+prefix=${prefix}/${pkgName}
+
+# If verbose, write out the configuration settings:
+if [[ ${verbose} -ge 1 ]]; then
+    echo "Building ${package} with the following settings:" 1>&2
+    echo "Build site: ${site}" 1>&2
+    echo "Build dir:  ${buildDir}" 1>&2
+    echo "Install prefix: ${prefix}" 1>&2
+fi
+if [[ ${verbose} -ge 2 ]]; then
+    echo "Using modules" 1>&2
+    module list
+fi
+if [[ ${verbose} -ge 3 ]]; then
+    echo "Full environment settings" 1>&2
+    env 1>&2
+    echo "Shell options set" 1>&2
+    set 1>&2
+fi
+
+# Directories in the 'tools' directory that need to be compiled
+toolsSRC="check_mask \
+          fregrid \
+          make_coupler_mosaic \
+          make_hgrid \
+          make_land_domain \
+          make_regional_mosaic \
+          make_quick_mosaic \
+          make_solo_mosaic \
+          make_topog \
+          make_vgrid \
+          mppncscatter \
+          ncexists \
+          remap_land \
+          river_regrid \
+          runoff_regrid \
+          transfer_to_mosaic_grid"
+# Directories in the 'postprocessing' directory that need to be compiled
+postpSRC="combine_blobs \
+          combine_restarts \
+          iceberg_comb \
+          land_utils \
+          list_ncvars \
+          mppnccombine \
+          ncx \
+          plevel \
+          split_ncvars \
+          timavg"
+
+# Setup the build directory:
+# Copy in the env and build.mk files:
+cp ${scriptDir}/site-configs/${site}/env.sh ${buildDir}
+cp ${scriptDir}/site-configs/${site}/build.mk ${buildDir}
+
+ppBuildDir=${buildDir}/postprocessing
+for dir in ${postpSRC}; do
+    # Create the 'postprocessing' directory in the buildDir
+    # This will contain the Makefile required for building the
+    # tools in 'postprocessing'
+    mkdir -p ${ppBuildDir}/${dir}
+
+    # Bring in the Makefile
+    cp ${scriptDir}/postprocessing/${dir}/Makefile ${ppBuildDir}/${dir}/Makefile
+done
+
+toolsBuildDir=${buildDir}/tools
+for dir in ${toolsSRC}; do
+    # Create the 'tools' directory in the buildDir
+    # This will contain the Makefile required for building the
+    # tools in 'tools'
+    mkdir -p ${toolsBuildDir}/${dir}
+
+    # Bring in the Makefile
+    cp ${scriptDir}/tools/${dir}/Makefile ${toolsBuildDir}/${dir}/Makefile
+done
+
+# Get and prepare the master Makefile
+cp ${scriptDir}/Makefile ${buildDir}
+# Set the SRCDIR, PREFIX and SITE in the master Makefile
+sed -i -e "/^SRCDIR *:\?=/c\SRCDIR := ${scriptDir}" ${buildDir}/Makefile
+sed -i -e "/^PREFIX *:\?=/c\PREFIX := ${prefix}" ${buildDir}/Makefile
+sed -i -e "/^SITE *:\?=/c\SITE := ${site}" ${buildDir}/Makefile
+
+# Perform the build (unless option -n given)
+if [ "${doBuild}" == "true" ]; then
+    # Enter the build directory
+    pushd ${buildDir}
+
+    # Read in the environment configuration:
+    . ./env.sh
+
+    # Run make
+    make
+    if [[ $? -ne 0 ]]; then
+	echo "${scriptName}: Error during build of ${package}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	popd
+	exit 1
+    else
+	# Install the package
+	make install
+	if [[ $? -ne 0 ]]; then
+	    echo "${scriptName}: Error installing ${package} in ${prefix}.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	    popd
+	    exit 1
+	else
+	    echo "Build and Install of ${package} complete, and available in ${prefix}."
+	fi
+    fi
+
+    if [ "${doDocus}" == "true" ]; then
+	# Create the documentation
+	make docs
+	if [[ $? -ne 0 ]]; then
+	    echo "${scriptName}: Error creating ${package}'s documentation.  What was completed is available in build directory \"${buildDir}\"." 1>&2
+	    popd
+	    exit 1
+        else
+	    # Install the documentation
+	    make install-docs
+	    if [[ $? -ne 0 ]]; then
+	        echo "${scriptName}: Error installing ${package}'s documentation.  What was completed is available in the build directory \"${buildDir}\"." 1>&2
+	        popd
+	        exit 1
+	    else
+	        echo "Build and Install of ${package}'s documentation is complete and available in ${prefix}."
+	    fi
+        fi
+    fi
+
+    # Return to previous directory
+    popd
+else
+    echo "Build directory ready: ${buildDir}"
+fi
