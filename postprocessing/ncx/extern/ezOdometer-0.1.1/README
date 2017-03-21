@@ -1,4 +1,0 @@
-make test
-make memtest
-make clean
-make dist VER=0.1.0

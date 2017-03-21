@@ -25,7 +25,7 @@ toolsSRC += make_quick_mosaic make_solo_mosaic make_topog make_vgrid ncexists
 toolsSRC += remap_land river_regrid runoff_regrid transfer_to_mosaic_grid 
 toolsSRC += mppncscatter make_land_domain
 
-postpSRC := land_utils list_ncvars combine_blobs mppnccombine ncx plevel timavg
+postpSRC := land_utils list_ncvars combine_blobs mppnccombine plevel timavg
 postpSRC += split_ncvars iceberg_comb combine_restarts
 
 all: $(postpSRC) $(toolsSRC)
@@ -56,9 +56,6 @@ list_ncvars:
 mppnccombine:
 	make -C postprocessing/mppnccombine SRCDIR=$(SRCDIR)/postprocessing/mppnccombine
 
-ncx:
-	make -C postprocessing/ncx SRCDIR=$(SRCDIR)/postprocessing/ncx
-
 plevel:
 	make -C postprocessing/plevel SRCDIR=$(SRCDIR)/postprocessing/plevel
 
@@ -85,9 +82,6 @@ list_ncvars-install:
 
 mppnccombine-install:
 	make -C postprocessing/mppnccombine PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/mppnccombine install
-
-ncx-install:
-	make -C postprocessing/ncx PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/ncx install
 
 plevel-install:
 	make -C postprocessing/plevel PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/plevel install
@@ -116,9 +110,6 @@ list_ncvars-docs:
 mppnccombine-docs:
 	make -C postprocessing/mppnccombine SRCDIR=$(SRCDIR)/postprocessing/mppnccombine docs
 
-ncx-docs:
-	make -C postprocessing/ncx SRCDIR=$(SRCDIR)/postprocessing/ncx docs
-
 plevel-docs:
 	make -C postprocessing/plevel SRCDIR=$(SRCDIR)/postprocessing/plevel docs
 
@@ -145,9 +136,6 @@ list_ncvars-install-docs:
 
 mppnccombine-install-docs:
 	make -C postprocessing/mppnccombine PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/mppnccombine install-docs
-
-ncx-install-docs:
-	make -C postprocessing/ncx PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/ncx install-docs
 
 plevel-install-docs:
 	make -C postprocessing/plevel PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/postprocessing/plevel install-docs

@@ -215,7 +215,6 @@ postpSRC="combine_blobs \
           land_utils \
           list_ncvars \
           mppnccombine \
-          ncx \
           plevel \
           split_ncvars \
           timavg"
