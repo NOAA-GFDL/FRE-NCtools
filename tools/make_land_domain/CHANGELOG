@@ -1,0 +1,8 @@
+2009-06-10 Aleksey Yakovelv <Aleksey.Yakovlev@noaa.gov>
+    * Initial version (Makefile, CVS ver 17.0.4.2)
+    * Add rules to build MPI-based executable
+    * Simplified according to fre-nctools standards
+
+2017-03-18 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Changed Makefile to match new build system
+

@@ -1,9 +1,0 @@
-ezSlice is a class to parse array slice strings like those used in Python or MATLAB. Examples are in the unit test test_ezSlice.cpp. To try, do
-
-make
-make memtest
-./test_ezSlice --verbose
-
-NEWS
-2011/11/11 v0.0.0 
-1. Initial version.

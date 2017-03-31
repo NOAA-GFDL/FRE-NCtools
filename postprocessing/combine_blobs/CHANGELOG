@@ -1,0 +1,6 @@
+2012-09-12  Kyle Olivo <Kyle.Olivo@noaa.gov>
+    * Initial write of Makefile.mk
+
+2017-03-17  Seth Underwood <Seth.Underwood@noaa.gov>
+    * Change Makefile.mk for new build process
+

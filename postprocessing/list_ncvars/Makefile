@@ -1,16 +1,63 @@
-# The following three directory may need to set.
-NETCDFPATH = /usr/local/netcdf-4.0.1
-POSTPPATH  = .
-FFLAGS = -I${NETCDFPATH}/include -I/usr/include -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -r8 -nowarn -Wp,-w
-LDFLAGS =  -L${NETCDFPATH}/lib/shared -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lmpi -lz
-DEFFLAG = -Duse_netCDF
-LNFLAGS = -v
-FC      = ifort
+# ------------------------------------------------------------------------------
+# FMS/FRE Project: Makefile to Build list_ncvars
+# ------------------------------------------------------------------------------
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2009-2011
+# This program is distributed under the terms of the GNU General Public
+# License. See the file COPYING contained in this directory
+# ------------------------------------------------------------------------------
+# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
+# ------------------------------------------------------------------------------
 
-OBJS = list_ncvars.o
+# Default compilers
+FC       := ifort
 
-list_ncvars.exe: $(OBJS)
-	$(FC) $(LNFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+# Bring in the site build settings
+# Compiler may be overridden
+include ../../build.mk
 
-list_ncvars.o: $(POSTPPATH)/list_ncvars.f90
-	$(FC) $(FFLAGS) -c $(POSTPPATH)/list_ncvars.f90
+# Default Directories
+SRCDIR := .
+PREFIX := .
+PREFIX_EXEC = $(PREFIX)/$(SITE)/bin
+PREFIX_SHARE = $(PREFIX)/share
+PREFIX_DOCS = $(PREFIX_SHARE)
+PREFIX_SHARE_EXEC = $(PREFIX_SHARE)/bin
+
+VPATH = $(SRCDIR):.
+
+FFLAGS   := -fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -g -O2 -i4 -r8 -traceback $(FFLAGS_SITE)
+INCLUDES := -I${NETCDF_HOME}/include
+LIBS     :=  -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz $(LIBS_SITE) $(STATIC)
+
+TARGETS  := list_ncvars.exe
+TARGETS_SHARE := list_ncvars.csh
+
+SOURCES  := list_ncvars.f90
+
+OBJECTS  := $(SOURCES:f90=o)
+
+all: $(TARGETS)
+
+list_ncvars.exe: list_ncvars.o
+	$(FC) -o $@ $(OBJECTS) $(LIBS)
+
+list_ncvars.o: list_ncvars.f90
+	$(FC) $(FFLAGS) $(INCLUDES) -c $< 
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
+
+install: all $(TARGETS_SHARE)
+	install -m 755 -d $(PREFIX)
+	install -m 755 -d $(PREFIX_EXEC)
+	install -m 755 -d $(PREFIX_SHARE)
+	install -m 755 -d $(PREFIX_SHARE_EXEC)
+	install -m 755 $(TARGETS) $(PREFIX_EXEC)
+	install -m 755 $(TARGETS_SHARE:%=$(SRCDIR)/%) $(PREFIX_SHARE_EXEC)
+
+docs:
+
+install-docs: docs
+
+clean:
+	-rm -f *.o $(TARGETS)
