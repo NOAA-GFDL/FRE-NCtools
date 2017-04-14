@@ -1,0 +1,20 @@
+# ******************************************************************************
+# gitlab-ci.yml file to build and deploy fre-nctools
+# ******************************************************************************
+
+before_script:
+  - hostname
+
+.buildScript: &buildScript
+  script:
+    - buildDir=$(mktemp -d build.XXXX)
+    - cd ${buildDir}
+    - ${CI_PROJECT_DIR}/fre-nctools-make-package -s ${FRE_SITE}
+
+build:gfdl-ws:
+  stage: build
+  tags:
+    - gfdl-ws
+  variables:
+    FRE_SITE: gfdl-ws
+  <<: *buildScript
