@@ -37,12 +37,12 @@ deploy:gfdl-ws:
   tags:
     - gfdl-ws_deploy
   environment:
-    - stage_gfdl-ws
+    name: stage_gfdl-ws
   variables:
     FRE_SITE: gfdl-ws
     FMS_HOME: /home/fms
   only:
     - master
   dependencies:
-    build:gfdl-ws
+    - build:gfdl-ws
   <<: *deployScript
