@@ -11,7 +11,7 @@ variables:
   script:
     - mkdir ${buildDir}
     - cd ${buildDir}
-    - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -p ${FMS_HOME}/local/opt/fre-nctools/test -s ${FRE_SITE} test
+    - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -P ${FMS_HOME}/local/opt/fre-nctools/test -s ${FRE_SITE} test
     - . ./env.sh
     - make
   artifacts:
