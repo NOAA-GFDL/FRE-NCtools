@@ -31,6 +31,7 @@ build:gfdl-ws:
     - gfdl-ws
   variables:
     FRE_SITE: gfdl-ws
+    FMS_HOME: /home/fms
   <<: *buildScript
 
 deploy:gfdl-ws:
