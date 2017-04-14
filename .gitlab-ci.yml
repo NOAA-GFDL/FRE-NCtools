@@ -5,11 +5,24 @@
 before_script:
   - hostname
 
+variables:
+  buildDir: build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
 .buildScript: &buildScript
   script:
-    - buildDir=$(mktemp -d build.XXXX)
     - cd ${buildDir}
-    - ${CI_PROJECT_DIR}/fre-nctools-make-package -s ${FRE_SITE} test
+    - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -p ${FMS_HOME}/local/opt/fre-nctools/test -s ${FRE_SITE} test
+    - . ./env.sh
+    - make
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - ${CI_PROJECT_DIR}/build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
+
+.deployScript: &deployScript
+  script:
+    - cd ${CI_PROJECT_DIR}/${buildDir}
+    - . ./env.sh
+    - make install
 
 build:gfdl-ws:
   stage: build
@@ -18,3 +31,18 @@ build:gfdl-ws:
   variables:
     FRE_SITE: gfdl-ws
   <<: *buildScript
+
+deploy:gfdl-ws:
+  stage: deploy
+  tags:
+    - gfdl-ws_deploy
+  environment:
+    - stage_gfdl-ws
+  variables:
+    FRE_SITE: gfdl-ws
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    build:gfdl-ws
+  <<: *deployScript
