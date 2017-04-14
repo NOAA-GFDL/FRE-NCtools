@@ -9,7 +9,7 @@ before_script:
   script:
     - buildDir=$(mktemp -d build.XXXX)
     - cd ${buildDir}
-    - ${CI_PROJECT_DIR}/fre-nctools-make-package -s ${FRE_SITE}
+    - ${CI_PROJECT_DIR}/fre-nctools-make-package -s ${FRE_SITE} test
 
 build:gfdl-ws:
   stage: build
