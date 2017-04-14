@@ -34,6 +34,42 @@ build:gfdl-ws:
     FMS_HOME: /home/fms
   <<: *buildScript
 
+build:gfdl:
+  stage: build
+  tags:
+    - gfdl
+  variables:
+    FRE_SITE: gfdl
+    FMS_HOME: /home/fms
+  <<: *buildScript
+
+build:theia:
+  stage: build
+  tags:
+    - theia
+  variables:
+    FRE_SITE: theia
+    FMS_HOME: /home/fms
+  <<: *buildScript
+
+build:ncrc4:
+  stage: build
+  tags:
+    - ncrc4
+  variables:
+    FRE_SITE: ncrc4
+    FMS_HOME: /ncrc/home2/fms
+  <<: *buildScript
+
+build:ncrc3:
+  stage: build
+  tags:
+    - ncrc3
+  variables:
+    FRE_SITE: ncrc3
+    FMS_HOME: /ncrc/home2/fms
+  <<: *buildScript
+
 deploy:gfdl-ws:
   stage: deploy
   tags:
@@ -47,4 +83,64 @@ deploy:gfdl-ws:
     - master
   dependencies:
     - build:gfdl-ws
+  <<: *deployScript
+
+deploy:gfdl:
+  stage: deploy
+  tags:
+    - gfdl-ws_deploy
+  environment:
+    name: stage_gfdl
+  variables:
+    FRE_SITE: gfdl
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:gfdl
+  <<: *deployScript
+
+deploy:theia:
+  stage: deploy
+  tags:
+    - theia_deploy
+  environment:
+    name: stage_theia
+  variables:
+    FRE_SITE: theia
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:theia
+  <<: *deployScript
+
+deploy:ncrc4:
+  stage: deploy
+  tags:
+    - ncrc_deploy
+  environment:
+    name: stage_ncrc4
+  variables:
+    FRE_SITE: ncrc4
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:ncrc4
+  <<: *deployScript
+
+deploy:ncrc3:
+  stage: deploy
+  tags:
+    - ncrc_deploy
+  environment:
+    name: stage_ncrc3
+  variables:
+    FRE_SITE: ncrc3
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:ncrc3
   <<: *deployScript
