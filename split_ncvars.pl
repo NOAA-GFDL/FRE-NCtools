@@ -172,6 +172,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             if (@coordinates) {
               print "   $var: coordinates = ".join(", ",@bounds)."\n" if $Opt{VERBOSE} > 1;
               push @vlist, @coordinates;
+              # add bounds for coordinate variables
+              foreach my $coord (@coordinates) {
+                push @vlist, get_dimension_bounds ($dump,$coord);
+              }
             }
 
 	    
@@ -484,14 +488,25 @@ sub get_variable_bounds {
     my @axes = split /, /, $1;
     foreach my $dim (@axes) {
       next if ($dim eq $timename);
-      my $bnds = get_variable_att($dump,$dim,"bounds");
-      push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-      if (!$CMIPVAR) {
-        my $bnds = get_variable_att($dump,$dim,"edges");
-        push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-      }
+      push @bounds, get_dimension_bounds($dump,$dim,$CMIPVAR);
     }     
   }     
+  return @bounds;
+}
+
+#-------------------------------------------
+
+sub get_dimension_bounds ($$;$) {
+  my ($dump,$dim,$CMIPVAR) = @_;
+  my @bounds;
+  # get the field pointed to by bounds attribute
+  my $bnds = get_variable_att($dump,$dim,"bounds");
+  push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
+  if (!$CMIPVAR) {
+    # get the field pointed to by edges attribute
+    my $bnds = get_variable_att($dump,$dim,"edges");
+    push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
+  }
   return @bounds;
 }
 
