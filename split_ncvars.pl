@@ -16,13 +16,14 @@
 use strict;
 use Cwd;
 use Getopt::Long;
+use List::MoreUtils qw{uniq};
 Getopt::Long::Configure("bundling");
 
 my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 
-my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, AUTO=>0, odir=>$cwd );
+my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
 
@@ -32,6 +33,7 @@ my $status = GetOptions ('h|help!'     => \$Opt{HELP},
                          'l|log!'      => \$Opt{LOG},
                          's|static!'   => \$Opt{STATIC},
                          'c|cmip!'     => \$Opt{CMIP},
+			 'p|ps'        => \$Opt{PS},
                          'a|auto!'     => \$Opt{AUTO},
                          'f|onefile=s' => \$Opt{onefile},
                          'i|idir=s'    => \$Opt{idir},
@@ -71,6 +73,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 #  process each input file separately
 
+ my %ps_includes;
  foreach my $file (@ifiles) {
      if ($Opt{idir}) {
         my @commands;
@@ -104,7 +107,6 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
      foreach my $coord (qw/geolat geolon/) {
        push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
      }
-
 #-------------------------------------
 #-----  loop through variables  ------
 #-------------------------------------
@@ -128,11 +130,28 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          # add variable to list of variables to extract
          push @vlist, $var;
 
+	 # Add the cell_measures to the list of variables to include
+	 my $cell_measures_variable = get_cell_measures($dump,$var);
+	 push @vlist, $cell_measures_variable
+	     if $dump =~ /\t\w+ $cell_measures_variable\(.+\)/;
+
          # automatically detect if this a a cmip variable - if attrib standard_name exists
          my $CMIP = $Opt{CMIP};
          if ($Opt{AUTO} && !$Opt{CMIP}) {
            $CMIP = 1 if (get_variable_att($dump,$var,"standard_name"));
          }
+
+	 # get the number of dimensions if ps is provided on the commandline
+	 if ( $Opt{PS} ){
+	     my $dimensions = get_variable_dimensions($dump,$var);
+	     if ( grep ( /(pfull|phalf)/, @{$dimensions} ) and scalar @{$dimensions} >= 4 ) {
+		 print "Setting ps_incluides for $var\n" if $Opt{VERBOSE} > 1;
+		 $ps_includes{$var} = 1;
+	     } else {
+		 print "Not setting ps_includes of $var\n" if $Opt{VERBOSE} > 1;
+		 $ps_includes{$var} = 0;
+	     }
+	 }
 
         #------------------------------------------------------------
         # FIRST TIME ONLY (when output file does not exist)
@@ -155,6 +174,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
               push @vlist, @coordinates;
             }
 
+	    
+
             # formula terms
             # only add static terms to the vlist
             # time-varying terms are "external_variables"
@@ -168,7 +189,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
               push @xlist, @$xterms;
             }
          }
-
+	 if ( $ps_includes{$var} ){
+	   print "Appending ps,pk,bk to variables to include.\n" if $Opt{VERBOSE} > 1;
+	   push @vlist, qw{ps pk bk};
+         }
         #-------------------------------------------------
         # EVERY TIME (when there is a time dimension)
         # need to extract time bounds/average_XX variables
@@ -352,6 +376,7 @@ Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
         -l       = include readme log in output directory
         -V       = verbose option: increases standard output, multiple -V allowed
         -c       = cmip option, time average info variable not written
+        -p       = includes ps variable in output files that will be zInterpolated
         -i idir  = input (archive) directory path
         -o odir  = output directory path
         -f file  = one file output option
@@ -376,6 +401,24 @@ sub get_time_dimension {
       $timeSize = $1; 
    }   
    return $timeName;
+}
+
+#-------------------------------------------
+
+sub get_variable_dimensions {
+  my $dump = shift;
+  my $var = shift;
+  my %cartesian_coords;
+  my @coords;
+  # Get a list of the cartesian coordinates that are in a file
+  while ( $dump =~ /\t\t(.*):cartesian_axis = "(.*)"/g ){
+      $cartesian_coords{$1} = $2;
+  }
+  # Compare the cartesian coords to those of the variables
+  if ( $dump =~ /\t.*$var\((.+)\)/){
+    @coords = uniq map { grep $_, split /,\s/, $1 } keys %cartesian_coords;
+  }
+  return \@coords;
 }
 
 #-------------------------------------------
@@ -411,6 +454,21 @@ sub get_variables_from_att {
     push @attvars, $_ if ($dump =~ /\t\w+ $_\(.+\)/ || $dump =~ /\t\w+ $_ ;/);
   }
   return @attvars;
+}
+
+#-------------------------------------------
+
+sub get_cell_measures {
+  my $dump = shift;
+  my $var  = shift;
+  my $cell_measures;
+  if ( $dump =~ /\t\w+ $var\((.+)\)/ ){
+    my $cell_measures_att = get_variable_att($dump,$var,"cell_measures");
+    if ( $cell_measures_att ){
+      $cell_measures = (split(/\s/, $cell_measures_att))[-1];
+    }
+  }
+  return $cell_measures;
 }
 
 #-------------------------------------------
@@ -570,11 +628,10 @@ sub cleanup_dim_atts {
   }
   push @opts, "-a calendar_type,$dim,d,," if $calt;
 
-  # "none" is not valid units
-  # CF-conventions allow dimensionless quantities to omit units
+  # correct units from "none" -> "1"
   my $units = get_variable_att($dump,$dim,"units");
   if ($units) {
-    push @opts, "-a units,$dim,d,," if (lc($units) eq "none");
+    push @opts, "-a units,$dim,m,c,\"1\"" if (lc($units) eq "none");
   }
 
   return @opts;
