@@ -57,7 +57,7 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
    integer :: ncid_in, ncid_out, numvars, numdims, numatts
    integer :: istat, ifile, itime, ivar, idim, nvar, ndim, natt, dimlen, varid,      &
               i, ix, jy, kz, numtime, recdim, varid_recdim, varid_in, attnum, dimid, &
-              nvar_out, nv_dimid, nc, nca, ncu, dimid_tod, mt
+              nvar_out, nv_dimid, nc, nca, ncu, dimid_tod, mt, nv_varid
    integer :: max_shape(4), shape(4), tid(0:3), avgid(3), start(5)
    integer :: axes(NF90_MAX_VAR_DIMS), dimids_out(NF90_MAX_VAR_DIMS)
    logical :: do_avg, first, time_bounds_present, do_time_bounds, add_time_bounds, &
@@ -387,9 +387,20 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
 
        ! add axis for time bounds variable
          if (add_time_bounds) then
+            ! Add the bounds vertex bounds for the time bounds
              istat = NF90_DEF_DIM (ncid_out, 'nv', 2, nv_dimid)
              if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-             dimids_out(numdims+1) = dimid
+             dimids_out(numdims+1) = nv_dimid
+
+            ! Add the vertex number variable to the netCDF file
+             istat = NF90_DEF_VAR(ncid_out, 'nv', nf90_int, nv_dimid, nv_varid)
+             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+             istat = NF90_PUT_ATT(ncid_out, nv_varid, 'long_name', 'vertex number')
+             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+             istat = NF90_PUT_ATT(ncid_out, nv_varid, 'units', 'none')
+             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+             istat = NF90_PUT_ATT(ncid_out, nv_varid, 'cartesian_axis', 'N')
+             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
          endif
 
        ! copy variables
@@ -924,6 +935,12 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
         istat = NF90_PUT_VAR (ncid_out, tid(i), time_bounds(i), (/ifile/))
         if (istat /= NF90_NOERR) call error_handler ('writing time avg info', ncode=istat)
      enddo
+
+     if (add_time_bounds) then
+        istat = NF90_PUT_VAR(ncid_out, nv_varid, (/0,1/))
+        if (istat /= NF90_NOERR) call error_handler ('writing nv bounds info', ncode=istat)
+     endif
+        
 
    ! close input file
      istat = NF90_CLOSE (ncid_in)
