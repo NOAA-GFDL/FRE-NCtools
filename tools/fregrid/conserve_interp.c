@@ -556,12 +556,6 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
             out_area[n0] += area;
           }
-          else if(cell_measures) {
-            if( field_in[tile].area[n1] != area_missing ){
-              area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
-              out_area[n0] += area;
-            }
-          }
         }
       }
       else {
