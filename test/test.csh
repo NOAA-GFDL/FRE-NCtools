@@ -19,7 +19,7 @@ if (! -e $expDir) then
   exit 1
 endif
 
-set FREGRID = /home/z1l/bin/20160428/fregrid
+set FREGRID = `which fregrid` # /home/z1l/bin/20160428/fregrid # bronx-12
 set SPLIT_NCVARS = /home/bw/sources/FMS/split_ncvars/split_ncvars.pl
 set LIST_NCVARS = `which list_ncvars.csh`
 if ($?) then

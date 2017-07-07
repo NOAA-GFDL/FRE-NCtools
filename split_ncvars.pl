@@ -23,7 +23,7 @@ my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 
-my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
+my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, PLEV_RENAME=>1, odir=>$cwd );
 
 #  ----- parse input argument list ------
 
@@ -303,18 +303,29 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                }
 
                # rename "p###" (coordinate) variables to just "plev"
-               my @plev = grep{/p\d+/} @coordinates;
-               if (@plev == 1) {
-                 if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
-                   print  "ncrename -h -v $plev[0],plev .var.nc\n";
-                   system("ncrename -h -v $plev[0],plev .var.nc");
-                   for (@coordinates) {
-                     s/$plev[0]/plev/;
+               if ($Opt{PLEV_RENAME}) {
+                 my @plev = grep{/p\d+/} @coordinates;
+                 if (@plev == 1) {
+                   if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
+                     print  "ncrename -h -v $plev[0],plev .var.nc\n";
+                     system("ncrename -h -v $plev[0],plev .var.nc");
+                     for (@coordinates) {
+                       s/$plev[0]/plev/;
+                     }
+                     push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
                    }
-                   push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
+                   # also rename the bounds variable/attribute (if there is one)
+                   my $plev_bnds = get_variable_att($vdump,$plev[0],"bounds");
+                   if ($plev_bnds) {
+                     if ($vdump =~ /\t\w+ $plev_bnds\(.+\)/) {
+                       print  "ncrename -h -v $plev_bnds,plev_bnds .var.nc\n";
+                       system("ncrename -h -v $plev_bnds,plev_bnds .var.nc");
+                       push @ncatted_opts, "-a bounds,plev,m,c,\"plev_bnds\"";
+                     }
+                   }
+                 } elsif (@plev > 1) {
+                   die "ERROR: can not have more than one plev coordinate attribute/variable";
                  }
-               } elsif (@plev > 1) {
-                 die "ERROR: can not have more than one plev coordinate attribute/variable";
                }
              }
 
