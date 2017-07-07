@@ -649,6 +649,14 @@ sub cleanup_dim_atts {
     push @opts, "-a units,$dim,m,c,\"1\"" if (lc($units) eq "none");
   }
 
+  # add standard name for lat/lon dimensions
+  foreach my $name (qw/latitude longitude/) {
+    if ($dim eq $name || $dim eq substr($name,0,3)) {
+      my $stdname = get_variable_att($dump,$dim,"standard_name");
+      push @opts, "-a standard_name,$dim,c,c,\"$name\"" if (!$stdname);
+    }
+  }
+
   return @opts;
 }
 
