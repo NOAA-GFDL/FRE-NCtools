@@ -305,6 +305,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                # rename "p###" (coordinate) variables to just "plev"
                if ($Opt{PLEV_RENAME}) {
                  my @plev = grep{/p\d+/} @coordinates;
+                 push @plev, grep{/pl700/} @coordinates;
                  if (@plev == 1) {
                    if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
                      print  "ncrename -h -v $plev[0],plev .var.nc\n";
