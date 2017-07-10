@@ -496,6 +496,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
   int cell_measures, cell_methods;
   double area, missing, di, dj, area_missing;
   double *out_area;
+  int    *out_miss;
   double gsum_out;
   int monotonic;
   Monotone_config *monotone_data;
@@ -529,10 +530,12 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
     nx2 = grid_out[m].nxc;
     ny2 = grid_out[m].nyc;
     out_area = (double *)malloc(nx2*ny2*nz*sizeof(double));
-    
-    for(i=0; i<nx2*ny2*nz; i++) field_out[m].data[i] = 0.0;
-
-    for(i=0; i<nx2*ny2; i++) out_area[i] = 0.0;
+    out_miss = (int *)malloc(nx2*ny2*nz*sizeof(int)); 
+    for(i=0; i<nx2*ny2*nz; i++) {
+      field_out[m].data[i] = 0.0;
+      out_area[i] = 0.0;
+      out_miss[i] = 0;
+    }
     if(interp_method == CONSERVE_ORDER1) {
       if(has_missing) {
 	for(n=0; n<interp[m].nxgrid; n++) {
@@ -560,6 +563,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	      area /= grid_in[tile].cell_area[n1];
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
             out_area[n0] += area;
+	    out_miss[n0] = 1;
           }
         }
       }
@@ -583,6 +587,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	      area /= grid_in[tile].cell_area[n1];
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
 	    out_area[n0] += area;
+	    out_miss[n0] = 1;
 	  }
 	}
       } 
@@ -750,6 +755,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 					+field_in[tile].grad_y[n1]*dj)*area;
 	    }
 	    out_area[n0] += area;
+	    out_miss[n0] = 1;
 	  }
 	}
       }
@@ -778,6 +784,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	    field_out[m].data[n0] += (field_in[tile].data[n2]+field_in[tile].grad_x[n1]*di
 				      +field_in[tile].grad_y[n1]*dj)*area;
 	    out_area[n0] += area;	    
+            out_miss[n0] = 1;
 	  }
 	}
       }
@@ -793,6 +800,8 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
       for(i=0; i<nx2*ny2*nz; i++) {
 	if(out_area[i] > 0)
 	  field_out[m].data[i] /= out_area[i];
+	else if(out_miss[i] == 1)
+	  field_out[m].data[i] = 0.0;
 	else
 	  field_out[m].data[i] = missing;      
       }
@@ -801,6 +810,8 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
       for(i=0; i<nx2*ny2; i++) {
 	if(out_area[i] > 0)
 	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] /= grid_out[m].cell_area[i];
+	else if(out_miss[i] == 1)
+	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
 	else
 	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
       }
@@ -808,11 +819,15 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
     else if ( cell_methods == CELL_METHODS_SUM ) {
       for(i=0; i<nx2*ny2*nz; i++) {
         if(out_area[i] == 0)
-          for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+	  if(out_miss[i] ==0)
+	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+	  else
+	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
       }
     }
 
     free(out_area);
+    free(out_miss);
   }
     
 
