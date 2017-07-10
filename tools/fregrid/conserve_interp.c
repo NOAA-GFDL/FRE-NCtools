@@ -551,7 +551,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	  if( field_in[tile].data[n1] != missing ) {
             if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
-	         printf("tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",tile,i1,j1,i2,j2);
+	         printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	         mpp_error("conserve_interp: data is not missing but area is missing");
 	      }
 	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
@@ -735,7 +735,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	    n0 = j2*nx2+i2;
             if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
-	        printf("tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",tile,i1,j1,i2,j2);
+                printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	        mpp_error("conserve_interp: data is not missing but area is missing");
               } 
 	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
