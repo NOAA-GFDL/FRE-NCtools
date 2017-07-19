@@ -328,6 +328,25 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                    die "ERROR: can not have more than one plev coordinate attribute/variable";
                  }
                }
+
+               # rename vertical dimensions (plev## -> plev, levhalf -> lev)
+               if ($CMIP) {
+                 foreach my $dim (get_vertical_dimensions($vdump,$var)) {
+                   if ($dim =~ /^plev\d+/) {
+                     print  "ncrename -h -d $dim,plev -v $dim,plev .var.nc\n";
+                     system("ncrename -h -d $dim,plev -v $dim,plev .var.nc");
+                   } elsif ($dim eq "levhalf") {
+                     print  "ncrename -h -d $dim,lev -v $dim,lev .var.nc\n";
+                     system("ncrename -h -d $dim,lev -v $dim,lev .var.nc");
+                     # also rename the formula terms
+                     if (get_variable_att($vdump,$dim,"formula_terms") eq "ap: ap_half b: b_half ps: ps") {
+                       print  "ncrename -h -v ap_half,ap -v b_half,b .var.nc\n";
+                       system("ncrename -h -v ap_half,ap -v b_half,b .var.nc");
+                       push @ncatted_opts, "-a formula_terms,lev,m,c,\"ap: ap b: b ps: ps\"";
+                     }
+                   }
+                 }
+               }
              }
 
              print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
@@ -435,6 +454,24 @@ sub get_variable_dimensions {
     @coords = uniq map { grep $_, split /,\s/, $1 } keys %cartesian_coords;
   }
   return \@coords;
+}
+
+#-------------------------------------------
+# return variable dimensions with the attribute
+#   axis or cartesian_axis ="Z"
+
+sub get_vertical_dimensions {
+  my $dump = shift;
+  my $var = shift;
+  my @vdims;
+  if ( $dump =~ /\t.*$var\((.+)\)/){
+    foreach my $dim (split /,\s/, $1) {
+      if ($dump =~ /\t\w+ $dim\(.+\)/) {
+        push @vdims, $dim if ($dump =~ /\t\t$dim:(axis|cartesian_axis) = "Z" ;/);
+      }
+    }
+  }
+  return @vdims;
 }
 
 #-------------------------------------------
