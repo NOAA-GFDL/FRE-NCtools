@@ -411,7 +411,7 @@ sub get_variable_dimensions {
   my %cartesian_coords;
   my @coords;
   # Get a list of the cartesian coordinates that are in a file
-  while ( $dump =~ /\t\t(.*):cartesian_axis = "(.*)"/g ){
+  while ( $dump =~ /\t\t(.*):(cartesian_axis|axis) = "(.*)"/g ){
       $cartesian_coords{$1} = $2;
   }
   # Compare the cartesian coords to those of the variables
