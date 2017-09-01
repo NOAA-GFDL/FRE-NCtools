@@ -1292,7 +1292,7 @@ int main(int argc, char* argv[])
 	  if(nidx_dst_global==0) {
 	    if(strcmp(varname, LON_NAME) && strcmp(varname, LAT_NAME) &&
 	       strcmp(varname, LEVEL_NAME) && strcmp(varname, TILE_NAME) &&
-	       strcmp(varname, COHORT_NAME)) continue;
+	       strcmp(varname, COHORT_NAME) && strcmp(varname,timename)) continue;
 	  }
 
 	  vid_dst = mpp_get_varid(fid_dst, varname);
