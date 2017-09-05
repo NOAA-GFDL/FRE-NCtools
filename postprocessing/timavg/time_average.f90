@@ -401,6 +401,8 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
              if (istat /= NF90_NOERR) call error_handler (ncode=istat)
              istat = NF90_PUT_ATT(ncid_out, nv_varid, 'cartesian_axis', 'N')
              if (istat /= NF90_NOERR) call error_handler (ncode=istat)
+             istat = NF90_PUT_ATT(ncid_out, nv_varid, 'axis', 'N')
+             if (istat /= NF90_NOERR) call error_handler (ncode=istat)
          endif
 
        ! copy variables
