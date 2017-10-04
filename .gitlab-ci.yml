@@ -1,0 +1,146 @@
+# ******************************************************************************
+# gitlab-ci.yml file to build and deploy fre-nctools
+# ******************************************************************************
+
+before_script:
+  - hostname
+
+variables:
+  buildDir: build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
+.buildScript: &buildScript
+  script:
+    - mkdir ${buildDir}
+    - cd ${buildDir}
+    - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -P ${FMS_HOME}/local/opt/fre-nctools -s ${FRE_SITE} test
+    - . ./env.sh
+    - make
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - ${CI_PROJECT_DIR}/build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
+
+.deployScript: &deployScript
+  script:
+    - cd ${CI_PROJECT_DIR}/${buildDir}
+    - . ./env.sh
+    - make install
+
+build:gfdl-ws:
+  stage: build
+  tags:
+    - gfdl-ws
+  variables:
+    FRE_SITE: gfdl-ws
+    FMS_HOME: /home/fms
+  <<: *buildScript
+
+build:gfdl:
+  stage: build
+  tags:
+    - gfdl
+  variables:
+    FRE_SITE: gfdl
+    FMS_HOME: /home/fms
+  <<: *buildScript
+
+build:theia:
+  stage: build
+  tags:
+    - theia
+  variables:
+    FRE_SITE: theia
+    FMS_HOME: /home/fms
+  <<: *buildScript
+
+build:ncrc4:
+  stage: build
+  tags:
+    - ncrc4
+  variables:
+    FRE_SITE: ncrc4
+    FMS_HOME: /ncrc/home2/fms
+  <<: *buildScript
+
+build:ncrc3:
+  stage: build
+  tags:
+    - ncrc3
+  variables:
+    FRE_SITE: ncrc3
+    FMS_HOME: /ncrc/home2/fms
+  <<: *buildScript
+
+deploy:gfdl-ws:
+  stage: deploy
+  tags:
+    - gfdl-ws_deploy
+  environment:
+    name: stage_gfdl-ws
+  variables:
+    FRE_SITE: gfdl-ws
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:gfdl-ws
+  <<: *deployScript
+
+deploy:gfdl:
+  stage: deploy
+  tags:
+    - gfdl-ws_deploy
+  environment:
+    name: stage_gfdl
+  variables:
+    FRE_SITE: gfdl
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:gfdl
+  <<: *deployScript
+
+deploy:theia:
+  stage: deploy
+  tags:
+    - theia_deploy
+  environment:
+    name: stage_theia
+  variables:
+    FRE_SITE: theia
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:theia
+  <<: *deployScript
+
+deploy:ncrc4:
+  stage: deploy
+  tags:
+    - ncrc_deploy
+  environment:
+    name: stage_ncrc4
+  variables:
+    FRE_SITE: ncrc4
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:ncrc4
+  <<: *deployScript
+
+deploy:ncrc3:
+  stage: deploy
+  tags:
+    - ncrc_deploy
+  environment:
+    name: stage_ncrc3
+  variables:
+    FRE_SITE: ncrc3
+    FMS_HOME: /home/fms
+  only:
+    - master
+  dependencies:
+    - build:ncrc3
+  <<: *deployScript
