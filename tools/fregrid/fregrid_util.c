@@ -1017,14 +1017,15 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 		strcpy(file1, file2);
 	      
               /* check if the file exist or not, if not add tile# */
-              if(mpp_file_exist(file1)) 
-                 strcpy(associated_file, file1);
-              else {    /* add tile number if there is more than one tile */
-                 if(ntiles==1) {
+              if(ntiles == 1) {
+                 if(mpp_file_exist(file1))
+                    strcpy(associated_file, file1);
+                 else {    /* add tile number if there is more than one tile */
                     sprintf(errmsg, "fregrid_util(get_input_metadata): ntiles==1 and file %s does not exist", file1);
                     mpp_error(errmsg);
                  }
-
+              }
+              else {
 		 len = strlen(file1);
 		 if( strcmp(file1+len-3, ".nc") ==0 ) {
 		    strncpy(str1, file1, len-3);
@@ -1035,8 +1036,12 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	         sprintf(associated_file, "%s.tile%d.nc", str1, n+1);
 	      
                  if( ! mpp_file_exist(associated_file) ) {
-                    sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1, associated_file);
-                    mpp_error(errmsg);
+                    if(mpp_file_exist(file1))
+                       strcpy(associated_file, file1);
+                    else {
+                       sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1, associated_file);
+                       mpp_error(errmsg);
+                    }
                  }
               }
               {
