@@ -111,12 +111,12 @@ deploy:ncrc:
   tags:
     - ncrc_deploy
   environment:
-    name: stage_ncrc4
+    name: stage_ncrc
   variables:
-    FRE_SITE: ncrc4
+    FRE_SITE: ncrc
     FMS_HOME: /home/fms
   only:
     - master
   dependencies:
-    - build:ncrc4
+    - build:ncrc
   <<: *deployScript
