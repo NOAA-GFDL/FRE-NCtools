@@ -35,7 +35,7 @@ LIBS     := -L${NETCDF_HOME}/lib -L${HDF5_HOME}/lib -lnetcdff -lnetcdf -lhdf5_hl
 
 TARGETS  := scatter-ncc combine-ncc decompress-ncc is-compressed 
 
-TARGETS_SHARE = combine-lumip-vars.py
+TARGETS_SHARE := combine-lumip-vars.py
 
 SOURCES  := nfu.F90 nfu_compress.F90
 
@@ -73,17 +73,13 @@ is-compressed: is-compressed.o
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<
 
-install: $(TARGETS)
+install: $(TARGETS) $(TARGETS_SHARE)
 	install -m 755 -d $(PREFIX)
 	install -m 755 -d $(PREFIX_EXEC)
 	install -m 755 $(TARGETS) $(PREFIX_EXEC)
-
-install: all $(TARGETS_SHARE)
-	install -m 755 -d $(PREFIX)
 	install -m 755 -d $(PREFIX_SHARE)
 	install -m 755 -d $(PREFIX_SHARE_EXEC)
 	install -m 755 $(TARGETS_SHARE:%=$(SRCDIR)/%) $(PREFIX_SHARE_EXEC)
-
 
 docs:
 
