@@ -30,6 +30,7 @@ build:gfdl-ws:
   tags:
     - gfdl-ws
   variables:
+    GIT_STRATEGY: clone
     FRE_SITE: gfdl-ws
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -39,6 +40,7 @@ build:gfdl:
   tags:
     - gfdl
   variables:
+    GIT_STRATEGY: clone
     FRE_SITE: gfdl
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -48,6 +50,7 @@ build:theia:
   tags:
     - theia
   variables:
+    GIT_STRATEGY: clone
     FRE_SITE: theia
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -57,6 +60,7 @@ build:ncrc:
   tags:
     - ncrc
   variables:
+    GIT_STRATEGY: clone
     FRE_SITE: ncrc
     FMS_HOME: /ncrc/home2/fms
   <<: *buildScript
