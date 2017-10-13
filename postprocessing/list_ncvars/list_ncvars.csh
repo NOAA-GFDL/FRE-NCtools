@@ -78,6 +78,7 @@ Usage:  $name -s | -t [-0123] files...
    A file name must be supplied.
    Variables that are also dimensions are skipped.
    Variables that end in "_T1", "_T2", and "_DT" are skipped.
+   Variables that are character data types are skipped.
 
 Example:  $name -st -0123 myfile.nc
           

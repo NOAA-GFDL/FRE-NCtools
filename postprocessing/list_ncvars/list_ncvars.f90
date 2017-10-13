@@ -23,7 +23,8 @@ logical :: var0d  = .false.
 namelist /input/ filename, list_nonstatic, list_static, var4d, var3d, var2d, var1d, var0d
 
 integer :: istat, ncid, numdim, numvar, numatt, recdim, &
-           varid, ndim, dimids(NF90_MAX_VAR_DIMS), dimid, nc
+           varid, ndim, dimids(NF90_MAX_VAR_DIMS), dimid, &
+           nc, xtype
 logical :: static
 character(len=NF90_MAX_NAME) :: name
 
@@ -34,6 +35,7 @@ character(len=NF90_MAX_NAME) :: name
    if (filename(1:1) == ' ') then
        stop
    endif
+
 
   !--- opening input file ---
    istat = NF90_OPEN (trim(filename), NF90_NOWRITE, ncid)
@@ -46,14 +48,17 @@ character(len=NF90_MAX_NAME) :: name
   !--- loop over variables ---
    do varid = 1, numvar
 
-      istat = NF90_INQUIRE_VARIABLE (ncid, varid, name=name, ndims=ndim, dimids=dimids)
+      istat = NF90_INQUIRE_VARIABLE (ncid, varid, name=name, ndims=ndim, dimids=dimids, xtype=xtype)
       if (istat /= NF90_NOERR) call error_handler (istat)
+     
+     !--- skip if character fields ---           
+      if (xtype == NF90_CHAR) cycle
 
      !--- skip dimensions ---
       istat = NF90_INQ_DIMID (ncid, trim(name), dimid)
       if (istat == NF90_NOERR) cycle
-
-     !--- skip names ending in _T1, _T2, _DT ---
+ 
+     !--- skip names ending in _T1, _T2, _DT  ---
       nc = len_trim(name)
       if (name(nc-2:nc) == '_T1' .or. name(nc-2:nc) == '_T2' .or. &
           name(nc-2:nc) == '_DT' .or. name(nc-6:nc) == '_NITEMS') cycle
