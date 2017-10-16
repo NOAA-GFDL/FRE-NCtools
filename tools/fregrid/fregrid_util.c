@@ -1017,14 +1017,15 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 		strcpy(file1, file2);
 	      
               /* check if the file exist or not, if not add tile# */
-              if(mpp_file_exist(file1)) 
-                 strcpy(associated_file, file1);
-              else {    /* add tile number if there is more than one tile */
-                 if(ntiles==1) {
+              if(ntiles == 1) {
+                 if(mpp_file_exist(file1))
+                    strcpy(associated_file, file1);
+                 else {    /* add tile number if there is more than one tile */
                     sprintf(errmsg, "fregrid_util(get_input_metadata): ntiles==1 and file %s does not exist", file1);
                     mpp_error(errmsg);
                  }
-
+              }
+              else {
 		 len = strlen(file1);
 		 if( strcmp(file1+len-3, ".nc") ==0 ) {
 		    strncpy(str1, file1, len-3);
@@ -1035,8 +1036,12 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	         sprintf(associated_file, "%s.tile%d.nc", str1, n+1);
 	      
                  if( ! mpp_file_exist(associated_file) ) {
-                    sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1, associated_file);
-                    mpp_error(errmsg);
+                    if(mpp_file_exist(file1))
+                       strcpy(associated_file, file1);
+                    else {
+                       sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1, associated_file);
+                       mpp_error(errmsg);
+                    }
                  }
               }
               {
@@ -1669,24 +1674,24 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	  else if( standard_dimension && file_out[n].axis[i].cart == 'X' ) {
 	    file_out[n].axis[i].vid = mpp_def_var(file_out[n].fid, "lon", NC_DOUBLE, 1,
 						  &(file_out[n].axis[i].dimid), 4, "long_name", "longitude",
-						  "units", "degrees_E", "cartesian_axis", "X", "bounds", "lon_bnds" );
+						  "units", "degrees_E", "axis", "X", "bounds", "lon_bnds" );
 	    if( file_out[n].axis[i].bndtype != 3 ) mpp_error("fregrid_util.c: x axis bndtype must be 3 when standard_dimension is true");
 	    /* define bounds variable */
 	    dims[0] = file_out[n].axis[i].dimid;
 	    dims[1] = dim_bnds;
 	    file_out[n].axis[i].bndid = mpp_def_var(file_out[n].fid, "lon_bnds", NC_DOUBLE, 2, dims , 3,
-						    "long_name", "longitude bounds", "units", "degrees_E", "cartesian_axis", "X");
+						    "long_name", "longitude bounds", "units", "degrees_E", "axis", "X");
 	  }
 	  else if( standard_dimension && file_out[n].axis[i].cart == 'Y' ) {
 	    file_out[n].axis[i].vid = mpp_def_var(file_out[n].fid, "lat", NC_DOUBLE, 1,
 						  &(file_out[n].axis[i].dimid), 4, "long_name", "latitude",
-						  "units", "degrees_N", "cartesian_axis", "Y", "bounds", "lat_bnds" );
+						  "units", "degrees_N", "axis", "Y", "bounds", "lat_bnds" );
 	    if( file_out[n].axis[i].bndtype != 3 ) mpp_error("fregrid_util.c: y axis bndtype must be 3 when standard_dimension is true");
 	    /* define bounds variable */
 	    dims[0] = file_out[n].axis[i].dimid;
 	    dims[1] = dim_bnds;
 	    file_out[n].axis[i].bndid = mpp_def_var(file_out[n].fid, "lat_bnds", NC_DOUBLE, 2, dims , 3,
-						    "long_name", "latitude bounds", "units", "degrees_N", "cartesian_axis", "Y");
+						    "long_name", "latitude bounds", "units", "degrees_N", "axis", "Y");
 	  }	  	  
 	  else {
 	    file_out[n].axis[i].vid = mpp_def_var(file_out[n].fid, file_out[n].axis[i].name, file_out[n].axis[i].type, 1,
