@@ -4,7 +4,7 @@
 source $MODULESHOME/init/sh
 module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
 module load PrgEnv-intel/6.0.3
-module swap intel intel/5.2.820
+module swap intel intel/16.0.3.210
 module load cray-netcdf/4.4.0
 module load cray-hdf5/1.8.16
 
