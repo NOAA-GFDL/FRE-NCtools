@@ -130,10 +130,12 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          # add variable to list of variables to extract
          push @vlist, $var;
 
-	 # Add the cell_measures to the list of variables to include
-	 my $cell_measures_variable = get_cell_measures($dump,$var);
-	 push @vlist, $cell_measures_variable
-	     if $dump =~ /\t\w+ $cell_measures_variable\(.+\)/;
+         # Add the cell_measures to the list of variables to include in the external_variables global attribute
+         my @cell_measures_variables = get_cell_measures($dump,$var);
+         if (@cell_measures_variables) {
+            push @xlist, @cell_measures_variables;
+            print "   $var: external_variables = ".join(", ",@cell_measures_variables)."\n" if $Opt{VERBOSE} > 1;
+         }
 
          # automatically detect if this a a cmip variable - if attrib standard_name exists
          my $CMIP = $Opt{CMIP};
@@ -275,7 +277,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             #--- move to output directory ---
 
              my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var,$CMIP);
-             # external_variables attribute (missin & time-varying formula terms)
+             # external_variables attribute (cell_measures & time-varying formula terms)
              if (@xlist) {
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
              }
@@ -411,7 +413,7 @@ sub get_variable_dimensions {
   my %cartesian_coords;
   my @coords;
   # Get a list of the cartesian coordinates that are in a file
-  while ( $dump =~ /\t\t(.*):cartesian_axis = "(.*)"/g ){
+  while ( $dump =~ /\t\t(.*):(cartesian_axis|axis) = "(.*)"/g ){
       $cartesian_coords{$1} = $2;
   }
   # Compare the cartesian coords to those of the variables
@@ -461,14 +463,13 @@ sub get_variables_from_att {
 sub get_cell_measures {
   my $dump = shift;
   my $var  = shift;
-  my $cell_measures;
+  my @cell_measures;
   if ( $dump =~ /\t\w+ $var\((.+)\)/ ){
     my $cell_measures_att = get_variable_att($dump,$var,"cell_measures");
-    if ( $cell_measures_att ){
-      $cell_measures = (split(/\s/, $cell_measures_att))[-1];
-    }
+    # e.g. volume: volcello area: areacello
+    @cell_measures = grep { !/:$/ } split ' ', $cell_measures_att;
   }
-  return $cell_measures;
+  return @cell_measures;
 }
 
 #-------------------------------------------
