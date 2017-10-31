@@ -67,10 +67,12 @@ typedef struct {
   int    interp_method; /* indicate which remapping method will be used to do regridding. */
   int    cell_measures;
   int    cell_methods;
+  int    use_volume;
   int    area_vid;
   int    area_fid;
   int    area_has_taxis;
   int    area_has_naxis;
+  int    area_has_zaxis;
   double area_missing;
   char   area_name[STRING];
   int    do_regrid;

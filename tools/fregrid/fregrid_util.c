@@ -966,18 +966,33 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           int status;
  
 	  file[n].has_cell_measure_att = 1;  
+          field[n].var[ll].use_volume = 0;
           /* --source_grid must be set when cell_measures attribute exists */
 	  mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_measures", attval);
-          status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
+
+          status = parse_string(attval, "volume:", field[n].var[ll].area_name, errout);
 	  if(status==-1) {
 	      sprintf(errmsg, "fregrid_util(get_input_metadata): %s for cell_measure "
-		      "attribute of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
+		      "attribute volume of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
 	      mpp_error(errmsg);
 	  }
-          else if(status ==1)
+          else if(status ==1) {
 	    field[n].var[ll].cell_measures=1;
-	  else
-	    field[n].var[ll].cell_measures=0;
+            field[n].var[ll].use_volume = 1;
+	  }
+	  else {
+	    status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
+	    if(status==-1) {
+	      sprintf(errmsg, "fregrid_util(get_input_metadata): %s for cell_measure "
+		      "attribute area of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
+	      mpp_error(errmsg);
+	    }
+	    else if(status ==1)
+	      field[n].var[ll].cell_measures=1;
+	    else
+	      field[n].var[ll].cell_measures=0;
+	  }
+	  
 	  if(field[n].var[ll].cell_measures==1) {
             char associated_file[512], dimname[32];
 	    int vid2;
@@ -1081,6 +1096,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 	    }
 	    /* check if has n-axis (diurnal data). */
 	    field[n].var[ll].area_has_naxis = 0;
+	    field[n].var[ll].area_has_zaxis = 0;
 	    if(ndim>2) {
 	      if(field[n].var[ll].area_has_taxis)
 		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 1, dimname);
@@ -1088,15 +1104,21 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
 	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
 	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
-	      if(cart == 'N') {
+	      if(cart == 'N' ) 
 		field[n].var[ll].area_has_naxis = 1;
+	      else if( cart == 'Z' )
+		field[n].var[ll].area_has_zaxis = 1;
+	      
+	      if(field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
 		if(ndim==3 && field[n].var[ll].area_has_taxis) {
-		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis=T for field %s in file %s",
+		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field %s in file %s",
 			  field[n].var[ll].area_name, associated_file );
+		  mpp_error(errmsg);
 		}
 		else if(ndim==4 && !field[n].var[ll].area_has_taxis) {
 		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
 			  field[n].var[ll].area_name, associated_file );
+		  mpp_error(errmsg);
 		}  
 	      }
             }
@@ -2141,6 +2163,17 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
       i = 0;
       if(field[n].var[varid].area_has_taxis) start2[i++] = level_t;
       if(field[n].var[varid].area_has_naxis) start2[i++] = level_n;
+/*???
+if(field[n].var[varid].area_has_zaxis) start2[i++] = level_z;
+*/
+      if(field[n].var[varid].area_has_zaxis) {
+         if(level_z >28)
+	    start2[i++] = 0;
+	 else
+	    start2[i++] = level_z;
+	 }
+
+
       nread2[i] = ny;
       nread2[i+1] = nx;
       mpp_get_var_value_block(field[n].var[varid].area_fid, field[n].var[varid].area_vid, start2, nread2, field[n].area );
