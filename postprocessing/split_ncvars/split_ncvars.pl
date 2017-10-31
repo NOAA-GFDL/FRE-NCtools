@@ -23,7 +23,7 @@ my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 
-my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, PLEV_RENAME=>1, odir=>$cwd );
+my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
 
@@ -304,8 +304,9 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  die "ERROR: can not have more than one height coordinate attribute/variable";
                }
 
-               # rename "p###" (coordinate) variables to just "plev"
-               if ($Opt{PLEV_RENAME}) {
+               # Do some extra CMORizing if --cmip
+               if ($CMIP) {
+                 # rename "p###" (coordinate) variables to just "plev"
                  my @plev = grep{/p\d+/} @coordinates;
                  push @plev, grep{/pl700/} @coordinates;
                  if (@plev == 1) {
@@ -329,10 +330,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  } elsif (@plev > 1) {
                    die "ERROR: can not have more than one plev coordinate attribute/variable";
                  }
-               }
 
-               # rename vertical dimensions (plev## -> plev, levhalf -> lev)
-               if ($CMIP) {
+                 # rename vertical dimensions (plev## -> plev, levhalf -> lev)
                  foreach my $dim (get_vertical_dimensions($vdump,$var)) {
                    if ($dim =~ /^plev\d+/) {
                      print  "ncrename -h -d $dim,plev -v $dim,plev .var.nc\n";
