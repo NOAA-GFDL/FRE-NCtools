@@ -1,0 +1,6 @@
+*.[oa]
+*~
+*.tar
+*.gz
+build.fre-nctools*
+share

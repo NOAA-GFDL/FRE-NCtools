@@ -1,0 +1,59 @@
+iceberg_comb.sh(1)
+=================
+
+NAME
+----
+iceberg_comb.sh - combine the iceberg restart files, taking into account any files without icebergs
+
+SYNOPSIS
+--------
+[verse]
+iceberg_comb.sh [options] <in_file> [<in_file> ...] <out_file>
+
+
+DESCRIPTION
+-----------
+*iceberg_comb.sh* takes a list of FMS iceberg restart files, and
+combines them using the NCO record concatenation utility *ncrcat*.  It
+checks the list of _<in_file>_ to determine if they actually contain
+any icebergs prior to performing the *ncrcat*.
+
+OPTIONS
+-------
+*-h*::
+Print the help message
+
+*-v*::
+Increase verbosity.  Can be repeated.
+
+*-V*::
+Print the version and exit
+
+SEE ALSO
+--------
+*ncrcat*(1)
+
+BUGS
+----
+Send bug reports to GFDL's Helpdesk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Designed and written by
+Niki Zadeh and
+Seth Underwood.
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2015 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

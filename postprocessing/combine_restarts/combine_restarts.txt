@@ -1,0 +1,55 @@
+combine_restarts(1)
+===================
+
+NAME
+----
+combine_restarts - simple script to combine restart files
+
+SYNOPSIS
+--------
+[verse]
+combine_restarts [options]
+
+
+DESCRIPTION
+-----------
+*combine_restarts* will use the correct combine utility (*mppnccombine*
+or *combine-ncc*) to combine any restart files that reside in the
+currrent working directory.  *combine_restarts* uses the same options used
+in the FRE workflow.
+
+OPTIONS
+-------
+*-h*::
+Print the help message
+
+*-v*::
+Increase verbosity.  Can be repeated.
+
+SEE ALSO
+--------
+*mppnccombine*(1), *combine-ncc*(1)
+
+BUGS
+----
+Send bug reports to GFDL's Helpdesk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Designed and written by
+Seth Underwood.
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2015 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
