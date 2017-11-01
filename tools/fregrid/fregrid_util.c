@@ -2163,16 +2163,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
       i = 0;
       if(field[n].var[varid].area_has_taxis) start2[i++] = level_t;
       if(field[n].var[varid].area_has_naxis) start2[i++] = level_n;
-/*???
-if(field[n].var[varid].area_has_zaxis) start2[i++] = level_z;
-*/
-      if(field[n].var[varid].area_has_zaxis) {
-         if(level_z >28)
-	    start2[i++] = 0;
-	 else
-	    start2[i++] = level_z;
-	 }
-
+      if(field[n].var[varid].area_has_zaxis) start2[i++] = level_z;
 
       nread2[i] = ny;
       nread2[i+1] = nx;
