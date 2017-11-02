@@ -499,6 +499,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
   int    *out_miss;
   double gsum_out;
   int monotonic;
+  int target_grid;
   Monotone_config *monotone_data;
   
   gsum_out = 0;
@@ -515,6 +516,8 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
   weight_exist = grid_in[0].weight_exist;
   cell_measures = field_in->var[varid].cell_measures;
   cell_methods = field_in->var[varid].cell_methods;
+  target_grid = opcode & TARGET;
+  if( field_in->var[varid].use_volume ) target_grid = 0;
 
   missing = -MAXVAL;
   if(has_missing) missing = field_in->var[varid].missing;
@@ -552,15 +555,15 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	  n0 = j2*nx2+i2;
 	  
 	  if( field_in[tile].data[n1] != missing ) {
-            if( cell_measures ) {
+	    if( cell_methods == CELL_METHODS_SUM )
+	      area /= grid_in[tile].cell_area[n1];
+            else if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
 	         printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	         mpp_error("conserve_interp: data is not missing but area is missing");
 	      }
 	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
 	    }
-	    else if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
             out_area[n0] += area;
 	    out_miss[n0] = 1;
@@ -581,10 +584,10 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	  for(k=0; k<nz; k++) {
 	    n1 = k*nx1*ny1 + j1*nx1+i1;
 	    n0 = k*nx2*ny2 + j2*nx2+i2;
-            if( cell_measures )
-	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
-	    else if(  cell_methods == CELL_METHODS_SUM )
+	    if(  cell_methods == CELL_METHODS_SUM )
 	      area /= grid_in[tile].cell_area[n1];
+            else if( cell_measures )
+	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
 	    out_area[n0] += area;
 	    out_miss[n0] = 1;
@@ -709,10 +712,10 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
 	n1 = j1*nx1+i1;
 	n0 = j2*nx2+i2;
-	if( cell_measures )
+	if( cell_methods == CELL_METHODS_SUM )
+	  area /= grid_in[tile].cell_area[n1];
+	else if( cell_measures )
 	  area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
-	else if( cell_methods == CELL_METHODS_SUM )
-	  area /= grid_in[tile].cell_area[n1];	    
 	field_out[m].data[n0] += xdata[n]*area;
 	out_area[n0] += area;
       }
@@ -738,15 +741,15 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	  if( field_in[tile].data[n2] != missing ) {
 	    n1 = j1*nx1+i1;
 	    n0 = j2*nx2+i2;
-            if( cell_measures ) {
+            if( cell_methods == CELL_METHODS_SUM )
+	      area /= grid_in[tile].cell_area[n1];
+            else if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
                 printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	        mpp_error("conserve_interp: data is not missing but area is missing");
               } 
 	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
             }
-            else if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];	    
 	    if(field_in[tile].grad_mask[n1]) { /* use zero gradient */
 	      field_out[m].data[n0] += field_in[tile].data[n2]*area;
 	    }
@@ -777,10 +780,10 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	    n0 = k*nx2*ny2 + j2*nx2+i2;
 	    n1 = k*nx1*ny1+j1*nx1+i1;
 	    n2 = k*(nx1+2)*(ny1+2)+(j1+1)*(nx1+2)+i1+1;
-	    if( cell_measures )
+	    if( cell_methods == CELL_METHODS_SUM )
+	      area /= grid_in[tile].cell_area[n1];
+	    else if( cell_measures )
 	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
-	    else if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];	  
 	    field_out[m].data[n0] += (field_in[tile].data[n2]+field_in[tile].grad_x[n1]*di
 				      +field_in[tile].grad_y[n1]*dj)*area;
 	    out_area[n0] += area;	    
@@ -796,7 +799,16 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
       }
     }
 
-    if( cell_measures || ( !(opcode & TARGET) && !(cell_methods == CELL_METHODS_SUM)) ) {
+    if ( cell_methods == CELL_METHODS_SUM ) {
+      for(i=0; i<nx2*ny2*nz; i++) {
+        if(out_area[i] == 0)
+	  if(out_miss[i] ==0)
+	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+	  else
+	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
+      }
+    }
+    else {    
       for(i=0; i<nx2*ny2*nz; i++) {
 	if(out_area[i] > 0)
 	  field_out[m].data[i] /= out_area[i];
@@ -805,24 +817,31 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 	else
 	  field_out[m].data[i] = missing;      
       }
-    }
-    else if( opcode & TARGET ) {
-      for(i=0; i<nx2*ny2; i++) {
-	if(out_area[i] > 0)
-	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] /= grid_out[m].cell_area[i];
-	else if(out_miss[i] == 1)
-	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
-	else
-	  for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
-      }
-    }
-    else if ( cell_methods == CELL_METHODS_SUM ) {
-      for(i=0; i<nx2*ny2*nz; i++) {
-        if(out_area[i] == 0)
-	  if(out_miss[i] ==0)
-	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+
+      if( (target_grid) ) {
+	for(i=0; i<nx2*ny2; i++) out_area[i] = 0.0;
+	for(n=0; n<interp[m].nxgrid; n++) {
+	  i2   = interp[m].i_out[n];
+	  j2   = interp[m].j_out[n];
+	  i1   = interp[m].i_in [n];
+	  j1   = interp[m].j_in [n];
+	  tile = interp[m].t_in [n];
+	  area = interp[m].area [n];
+	  nx1  = grid_in[tile].nx;
+	  ny1  = grid_in[tile].ny;
+	  n0 = j2*nx2+i2;
+	  n1 = j1*nx1+i1;
+	  if(cell_measures )
+	    out_area[n0] += (area*field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
 	  else
-	    for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
+	    out_area[n0] += area;
+	}
+	for(i=0; i<nx2*ny2*nz; i++) {
+	  if(field_out[m].data[i] != missing) {
+	    i2 = i%(nx2*ny2);
+	    field_out[m].data[i] *=  (out_area[i2]/grid_out[m].cell_area[i2]);
+	  }
+	}
       }
     }
 

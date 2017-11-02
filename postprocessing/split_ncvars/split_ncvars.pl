@@ -174,6 +174,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
             if (@coordinates) {
               print "   $var: coordinates = ".join(", ",@bounds)."\n" if $Opt{VERBOSE} > 1;
               push @vlist, @coordinates;
+              # add bounds for coordinate variables
+              foreach my $coord (@coordinates) {
+                push @vlist, get_dimension_bounds ($dump,$coord);
+              }
             }
 
 	    
@@ -300,19 +304,49 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  die "ERROR: can not have more than one height coordinate attribute/variable";
                }
 
-               # rename "p###" (coordinate) variables to just "plev"
-               my @plev = grep{/p\d+/} @coordinates;
-               if (@plev == 1) {
-                 if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
-                   print  "ncrename -h -v $plev[0],plev .var.nc\n";
-                   system("ncrename -h -v $plev[0],plev .var.nc");
-                   for (@coordinates) {
-                     s/$plev[0]/plev/;
+               # Do some extra CMORizing if --cmip
+               if ($CMIP) {
+                 # rename "p###" (coordinate) variables to just "plev"
+                 my @plev = grep{/p\d+/} @coordinates;
+                 push @plev, grep{/pl700/} @coordinates;
+                 if (@plev == 1) {
+                   if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
+                     print  "ncrename -h -v $plev[0],plev .var.nc\n";
+                     system("ncrename -h -v $plev[0],plev .var.nc");
+                     for (@coordinates) {
+                       s/$plev[0]/plev/;
+                     }
+                     push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
                    }
-                   push @ncatted_opts, "-a coordinates,$var,m,c,\"@coordinates\"";
+                   # also rename the bounds variable/attribute (if there is one)
+                   my $plev_bnds = get_variable_att($vdump,$plev[0],"bounds");
+                   if ($plev_bnds) {
+                     if ($vdump =~ /\t\w+ $plev_bnds\(.+\)/) {
+                       print  "ncrename -h -v $plev_bnds,plev_bnds .var.nc\n";
+                       system("ncrename -h -v $plev_bnds,plev_bnds .var.nc");
+                       push @ncatted_opts, "-a bounds,plev,m,c,\"plev_bnds\"";
+                     }
+                   }
+                 } elsif (@plev > 1) {
+                   die "ERROR: can not have more than one plev coordinate attribute/variable";
                  }
-               } elsif (@plev > 1) {
-                 die "ERROR: can not have more than one plev coordinate attribute/variable";
+
+                 # rename vertical dimensions (plev## -> plev, levhalf -> lev)
+                 foreach my $dim (get_vertical_dimensions($vdump,$var)) {
+                   if ($dim =~ /^plev\d+/) {
+                     print  "ncrename -h -d $dim,plev -v $dim,plev .var.nc\n";
+                     system("ncrename -h -d $dim,plev -v $dim,plev .var.nc");
+                   } elsif ($dim eq "levhalf") {
+                     print  "ncrename -h -d $dim,lev -v $dim,lev .var.nc\n";
+                     system("ncrename -h -d $dim,lev -v $dim,lev .var.nc");
+                     # also rename the formula terms
+                     if (get_variable_att($vdump,$dim,"formula_terms") eq "ap: ap_half b: b_half ps: ps") {
+                       print  "ncrename -h -v ap_half,ap -v b_half,b .var.nc\n";
+                       system("ncrename -h -v ap_half,ap -v b_half,b .var.nc");
+                       push @ncatted_opts, "-a formula_terms,lev,m,c,\"ap: ap b: b ps: ps\"";
+                     }
+                   }
+                 }
                }
              }
 
@@ -424,6 +458,24 @@ sub get_variable_dimensions {
 }
 
 #-------------------------------------------
+# return variable dimensions with the attribute
+#   axis or cartesian_axis ="Z"
+
+sub get_vertical_dimensions {
+  my $dump = shift;
+  my $var = shift;
+  my @vdims;
+  if ( $dump =~ /\t.*$var\((.+)\)/){
+    foreach my $dim (split /,\s/, $1) {
+      if ($dump =~ /\t\w+ $dim\(.+\)/) {
+        push @vdims, $dim if ($dump =~ /\t\t$dim:(axis|cartesian_axis) = "Z" ;/);
+      }
+    }
+  }
+  return @vdims;
+}
+
+#-------------------------------------------
 
 sub get_variable_att {
   my $dump = shift;
@@ -485,14 +537,25 @@ sub get_variable_bounds {
     my @axes = split /, /, $1;
     foreach my $dim (@axes) {
       next if ($dim eq $timename);
-      my $bnds = get_variable_att($dump,$dim,"bounds");
-      push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-      if (!$CMIPVAR) {
-        my $bnds = get_variable_att($dump,$dim,"edges");
-        push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-      }
+      push @bounds, get_dimension_bounds($dump,$dim,$CMIPVAR);
     }     
   }     
+  return @bounds;
+}
+
+#-------------------------------------------
+
+sub get_dimension_bounds ($$;$) {
+  my ($dump,$dim,$CMIPVAR) = @_;
+  my @bounds;
+  # get the field pointed to by bounds attribute
+  my $bnds = get_variable_att($dump,$dim,"bounds");
+  push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
+  if (!$CMIPVAR) {
+    # get the field pointed to by edges attribute
+    my $bnds = get_variable_att($dump,$dim,"edges");
+    push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
+  }
   return @bounds;
 }
 
@@ -633,6 +696,14 @@ sub cleanup_dim_atts {
   my $units = get_variable_att($dump,$dim,"units");
   if ($units) {
     push @opts, "-a units,$dim,m,c,\"1\"" if (lc($units) eq "none");
+  }
+
+  # add standard name for lat/lon dimensions
+  foreach my $name (qw/latitude longitude/) {
+    if ($dim eq $name || $dim eq substr($name,0,3)) {
+      my $stdname = get_variable_att($dump,$dim,"standard_name");
+      push @opts, "-a standard_name,$dim,c,c,\"$name\"" if (!$stdname);
+    }
   }
 
   return @opts;
