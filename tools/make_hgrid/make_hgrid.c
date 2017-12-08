@@ -863,7 +863,7 @@ int main(int argc, char* argv[])
   
  /* create grid information */
   {
-    int size1, size2, size3, size4;
+    unsigned int size1, size2, size3, size4;
     
     size1 = nxp*nyp*ntiles;
     size2 = nxp*(nyp+1)*ntiles;

@@ -272,6 +272,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   ytmp = (double *)malloc(ni2p*nj2p*sizeof(double));
   
   for(n=0; n<ntiles2; n++) {
+    unsigned int n1,n2;
     /* copy C-cell to supergrid */
     for(j=0; j<=njl[n]; j++) for(i=0; i<=nil[n]; i++) {
       n1 = n*nxp*nxp+j*2*(2*nil[n]+1)+i*2;
@@ -313,32 +314,46 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   
   /* calculate grid cell length */
   for(n=0; n<ntiles2; n++) {
+    unsigned int n1, n2, n0;
     for(j=0; j<=nyl[n]; j++) {
       for(i=0; i<nxl[n]; i++) {
-	p1[0] = x[n*nxp*nxp+j*(nxl[n]+1)+i];
-	p1[1] = y[n*nxp*nxp+j*(nxl[n]+1)+i];
-	p2[0] = x[n*nxp*nxp+j*(nxl[n]+1)+i+1];
-	p2[1] = y[n*nxp*nxp+j*(nxl[n]+1)+i+1];
-	dx[n*nx*nxp+j*nxl[n]+i] = great_circle_distance(p1, p2);
+	n0 = n*nx*nxp+j*nxl[n]+i;
+	n1 = n*nxp*nxp+j*(nxl[n]+1)+i;
+	n2 = n*nxp*nxp+j*(nxl[n]+1)+i+1;
+
+	p1[0] = x[n1];
+	p1[1] = y[n1];
+	p2[0] = x[n2];
+	p2[1] = y[n2];
+	dx[n0] = great_circle_distance(p1, p2);
       }
     }
   }
   for(n=0; n<ntiles2; n++) {
+    unsigned int n1, n2, n0;
     if( stretched_grid || n==ntiles ) { 
       for(j=0; j<nyl[n]; j++) {
 	for(i=0; i<=nxl[n]; i++) {
-	  p1[0] = x[n*nxp*nxp+j*(nxl[n]+1)+i];
-	  p1[1] = y[n*nxp*nxp+j*(nxl[n]+1)+i];
-	  p2[0] = x[n*nxp*nxp+(j+1)*(nxl[n]+1)+i];
-	  p2[1] = y[n*nxp*nxp+(j+1)*(nxl[n]+1)+i];
+	  n0 = n*nx*nxp+j*(nxl[n]+1)+i;
+	  n1 = n*nxp*nxp+j*(nxl[n]+1)+i;
+	  n2 = n*nxp*nxp+(j+1)*(nxl[n]+1)+i;
+	  p1[0] = x[n1];
+	  p1[1] = y[n1];
+	  p2[0] = x[n2];
+	  p2[1] = y[n2];
 	  dy[n*nx*nxp+j*(nxl[n]+1)+i] = great_circle_distance(p1, p2);
 	}
       }
     }
     else {
+      unsigned int n1, n2;
       for(n=0; n<ntiles; n++) {
 	for(j=0; j<nyp; j++) {
-	  for(i=0; i<nx; i++) dy[n*nx*nxp+i*nxp+j] = dx[n*nx*nxp+j*nx+i];
+	  for(i=0; i<nx; i++) {
+	    n1 = n*nx*nxp+i*nxp+j;
+	    n2 = n*nx*nxp+j*nx+i;
+	    dy[n1] = dx[n2];
+	  }
 	}
       }
     }
@@ -346,29 +361,56 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   
   /* ensure consistency on the boundaries between tiles */
   for(j=0; j<nx; j++) {
-    dy[j*nxp]             = dx[4*nx*nxp+nx*nx+nx-j-1]; /* 5N -> 1W */
-    dy[j*nxp+nx]          = dy[nxp*nx+j*nxp];          /* 2W -> 1E */
-    dy[nxp*nx+j*nxp+nx]   = dx[3*nx*nxp+(nx-j-1)];     /* 4S -> 2E */
-    dy[2*nxp*nx+j*nxp]    = dx[nx*nx+nx-j-1];          /* 1N -> 3W */
-    dy[2*nxp*nx+j*nxp+nx] = dy[3*nxp*nx+j*nxp];        /* 4W -> 3E */
-    dy[3*nxp*nx+j*nxp+nx] = dx[5*nx*nxp+(nx-j-1)];     /* 4S -> 2E */
-    dy[4*nxp*nx+j*nxp]    = dx[2*nx*nxp+nx*nx+nx-j-1]; /* 3N -> 5W */
-    dy[4*nxp*nx+j*nxp+nx] = dy[5*nxp*nx+j*nxp];        /* 6W -> 5E */
-    dy[5*nxp*nx+j*nxp+nx] = dx[nx*nxp+(nx-j-1)];       /* 2S -> 6E */    
+    unsigned int n11, n21, n31, n41, n51, n61, n71, n81, n91;
+    unsigned int n12, n22, n32, n42, n52, n62, n72, n82, n92;
+    n11 = j*nxp;
+    n12 = 4*nx*nxp+nx*nx+nx-j-1;
+    n21 = j*nxp+nx;
+    n22 = nxp*nx+j*nxp;
+    n31 = nxp*nx+j*nxp+nx;
+    n32 = 3*nx*nxp+(nx-j-1);
+    n41 = 2*nxp*nx+j*nxp;
+    n42 = nx*nx+nx-j-1;
+    n51 = 2*nxp*nx+j*nxp+nx;
+    n52 = 3*nxp*nx+j*nxp;
+    n61 = 3*nxp*nx+j*nxp+nx;
+    n62 = 5*nx*nxp+(nx-j-1);
+    n71 = 4*nxp*nx+j*nxp;
+    n72 = 2*nx*nxp+nx*nx+nx-j-1;
+    n81 = 4*nxp*nx+j*nxp+nx;
+    n82 = 5*nxp*nx+j*nxp;
+    n91= 5*nxp*nx+j*nxp+nx;
+    n92 = nx*nxp+(nx-j-1);
+    dy[n11] = dx[n12]; /* 5N -> 1W */
+    dy[n21] = dy[n22]; /* 2W -> 1E */
+    dy[n31] = dx[n32]; /* 4S -> 2E */
+    dy[n41] = dx[n42]; /* 1N -> 3W */
+    dy[n51] = dy[n52]; /* 4W -> 3E */
+    dy[n61] = dx[n62]; /* 4S -> 2E */
+    dy[n71] = dx[n72]; /* 3N -> 5W */
+    dy[n81] = dy[n82]; /* 6W -> 5E */
+    dy[n91] = dx[n92]; /* 2S -> 6E */    
   }
 
   calc_cell_area(nx, ny, x, y, area);
 
   for(j=0; j<nx; j++) {
+    unsigned int n0, n1, n2, n3, n4, n5;
     for(i=0; i<nx; i++) {
       double ar;
       /* all the face have the same area */
-      ar = area[j*nx+i];
-      area[nx*nx+j*nx+i] = ar;
-      area[2*nx*nx+j*nx+i] = ar;
-      area[3*nx*nx+j*nx+i] = ar;
-      area[4*nx*nx+j*nx+i] = ar;
-      area[5*nx*nx+j*nx+i] = ar;        
+      n0 = j*nx+i;
+      n1 = nx*nx+j*nx+i;
+      n2 = 2*nx*nx+j*nx+i;
+      n3 = 3*nx*nx+j*nx+i;
+      n4 = 4*nx*nx+j*nx+i;
+      n5 = 5*nx*nx+j*nx+i;
+      ar = area[n0];
+      area[n1] = ar;
+      area[n2] = ar;
+      area[n3] = ar;
+      area[n4] = ar;
+      area[n5] = ar;        
     }
   }
 
@@ -385,16 +427,19 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       angle_dy[ntiles*nxp*nxp+i]=0;
     }
   }
-      
-  /* convert grid location from radians to degree */
-  npts = ntiles*nxp*nyp;
-  if(nx_nest>0) npts += (nx_nest+1)*(ny_nest+1);
-    
-  for(i=0; i<npts; i++) {
-    x[i] = x[i]*R2D;
-    y[i] = y[i]*R2D;
-  }
 
+  {
+    unsigned int npts, i;
+    /* convert grid location from radians to degree */
+    npts = ntiles*nxp*nyp;
+    if(nx_nest>0) npts += (nx_nest+1)*(ny_nest+1);
+
+  
+    for(i=0; i<npts; i++) {
+      x[i] = x[i]*R2D;
+      y[i] = y[i]*R2D;
+    }
+  }
   free(xc);
   free(yc);  
   
@@ -955,13 +1000,14 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 {
   int ip1, im1, jp1, jm1, tp1, tm1, i, j, n, ntiles, nx;
   double lon_scale;
-
+  unsigned int n1, n2, n3;
   nx = nxp-1;
   ntiles = 6;
   for(n=0; n<ntiles; n++) {
     for(j=0; j<nxp; j++) {
       for(i=0; i<nxp; i++) {
-	lon_scale = cos(y[n*nxp*nxp+j*nxp+i]*D2R);
+	n1 = n*nxp*nxp+j*nxp+i;
+	lon_scale = cos(y[n1]*D2R);
 	tp1 = n;
 	tm1 = n;
 	ip1 = i+1;
@@ -993,9 +1039,10 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 	    im1 = nx;
 	  }
 	}
-
-	angle_dx[n*nxp*nxp+j*nxp+i] = atan2(y[tp1*nxp*nxp+jp1*nxp+ip1]-y[tm1*nxp*nxp+jm1*nxp+im1],
-					    (x[tp1*nxp*nxp+jp1*nxp+ip1]-x[tm1*nxp*nxp+jm1*nxp+im1])*lon_scale )*R2D;
+	n1 = n*nxp*nxp+j*nxp+i;
+	n2 = tp1*nxp*nxp+jp1*nxp+ip1;
+	n3 = tm1*nxp*nxp+jm1*nxp+im1;
+	angle_dx[n1] = atan2(y[n2]-y[n3], (x[n2]-x[n3])*lon_scale )*R2D;
 	tp1 = n;
 	tm1 = n;
 	ip1 = i;
@@ -1028,9 +1075,11 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 	    jm1 = nx-i;
 	  }
 	}	
-
-	angle_dy[n*nxp*nxp+j*nxp+i] = atan2(y[tp1*nxp*nxp+jp1*nxp+ip1]-y[tm1*nxp*nxp+jm1*nxp+im1],
-					    (x[tp1*nxp*nxp+jp1*nxp+ip1]-x[tm1*nxp*nxp+jm1*nxp+im1])*lon_scale )*R2D;
+	n1 = n*nxp*nxp+j*nxp+i;
+	n2 = tp1*nxp*nxp+jp1*nxp+ip1;
+	n3 = tm1*nxp*nxp+jm1*nxp+im1;
+	      
+	angle_dy[n1] = atan2(y[n2]-y[n3], (x[n2]-x[n3])*lon_scale )*R2D;
       }
     }
   }
