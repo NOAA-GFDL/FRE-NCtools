@@ -41,7 +41,7 @@ void create_conformal_cubic_grid( int *npts, int *nratio, char *method, char *or
 
 void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *x, double *y,
 				 double *dx, double *dy, double *area, double *angle_dx,
-			         double *angle_dy, double shift_fac, int do_schmidt, double stretch_factor,
+			         double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
 				 double target_lon, double target_lat, int nest_grid,
 				 int parent_tile, int refine_ratio, int istart_nest,
 				 int iend_nest, int jstart_nest, int jend_nest, int halo );

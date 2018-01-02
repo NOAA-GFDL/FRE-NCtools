@@ -51,6 +51,7 @@ char *usage[] = {
   "                  --simple_dx simple_dx --simple_dy simple_dy                    ",
   "                  --grid_name gridname --center center --verbose --shift_fac #   ",
   "                  --do_schmidt --stretch_fac # --target_lon # --target_lat #     ",
+  "                  --do_cube_transform                                            ",
   "                  --nest_grid --parent_tile # --refine_ratio # --halo #          ",
   "                  --istart_nest # --iend_nest # --jstart_nest # --jend_nest #    ",
   "                  --great_circle_algorithm --out_halo #                          ",
@@ -179,6 +180,13 @@ char *usage[] = {
   "                                                                                 ",
   "   --do_schmidt               Set to do Schmidt transformation to create         ",
   "                              stretched grid. When do_schmidt is set, the        ",
+  "                              following must be set: --stretch_factor,           ",
+  "                              --target_lon and --target_lat.                     ",
+  "                                                                                 ",
+  "   --do_cube_transform        re-orient the rotated cubed sphere so that tile    ",
+  "                              6 has 'north' facing upward, which would make      ",
+  "                              analysis and explaining nest placement much easier.",
+  "                              When do_cube_transform is set, the                 ",
   "                              following must be set: --stretch_factor,           ",
   "                              --target_lon and --target_lat.                     ",
   "                                                                                 ",
@@ -398,6 +406,7 @@ int main(int argc, char* argv[])
   double lat_join=65.;
   double shift_fac = 18.0;
   int do_schmidt = 0;
+  int do_cube_transform = 0;
   double stretch_factor = 0.0;
   double target_lon   = 0.0;
   double target_lat   = 0.0;
@@ -471,6 +480,7 @@ int main(int argc, char* argv[])
     {"shift_fac",       required_argument, NULL, 'I'},
     {"great_circle_algorithm", no_argument, NULL, 'J'},
     {"out_halo",        required_argument, NULL, 'K'},
+    {"do_cube_transform", no_argument,     NULL, 'L'},
     {"help",            no_argument,       NULL, 'h'},
     {"verbose",         no_argument,       NULL, 'v'},
     {0, 0, 0, 0},
@@ -596,7 +606,10 @@ int main(int argc, char* argv[])
       break;
     case 'K':
       out_halo = atoi(optarg);
-      break;      
+      break; 
+    case 'L':
+      do_cube_transform = 1;
+      break;     
     case 'v':
       verbose = 1;
       break;
@@ -654,7 +667,12 @@ int main(int argc, char* argv[])
   
  if( my_grid_type != GNOMONIC_ED && do_schmidt )
     mpp_error("make_hgrid: --do_schmidt should not be set when grid_type is not 'gnomonic_ed'");
+
+ if( my_grid_type != GNOMONIC_ED && do_cube_transform )
+    mpp_error("make_hgrid: --do_cube_transform should not be set when grid_type is not 'gnomonic_ed'");
   
+ if( do_cube_transform && do_schmidt ) mpp_error("make_hgrid: both --do_cube_transform and --do_schmidt are set");
+
   use_legacy = 0;
   /* check the command-line arguments to make sure the value are suitable */
   if( my_grid_type == REGULAR_LONLAT_GRID || my_grid_type == TRIPOLAR_GRID ||
@@ -789,10 +807,10 @@ int main(int argc, char* argv[])
   else if( my_grid_type == GNOMONIC_ED ) {
     strcpy(projection, "cube_gnomonic");
     strcpy(conformal, "FALSE");
-    if( do_schmidt ) {
+    if( do_schmidt || do_cube_transform ) {
       if( present_stretch_factor == 0 || present_target_lon == 0 || present_target_lat == 0 )
 	mpp_error("make_hgrid: grid type is 'gnomonic_ed, --stretch_factor, --target_lon "
-		  "and --target_lat must be set when --do_schmidt is set");
+		  "and --target_lat must be set when --do_schmidt or --do_cube_transform is set");
     }
 
     if(nest_grid) {
@@ -919,7 +937,7 @@ int main(int argc, char* argv[])
     create_conformal_cubic_grid(&nx, &nratio, method, orientation, x, y, dx, dy, area, angle_dx, angle_dy );
   else if(my_grid_type==GNOMONIC_ED)
     create_gnomonic_cubic_grid(grid_type, nxl, nyl, x, y, dx, dy, area, angle_dx, angle_dy,
-			       shift_fac, do_schmidt, stretch_factor, target_lon, target_lat,
+			       shift_fac, do_schmidt, do_cube_transform, stretch_factor, target_lon, target_lat,
 			       nest_grid, parent_tile, refine_ratio,
 			       istart_nest, iend_nest, jstart_nest, jend_nest, halo );
   else if((my_grid_type==F_PLANE_GRID) || (my_grid_type==BETA_PLANE_GRID))
