@@ -9,7 +9,7 @@
 #define MAXENTRY  512
 #define NVAR     2048
 #define NFILE    32
-#define MAXDIM   10
+#define MAXDIM   20
 /* constants for grid type and grid location */
 #define ZERO   0
 #define NINETY 1
