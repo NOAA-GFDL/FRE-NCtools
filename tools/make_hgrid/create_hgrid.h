@@ -44,7 +44,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 			         double *angle_dy, double shift_fac, int do_schmidt, double stretch_factor,
 				 double target_lon, double target_lat, int nest_grid,
 				 int parent_tile, int refine_ratio, int istart_nest,
-				 int iend_nest, int jstart_nest, int jend_nest, int halo );
+				 int iend_nest, int jstart_nest, int jend_nest, int halo, int output_angle_length );
 void create_f_plane_grid( int *nxbnds, int *nybnds, double *xbnds, double *ybnds,
                           int *nlon, int *nlat, double *dlon, double *dlat,
 			  int use_legacy, double f_plane_latitude, int *isc, int *iec,
