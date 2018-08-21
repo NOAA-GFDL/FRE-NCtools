@@ -551,11 +551,9 @@ sub get_dimension_bounds ($$;$) {
   # get the field pointed to by bounds attribute
   my $bnds = get_variable_att($dump,$dim,"bounds");
   push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-  if (!$CMIPVAR) {
-    # get the field pointed to by edges attribute
-    my $bnds = get_variable_att($dump,$dim,"edges");
-    push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-  }
+  # get the field pointed to by edges attribute
+  my $bnds = get_variable_att($dump,$dim,"edges");
+  push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
   return @bounds;
 }
 
