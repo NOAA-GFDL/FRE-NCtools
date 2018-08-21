@@ -63,4 +63,5 @@ int mpp_var_exist(int fid, const char *field);
 int mpp_dim_exist(int fid, const char *dimname);
 int get_great_circle_algorithm(int fid);
 void mpp_set_deflation(int fid_in, int fid_out, int deflation, int shuffle);
+void set_in_format(char *format);
 #endif
