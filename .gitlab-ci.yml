@@ -84,7 +84,7 @@ deploy:gfdl-ws:
 deploy:gfdl:
   stage: deploy
   tags:
-    - gfdl_deploy
+    - gfdl-ws_deploy
   environment:
     name: stage_gfdl
   variables:
