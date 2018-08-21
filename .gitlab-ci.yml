@@ -48,7 +48,7 @@ build:gfdl:
 build:theia:
   stage: build
   tags:
-    - theia
+    - theia_deploy
   variables:
     GIT_STRATEGY: clone
     FRE_SITE: theia
