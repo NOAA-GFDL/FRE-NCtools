@@ -104,7 +104,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 #    set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
 #     exec echo coords = $coords
      my @coords;
-     foreach my $coord (qw/geolat geolon/) {
+     foreach my $coord (qw/geolat geolon GEOLAT GEOLON/) {
        push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
      }
 #-------------------------------------
