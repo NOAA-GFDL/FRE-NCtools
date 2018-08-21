@@ -53,7 +53,8 @@ build:theia:
     GIT_STRATEGY: clone
     FRE_SITE: theia
     FMS_HOME: /home/fms
-  <<: *buildScript
+  script:
+    - echo skipping theia for until their modules are fixed
 
 build:ncrc:
   stage: build
@@ -108,7 +109,8 @@ deploy:theia:
     - master
   dependencies:
     - build:theia
-  <<: *deployScript
+  script:
+    - echo skipping theia for until their modules are fixed
 
 deploy:ncrc:
   stage: deploy
