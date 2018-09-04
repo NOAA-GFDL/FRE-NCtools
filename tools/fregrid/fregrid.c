@@ -51,7 +51,7 @@ char *usage[] = {
   "          [--center_y] [--check_conserve] [--weight_file weight_file]                 ",
   "          [--weight_field --weight_field] [--dst_vgrid dst_vgrid]                     ",
   "          [--extrapolate] [--stop_crit #] [--standard_dimension]                      ",
-  "          [--associated_file_dir dir]                                                 ",
+  "          [--associated_file_dir dir] [--format format]                               ",
   "          [--deflation #] [--shuffle 1|0]                                             ",
   "                                                                                      ",
   "fregrid remaps data (scalar or vector) from input_mosaic onto                         ",
@@ -230,6 +230,11 @@ char *usage[] = {
   "                                                                                      ",
   "--debug                       Will print out memory usage and running time            ",
   "                                                                                      ",
+  "--format                      netcdf file format. Valid values are 'netcdf4',         ",
+  "                              'netcdf4_classic', '64bit_offset', 'classic'. When      ",
+  "                              format is not specified, will use the format of         ",
+  "                              input_file.                                             ",
+  "                                                                                      ",
   "--nthreads #                  Specify number of OpenMP threads.                       ",
   "                                                                                      ",
   "--deflation #                 If using NetCDF4 , use deflation of level #.            ",
@@ -302,6 +307,7 @@ int main(int argc, char* argv[])
   int     great_circle_algorithm_in, great_circle_algorithm_out;
   int     deflation = -1;
   int     shuffle = -1;
+  char    *format=NULL;
   
   char          wt_file_obj[512];
   char          *weight_file=NULL;
@@ -325,7 +331,7 @@ int main(int argc, char* argv[])
   Interp_config *interp     = NULL;   /* store remapping information */
   int save_weight_only      = 0;
   int nthreads = 1;
-
+  
   double time_get_in_grid=0, time_get_out_grid=0, time_get_input=0;
   double time_setup_interp=0, time_do_interp=0, time_write=0;
   clock_t time_start, time_end;
@@ -375,6 +381,7 @@ int main(int argc, char* argv[])
     {"associated_file_dir", required_argument, NULL, 'R'},
     {"deflation",        required_argument, NULL, 'S'},
     {"shuffle",          required_argument, NULL, 'T'},
+    {"format",           required_argument, NULL, 'U'},
     {"help",             no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
   };  
@@ -524,6 +531,9 @@ int main(int argc, char* argv[])
     case 'T':
       shuffle = atoi(optarg);
 	break;
+    case 'U':
+      format = optarg;
+      break;
     case '?':
       errflg++;
       break;
@@ -845,6 +855,8 @@ int main(int argc, char* argv[])
 		       kbegin, kend, lbegin, lend, opcode, associated_file_dir);
 
     set_weight_inf( ntiles_in, grid_in, weight_file, weight_field, file_in->has_cell_measure_att);
+
+    set_in_format(format);
     
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
 			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
