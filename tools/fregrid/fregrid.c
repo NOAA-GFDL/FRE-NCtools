@@ -896,8 +896,29 @@ int main(int argc, char* argv[])
   */
 
   if(debug) time_start = clock();
-   if( opcode & BILINEAR ) /* bilinear interpolation from cubic to lalon */
-     setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode );
+  if( opcode & BILINEAR ) {  /* bilinear interpolation from cubic to lalon */
+    double dlon_in, dlat_in;
+    double lonbegin_in, latbegin_in;
+    /* when dlon_in is 0, bilinear_interp will use the default 2*M_PI */
+    if(fabs(lonend-lonbegin-360) < EPSLN10)
+      dlon_in = M_PI+M_PI;
+    else
+      dlon_in = (lonend-lonbegin)*D2R;
+    if(fabs(latend-latbegin-180) < EPSLN10)
+      dlat_in = M_PI;
+    else
+      dlat_in = (latend-latbegin)*D2R;
+    if(fabs(lonbegin) < EPSLN10)
+      lonbegin_in = 0.0;
+    else
+      lonbegin_in = lonbegin*D2R;
+    if(fabs(latbegin+90) < EPSLN10)
+      latbegin_in = -0.5*M_PI;
+    else
+      latbegin_in = latbegin*D2R;
+    
+    setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
+  }
    else
      setup_conserve_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode);
    if(debug) {
