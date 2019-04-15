@@ -180,10 +180,9 @@ int main(int argc, char* argv[])
   /* get the mosaic information of input and output mosaic*/
   mid_in = mpp_open(mosaic_in, MPP_READ);
   ntiles_in = mpp_get_dimlen(mid_in, "ntiles");
-  if( ntiles_in != 6)  mpp_error("make_remap_file: number of tiles in input_mosaic is not 6");
   mid_out = mpp_open(mosaic_out, MPP_READ);
   ntiles_out = mpp_get_dimlen(mid_out, "ntiles");
-  if( ntiles_out != 6)  mpp_error("make_remap_file: number of tiles in output_mosaic is not 6"); 
+  if( ntiles_out != ntiles_in)  mpp_error("make_remap_file: ntiles_out not equal to ntiles_in"); 
 
   /*get the path of input_mosaic and output_mosaic, assume the grid file are in the same directory */
   get_file_path(mosaic_in, dir_in);
@@ -232,7 +231,6 @@ int main(int argc, char* argv[])
     ny_in = mpp_get_dimlen(fid, "ny");
     if(nx_in%2) mpp_error("make_remap_file: the size of dimension nx in input grid should be even (on supergrid)");
     if(ny_in%2) mpp_error("make_remap_file: the size of dimension ny in input grid should be even (on supergrid)");
-    if(nx_in != ny_in) mpp_error("make_remap_file: nx_in != ny_in");
     /* Assume all the tiles have the same size */
     if(n>0 && (nx_in != 2*ni_in || ny_in != 2*nj_in)) mpp_error("make_remap_file: all the tiles should have same grid size");
     ni_in = nx_in/2;
@@ -271,7 +269,6 @@ int main(int argc, char* argv[])
     ny_out = mpp_get_dimlen(fid, "ny");
     if(nx_out%2) mpp_error("make_remap_file: the size of dimension nx in output grid should be even (on supergrid)");
     if(ny_out%2) mpp_error("make_remap_file: the size of dimension ny in output grid should be even (on supergrid)");
-    if(nx_out != ny_out) mpp_error("make_remap_file: nx_out != ny_out");
     /* Assume all the tiles have the same size */
     if(n>1 && (nx_out != 2*ni_out || ny_out != 2*nj_out)) mpp_error("make_remap_file: all the tiles should have same grid size");
     ni_out = nx_out/2;
