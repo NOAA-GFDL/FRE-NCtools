@@ -1479,3 +1479,22 @@ int get_great_circle_algorithm(int fid)
   return  great_circle_algorithm;
 }
 
+void set_in_format(char *format)
+{
+  char errmsg[128];
+
+
+  if(!format) return;
+  if(!strcmp(format, "netcdf4")) 
+    in_format = NC_FORMAT_NETCDF4;
+  else if(!strcmp(format, "netcdf4_classic")) 
+    in_format = NC_FORMAT_NETCDF4_CLASSIC;
+  else if(!strcmp(format, "64bit_offset")) 
+    in_format = NC_FORMAT_64BIT;
+  else if(!strcmp(format, "classic"))
+    in_format = NC_FORMAT_CLASSIC;
+  else {
+    sprintf(errmsg, "mpp_io(mpp_open): format = %s is not a valid option", format);
+    mpp_error(errmsg);
+    }
+}

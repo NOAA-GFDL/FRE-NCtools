@@ -51,7 +51,8 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
     !------------------------------------------------------------------!
 *******************************************************************************/
 void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles_out, const Grid_config *grid_out, 
-                      Interp_config *interp, unsigned int opcode)
+			   Interp_config *interp, unsigned int opcode, double dlon_in, double dlat_in,
+                           double lonbegin, double latbegin) 
 {
   const int max_iter = 10;
   double abs_center, dcub, dlon, dlat, coslat, distance;
@@ -112,9 +113,9 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   index    = (int *)malloc(ntiles_in*3*sizeof(int));
   shortest = (double *)malloc(ntiles_in*sizeof(double));
   for(i=0; i<nx_out*ny_out; i++) found[i] = 0;
-    
-  dlon=(M_PI+M_PI)/nx_out;
-  dlat=M_PI/(ny_out-1);
+  
+  dlon = dlon_in/nx_out;
+  dlat = dlat_in/(ny_out-1);
 
   for(iter=1; iter<=max_iter; iter++) {
     for(l=0; l<ntiles_in; l++) {
@@ -131,15 +132,15 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	v2[1] = grid_in[l].yt[n2];
 	v2[2] = grid_in[l].zt[n2];
 	dcub=iter*normalize_great_circle_distance(v1, v2);
-	j_min=max(   1,  floor((grid_in[l].latt[n1]-dcub+0.5*M_PI)/dlat)-iter+1);
-	j_max=min(ny_out,ceil((grid_in[l].latt[n1]+dcub+0.5*M_PI)/dlat)+iter-1);
+	j_min=max(   1,  floor((grid_in[l].latt[n1]-dcub-latbegin)/dlat)-iter+1);
+	j_max=min(ny_out,ceil((grid_in[l].latt[n1]+dcub-latbegin)/dlat)+iter-1);
 	if (j_min==1 || j_max==ny_out) {
 	  i_min=1;
 	  i_max=nx_out;
 	}
         else {
-	  i_min=max(   1,  floor((grid_in[l].lont[n1]-dcub)/dlon-iter+1));
-	  i_max=min(nx_out,ceil((grid_in[l].lont[n1]+dcub)/dlon+iter-1));
+	  i_min=max(   1,  floor((grid_in[l].lont[n1]-dcub-lonbegin)/dlon-iter+1));
+	  i_max=min(nx_out,ceil((grid_in[l].lont[n1]+dcub-lonbegin)/dlon+iter-1));
 	}
 	for(j=j_min-1; j<j_max; j++) for(i=i_min-1; i<i_max; i++) {
 	  n0 = j*nx_out + i;

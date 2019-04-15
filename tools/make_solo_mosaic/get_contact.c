@@ -18,7 +18,7 @@ double* west_bound(const double *data, int nx, int ny);
 double* south_bound(const double *data, int nx, int ny);
 double* north_bound(const double *data, int nx, int ny);
 #define EPSLN (1.0e-10)
-
+#define EPSLN2 (1.0e-7)
 int get_contact_index( int size1, int size2, double *x1, double *y1, double *x2, double *y2, double periodx,
 		       double periody, int *start1, int *end1, int *start2, int *end2);
 int get_overlap_index( double x1, double y1, int nx2, int ny2, const double *x2, const double *y2,
@@ -197,23 +197,28 @@ int get_align_contact(int tile1, int tile2, int nx1, int ny1, int nx2, int ny2,
   /* when tile1 = tile2, we need to consider about folded. Only foled north is considered here */
   if(tile1 == tile2) {
     int i, folded = 1;
-    double dx;
+    double dx, dy;
     int num;
  
     num = 0;
     xb1 = north_bound(x1, nx1, ny1);
     yb1 = north_bound(y1, nx1, ny1);
     for(i=0; i<nx1/2; i++) {
-      if( yb1[i] != yb1[nx1-i-1] ) {
+      dy = fabs( yb1[i] - yb1[nx1-i-1]);
+      if( dy > EPSLN2 ) {
+	printf("i=%d, yb1=%13.10f, yb2=%13.10f, dy=%13.10f\n", i, yb1[i],  yb1[nx1-i-1], dy);
 	folded = 0;
 	break;
       }
       dx = fabs(xb1[i] - xb1[nx1-i-1]);
-      if( dx !=0 && dx != 360 ) {
-        if(dx == 180) 
+      if( dx > EPSLN2 && fabs(dx-360)>EPSLN2 ) { 
+        if( fabs(dx-180) < EPSLN2  ) {
            num++;
+	   /*	   printf("i=%d, num=%d, dx=%13.10f\n", i, num, dx); */
+	}
         else {
 	   folded = 0;
+	   printf("i=%d, xb1=%13.10f, xb2=%13.10f, dx=%13.10f\n", i, xb1[i],  xb1[nx1-i-1], dx-180);
 	   break;
         }
       }

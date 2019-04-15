@@ -56,16 +56,16 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
 				 double target_lon, double target_lat, int nest_grid,
 				 int parent_tile, int refine_ratio, int istart_nest,
-				 int iend_nest, int jstart_nest, int jend_nest, int halo)
+				 int iend_nest, int jstart_nest, int jend_nest, int halo, int output_length_angle)
 {
   const int ntiles = 6;
-  int ntiles2, global_nest=0;
-  int nx, ny, nxp, nyp, ni, nj, nip, njp;
-  int ni_nest, nj_nest, nx_nest, ny_nest;
-  int istart, iend, jstart, jend;
-  int ni2, nj2, ni2p, nj2p, n1, n2;
+  long ntiles2, global_nest=0;
+  long nx, ny, nxp, nyp, ni, nj, nip, njp;
+  long ni_nest, nj_nest, nx_nest, ny_nest;
+  long istart, iend, jstart, jend;
+  long ni2, nj2, ni2p, nj2p, n1, n2;
   int *nxl=NULL, *nyl=NULL, *nil=NULL, *njl=NULL;
-  int i, j, n, npts;
+  long i,j,n, npts;
   double p1[2], p2[2];
   double *lon=NULL, *lat=NULL;
   double *xc=NULL, *yc=NULL, *xtmp=NULL, *ytmp=NULL;
@@ -281,7 +281,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   ytmp = (double *)malloc(ni2p*nj2p*sizeof(double));
   
   for(n=0; n<ntiles2; n++) {
-    unsigned int n1,n2;
+    long n1,n2;
     /* copy C-cell to supergrid */
     for(j=0; j<=njl[n]; j++) for(i=0; i<=nil[n]; i++) {
       n1 = n*nxp*nxp+j*2*(2*nil[n]+1)+i*2;
@@ -322,123 +322,145 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   free(ytmp);
   
   /* calculate grid cell length */
-  for(n=0; n<ntiles2; n++) {
-    unsigned int n1, n2, n0;
-    for(j=0; j<=nyl[n]; j++) {
-      for(i=0; i<nxl[n]; i++) {
-	n0 = n*nx*nxp+j*nxl[n]+i;
-	n1 = n*nxp*nxp+j*(nxl[n]+1)+i;
-	n2 = n*nxp*nxp+j*(nxl[n]+1)+i+1;
-
-	p1[0] = x[n1];
-	p1[1] = y[n1];
-	p2[0] = x[n2];
-	p2[1] = y[n2];
-	dx[n0] = great_circle_distance(p1, p2);
-      }
-    }
-  }
-  for(n=0; n<ntiles2; n++) {
-    unsigned int n1, n2, n0;
-    if( stretched_grid || n==ntiles ) { 
-      for(j=0; j<nyl[n]; j++) {
-	for(i=0; i<=nxl[n]; i++) {
-	  n0 = n*nx*nxp+j*(nxl[n]+1)+i;
+  if(output_length_angle) {
+    for(n=0; n<ntiles2; n++) {
+      long n1, n2, n0;
+      for(j=0; j<=nyl[n]; j++) {
+	for(i=0; i<nxl[n]; i++) {
+	  n0 = n*nx*nxp+j*nxl[n]+i;
 	  n1 = n*nxp*nxp+j*(nxl[n]+1)+i;
-	  n2 = n*nxp*nxp+(j+1)*(nxl[n]+1)+i;
+	  n2 = n*nxp*nxp+j*(nxl[n]+1)+i+1;
+
 	  p1[0] = x[n1];
 	  p1[1] = y[n1];
 	  p2[0] = x[n2];
 	  p2[1] = y[n2];
-	  dy[n*nx*nxp+j*(nxl[n]+1)+i] = great_circle_distance(p1, p2);
+	  dx[n0] = great_circle_distance(p1, p2);
 	}
       }
     }
-    else {
-      unsigned int n1, n2;
-      for(n=0; n<ntiles; n++) {
-	for(j=0; j<nyp; j++) {
-	  for(i=0; i<nx; i++) {
-	    n1 = n*nx*nxp+i*nxp+j;
-	    n2 = n*nx*nxp+j*nx+i;
-	    dy[n1] = dx[n2];
+    for(n=0; n<ntiles2; n++) {
+      long n1, n2, n0;
+      if( stretched_grid || n==ntiles ) { 
+	for(j=0; j<nyl[n]; j++) {
+	  for(i=0; i<=nxl[n]; i++) {
+	    n0 = n*nx*nxp+j*(nxl[n]+1)+i;
+	    n1 = n*nxp*nxp+j*(nxl[n]+1)+i;
+	    n2 = n*nxp*nxp+(j+1)*(nxl[n]+1)+i;
+	    p1[0] = x[n1];
+	    p1[1] = y[n1];
+	    p2[0] = x[n2];
+	    p2[1] = y[n2];
+	    dy[n*nx*nxp+j*(nxl[n]+1)+i] = great_circle_distance(p1, p2);
+	  }
+	}
+      }
+      else {
+	long n1, n2;
+	for(n=0; n<ntiles; n++) {
+	  for(j=0; j<nyp; j++) {
+	    for(i=0; i<nx; i++) {
+	      n1 = n*nx*nxp+i*nxp+j;
+	      n2 = n*nx*nxp+j*nx+i;
+	      dy[n1] = dx[n2];
+	    }
 	  }
 	}
       }
     }
-  }
   
-  /* ensure consistency on the boundaries between tiles */
-  for(j=0; j<nx; j++) {
-    unsigned int n11, n21, n31, n41, n51, n61, n71, n81, n91;
-    unsigned int n12, n22, n32, n42, n52, n62, n72, n82, n92;
-    n11 = j*nxp;
-    n12 = 4*nx*nxp+nx*nx+nx-j-1;
-    n21 = j*nxp+nx;
-    n22 = nxp*nx+j*nxp;
-    n31 = nxp*nx+j*nxp+nx;
-    n32 = 3*nx*nxp+(nx-j-1);
-    n41 = 2*nxp*nx+j*nxp;
-    n42 = nx*nx+nx-j-1;
-    n51 = 2*nxp*nx+j*nxp+nx;
-    n52 = 3*nxp*nx+j*nxp;
-    n61 = 3*nxp*nx+j*nxp+nx;
-    n62 = 5*nx*nxp+(nx-j-1);
-    n71 = 4*nxp*nx+j*nxp;
-    n72 = 2*nx*nxp+nx*nx+nx-j-1;
-    n81 = 4*nxp*nx+j*nxp+nx;
-    n82 = 5*nxp*nx+j*nxp;
-    n91= 5*nxp*nx+j*nxp+nx;
-    n92 = nx*nxp+(nx-j-1);
-    dy[n11] = dx[n12]; /* 5N -> 1W */
-    dy[n21] = dy[n22]; /* 2W -> 1E */
-    dy[n31] = dx[n32]; /* 4S -> 2E */
-    dy[n41] = dx[n42]; /* 1N -> 3W */
-    dy[n51] = dy[n52]; /* 4W -> 3E */
-    dy[n61] = dx[n62]; /* 4S -> 2E */
-    dy[n71] = dx[n72]; /* 3N -> 5W */
-    dy[n81] = dy[n82]; /* 6W -> 5E */
-    dy[n91] = dx[n92]; /* 2S -> 6E */    
-  }
-
-  calc_cell_area(nx, ny, x, y, area);
-
-  for(j=0; j<nx; j++) {
-    unsigned int n0, n1, n2, n3, n4, n5;
-    for(i=0; i<nx; i++) {
-      double ar;
-      /* all the face have the same area */
-      n0 = j*nx+i;
-      n1 = nx*nx+j*nx+i;
-      n2 = 2*nx*nx+j*nx+i;
-      n3 = 3*nx*nx+j*nx+i;
-      n4 = 4*nx*nx+j*nx+i;
-      n5 = 5*nx*nx+j*nx+i;
-      ar = area[n0];
-      area[n1] = ar;
-      area[n2] = ar;
-      area[n3] = ar;
-      area[n4] = ar;
-      area[n5] = ar;        
-    }
-  }
-
-  /* calculate nested grid area */
-  if(ntiles2>ntiles) calc_cell_area(nx_nest, ny_nest, x+ntiles*nxp*nyp, y+ntiles*nxp*nyp, area+ntiles*nx*ny);
-  
-  /*calculate rotation angle, just some workaround, will modify this in the future. */
-  calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
-
-  /* since angle is used in the model, set angle to 0 for nested region */
-  if(ntiles2>ntiles) {
-    for(i=0; i<=(nx_nest+1)*(ny_nest+1); i++) {
-      angle_dx[ntiles*nxp*nxp+i]=0;
-      angle_dy[ntiles*nxp*nxp+i]=0;
+    /* ensure consistency on the boundaries between tiles */
+    for(j=0; j<nx; j++) {
+      long n11, n21, n31, n41, n51, n61, n71, n81, n91;
+      long n12, n22, n32, n42, n52, n62, n72, n82, n92;
+      n11 = j*nxp;
+      n12 = 4*nx*nxp+nx*nx+nx-j-1;
+      n21 = j*nxp+nx;
+      n22 = nxp*nx+j*nxp;
+      n31 = nxp*nx+j*nxp+nx;
+      n32 = 3*nx*nxp+(nx-j-1);
+      n41 = 2*nxp*nx+j*nxp;
+      n42 = nx*nx+nx-j-1;
+      n51 = 2*nxp*nx+j*nxp+nx;
+      n52 = 3*nxp*nx+j*nxp;
+      n61 = 3*nxp*nx+j*nxp+nx;
+      n62 = 5*nx*nxp+(nx-j-1);
+      n71 = 4*nxp*nx+j*nxp;
+      n72 = 2*nx*nxp+nx*nx+nx-j-1;
+      n81 = 4*nxp*nx+j*nxp+nx;
+      n82 = 5*nxp*nx+j*nxp;
+      n91= 5*nxp*nx+j*nxp+nx;
+      n92 = nx*nxp+(nx-j-1);
+      dy[n11] = dx[n12]; /* 5N -> 1W */
+      dy[n21] = dy[n22]; /* 2W -> 1E */
+      dy[n31] = dx[n32]; /* 4S -> 2E */
+      dy[n41] = dx[n42]; /* 1N -> 3W */
+      dy[n51] = dy[n52]; /* 4W -> 3E */
+      dy[n61] = dx[n62]; /* 4S -> 2E */
+      dy[n71] = dx[n72]; /* 3N -> 5W */
+      dy[n81] = dy[n82]; /* 6W -> 5E */
+      dy[n91] = dx[n92]; /* 2S -> 6E */    
     }
   }
 
   {
-    unsigned int npts, i;
+    long pos1, pos2;
+    pos1 = 0;
+    pos2 = 0;
+    if ( do_schmidt ) {
+      for(n=0; n<ntiles; n++) {
+	calc_cell_area(nx, ny, x+pos1, y+pos1, area+pos2);
+	pos1 += (nx+1)*(nx+1);
+	pos2 += nx*nx;
+      }
+    }
+    else {
+      calc_cell_area(nx, ny, x, y, area);
+      for(j=0; j<nx; j++) {
+	long n0, n1, n2, n3, n4, n5;
+	for(i=0; i<nx; i++) {
+	  double ar;
+	  /* all the face have the same area */
+	  n0 = j*nx+i;
+	  n1 = nx*nx+j*nx+i;
+	  n2 = 2*nx*nx+j*nx+i;
+	  n3 = 3*nx*nx+j*nx+i;
+	  n4 = 4*nx*nx+j*nx+i;
+	  n5 = 5*nx*nx+j*nx+i;
+	  ar = area[n0];
+	  area[n1] = ar;
+	  area[n2] = ar;
+	  area[n3] = ar;
+	  area[n4] = ar;
+	  area[n5] = ar;
+	}
+      }
+    }
+	
+    
+    /* calculate nested grid area */
+    if(ntiles2>ntiles) {
+       pos1 = ntiles*nxp*nyp;
+       pos2 = ntiles*nx*ny;
+      calc_cell_area(nx_nest, ny_nest, x+pos1, y+ntiles*nxp*nyp, area+pos2);
+    }
+  }
+  
+  if(output_length_angle) {
+    /*calculate rotation angle, just some workaround, will modify this in the future. */
+    calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
+
+    /* since angle is used in the model, set angle to 0 for nested region */
+    if(ntiles2>ntiles) {
+      for(i=0; i<=(nx_nest+1)*(ny_nest+1); i++) {
+	angle_dx[ntiles*nxp*nxp+i]=0;
+	angle_dy[ntiles*nxp*nxp+i]=0;
+      }
+    }
+  }
+  
+  {
+    long npts, i;
     /* convert grid location from radians to degree */
     npts = ntiles*nxp*nyp;
     if(nx_nest>0) npts += (nx_nest+1)*(ny_nest+1);

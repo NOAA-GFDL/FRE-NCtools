@@ -219,7 +219,11 @@ char *usage[] = {
   "                              grid in parent tile supergrid(Fortran index).      ",
   "                                                                                 ",
   "   --halo #                   halo size to used in the atmosphere cubic sphere   ",
-  "                              model. It only needs to be specified when          ",
+  "                              model. The purpose is to make sure the nest,       ",
+  "                              including the halo region, is fully contained      ",
+  "                              within a single parent (coarse) tile. The option   ",
+  "                              may be obsolete and be removed in future           ",
+  "                              development. It only needs to be specified when    ",
   "                              --nest_grid is set.                                ",
   "                                                                                 ",
   "   --great_circle_algorithm   When specified, great_circle_algorithm will be     ",
@@ -227,6 +231,9 @@ char *usage[] = {
   "                                                                                 ",
   "   --out_halo #               extra halo size data to be written out. This is    ",
   "                              only works for gnomonic_ed.                        ",
+  "                                                                                 ",
+  "   --non_length_angle         When specified, will not output length(dx,dy) and  ",
+  "                              angle (angle_dx, angle_dy)                         ",
   "                                                                                 ",
   "   --verbose                  Will print out running time message when this      ",
   "                              option is set. Otherwise the run will be silent    ",
@@ -423,6 +430,7 @@ int main(int argc, char* argv[])
   int    present_target_lon = 0;
   int    present_target_lat = 0;
   int    use_great_circle_algorithm = 0;
+  int    output_length_angle = 1;
   unsigned int verbose = 0;
   double simple_dx=0, simple_dy=0;
   int nx, ny, nxp, nyp, ntiles=1, ntiles_global=1;
@@ -481,6 +489,7 @@ int main(int argc, char* argv[])
     {"great_circle_algorithm", no_argument, NULL, 'J'},
     {"out_halo",        required_argument, NULL, 'K'},
     {"do_cube_transform", no_argument,     NULL, 'L'},
+    {"no_length_angle", no_argument,       NULL, 'M'},
     {"help",            no_argument,       NULL, 'h'},
     {"verbose",         no_argument,       NULL, 'v'},
     {0, 0, 0, 0},
@@ -610,6 +619,10 @@ int main(int argc, char* argv[])
     case 'L':
       do_cube_transform = 1;
       break;     
+      break;
+    case 'M':
+      output_length_angle = 0;
+      break;  
     case 'v':
       verbose = 1;
       break;
@@ -878,10 +891,14 @@ int main(int argc, char* argv[])
 
   if(strcmp(center,"none") && strcmp(center,"c_cell") && strcmp(center,"t_cell") )
     mpp_error("make_hgrid: center should be 'none', 'c_cell' or 't_cell' ");
+
+  /* --no_length_angle should only be set when grid_type == GNOMONIC_ED */
+  if( !output_length_angle &&  my_grid_type != GNOMONIC_ED )
+    mpp_error("make_hgrid: --no_length_angle is set but grid_type is not 'gnomonic_ed'");
   
  /* create grid information */
   {
-    unsigned int size1, size2, size3, size4;
+    long size1, size2, size3, size4;
     
     size1 = nxp*nyp*ntiles;
     size2 = nxp*(nyp+1)*ntiles;
@@ -897,12 +914,15 @@ int main(int argc, char* argv[])
 
     x        = (double *) malloc(size1*sizeof(double));
     y        = (double *) malloc(size1*sizeof(double));
-    dx       = (double *) malloc(size2*sizeof(double));
-    dy       = (double *) malloc(size3*sizeof(double));
     area     = (double *) malloc(size4*sizeof(double));
-    angle_dx = (double *) malloc(size1*sizeof(double));
-    if( strcmp(conformal,"true") !=0 )
-      angle_dy = (double *) malloc(size1*sizeof(double));
+    if(output_length_angle) {
+      dx       = (double *) malloc(size2*sizeof(double));
+      dy       = (double *) malloc(size3*sizeof(double));
+      area     = (double *) malloc(size4*sizeof(double));
+      angle_dx = (double *) malloc(size1*sizeof(double));
+      if( strcmp(conformal,"true") !=0 )
+	angle_dy = (double *) malloc(size1*sizeof(double));
+    }
   }
 
   isc = 0;
@@ -920,7 +940,7 @@ int main(int argc, char* argv[])
 			 area, angle_dx, center, verbose, use_great_circle_algorithm);
   else if(my_grid_type==FROM_FILE) {
     for(n=0; n<ntiles; n++) {
-      int n1, n2, n3, n4;
+      long n1, n2, n3, n4;
       n1 = n * nxp * nyp;
       n2 = n * nx  * nyp;
       n3 = n * nxp * ny;
@@ -939,7 +959,7 @@ int main(int argc, char* argv[])
     create_gnomonic_cubic_grid(grid_type, nxl, nyl, x, y, dx, dy, area, angle_dx, angle_dy,
 			       shift_fac, do_schmidt, do_cube_transform, stretch_factor, target_lon, target_lat,
 			       nest_grid, parent_tile, refine_ratio,
-			       istart_nest, iend_nest, jstart_nest, jend_nest, halo );
+			       istart_nest, iend_nest, jstart_nest, jend_nest, halo, output_length_angle );
   else if((my_grid_type==F_PLANE_GRID) || (my_grid_type==BETA_PLANE_GRID))
     create_f_plane_grid(&nxbnds, &nybnds, xbnds, ybnds, nlon, nlat, dx_bnds, dy_bnds,
 			use_legacy, f_plane_latitude, &isc, &iec, &jsc, &jec, x, y, dx, dy, area, angle_dx, center);
@@ -951,7 +971,7 @@ int main(int argc, char* argv[])
     size_t start[4], nwrite[4];
     char tilename[128] = "";
     char outfile[128] = "";
-    int pos_c, pos_e, pos_n, pos_t;
+    long pos_c, pos_e, pos_n, pos_t;
 
     pos_c = 0;
     pos_e = 0;
@@ -995,26 +1015,30 @@ int main(int argc, char* argv[])
       id_y = mpp_def_var(fid, "y", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_latitude",
 			 "units", "degree_north");
       if(out_halo>0) mpp_def_var_att_double(fid, id_y, "_FillValue", MISSING_VALUE);
-      dims[0] = dimlist[4]; dims[1] = dimlist[1];
-      id_dx = mpp_def_var(fid, "dx", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_x_distance",
-			  "units", "meters");
-      if(out_halo>0) mpp_def_var_att_double(fid, id_dx, "_FillValue", MISSING_VALUE);
-      dims[0] = dimlist[2]; dims[1] = dimlist[3];
-      id_dy = mpp_def_var(fid, "dy", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_y_distance",
-			  "units", "meters");
-      if(out_halo>0) mpp_def_var_att_double(fid, id_dy, "_FillValue", MISSING_VALUE);
+      if(output_length_angle) {
+	dims[0] = dimlist[4]; dims[1] = dimlist[1];
+	id_dx = mpp_def_var(fid, "dx", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_x_distance",
+			    "units", "meters");
+	if(out_halo>0) mpp_def_var_att_double(fid, id_dx, "_FillValue", MISSING_VALUE);
+	dims[0] = dimlist[2]; dims[1] = dimlist[3];
+	id_dy = mpp_def_var(fid, "dy", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_edge_y_distance",
+			    "units", "meters");
+	if(out_halo>0) mpp_def_var_att_double(fid, id_dy, "_FillValue", MISSING_VALUE);
+      }
       dims[0] = dimlist[2]; dims[1] = dimlist[1];
       id_area = mpp_def_var(fid, "area", MPP_DOUBLE, 2, dims, 2, "standard_name", "grid_cell_area",
 			    "units", "m2" );
       if(out_halo>0) mpp_def_var_att_double(fid, id_area, "_FillValue", MISSING_VALUE);
-      dims[0] = dimlist[4]; dims[1] = dimlist[3];
-      id_angle_dx = mpp_def_var(fid, "angle_dx", MPP_DOUBLE, 2, dims, 2, "standard_name",
-				    "grid_vertex_x_angle_WRT_geographic_east", "units", "degrees_east");
-      if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dx, "_FillValue", MISSING_VALUE);
-      if(strcmp(conformal, "true") != 0) {
-	id_angle_dy = mpp_def_var(fid, "angle_dy", MPP_DOUBLE, 2, dims, 2, "standard_name",
-				  "grid_vertex_y_angle_WRT_geographic_north", "units", "degrees_north");
-	if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dy, "_FillValue", MISSING_VALUE);
+      if(output_length_angle) {
+	dims[0] = dimlist[4]; dims[1] = dimlist[3];
+	id_angle_dx = mpp_def_var(fid, "angle_dx", MPP_DOUBLE, 2, dims, 2, "standard_name",
+				  "grid_vertex_x_angle_WRT_geographic_east", "units", "degrees_east");
+	if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dx, "_FillValue", MISSING_VALUE);
+	if(strcmp(conformal, "true") != 0) {
+	  id_angle_dy = mpp_def_var(fid, "angle_dy", MPP_DOUBLE, 2, dims, 2, "standard_name",
+				    "grid_vertex_y_angle_WRT_geographic_north", "units", "degrees_north");
+	  if(out_halo>0) mpp_def_var_att_double(fid, id_angle_dy, "_FillValue", MISSING_VALUE);
+	}
       }
       if( strcmp(north_pole_arcx, "none") == 0)
 	id_arcx = mpp_def_var(fid, "arcx", MPP_CHAR, 1, dimlist, 1, "standard_name", "grid_edge_x_arc_type" );
@@ -1035,11 +1059,15 @@ int main(int argc, char* argv[])
       if(out_halo ==0) {
         mpp_put_var_value(fid, id_x, x+pos_c);
 	mpp_put_var_value(fid, id_y, y+pos_c);
-	mpp_put_var_value(fid, id_dx, dx+pos_n);
-	mpp_put_var_value(fid, id_dy, dy+pos_e);
+	if(output_length_angle) {
+	  mpp_put_var_value(fid, id_dx, dx+pos_n);
+	  mpp_put_var_value(fid, id_dy, dy+pos_e);
+	}
 	mpp_put_var_value(fid, id_area, area+pos_t);
-	mpp_put_var_value(fid, id_angle_dx, angle_dx+pos_c);
-	if(strcmp(conformal, "true") != 0) mpp_put_var_value(fid, id_angle_dy, angle_dy+pos_c);
+	if(output_length_angle) {
+	  mpp_put_var_value(fid, id_angle_dx, angle_dx+pos_c);
+	  if(strcmp(conformal, "true") != 0) mpp_put_var_value(fid, id_angle_dy, angle_dy+pos_c);
+	}
       }
       else {
 	double *tmp;
@@ -1049,17 +1077,19 @@ int main(int argc, char* argv[])
 	mpp_put_var_value(fid, id_x, tmp);
 	fill_cubic_grid_halo(nx,ny,out_halo,tmp,y,y,n,1,1);
 	mpp_put_var_value(fid, id_y, tmp);
-        fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dx,angle_dx,n,1,1);
-	mpp_put_var_value(fid, id_angle_dx, tmp);
-	if(strcmp(conformal, "true") != 0) {
-	  fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dy,angle_dy,n,1,1);
-	mpp_put_var_value(fid, id_angle_dy, tmp);
-	}
+	if(output_length_angle) {
+	  fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dx,angle_dx,n,1,1);
+	  mpp_put_var_value(fid, id_angle_dx, tmp);
+	  if(strcmp(conformal, "true") != 0) {
+	    fill_cubic_grid_halo(nx,ny,out_halo,tmp,angle_dy,angle_dy,n,1,1);
+	    mpp_put_var_value(fid, id_angle_dy, tmp);
+	  }
 	
-        fill_cubic_grid_halo(nx,ny,out_halo,tmp,dx,dy,n,0,1);
-	mpp_put_var_value(fid, id_dx, tmp);
-        fill_cubic_grid_halo(nx,ny,out_halo,tmp,dy,dx,n,1,0);
-	mpp_put_var_value(fid, id_dy, tmp);
+	  fill_cubic_grid_halo(nx,ny,out_halo,tmp,dx,dy,n,0,1);
+	  mpp_put_var_value(fid, id_dx, tmp);
+	  fill_cubic_grid_halo(nx,ny,out_halo,tmp,dy,dx,n,1,0);
+	  mpp_put_var_value(fid, id_dy, tmp);
+	}
         fill_cubic_grid_halo(nx,ny,out_halo,tmp,area,area,n,0,0);
 	mpp_put_var_value(fid, id_area, tmp);
 	free(tmp);
@@ -1077,11 +1107,13 @@ int main(int argc, char* argv[])
 
   free(x);
   free(y);
-  free(dx);
-  free(dy);
   free(area);
-  free(angle_dx);
-  if(strcmp(conformal, "true") != 0) free(angle_dy);
+  if(output_length_angle) {
+    free(dx);
+    free(dy);
+    free(angle_dx);
+    if(strcmp(conformal, "true") != 0) free(angle_dy);
+  }
   if(mpp_pe() == mpp_root_pe() && verbose) printf("generate_grid is run successfully. \n");
 
   mpp_end();

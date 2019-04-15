@@ -104,7 +104,7 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 #    set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
 #     exec echo coords = $coords
      my @coords;
-     foreach my $coord (qw/geolat geolon/) {
+     foreach my $coord (qw/geolat geolon GEOLAT GEOLON/) {
        push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
      }
 #-------------------------------------
@@ -551,11 +551,9 @@ sub get_dimension_bounds ($$;$) {
   # get the field pointed to by bounds attribute
   my $bnds = get_variable_att($dump,$dim,"bounds");
   push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-  if (!$CMIPVAR) {
-    # get the field pointed to by edges attribute
-    my $bnds = get_variable_att($dump,$dim,"edges");
-    push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
-  }
+  # get the field pointed to by edges attribute
+  my $bnds = get_variable_att($dump,$dim,"edges");
+  push @bounds, $bnds if ($dump =~ /\t\w+ $bnds\(.+\)/);
   return @bounds;
 }
 
