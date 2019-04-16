@@ -180,11 +180,14 @@ int main(int argc, char* argv[])
   /* get the mosaic information of input and output mosaic*/
   mid_in = mpp_open(mosaic_in, MPP_READ);
   ntiles_in = mpp_get_dimlen(mid_in, "ntiles");
-  if( ntiles_in != 6)  mpp_error("make_remap_file: number of tiles in input_mosaic is not 6");
   mid_out = mpp_open(mosaic_out, MPP_READ);
   ntiles_out = mpp_get_dimlen(mid_out, "ntiles");
-  if( ntiles_out != 6)  mpp_error("make_remap_file: number of tiles in output_mosaic is not 6"); 
+  if( ntiles_out != ntiles_in)  mpp_error("make_remap_file: ntiles_out not equal to ntiles_in"); 
 
+
+  if(ntiles_in != 6 && remap_method == CONSERVE_ORDER2)
+    mpp_error("make_remap_file: only cubic sphere grid supports interp_method = conserve_order2");
+  
   /*get the path of input_mosaic and output_mosaic, assume the grid file are in the same directory */
   get_file_path(mosaic_in, dir_in);
   get_file_path(mosaic_out, dir_out);
@@ -212,12 +215,13 @@ int main(int argc, char* argv[])
     size_t start[4], nread[4], nwrite[4];
     int nxp_in, nyp_in, nip_in, njp_in;
     int nxp_out, nyp_out, nip_out, njp_out;
-    int i, j, ratio, pos, i1, j1;
+    int ratio, pos, i1, j1;
+    unsigned long i,j;
     int vid, fid, n_out, n_in;
     int dim_string, dim_ncells, dim_two, dims[2];
     int id_tile1, id_tile1_cell, id_tile2_cell, id_xgrid_area;
     int id_tile1_dist;
-
+    int out_is_fine;
     
     /**********************************************************************
                          Get input grid
@@ -232,7 +236,6 @@ int main(int argc, char* argv[])
     ny_in = mpp_get_dimlen(fid, "ny");
     if(nx_in%2) mpp_error("make_remap_file: the size of dimension nx in input grid should be even (on supergrid)");
     if(ny_in%2) mpp_error("make_remap_file: the size of dimension ny in input grid should be even (on supergrid)");
-    if(nx_in != ny_in) mpp_error("make_remap_file: nx_in != ny_in");
     /* Assume all the tiles have the same size */
     if(n>0 && (nx_in != 2*ni_in || ny_in != 2*nj_in)) mpp_error("make_remap_file: all the tiles should have same grid size");
     ni_in = nx_in/2;
@@ -244,7 +247,7 @@ int main(int argc, char* argv[])
     if(n ==0) {
       x_in = (double *)malloc(nip_in*njp_in*sizeof(double));
       y_in = (double *)malloc(nip_in*njp_in*sizeof(double));
-      tmp_in = (double*)malloc(nxp_in*nyp_in*sizeof(double));
+      tmp_in = (double*)malloc((unsigned long)nxp_in*nyp_in*sizeof(double));
     }
     vid = mpp_get_varid(fid, "x");
     mpp_get_var_value(fid, vid, tmp_in);
@@ -271,7 +274,6 @@ int main(int argc, char* argv[])
     ny_out = mpp_get_dimlen(fid, "ny");
     if(nx_out%2) mpp_error("make_remap_file: the size of dimension nx in output grid should be even (on supergrid)");
     if(ny_out%2) mpp_error("make_remap_file: the size of dimension ny in output grid should be even (on supergrid)");
-    if(nx_out != ny_out) mpp_error("make_remap_file: nx_out != ny_out");
     /* Assume all the tiles have the same size */
     if(n>1 && (nx_out != 2*ni_out || ny_out != 2*nj_out)) mpp_error("make_remap_file: all the tiles should have same grid size");
     ni_out = nx_out/2;
@@ -283,7 +285,7 @@ int main(int argc, char* argv[])
     if(n ==0) {
       x_out = (double *)malloc(nip_out*njp_out*sizeof(double));
       y_out = (double *)malloc(nip_out*njp_out*sizeof(double));
-      tmp_out = (double*)malloc(nxp_out*nyp_out*sizeof(double));
+      tmp_out = (double*)malloc((unsigned long)nxp_out*nyp_out*sizeof(double));
     }
     vid = mpp_get_varid(fid, "x");
     mpp_get_var_value(fid, vid, tmp_out);
@@ -296,27 +298,43 @@ int main(int argc, char* argv[])
       y_out[j*nip_out+i] = tmp_out[2*j*nxp_out+2*i]*D2R;
     }    
     mpp_close(fid);
-
     /**********************************************************************
             check the ratio of input and output grid size is integer
-            Currently we assume nx_out > nx_in. Also check the x_in/y_in
-            match some of the points of x_out/y_out
+            Currently we assume nx_out > nx_in. Also check x_in/y_in
+            match x_out/y_out
     **********************************************************************/
-    if(nx_out%nx_in !=0) mpp_error("make_remap_file: nx_out/nx_in is not integer");
-    ratio = nx_out/nx_in;
-    for(j=0; j<njp_in; j++) for(i=0; i<nip_in; i++) {
-      if(fabs(x_in[j*nip_in+i]-x_out[j*ratio*nip_out+i*ratio]) > EPSLN)
-	mpp_error("make_remap_file: input grid x does not match output grid");
-      if(fabs(y_in[j*nip_in+i]-y_out[j*ratio*nip_out+i*ratio]) > EPSLN)
-	mpp_error("make_remap_file: input grid y does not match output grid");
+    if(nx_out%nx_in ==0 && ny_out%ny_in == 0) {
+      if(nx_out/nx_in != ny_out/ny_in) mpp_error("make_remap_file: nx_out/nx_in != ny_out/ny_in");
+      out_is_fine = 1;
+      ratio = nx_out/nx_in;
+      nxgrid = ni_out*nj_out;
+      for(j=0; j<njp_in; j++) for(i=0; i<nip_in; i++) {
+	  if(fabs(x_in[j*nip_in+i]-x_out[j*ratio*nip_out+i*ratio]) > EPSLN)
+	    mpp_error("make_remap_file: input grid x does not match output grid");
+	  if(fabs(y_in[j*nip_in+i]-y_out[j*ratio*nip_out+i*ratio]) > EPSLN)
+	    mpp_error("make_remap_file: input grid y does not match output grid");
+	}
     }
+    else if(nx_in%nx_out == 0 && ny_in%ny_out == 0) {
+      if(nx_in/nx_out != ny_in/ny_out) mpp_error("make_remap_file: nx_in/nx_out != ny_in/ny_out");
+      out_is_fine = 0;
+      ratio = nx_in/nx_out;
+      nxgrid = ni_in*nj_in;
+      for(j=0; j<njp_out; j++) for(i=0; i<nip_out; i++) {
+	  if(fabs(x_out[j*nip_out+i]-x_in[j*ratio*nip_in+i*ratio]) > EPSLN)
+	    mpp_error("make_remap_file: output grid x does not match input grid");
+	  if(fabs(y_out[j*nip_out+i]-y_in[j*ratio*nip_in+i*ratio]) > EPSLN)
+	    mpp_error("make_remap_file: output grid y does not match input grid");
+	}
+    }
+    else
+      mpp_error("make_remap_file: ratio is not integer");
     
     /**********************************************************************
                   Create remap information, number of exchange grid will
                   equal number of output grid.
     **********************************************************************/
     if(n==0) { /* all the tiles have the same size, only do memory allocation at the first tile */
-      nxgrid = ni_out*nj_out;
       i_in   = (int    *)malloc(nxgrid*sizeof(int   ));
       j_in   = (int    *)malloc(nxgrid*sizeof(int   ));
       i_out  = (int    *)malloc(nxgrid*sizeof(int   ));
@@ -341,63 +359,99 @@ int main(int argc, char* argv[])
 	clat_in[i] = 0.0;
       }
     }
-    pos = 0;
-    for(j=0; j<nj_in; j++) for(i=0; i<ni_in; i++) {
-	px_in[0] = x_in[j*nip_in+i];
-	py_in[0] = y_in[j*nip_in+i];
-	px_in[1] = x_in[j*nip_in+i+1];
-	py_in[1] = y_in[j*nip_in+i+1];
-	px_in[2] = x_in[(j+1)*nip_in+i+1];
-	py_in[2] = y_in[(j+1)*nip_in+i+1];
-	px_in[3] = x_in[(j+1)*nip_in+i];
-	py_in[3] = y_in[(j+1)*nip_in+i];
-	n_in = fix_lon(px_in, py_in, 4, M_PI);
-	lon_in_avg = avgval_double(n_in, px_in);
-      for(j1=0; j1< ratio; j1++) for(i1=0; i1<ratio; i1++) {
-	i_in[pos] = i;
-	j_in[pos] = j;
-	i_out[pos] = i*ratio + i1;
-	j_out[pos] = j*ratio + j1;
-	t_in[pos]  = n;
-	/* calculate exchange grid area */
-	px_out[0] = x_out[j_out[pos]*nip_out+i_out[pos]];
-	py_out[0] = y_out[j_out[pos]*nip_out+i_out[pos]];
-	px_out[1] = x_out[j_out[pos]*nip_out+i_out[pos]+1];
-	py_out[1] = y_out[j_out[pos]*nip_out+i_out[pos]+1];
-	px_out[2] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
-	py_out[2] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
-	px_out[3] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]];
-	py_out[3] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]];
-	n_out = fix_lon(px_out, py_out, 4, M_PI);
-	xarea[pos] = poly_area (px_out, py_out, n_out );
-	area_in[j*ni_in+i] += xarea[pos];
-	if(remap_method == CONSERVE_ORDER2) {
-	  xclon[pos] = poly_ctrlon(px_out, py_out, n_out, lon_in_avg);
-	  xclat[pos] = poly_ctrlat (px_out, py_out, n_out );
-	  clon_in[j*ni_in+i] += xclon[pos];
-	  clat_in[j*ni_in+i] += xclat[pos];
+
+    if(out_is_fine) { /* output grid is finer */
+      pos = 0;
+      for(j=0; j<nj_in; j++) for(i=0; i<ni_in; i++) {
+	  px_in[0] = x_in[j*nip_in+i];
+	  py_in[0] = y_in[j*nip_in+i];
+	  px_in[1] = x_in[j*nip_in+i+1];
+	  py_in[1] = y_in[j*nip_in+i+1];
+	  px_in[2] = x_in[(j+1)*nip_in+i+1];
+	  py_in[2] = y_in[(j+1)*nip_in+i+1];
+	  px_in[3] = x_in[(j+1)*nip_in+i];
+	  py_in[3] = y_in[(j+1)*nip_in+i];
+	  n_in = fix_lon(px_in, py_in, 4, M_PI);
+	  lon_in_avg = avgval_double(n_in, px_in);
+	  for(j1=0; j1< ratio; j1++) for(i1=0; i1<ratio; i1++) {
+	      i_in[pos] = i;
+	      j_in[pos] = j;
+	      i_out[pos] = i*ratio + i1;
+	      j_out[pos] = j*ratio + j1;
+	      t_in[pos]  = n;
+	      /* calculate exchange grid area */
+	      px_out[0] = x_out[j_out[pos]*nip_out+i_out[pos]];
+	      py_out[0] = y_out[j_out[pos]*nip_out+i_out[pos]];
+	      px_out[1] = x_out[j_out[pos]*nip_out+i_out[pos]+1];
+	      py_out[1] = y_out[j_out[pos]*nip_out+i_out[pos]+1];
+	      px_out[2] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
+	      py_out[2] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
+	      px_out[3] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]];
+	      py_out[3] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]];
+	      n_out = fix_lon(px_out, py_out, 4, M_PI);
+	      xarea[pos] = poly_area (px_out, py_out, n_out );
+	      area_in[j*ni_in+i] += xarea[pos];
+	      if(remap_method == CONSERVE_ORDER2) {
+		xclon[pos] = poly_ctrlon(px_out, py_out, n_out, lon_in_avg);
+		xclat[pos] = poly_ctrlat (px_out, py_out, n_out );
+		clon_in[j*ni_in+i] += xclon[pos];
+		clat_in[j*ni_in+i] += xclat[pos];
+	      }
+	      pos++;
+	    }
 	}
-	pos++;
+      if(remap_method == CONSERVE_ORDER2) {
+	for(i=0; i<ni_in*nj_in; i++) {
+	  clon_in[i] /= area_in[i];
+	  clat_in[i] /= area_in[i];
+	}
+	for(i=0; i<nxgrid; i++) {
+	  xclon[i] /= xarea[i];
+	  xclat[i] /= xarea[i];
+	  di_in[i] = xclon[i] - clon_in[j_in[i]*ni_in+i_in[i]];
+	  dj_in[i] = xclat[i] - clat_in[j_in[i]*ni_in+i_in[i]];
+	}
       }
     }
+    else { /* input grid is finer */
+      pos = 0;
+      for(j=0; j<nj_out; j++) for(i=0; i<ni_out; i++) {
+	  for(j1=0; j1< ratio; j1++) for(i1=0; i1<ratio; i1++) {
+	      i_out[pos] = i;
+	      j_out[pos] = j;
+	      i_in[pos] = i*ratio + i1;
+	      j_in[pos] = j*ratio + j1;
+	      t_in[pos]  = n;
+	      /* calculate exchange grid area */
+	      px_out[0] = x_out[j_out[pos]*nip_out+i_out[pos]];
+	      py_out[0] = y_out[j_out[pos]*nip_out+i_out[pos]];
+	      px_out[1] = x_out[j_out[pos]*nip_out+i_out[pos]+1];
+	      py_out[1] = y_out[j_out[pos]*nip_out+i_out[pos]+1];
+	      px_out[2] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
+	      py_out[2] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]+1];
+	      px_out[3] = x_out[(j_out[pos]+1)*nip_out+i_out[pos]];
+	      py_out[3] = y_out[(j_out[pos]+1)*nip_out+i_out[pos]];
+	      n_out = fix_lon(px_out, py_out, 4, M_PI);
+	      xarea[pos] = poly_area (px_out, py_out, n_out );
+	      area_in[j_in[pos]*ni_in+i_in[pos]] = xarea[pos];
+	      pos++;
+	    }
+	}
+      if(remap_method == CONSERVE_ORDER2) {
+      	for(i=0; i<nxgrid; i++) {
+	  di_in[i] = 0.0;
+	  dj_in[i] = 0.0;
+	}
+      }
+    }
+      
 
     if(pos != nxgrid) {
       printf("pos=%d, nxgrid=%d\n", pos, nxgrid);
       mpp_error("make_remap_file: pos != nxgrid");
     }
 
-    if(remap_method == CONSERVE_ORDER2) {
-      for(i=0; i<ni_in*nj_in; i++) {
-	clon_in[i] /= area_in[i];
-	clat_in[i] /= area_in[i];
-      }
-      for(i=0; i<nxgrid; i++) {
-	xclon[i] /= xarea[i];
-	xclat[i] /= xarea[i];
-	di_in[i] = xclon[i] - clon_in[j_in[i]*ni_in+i_in[i]];
-	dj_in[i] = xclat[i] - clat_in[j_in[i]*ni_in+i_in[i]];
-      }
-    }
+
     /* write out the remap information */
     if(ntiles_in > 1) 
       sprintf(my_remap_file, "%s.tile%d.nc", remap_file_base, n+1);

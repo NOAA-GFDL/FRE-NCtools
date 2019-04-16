@@ -268,7 +268,7 @@ void set_regular_lonlat_grid( int nxp, int nyp, int isc, int iec, int jsc, int j
 			      double *x, double *y, double *dx, double *dy, double *area, double *angle,
 			      int use_great_circle_algorithm)
 {
-  int n, i, j;
+  long n, i, j;
   double lon[4], lat[4];
   
   n = 0;
