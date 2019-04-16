@@ -879,12 +879,12 @@ int main(int argc, char* argv[])
   
  /* create grid information */
   {
-    long size1, size2, size3, size4;
+    unsigned long size1, size2, size3, size4;
     
-    size1 = nxp*nyp*ntiles;
-    size2 = nxp*(nyp+1)*ntiles;
-    size3 = (nxp+1)*nyp*ntiles;
-    size4 = nxp    *nyp*ntiles;
+    size1 = (unsigned long)nxp*nyp*ntiles;
+    size2 = (unsigned long)nxp*(nyp+1)*ntiles;
+    size3 = (unsigned long)(nxp+1)*nyp*ntiles;
+    size4 = (unsigned long)nxp    *nyp*ntiles;
   
     if( nest_grid) { /* nest grid is the last tile */
       size1 += nxl[ntiles-1]*nyl[ntiles-1];
