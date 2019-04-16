@@ -37,6 +37,8 @@ void cell_north(int ni, int nj, const double *lonc, const double *latc, double *
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area);
 void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
 		      int n, double *lon, double *lat);
+void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
+                      int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
                         double *xc, double *yc);
@@ -51,7 +53,7 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
 *******************************************************************************/
 void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *x, double *y,
 				double *dx, double *dy, double *area, double *angle_dx,
-				 double *angle_dy, double shift_fac, int do_schmidt, double stretch_factor,
+				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
 				 double target_lon, double target_lat, int nest_grid,
 				 int parent_tile, int refine_ratio, int istart_nest,
 				 int iend_nest, int jstart_nest, int jend_nest, int halo, int output_length_angle)
@@ -141,7 +143,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   nip=ni+1;
   njp=nj+1;
   
-  if ( do_schmidt && fabs(stretch_factor-1.) > EPSLN5 ) stretched_grid = 1;
+  if ( (do_schmidt || do_cube_transform) && fabs(stretch_factor-1.) > EPSLN5 ) stretched_grid = 1;
   
   lon = (double *)malloc(nip*nip*sizeof(double));
   lat = (double *)malloc(nip*nip*sizeof(double));
@@ -177,7 +179,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   for(n=0; n<ntiles*nip*nip; n++) {
     /* This will result in the corner close to east coast of china */
-    if( do_schmidt == 0 && shift_fac > EPSLN4) xc[n] -= M_PI/18.;
+    if( do_schmidt == 0 && do_cube_transform==0 && shift_fac > EPSLN4) xc[n] -= M_PI/18.;
     if(xc[n] < 0.) xc[n] += 2.*M_PI;
     if(fabs(xc[n]) < EPSLN10) xc[n] = 0;
     if(fabs(yc[n]) < EPSLN10) yc[n] = 0;
@@ -226,6 +228,13 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 			n, xc+n*nip*nip, yc+n*nip*nip);
     }
   }
+  else if( do_cube_transform ) {
+    for(n=0; n<ntiles; n++) {
+       cube_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
+                        n, xc+n*nip*nip, yc+n*nip*nip);
+    }
+  }
+
   
   /* get nest grid */
   if(global_nest) {
@@ -557,6 +566,79 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
   }
   
 }; /* direct_transform */
+
+
+/*-------------------------------------------------------------------------
+  void cube_transform(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
+                        double *lon, double *lat)
+
+  This is a direct transformation of the standard (symmetrical) cubic grid
+  to a locally enhanced high-res grid on the sphere; it is an application
+  of the Schmidt transformation at the **north** pole followed by a 
+  pole_shift_to_target (rotation) operation
+
+  arguments:
+    c            : Stretching factor
+    lon_p, lat_p : center location of the target face, radian
+    n            : grid face number
+    i1,i2,j1,j2  : starting and ending index in i- and j-direction
+    lon          : longitude. 0 <= lon <= 2*pi
+    lat          : latitude. -pi/2 <= lat <= pi/2
+  ------------------------------------------------------------------------*/
+
+void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
+                      int n, double *lon, double *lat)
+{
+#ifdef NO_QUAD_PRECISION
+  double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  double c2p1, c2m1;
+#else
+  long double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  long double c2p1, c2m1;
+#endif
+  int i, j, l, nxp;
+
+  nxp = i2-i1+1;
+  p2 = 0.5*M_PI;
+  two_pi = 2.*M_PI;
+  if(n==0) printf("create_gnomonic_cubic_grid: Cube transformation (revised Schmidt): stretching factor=%g, center=(%g,%g)\n",
+                  stretch_factor, lon_p, lat_p);
+
+  c2p1 = 1. + stretch_factor*stretch_factor;
+  c2m1 = 1. - stretch_factor*stretch_factor;
+
+  sin_p = sin(lat_p);
+  cos_p = cos(lat_p);
+  /* Try rotating pole around before doing the regular rotation */
+  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+      l = j*nxp+i;
+      if ( fabs(c2m1) > EPSLN7 ) {
+        sin_lat = sin(lat[l]);
+        lat_t   = asin( (c2m1+c2p1*sin_lat)/(c2p1+c2m1*sin_lat) );
+      }
+      else {
+        lat_t = lat[l];
+      }
+      sin_lat = sin(lat_t);
+      cos_lat = cos(lat_t);
+      lon[l] = lon[l] + M_PI; /* rotate around first to get final orientation correct */
+      sin_o = -(sin_p*sin_lat + cos_p*cos_lat*cos(lon[l]));
+      if ( (1.-fabs(sin_o)) < EPSLN7 ) {    /* poles */
+        lon[l] = 0.;
+        lat[l] = (sin_o < 0) ? -p2:p2;
+      }
+      else {
+        lat[l] = asin( sin_o );
+        lon[l] = lon_p + atan2(-cos_lat*sin(lon[l]), -sin_lat*cos_p+cos_lat*sin_p*cos(lon[l]));
+        if ( lon[l] < 0. )
+          lon[l] +=two_pi;
+        else if( lon[l] >= two_pi )
+          lon[l] -=two_pi;
+      }
+  }
+  
+}; /* cube_transform */
+
 
 
 
