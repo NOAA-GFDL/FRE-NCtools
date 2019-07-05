@@ -179,9 +179,9 @@ program combine_res
      associate(d=>dim(dimid))
      if (.not.d%compressed) cycle ! skip nonn-compressed dimensions
 
-     if (d%len==0) then 
+     if (d%len==0) then
         ! if compressed dimension has zero length, then the variables
-        ! that depend on it have no values; by skipping them we leave 
+        ! that depend on it have no values; by skipping them we leave
         ! the output filled with respective _FillValues
         if (verbosity>0) then
            write(*,'(x,a)')'compressed dimension "'//trim(d%name)//'" has no values, skipping it and all variables that depend on it'
@@ -419,7 +419,7 @@ subroutine parse_command_line()
   logical :: do_interpret_arguments
   integer :: i, iostat
 
-  integer, external :: iargc
+  !integer, external :: iargc
 
   nargs = iargc()
   if(nargs==0) then
