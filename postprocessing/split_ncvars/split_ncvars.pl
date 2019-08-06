@@ -38,6 +38,7 @@ my $status = GetOptions ('h|help!'     => \$Opt{HELP},
                          'f|onefile=s' => \$Opt{onefile},
                          'i|idir=s'    => \$Opt{idir},
                          'o|odir=s'    => \$Opt{odir},
+                         'u|uncomb'    => \$Opt{UNCOMB},
                          'v|vars=s'    => \$Opt{vars});
 
 usage () if ($Opt{HELP} || @ARGV == 0);
@@ -48,8 +49,17 @@ my $odir = $Opt{odir};
 ##################################################################
 # external scripts 
 
-my $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " --64bit -t 2 --header_pad 16384";
-my $ncks   = `which ncks`; chomp $ncks; $ncks .= " --64bit --header_pad 16384";
+my $ncrcat;
+my $ncks;
+
+if (!$Opt{UNCOMB}) {
+  $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " --64bit -t 2 --header_pad 16384";
+  $ncks   = `which ncks`; chomp $ncks; $ncks .= " --64bit --header_pad 16384";
+} else {
+  $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " -t 2 --header_pad 16384";
+  $ncks   = `which ncks`; chomp $ncks; $ncks .= " --header_pad 16384";
+}
+
 my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 ##################################################################
@@ -75,6 +85,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
  my %ps_includes;
  foreach my $file (@ifiles) {
+     #debug
+     print "\n\n\nFile: $file\n\n\n";
+     my ($ext) = $file =~ /\.nc(.*)/;
+     print "Extension: $ext\n\n";
      if ($Opt{idir}) {
         my @commands;
         print  "dmget ".$Opt{idir}."/$file\n" if $Opt{VERBOSE} > 2;
@@ -350,12 +364,24 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                }
              }
 
-             print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
-             system("mv .var.nc $odir/$var.nc");
+             if ($Opt{UNCOMB}) {
+               print  "mv .var.nc $odir/$var.nc$ext\n" if $Opt{VERBOSE} > 2;
+               system("mv .var.nc $odir/$var.nc$ext");
+               
+               if (@ncatted_opts) {
+                 print  "ncatted -h -O @ncatted_opts $odir/$var.nc$ext\n" if $Opt{VERBOSE} > 1;
+                 system("ncatted -h -O @ncatted_opts $odir/$var.nc$ext");
+               }
+               
+             } else {
+                 print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
+                 system("mv .var.nc $odir/$var.nc");
 
-             if (@ncatted_opts) {
-               print  "ncatted -h -O @ncatted_opts $odir/$var.nc\n" if $Opt{VERBOSE} > 1;
-               system("ncatted -h -O @ncatted_opts $odir/$var.nc");
+                 if (@ncatted_opts) {
+                   print  "ncatted -h -O @ncatted_opts $odir/$var.nc\n" if $Opt{VERBOSE} > 1;
+                   system("ncatted -h -O @ncatted_opts $odir/$var.nc");
+                 }
+
              }
          }
 
@@ -415,6 +441,7 @@ Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
         -p       = includes ps variable in output files that will be zInterpolated
         -i idir  = input (archive) directory path
         -o odir  = output directory path
+        -u file  = option to operate on uncombined files
         -f file  = one file output option
                    file is the name of the output file
                    this option must be used with -v option
