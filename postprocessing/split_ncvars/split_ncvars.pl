@@ -49,17 +49,8 @@ my $odir = $Opt{odir};
 ##################################################################
 # external scripts 
 
-my $ncrcat;
-my $ncks;
-
-if (!$Opt{UNCOMB}) {
-  $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " --64bit -t 2 --header_pad 16384";
-  $ncks   = `which ncks`; chomp $ncks; $ncks .= " --64bit --header_pad 16384";
-} else {
-  $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " -t 2 --header_pad 16384";
-  $ncks   = `which ncks`; chomp $ncks; $ncks .= " --header_pad 16384";
-}
-
+my $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " --64bit_offset -t 2 --header_pad 16384";
+my $ncks = `which ncks`; chomp $ncks; $ncks .= " --64bit_offset --header_pad 16384";
 my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
 ##################################################################
@@ -85,10 +76,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
  my %ps_includes;
  foreach my $file (@ifiles) {
-     #debug
-     print "\n\n\nFile: $file\n\n\n";
      my ($ext) = $file =~ /\.nc(.*)/;
-     print "Extension: $ext\n\n";
+
      if ($Opt{idir}) {
         my @commands;
         print  "dmget ".$Opt{idir}."/$file\n" if $Opt{VERBOSE} > 2;
