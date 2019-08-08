@@ -1,16 +1,9 @@
 #!/usr/bin/perl
 #
-# $Id$
 # ------------------------------------------------------------------------------
 # FMS/FRE Project: Script to Split netCDF Files
 # ------------------------------------------------------------------------------
-# afy    Ver   1.00  Copied from ~fms/local/ia64/netcdf4.fix        June 10
-# afy    Ver   2.00  Don't source the 'init.csh' script             June 10
-# afy    Ver   2.01  Add aliases ncrcat/ncks (from the 'init.csh')  June 10
-# afy    Ver   2.02  Use 'which' to locate the 'list_ncvars.csh'    June 10
-# afy    Ver   2.03  Use 'which' to locate the 'varlist.csh'        June 10
-# ------------------------------------------------------------------------------
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2012
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2019
 # Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
 #
 use strict;
@@ -18,11 +11,14 @@ use Cwd;
 use Getopt::Long;
 use List::MoreUtils qw{uniq};
 Getopt::Long::Configure("bundling");
+use File::Path;
+use File::Spec;
 
 my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
-
+my $tmp_var_filename = ".split_ncvars.$$.var.nc";
+my $VERSION = '20190808';
 my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
@@ -38,10 +34,9 @@ my $status = GetOptions ('h|help!'     => \$Opt{HELP},
                          'f|onefile=s' => \$Opt{onefile},
                          'i|idir=s'    => \$Opt{idir},
                          'o|odir=s'    => \$Opt{odir},
-                         'u|uncomb'    => \$Opt{UNCOMB},
                          'v|vars=s'    => \$Opt{vars});
 
-usage () if ($Opt{HELP} || @ARGV == 0);
+usage() if ($Opt{HELP} || @ARGV == 0);
 my @ifiles = @ARGV;
 my $first = 1;
 my $odir = $Opt{odir};
@@ -49,67 +44,99 @@ my $odir = $Opt{odir};
 ##################################################################
 # external scripts 
 
-my $ncrcat = `which ncrcat`; chomp $ncrcat; $ncrcat .= " --64bit_offset -t 2 --header_pad 16384";
-my $ncks = `which ncks`; chomp $ncks; $ncks .= " --64bit_offset --header_pad 16384";
-my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
+my $ncrcat = `which ncrcat 2>&1`;
+die "Unable to locate ncrcat, cannot continue.\n" if $ncrcat =~ /(: no)|(not found)/;
+chomp $ncrcat; $ncrcat .= " --64 -t 2 --header_pad 16384";
+
+my $ncks = `which ncks 2>&1`; 
+die "Unable to locate ncks, cannot continue.\n" if $ncks =~ /(: no)|(not found)/;
+chomp $ncks; 
+# NCO changed options between 4.5.4 and 4.5.5.
+my $tmp = qx{$ncks --version 2>&1};
+$ncks .= ' --64bit' . ($tmp =~ /4\.5\.5/ ? '_offset' : '')
+       . ' --header_pad 16384';
+
+my $list_ncvars = `which list_ncvars.csh 2>&1`;
+die "Unable to locate list_ncvars.csh, cannot continue.\n" if $list_ncvars =~ /(: no)|(not found)/;
+chomp $list_ncvars;
+
+my $ncdump = `which ncdump 2>&1`;
+die "Unable to locate ncdump, cannot continue.\n" if $ncdump =~ /(: no)|(not found)/;
+chomp $ncdump;
+
+my $dmget_available = `which dmget 2>&1`;
+$dmget_available = 0 if $dmget_available =~ /(: no)|(not found)/;
 
 ##################################################################
 # user supplied variable list
 
-  my @varlist;
-  if ($Opt{vars}) {
-     @varlist = split /,/,$Opt{vars};
-  } else {
-     # vars list must be set to one file option
-     if ($Opt{onefile}) {
+my @varlist;
+if ($Opt{vars}) {
+    @varlist = split /,/,$Opt{vars};
+}
+else {
+    # vars list must be set to one file option
+    if ($Opt{onefile}) {
         $Opt{onefile} = "";
-     }
-  }
+    }
+}
 
 ##################################################################
-
 #  need to make output directory
 
- system("mkdir -p $odir") if (!-e $odir);
+make_path($odir) unless -d $odir;
 
+print "split_ncvars.pl version $VERSION\n" if $Opt{VERBOSE};
 #  process each input file separately
 
- my %ps_includes;
- foreach my $file (@ifiles) {
-     my ($ext) = $file =~ /\.nc(.*)/;
+my %ps_includes;
+my $file_copied = 0;
+foreach my $file (@ifiles) {
+    print STDERR "Cowardly refusing to process files without a .nc filename" and next
+	unless $file =~ /\.nc/;
+    my ($ext) = $file =~ /\.nc(.*)/;
 
-     if ($Opt{idir}) {
-        my @commands;
-        print  "dmget ".$Opt{idir}."/$file\n" if $Opt{VERBOSE} > 2;
-        system("dmget ".$Opt{idir}."/$file");
-        print  "gcp ".$Opt{idir}."/$file $file\n" if $Opt{VERBOSE} > 2;
-        system("gcp ".$Opt{idir}."/$file $file");
-     }
-     my $dump = `ncdump -h $file`;
+    if ($Opt{idir} ) {
+	if ($dmget_available
+	    and File::Spec->rel2abs($Opt{idir}) =~ m@^/arch@) {
+	    print  "dmget ".$Opt{idir}."/$file\n" if $Opt{VERBOSE} > 2;
+	    system("dmget ".$Opt{idir}."/$file");
 
-   # generate variable list (if not user supplied)
-     if (!@varlist) {
+	    if ( $Opt{idir} ne '.' ) {
+		print  "gcp ".$Opt{idir}."/$file $file\n" if $Opt{VERBOSE} > 2;
+		system("gcp ".$Opt{idir}."/$file $file");
+		$file_copied++;
+	    }
+	}
+	$file = "$Opt{idir}/$file";
+    }
+
+    print STDERR "Unable to read $file, skipping\n" and next unless -r $file;
+    my $dump = qx{$ncdump -h $file};
+
+    # generate variable list (if not user supplied)
+    if (!@varlist) {
         if (!$Opt{STATIC}) {
-           print tailname($list_ncvars)." -t0123 $file\n" if $Opt{VERBOSE} > 1;
-           @varlist = split /\n/, `$list_ncvars -t0123 $file`;
+	    print tailname($list_ncvars)." -t0123 $file\n" if $Opt{VERBOSE} > 1;
+	    @varlist = split /\n/, `$list_ncvars -t0123 $file`;
         } else {
-           print tailname($list_ncvars)." -s0123 $file\n" if $Opt{VERBOSE} > 1;
-           @varlist = split /\n/, `$list_ncvars -s0123 $file`;
+	    print tailname($list_ncvars)." -s0123 $file\n" if $Opt{VERBOSE} > 1;
+	    @varlist = split /\n/, `$list_ncvars -s0123 $file`;
         }
-     }
+    }
 
-   # get time axis name
-     my $timename = get_time_dimension($dump) if !$Opt{STATIC};
+    # get time axis name
+    my $timename = get_time_dimension($dump) if !$Opt{STATIC};
 
-#Balaji: add all variables that appear in a coordinate attribute
-#    set coords = ( `ncdump -h $file |grep :coordinates |cut -f2 -d\" |sed "s/ /\n/g" |sort -u` \
-#                   `ncdump -h $file |grep "float geol[oa][nt]" | awk '{print $2}' |cut -f1 -d\(` )
-#    set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
-#     exec echo coords = $coords
-     my @coords;
-     foreach my $coord (qw/geolat geolon GEOLAT GEOLON/) {
-       push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
-     }
+    #Balaji: add all variables that appear in a coordinate attribute
+    #    set coords = ( `ncdump -h $file |grep :coordinates |cut -f2 -d\" |sed "s/ /\n/g" |sort -u` \
+    #                   `ncdump -h $file |grep "float geol[oa][nt]" | awk '{print $2}' |cut -f1 -d\(` )
+    #    set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
+    #     exec echo coords = $coords
+    my @coords;
+    foreach my $coord (qw/geolat geolon GEOLAT GEOLON/) {
+	push @coords, $coord if ($dump =~ /\t\w+ $coord\(.+\)/);
+    }
 #-------------------------------------
 #-----  loop through variables  ------
 #-------------------------------------
@@ -251,15 +278,15 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
          my $vlist = join ",",@vlist;
          print "   var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
          my $appendopt = "";
-         $appendopt = "-A" if (-f "$cwd/.var.nc");
-         print    "ncks -h $appendopt -v $vlist $file .var.nc\n" if !$Opt{QUIET};
+         $appendopt = "-A" if (-f "$cwd/$tmp_var_filename");
+         print   "$ncks -h $appendopt -v $vlist $file $tmp_var_filename\n" if $Opt{VERBOSE};
          next if $TEST;
-         system ("$ncks -h $appendopt -v $vlist $file .var.nc");
+         system ("$ncks -h $appendopt -v $vlist $file $tmp_var_filename");
          $ncstatus += $?;
 
          # remove dimensions called "scalar_axis" (i.e., length = 1)
          # these are typically in the near-surface field files
-         my @commands = remove_degenerate_dimension(".var.nc","scalar_axis");
+         my @commands = remove_degenerate_dimension("$tmp_var_filename","scalar_axis");
          foreach my $cmd (@commands) {
            print "$cmd\n" if $Opt{VERBOSE} > 0;
            system($cmd);
@@ -271,19 +298,19 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
             #--- append to existing file ---
             #push @commands, "dmget ".$Opt{odir}."/$var.nc";
-             print  "mv $odir/$var.nc $odir/.tmp.nc\n" if $Opt{VERBOSE} > 2;
-             system("mv $odir/$var.nc $odir/.tmp.nc");
-             print "ncrcat $odir/.tmp.nc .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 0;
-             system ("$ncrcat -h $odir/.tmp.nc .var.nc $odir/$var.nc");
+             print  "mv $odir/$var.nc $odir/.split_ncvars.$$.tmp.nc\n" if $Opt{VERBOSE} > 2;
+             system("mv $odir/$var.nc $odir/.split_ncvars.$$.tmp.nc");
+             print "ncrcat $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $odir/$var.nc\n" if $Opt{VERBOSE} > 0;
+             system ("$ncrcat -h $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $odir/$var.nc");
              $ncstatus += $?;
-             print  "rm -f $odir/.tmp.nc .var.nc\n" if $Opt{VERBOSE} > 2;
-             system("rm -f $odir/.tmp.nc .var.nc");
+             print  "rm -f $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename\n" if $Opt{VERBOSE} > 2;
+             system("rm -f $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename");
          } else {
             #--- create new file ---
             #--- modify filename attribute ---
             #--- move to output directory ---
 
-             my @ncatted_opts = set_ncatted_opts(".var.nc","$var.nc",$var,$CMIP);
+             my @ncatted_opts = set_ncatted_opts("$tmp_var_filename","$var.nc",$var,$CMIP);
              # external_variables attribute (cell_measures & time-varying formula terms)
              if (@xlist) {
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
@@ -291,14 +318,14 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
 
              # rename coordinate variables
              if (!$Opt{onefile}) {
-               my $vdump = `ncdump -h .var.nc`;
+               my $vdump = `ncdump -h $tmp_var_filename`;
                my @coordinates = get_variables_from_att($vdump,$var,"coordinates");
 
                # rename "height#" (coordinate) variables to just "height"
                my @height = grep{/height\d+/} @coordinates;
                if (@height == 1) {
-                 print  "ncrename -h -v $height[0],height .var.nc\n";
-                 system("ncrename -h -v $height[0],height .var.nc");
+                 print  "ncrename -h -v $height[0],height $tmp_var_filename\n";
+                 system("ncrename -h -v $height[0],height $tmp_var_filename");
                  for (@coordinates) {
                    s/$height[0]/height/;
                  }
@@ -314,8 +341,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  push @plev, grep{/pl700/} @coordinates;
                  if (@plev == 1) {
                    if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
-                     print  "ncrename -h -v $plev[0],plev .var.nc\n";
-                     system("ncrename -h -v $plev[0],plev .var.nc");
+                     print  "ncrename -h -v $plev[0],plev $tmp_var_filename\n";
+                     system("ncrename -h -v $plev[0],plev $tmp_var_filename");
                      for (@coordinates) {
                        s/$plev[0]/plev/;
                      }
@@ -325,8 +352,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                    my $plev_bnds = get_variable_att($vdump,$plev[0],"bounds");
                    if ($plev_bnds) {
                      if ($vdump =~ /\t\w+ $plev_bnds\(.+\)/) {
-                       print  "ncrename -h -v $plev_bnds,plev_bnds .var.nc\n";
-                       system("ncrename -h -v $plev_bnds,plev_bnds .var.nc");
+                       print  "ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename\n";
+                       system("ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename");
                        push @ncatted_opts, "-a bounds,plev,m,c,\"plev_bnds\"";
                      }
                    }
@@ -337,15 +364,15 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                  # rename vertical dimensions (plev## -> plev, levhalf -> lev)
                  foreach my $dim (get_vertical_dimensions($vdump,$var)) {
                    if ($dim =~ /^plev\d+/) {
-                     print  "ncrename -h -d $dim,plev -v $dim,plev .var.nc\n";
-                     system("ncrename -h -d $dim,plev -v $dim,plev .var.nc");
+                     print  "ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename\n";
+                     system("ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename");
                    } elsif ($dim eq "levhalf") {
-                     print  "ncrename -h -d $dim,lev -v $dim,lev .var.nc\n";
-                     system("ncrename -h -d $dim,lev -v $dim,lev .var.nc");
+                     print  "ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename\n";
+                     system("ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename");
                      # also rename the formula terms
                      if (get_variable_att($vdump,$dim,"formula_terms") eq "ap: ap_half b: b_half ps: ps") {
-                       print  "ncrename -h -v ap_half,ap -v b_half,b .var.nc\n";
-                       system("ncrename -h -v ap_half,ap -v b_half,b .var.nc");
+                       print  "ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename\n";
+                       system("ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename");
                        push @ncatted_opts, "-a formula_terms,lev,m,c,\"ap: ap b: b ps: ps\"";
                      }
                    }
@@ -353,25 +380,14 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
                }
              }
 
-             if ($Opt{UNCOMB}) {
-               print  "mv .var.nc $odir/$var.nc$ext\n" if $Opt{VERBOSE} > 2;
-               system("mv .var.nc $odir/$var.nc$ext");
-               
-               if (@ncatted_opts) {
-                 print  "ncatted -h -O @ncatted_opts $odir/$var.nc$ext\n" if $Opt{VERBOSE} > 1;
-                 system("ncatted -h -O @ncatted_opts $odir/$var.nc$ext");
-               }
-               
-             } else {
-                 print  "mv .var.nc $odir/$var.nc\n" if $Opt{VERBOSE} > 2;
-                 system("mv .var.nc $odir/$var.nc");
-
-                 if (@ncatted_opts) {
-                   print  "ncatted -h -O @ncatted_opts $odir/$var.nc\n" if $Opt{VERBOSE} > 1;
-                   system("ncatted -h -O @ncatted_opts $odir/$var.nc");
-                 }
-
-             }
+	     my $destination = "$odir/$var.nc$ext"; #  . ($Opt{UNCOMB} ? $ext : '');
+	     print  "mv $tmp_var_filename $destination\n" if $Opt{VERBOSE} > 2;
+	     system("mv $tmp_var_filename $destination");
+	     
+	     if (@ncatted_opts) {
+		 print  "ncatted -h -O @ncatted_opts $destination\n" if $Opt{VERBOSE} > 1;
+		 system("ncatted -h -O @ncatted_opts $destination");
+	     }
          }
 
          # reset the variable lists
@@ -382,8 +398,8 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
     #--- extract fields for single file option ---
      if ($Opt{onefile}) {
          my $vlist = join ",",@vlist;
-         print    "ncks -h -A -v $vlist $file ".$Opt{onefile}."\n" if $Opt{VERBOSE} > 0;
-         system ("$ncks -h -A -v $vlist $file ".$Opt{onefile});
+         print  "$ncks -h -A -v $vlist $file $Opt{onefile}\n" if $Opt{VERBOSE} > 0;
+         system ("$ncks -h -A -v $vlist $file $Opt{onefile}");
          $ncstatus += $?;
 
          my @ncatted_opts = set_ncatted_opts($Opt{onefile},tailname($Opt{onefile}));
@@ -403,10 +419,10 @@ my $list_ncvars = `which list_ncvars.csh`; chomp $list_ncvars;
         $first = 0;
      }
     # remove file if copied from archive
-     unlink $file if $Opt{idir};
+     unlink $file if $file_copied;
 
-    # clean up
-     unlink "ncks.out" if (-e "ncks.out");
+    # clean up ncks dropping
+    unlink "ncks.out" if (-e "ncks.out");
 
  }   ### end of file loop ###
 
@@ -420,7 +436,7 @@ exit 1 if $ncstatus;
 sub usage {
   my $name = substr($0,rindex($0,"/")+1);
   print "
-Split NetCDF Variables
+Split NetCDF Variables, version $VERSION
 
 Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
 
@@ -430,7 +446,6 @@ Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
         -p       = includes ps variable in output files that will be zInterpolated
         -i idir  = input (archive) directory path
         -o odir  = output directory path
-        -u file  = option to operate on uncombined files
         -f file  = one file output option
                    file is the name of the output file
                    this option must be used with -v option
