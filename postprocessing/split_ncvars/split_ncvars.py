@@ -181,6 +181,9 @@ class OpenNetCDF():
 
 if __name__ == "__main__":
 
+    print("DEPRECATION WARNING. UNSUPPORTED TOOL, INVOKING split_ncvars.pl")
+    os.execvp('split_ncvars.pl', sys.argv)
+
     parser = argparse.ArgumentParser(description="Program to split variables and related fields from netCDF files")
     parser.add_argument("-i", "--input", help="directory to look for netCDF files", required=True)
     parser.add_argument("-o", "--output", help="directory to save newly created netCDF files", required=True)
