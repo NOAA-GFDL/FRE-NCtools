@@ -18,7 +18,7 @@ my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 my $tmp_var_filename = ".split_ncvars.$$.var.nc";
-my $VERSION = '20190808';
+my $VERSION = '20190812';
 my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
@@ -51,9 +51,11 @@ chomp $ncrcat; $ncrcat .= " --64 -t 2 --header_pad 16384";
 my $ncks = `which ncks 2>&1`; 
 die "Unable to locate ncks, cannot continue.\n" if $ncks =~ /(: no)|(not found)/;
 chomp $ncks; 
-# NCO changed options between 4.5.4 and 4.5.5.
+# NCO changed options between 4.5.4 and 4.5.5 and 4.6. Hopefully they stopped those schenanigans.
 my $tmp = qx{$ncks --version 2>&1};
-$ncks .= ' --64bit' . ($tmp =~ /4\.5\.5/ ? '_offset' : '')
+$ncks .=  ($tmp =~ /4\.5\.4/ ? ' --64bit'
+	   : $tmp =~ /4\.5\.5/ ? ' --64bit_offset'
+	   : ' --fl_fmt=64bit_offset')
        . ' --header_pad 16384';
 
 my $list_ncvars = `which list_ncvars.csh 2>&1`;
@@ -84,7 +86,7 @@ else {
 ##################################################################
 #  need to make output directory
 
-File::Path::make_path($odir) unless -d $odir;
+make_path($odir) unless -d $odir;
 
 print "split_ncvars.pl version $VERSION\n" if $Opt{VERBOSE};
 #  process each input file separately
@@ -446,6 +448,7 @@ Usage:  $name [-d] [-l] [-i idir] [-o odir] [-f file] [-v vars]  files.....
         -p       = includes ps variable in output files that will be zInterpolated
         -i idir  = input (archive) directory path
         -o odir  = output directory path
+        -u file  = option to operate on uncombined files
         -f file  = one file output option
                    file is the name of the output file
                    this option must be used with -v option
