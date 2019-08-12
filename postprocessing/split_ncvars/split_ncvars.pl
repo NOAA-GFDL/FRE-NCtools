@@ -84,7 +84,7 @@ else {
 ##################################################################
 #  need to make output directory
 
-make_path($odir) unless -d $odir;
+File::Path::make_path($odir) unless -d $odir;
 
 print "split_ncvars.pl version $VERSION\n" if $Opt{VERBOSE};
 #  process each input file separately
