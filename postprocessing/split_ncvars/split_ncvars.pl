@@ -18,7 +18,7 @@ my $cwd = getcwd;
 my $ncstatus = 0;
 my $TEST = 0;
 my $tmp_var_filename = ".split_ncvars.$$.var.nc";
-my $VERSION = '20190812';
+my $VERSION = '20190813';
 my %Opt = ( HELP=>0, VERBOSE=>0, QUIET=>0, LOG=>0, STATIC=>0, CMIP=>0, PS=>0, AUTO=>0, odir=>$cwd );
 
 #  ----- parse input argument list ------
@@ -97,7 +97,7 @@ foreach my $file (@ifiles) {
     print STDERR "Cowardly refusing to process files without a .nc filename" and next
 	unless $file =~ /\.nc/;
     my ($ext) = $file =~ /\.nc(.*)/;
-
+    my ($tile) = $file =~ /(\.tile\d)/;
     if ($Opt{idir} ) {
 	if ($dmget_available
 	    and File::Spec->rel2abs($Opt{idir}) =~ m@^/arch@) {
@@ -187,12 +187,14 @@ foreach my $file (@ifiles) {
 	     }
 	 }
 
+	 my $output = "$odir/$var$tile.nc";
+	 my $output_barefile = "$var$tile.nc";
         #------------------------------------------------------------
         # FIRST TIME ONLY (when output file does not exist)
         # need to extract additional static fields
         # 1) dimension bounds, 2) coordinate variables, 3) formula terms
         #------------------------------------------------------------
-         if (!-e "$odir/$var.nc") {
+         if (!-e $output) {
 
             # get variable names of all dimension bounds/edges (except for time)
             my @bounds = get_variable_bounds   ($dump,$var,$CMIP);
@@ -295,15 +297,15 @@ foreach my $file (@ifiles) {
          }
 
      #--- write to the output file ---
-         if (-e "$odir/$var.nc") {
+         if (-e $output) {
              die "ERROR: try to append to unlimited dimension when no unlimited dimension found" if !$timename;
 
             #--- append to existing file ---
             #push @commands, "dmget ".$Opt{odir}."/$var.nc";
-             print  "mv $odir/$var.nc $odir/.split_ncvars.$$.tmp.nc\n" if $Opt{VERBOSE} > 2;
-             system("mv $odir/$var.nc $odir/.split_ncvars.$$.tmp.nc");
-             print "ncrcat $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $odir/$var.nc\n" if $Opt{VERBOSE} > 0;
-             system ("$ncrcat -h $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $odir/$var.nc");
+             print  "mv $output $odir/.split_ncvars.$$.tmp.nc\n" if $Opt{VERBOSE} > 2;
+             system("mv $output $odir/.split_ncvars.$$.tmp.nc");
+             print "ncrcat $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $output\n" if $Opt{VERBOSE} > 0;
+             system ("$ncrcat -h $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $output");
              $ncstatus += $?;
              print  "rm -f $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename\n" if $Opt{VERBOSE} > 2;
              system("rm -f $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename");
@@ -312,7 +314,7 @@ foreach my $file (@ifiles) {
             #--- modify filename attribute ---
             #--- move to output directory ---
 
-             my @ncatted_opts = set_ncatted_opts("$tmp_var_filename","$var.nc",$var,$CMIP);
+             my @ncatted_opts = set_ncatted_opts("$tmp_var_filename","$output_barefile",$var,$CMIP);
              # external_variables attribute (cell_measures & time-varying formula terms)
              if (@xlist) {
                push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
@@ -382,7 +384,8 @@ foreach my $file (@ifiles) {
                }
              }
 
-	     my $destination = "$odir/$var.nc$ext"; #  . ($Opt{UNCOMB} ? $ext : '');
+#	     my $destination = "$odir/$var.nc$ext"; #  . ($Opt{UNCOMB} ? $ext : '');
+	     my $destination = "$output$ext";
 	     print  "mv $tmp_var_filename $destination\n" if $Opt{VERBOSE} > 2;
 	     system("mv $tmp_var_filename $destination");
 	     
