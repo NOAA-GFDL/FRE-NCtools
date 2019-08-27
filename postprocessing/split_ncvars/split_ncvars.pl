@@ -97,8 +97,8 @@ my $file_copied = 0;
 foreach my $file (@ifiles) {
     print STDERR "Cowardly refusing to process files without a .nc filename" and next
 	unless $file =~ /\.nc/;
-    my ($ext) = basename $file =~ /\.nc(.*)/;
-    my ($tile) = basename $file =~ /(\.tile\d)/;
+    my ($ext) = (basename $file) =~ /\.nc(.*)/;
+    my ($tile) = (basename $file) =~ /(\.tile\d)/;
     if ($Opt{idir} ) {
 	if ($dmget_available
 	    and File::Spec->rel2abs($Opt{idir}) =~ m@^/arch@) {
