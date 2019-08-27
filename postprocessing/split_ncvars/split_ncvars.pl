@@ -13,6 +13,7 @@ use List::MoreUtils qw{uniq};
 Getopt::Long::Configure("bundling");
 use File::Path;
 use File::Spec;
+use File::Basename;
 
 my $cwd = getcwd;
 my $ncstatus = 0;
@@ -96,8 +97,8 @@ my $file_copied = 0;
 foreach my $file (@ifiles) {
     print STDERR "Cowardly refusing to process files without a .nc filename" and next
 	unless $file =~ /\.nc/;
-    my ($ext) = $file =~ /\.nc(.*)/;
-    my ($tile) = $file =~ /(\.tile\d)/;
+    my ($ext) = basename $file =~ /\.nc(.*)/;
+    my ($tile) = basename $file =~ /(\.tile\d)/;
     if ($Opt{idir} ) {
 	if ($dmget_available
 	    and File::Spec->rel2abs($Opt{idir}) =~ m@^/arch@) {
