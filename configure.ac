@@ -63,12 +63,12 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
                  postprocessing/combine_blobs/Makefile
                  postprocessing/combine_restarts/Makefile
-		 postprocessing/iceberg_comb/Makefile
+                 postprocessing/iceberg_comb/Makefile
                  postprocessing/land_utils/Makefile
                  postprocessing/list_ncvars/Makefile
-		 postprocessing/mppnccombine/Makefile
-		 postprocessing/plevel/Makefile
-		 postprocessing/split_ncvars/Makefile
-		 postprocessing/timavg/Makefile
+                 postprocessing/mppnccombine/Makefile
+                 postprocessing/plevel/Makefile
+                 postprocessing/split_ncvars/Makefile
+                 postprocessing/timavg/Makefile
                ])
 AC_OUTPUT
