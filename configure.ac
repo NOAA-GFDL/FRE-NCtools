@@ -2,6 +2,7 @@
 AC_INIT([FRE NC Tools], [1.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
 AC_PREREQ([2.63])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
@@ -14,6 +15,9 @@ AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O
 AC_FC_SRCEXT([f90])
 AC_FC_SRCEXT([F90])
+AC_MSG_NOTICE([FCFLAGS = $FCFLAGS])
+AC_FC_LINE_LENGTH([unlimited])
+AC_MSG_NOTICE([FCFLAGS = $FCFLAGS])
 
 # Check for library
 AX_LIB_NETCDF()
@@ -41,13 +45,14 @@ if test $CC = icc; then
   BASE_CFLAGS="-traceback"
 fi
 if test $FC = gfortran; then
-  BASE_FCFLAGS="-ffree-line-length-none"
+  BASE_FCFLAGS=""
+  BASE_FCFLAGS=""
   R8_FCFLAGS="-fdefault-real-8"
   R4_FCFLAGS=""
   MODDIR_FCFLAGS="-J"
 fi
 if test $FC = ifort; then
-  BASE_FCFLAGS="-fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -real_size 64 -traceback"
+  BASE_FCFLAGS="-fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -traceback"
   R8_FCFLAGS="-real_size 64"
   R4_FCFLAGS="-real_size 32"
   MODDIR_FCFLAGS="-module"

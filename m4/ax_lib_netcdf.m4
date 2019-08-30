@@ -166,13 +166,13 @@ where NetCDF has been installed.
     AC_MSG_RESULT([yes (version $[NETCDF_VERSION])])
 
     # Save current CC settings
-    ax_lib_netcdf_save_CC=$CC
+    #ax_lib_netcdf_save_CC=$CC
     ax_lib_netcdf_save_CFLAGS=$CFLAGS
     ax_lib_netcdf_save_CPPFLAGS=$CPPFLAGS
     ax_lib_netcdf_save_LIBS=$LIBS
     ax_lib_netcdf_save_LDFLAGS=$LDFLAGS
 
-    CC=$NETCDF_CC
+    #CC=$NETCDF_CC
     CFLAGS=$NETCDF_CFLAGS
     CPPFLAGS=$NETCDF_CPPFLAGS
     LIBS=$NETCDF_LIBS
@@ -187,7 +187,7 @@ where NetCDF has been installed.
          with_netcdf="no"
     fi
 
-    CC=$ax_lib_netcdf_save_CC
+    #CC=$ax_lib_netcdf_save_CC
     CFLAGS=$ax_lib_netcdf_save_CFLAGS
     CPPFLAGS=$ax_lib_netcdf_save_CPPFLAGS
     LIBS=$ax_lib_netcdf_save_LIBS
@@ -288,12 +288,12 @@ where NetCDF Fortran has been installed.
     AC_MSG_RESULT([yes (version $[NETCDFF_VERSION])])
 
     # Save previous FC settings
-    ax_lib_netcdf_save_FC=$FC
+    #ax_lib_netcdf_save_FC=$FC
     ax_lib_netcdf_save_FCFLAGS=$FCFLAGS
     ax_lib_netcdf_save_LIBS=$LIBS
     ax_lib_netcdf_save_LDFLAGS=$LDFLAGS
 
-    FC=$NETCDF_FC
+    #FC=$NETCDF_FC
     FCFLAGS=$NETCDF_FCFLAGS
     LIBS=$NETCDF_FCLIBS
     LDFLAGS=$NETCDF_FCLDFLAGS
@@ -342,8 +342,8 @@ where NetCDF Fortran has been installed.
     fi
 
     # Restore previous FC settings
-    FC=$ax_lib_netcdf_save_FC
-    CFLAGS=$ax_lib_netcdf_save_CFLAGS
+    #FC=$ax_lib_netcdf_save_FC
+    FCFLAGS=$ax_lib_netcdf_save_FCFLAGS
     LIBS=$ax_lib_netcdf_save_LIBS
     LDFLAGS=$ax_lib_netcdf_save_LDFLAGS
 
