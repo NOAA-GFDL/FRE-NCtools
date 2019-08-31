@@ -12,12 +12,12 @@ endif
 
 .txt.1:
 	$(A2X) -v -L\
-               -D $(builddir) \
-               -d manpage \
-               -f manpage \
-               -afre_version=$(PACKAGE_VERSION) \
-               --asciidoc-opts="-f $(ASCIIDOC_CFG)" \
-               $<
+          -D $(builddir) \
+          -d manpage \
+          -f manpage \
+          -afre_version=$(PACKAGE_VERSION) \
+          --asciidoc-opts="-f $(ASCIIDOC_CFG)" \
+          $<
 
 clean-local:
 	$(RM) *.1

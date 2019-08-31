@@ -8,5 +8,21 @@ SUBDIRS = postprocessing/combine_blobs \
           postprocessing/mppnccombine \
           postprocessing/plevel \
           postprocessing/split_ncvars \
-          postprocessing/timavg
-
+          postprocessing/timavg \
+          tools/libfrencutils \
+          tools/check_mask \
+          tools/cubic_utils \
+          tools/fregrid \
+          tools/make_coupler_mosaic \
+          tools/make_hgrid \
+          tools/make_land_domain \
+          tools/make_quick_mosaic \
+          tools/make_regional_mosaic \
+          tools/make_solo_mosaic \
+          tools/make_topog \
+          tools/make_vgrid \
+          tools/mppncscatter \
+          tools/ncexists \
+          tools/remap_land \
+          tools/river_regrid \
+          tools/runoff_regrid

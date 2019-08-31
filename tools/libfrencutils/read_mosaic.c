@@ -5,9 +5,7 @@
 #include "read_mosaic.h"
 #include "constant.h"
 #include "mosaic_util.h"
-#ifdef use_netCDF
 #include <netcdf.h>
-#endif
 /*********************************************************************
     void netcdf_error( int status )
     status is the returning value of netcdf call. this routine will
@@ -33,7 +31,7 @@ void get_file_dir(const char *file, char *dir)
   char *strptr = NULL;
 
   /* get the diretory */
- 
+
   strptr = strrchr(file, '/');
   if(strptr) {
     len = strptr - file;
@@ -51,19 +49,18 @@ void get_file_dir(const char *file, char *dir)
 int field_exist(const char* file, const char *name)
 {
   int ncid, varid, status, existed;
-  char msg[512];  
-#ifdef use_netCDF
+  char msg[512];
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "field_exist: in opening file %s", file);
     handle_netcdf_error(msg, status);
   }
-  status = nc_inq_varid(ncid, name, &varid);  
+  status = nc_inq_varid(ncid, name, &varid);
   if(status == NC_NOERR)
     existed = 1;
   else
     existed = 0;
-    
+
   status = nc_close(ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "field_exist: in closing file %s.", file);
@@ -71,11 +68,6 @@ int field_exist(const char* file, const char *name)
   }
 
   return existed;
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-
-#endif
-  return 0; 
 }; /* field_exist */
 
 int get_dimlen(const char* file, const char *name)
@@ -85,19 +77,18 @@ int get_dimlen(const char* file, const char *name)
   char msg[512];
 
   len = 0;
-#ifdef use_netCDF  
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in opening file %s", file);
     handle_netcdf_error(msg, status);
   }
-  
+
   status = nc_inq_dimid(ncid, name, &dimid);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting dimid of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
   }
-  
+
   status = nc_inq_dimlen(ncid, dimid, &size);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting dimension size of %s from file %s.", name, file);
@@ -108,18 +99,15 @@ int get_dimlen(const char* file, const char *name)
     sprintf(msg, "in closing file %s.", file);
     handle_netcdf_error(msg, status);
   }
-  
+
   len = size;
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s", file);
     handle_netcdf_error(msg, status);
   }
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+
   return len;
-  
+
 }; /* get_dimlen */
 
 /*******************************************************************************
@@ -131,7 +119,6 @@ void get_string_data(const char *file, const char *name, char *data)
   int ncid, varid, status;
   char msg[512];
 
-#ifdef use_netCDF    
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in opening file %s", file);
@@ -141,7 +128,7 @@ void get_string_data(const char *file, const char *name, char *data)
   if(status != NC_NOERR) {
     sprintf(msg, "in getting varid of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
-  }     
+  }
   status = nc_get_var_text(ncid, varid, data);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting data of %s from file %s.", name, file);
@@ -151,11 +138,7 @@ void get_string_data(const char *file, const char *name, char *data)
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
     handle_netcdf_error(msg, status);
-  }  
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+  }
 }; /* get_string_data */
 
 /*******************************************************************************
@@ -168,7 +151,6 @@ void get_string_data_level(const char *file, const char *name, char *data, const
   size_t start[4], nread[4];
   char msg[512];
 
-#ifdef use_netCDF  
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in opening file %s", file);
@@ -192,11 +174,7 @@ void get_string_data_level(const char *file, const char *name, char *data, const
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
     handle_netcdf_error(msg, status);
-  }  
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+  }
 }; /* get_string_data_level */
 
 
@@ -207,11 +185,10 @@ void get_string_data_level(const char *file, const char *name, char *data, const
 void get_var_data(const char *file, const char *name, void *data)
 {
 
-  int ncid, varid, status;  
+  int ncid, varid, status;
   nc_type vartype;
   char msg[512];
 
-#ifdef use_netCDF    
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in opening file %s", file);
@@ -253,11 +230,7 @@ void get_var_data(const char *file, const char *name, void *data)
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
     handle_netcdf_error(msg, status);
-  }  
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+  }
 }; /* get_var_data */
 
 /*******************************************************************************
@@ -267,11 +240,10 @@ void get_var_data(const char *file, const char *name, void *data)
 void get_var_data_region(const char *file, const char *name, const size_t *start, const size_t *nread, void *data)
 {
 
-  int ncid, varid, status;  
+  int ncid, varid, status;
   nc_type vartype;
   char msg[512];
 
-#ifdef use_netCDF    
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "get_var_data_region: in opening file %s", file);
@@ -293,7 +265,7 @@ void get_var_data_region(const char *file, const char *name, const size_t *start
   case NC_DOUBLE:case NC_FLOAT:
 #ifdef OVERLOAD_R4
     status = nc_get_vara_float(ncid, varid, start, nread, data);
-#else      
+#else
     status = nc_get_vara_double(ncid, varid, start, nread, data);
 #endif
     break;
@@ -314,11 +286,7 @@ void get_var_data_region(const char *file, const char *name, const size_t *start
   if(status != NC_NOERR) {
     sprintf(msg, "get_var_data_region: in closing file %s.", file);
     handle_netcdf_error(msg, status);
-  }  
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+  }
 }; /* get_var_data_region */
 
 /******************************************************************************
@@ -327,10 +295,9 @@ void get_var_data_region(const char *file, const char *name, const size_t *start
 ******************************************************************************/
 void get_var_text_att(const char *file, const char *name, const char *attname, char *att)
 {
-  int ncid, varid, status;  
+  int ncid, varid, status;
   char msg[512];
 
-#ifdef use_netCDF    
   status = nc_open(file, NC_NOWRITE, &ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in opening file %s", file);
@@ -340,7 +307,7 @@ void get_var_text_att(const char *file, const char *name, const char *attname, c
   if(status != NC_NOERR) {
     sprintf(msg, "in getting varid of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
-  }     
+  }
   status = nc_get_att_text(ncid, varid, attname, att);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting attribute %s of %s from file %s.", attname, name, file);
@@ -350,11 +317,7 @@ void get_var_text_att(const char *file, const char *name, const char *attname, c
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
     handle_netcdf_error(msg, status);
-  }  
-#else
-  error_handler("read_mosaic: Add flag -Duse_netCDF when compiling");
-#endif
-  
+  }
 }; /* get_var_text_att */
 
 /***********************************************************************
@@ -370,17 +333,17 @@ int read_mosaic_xgrid_size_( const char *xgrid_file )
 int read_mosaic_xgrid_size( const char *xgrid_file )
 {
   int ncells;
-  
+
   ncells = get_dimlen(xgrid_file, "ncells");
   return ncells;
 }
 
 #ifdef OVERLOAD_R4
-float get_global_area(void) 
+float get_global_area(void)
 {
   float garea;
 #else
-double get_global_area(void) 
+double get_global_area(void)
 {
   double garea;
 #endif
@@ -415,7 +378,7 @@ void read_mosaic_xgrid_order1_(const char *xgrid_file, int *i1, int *j1, int *i2
 #endif
 {
   read_mosaic_xgrid_order1(xgrid_file, i1, j1, i2, j2, area);
-  
+
 };
 #endif
 
@@ -427,12 +390,12 @@ void read_mosaic_xgrid_order1(const char *xgrid_file, int *i1, int *j1, int *i2,
 {
   int    ncells, n;
   int    *tile1_cell, *tile2_cell;
-#ifdef OVERLOAD_R4  
+#ifdef OVERLOAD_R4
   float garea;
 #else
   double garea;
 #endif
-  
+
   ncells = get_dimlen(xgrid_file, "ncells");
 
   tile1_cell       = (int *)malloc(ncells*2*sizeof(int));
@@ -443,7 +406,7 @@ void read_mosaic_xgrid_order1(const char *xgrid_file, int *i1, int *j1, int *i2,
   get_var_data(xgrid_file, "xgrid_area", area);
 
   garea = 4*M_PI*RADIUS*RADIUS;
-  
+
   for(n=0; n<ncells; n++) {
     i1[n] = tile1_cell[n*2] - 1;
     j1[n] = tile1_cell[n*2+1] - 1;
@@ -454,7 +417,7 @@ void read_mosaic_xgrid_order1(const char *xgrid_file, int *i1, int *j1, int *i2,
 
   free(tile1_cell);
   free(tile2_cell);
-  
+
 }; /* read_mosaic_xgrid_order1 */
 
 
@@ -466,7 +429,7 @@ void read_mosaic_xgrid_order1_region_(const char *xgrid_file, int *i1, int *j1, 
 #endif
 {
   read_mosaic_xgrid_order1_region(xgrid_file, i1, j1, i2, j2, area, isc, iec);
-  
+
 };
 #endif
 
@@ -479,12 +442,12 @@ void read_mosaic_xgrid_order1_region(const char *xgrid_file, int *i1, int *j1, i
   int    ncells, n, i;
   int    *tile1_cell, *tile2_cell;
   size_t start[4], nread[4];
-#ifdef OVERLOAD_R4  
+#ifdef OVERLOAD_R4
   float garea;
 #else
   double garea;
 #endif
-  
+
   ncells = *iec-*isc+1;
 
   tile1_cell       = (int *)malloc(ncells*2*sizeof(int));
@@ -501,11 +464,11 @@ void read_mosaic_xgrid_order1_region(const char *xgrid_file, int *i1, int *j1, i
   get_var_data_region(xgrid_file, "tile2_cell", start, nread, tile2_cell);
 
   nread[1] = 1;
-  
+
   get_var_data_region(xgrid_file, "xgrid_area", start, nread, area);
 
   garea = 4*M_PI*RADIUS*RADIUS;
-  
+
   for(n=0; n<ncells; n++) {
     i1[n] = tile1_cell[n*2] - 1;
     j1[n] = tile1_cell[n*2+1] - 1;
@@ -516,7 +479,7 @@ void read_mosaic_xgrid_order1_region(const char *xgrid_file, int *i1, int *j1, i
 
   free(tile1_cell);
   free(tile2_cell);
-  
+
 }; /* read_mosaic_xgrid_order1 */
 
 /* NOTE: di, dj is for tile1, */
@@ -529,7 +492,7 @@ void read_mosaic_xgrid_order2_(const char *xgrid_file, int *i1, int *j1, int *i2
 #endif
 {
   read_mosaic_xgrid_order2(xgrid_file, i1, j1, i2, j2, area, di, dj);
-  
+
 };
 #endif
 #ifdef OVERLOAD_R4
@@ -558,7 +521,7 @@ void read_mosaic_xgrid_order2(const char *xgrid_file, int *i1, int *j1, int *i2,
   get_var_data(xgrid_file, "tile1_distance", tile1_distance);
 
   garea = 4*M_PI*RADIUS*RADIUS;
-  
+
   for(n=0; n<ncells; n++) {
     i1[n] = tile1_cell[n*2] - 1;
     j1[n] = tile1_cell[n*2+1] - 1;
@@ -572,7 +535,7 @@ void read_mosaic_xgrid_order2(const char *xgrid_file, int *i1, int *j1, int *i2,
   free(tile1_cell);
   free(tile2_cell);
   free(tile1_distance);
-  
+
 }; /* read_mosaic_xgrid_order2 */
 
 /******************************************************************************
@@ -593,7 +556,7 @@ int read_mosaic_ntiles(const char *mosaic_file)
   ntiles = get_dimlen(mosaic_file, "ntiles");
 
   return ntiles;
-  
+
 }; /* read_mosaic_ntiles */
 
 /******************************************************************************
@@ -615,9 +578,9 @@ int read_mosaic_ncontacts(const char *mosaic_file)
     ncontacts = get_dimlen(mosaic_file, "ncontact");
   else
     ncontacts = 0;
-  
+
   return ncontacts;
-  
+
 }; /* read_mosaic_ncontacts */
 
 
@@ -639,7 +602,7 @@ void read_mosaic_grid_sizes(const char *mosaic_file, int *nx, int *ny)
   char dir[STRING];
   const int x_refine = 2, y_refine = 2;
 
-  get_file_dir(mosaic_file, dir);  
+  get_file_dir(mosaic_file, dir);
   ntiles = get_dimlen(mosaic_file, "ntiles");
   for(n = 0; n < ntiles; n++) {
     get_string_data_level(mosaic_file, "gridfiles", gridfile, &n);
@@ -651,9 +614,9 @@ void read_mosaic_grid_sizes(const char *mosaic_file, int *nx, int *ny)
     nx[n] /= x_refine;
     ny[n] /= y_refine;
   }
-  
+
 }; /* read_mosaic_grid_sizes */
-  
+
 
 /******************************************************************************
   void read_mosaic_contact(const char *mosaic_file)
@@ -667,7 +630,7 @@ void read_mosaic_contact_(const char *mosaic_file, int *tile1, int *tile2, int *
 }
 #endif
 
-/* transfer the index from supergrid to model grid 
+/* transfer the index from supergrid to model grid
    return 0 if istart = iend
    otherwise return 1.
 */
@@ -681,7 +644,7 @@ int transfer_to_model_index(int istart_in, int iend_in, int *istart_out, int *ie
       type = 0;
       istart_out[0] = (istart_in+1)/refine_ratio-1;
       iend_out[0]  = istart_out[0];
-   }   
+   }
    else {
       type = 1;
       if( iend_in > istart_in ) {
@@ -697,7 +660,7 @@ int transfer_to_model_index(int istart_in, int iend_in, int *istart_out, int *ie
          error_handler("Error from read_mosaic: mismatch between refine_ratio and istart_in/iend_in");
       istart_out[0] /= refine_ratio;
       iend_out[0]   /= refine_ratio;
-   }      
+   }
 
    return type;
 
@@ -714,7 +677,7 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
   int ntiles, ncontacts, n, m, l, found;
   unsigned int nstr;
   const int x_refine = 2, y_refine = 2;
-  int i1_type, j1_type, i2_type, j2_type;  
+  int i1_type, j1_type, i2_type, j2_type;
 
   ntiles = get_dimlen(mosaic_file, "ntiles");
   gridtiles = (char **)malloc(ntiles*sizeof(char *));
@@ -722,8 +685,8 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
     gridtiles[n] = (char *)malloc(STRING*sizeof(char));
     get_string_data_level(mosaic_file, "gridtiles", gridtiles[n], &n);
   }
-    
-  ncontacts = get_dimlen(mosaic_file, "ncontact"); 
+
+  ncontacts = get_dimlen(mosaic_file, "ncontact");
   for(n = 0; n < ncontacts; n++) {
     get_string_data_level(mosaic_file, "contacts", contacts, &n);
     /* parse the string contacts to get tile number */
@@ -749,7 +712,7 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
       }
     }
     if(!found) error_handler("error from read_mosaic: the second tile name specified "
-			     "in contact is not found in tile list");    
+			     "in contact is not found in tile list");
     get_string_data_level(mosaic_file, "contact_index", contacts, &n);
     /* parse the string to get contact index */
     tokenize( contacts, ":,", STRING, MAXVAR, (char *)pstring, &nstr);
@@ -788,7 +751,7 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
   }
 
   free(gridtiles);
- 
+
 
 }; /* read_mosaic_contact */
 
@@ -810,10 +773,10 @@ void read_mosaic_grid_data(const char *mosaic_file, const char *name, int nx, in
   int    ni, nj, nxp, nyp, i, j;
 
   get_file_dir(mosaic_file, dir);
-  
+
   get_string_data_level(mosaic_file, "gridfiles", gridfile, &level);
   sprintf(tilefile, "%s/%s", dir, gridfile);
-  
+
   ni = get_dimlen(tilefile, "nx");
   nj = get_dimlen(tilefile, "ny");
 
@@ -824,7 +787,5 @@ void read_mosaic_grid_data(const char *mosaic_file, const char *name, int nx, in
   nyp = ny + 1 - joff;
   for(j=0; j<nyp; j++) for(i=0; i<nxp; i++) data[j*nxp+i] = tmp[(2*j+joff)*(ni+1)+2*i+ioff];
   free(tmp);
-   
+
 }; /* read_mosaic_grid_data */
-
-

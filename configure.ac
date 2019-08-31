@@ -8,6 +8,9 @@ AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Check for programs
+AC_PROG_RANLIB
+AM_PROG_AR
+
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
 
@@ -17,6 +20,7 @@ AC_FC_SRCEXT([f90])
 AC_FC_SRCEXT([F90])
 AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
+AC_FC_MODULE_EXTENSION()
 AX_REAL_KIND8_FLAG()
 AX_REAL_KIND4_FLAG()
 
@@ -64,5 +68,22 @@ AC_CONFIG_FILES([Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile
+                 tools/libfrencutils/Makefile
+                 tools/check_mask/Makefile
+                 tools/cubic_utils/Makefile
+                 tools/fregrid/Makefile
+                 tools/make_coupler_mosaic/Makefile
+                 tools/make_hgrid/Makefile
+                 tools/make_land_domain/Makefile
+                 tools/make_quick_mosaic/Makefile
+                 tools/make_regional_mosaic/Makefile
+                 tools/make_solo_mosaic/Makefile
+                 tools/make_topog/Makefile
+                 tools/make_vgrid/Makefile
+                 tools/mppncscatter/Makefile
+                 tools/ncexists/Makefile
+                 tools/remap_land/Makefile
+                 tools/river_regrid/Makefile
+                 tools/runoff_regrid/Makefile
                ])
 AC_OUTPUT
