@@ -1,6 +1,5 @@
 #!/bin/csh -f
 #
-# $Id: split_ncvars.csh,v 1.1.2.1.2.2.2.1.2.2.4.4 2013/07/23 13:09:56 keo Exp $
 # ------------------------------------------------------------------------------
 # FMS/FRE Project: Script to Split netCDF Files
 # ------------------------------------------------------------------------------
@@ -13,6 +12,25 @@
 # Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2012
 # Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
 #
+
+cat <<EOF
+ ================================================
+             DEPRECATION NOTICE
+ ================================================
+
+ As of 2018-08-08 this tool is deprecated.  
+
+ Please use "split_ncvars.pl" directly to avoid this message.
+
+ Now invoking the supported replacement tool, split_ncvars.pl
+
+ ================================================
+             DEPRECATION NOTICE
+ ================================================
+
+EOF
+
+exec split_ncvars.pl $*
 
 set odir = .
 set ifiles

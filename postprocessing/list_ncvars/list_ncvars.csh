@@ -94,7 +94,7 @@ endif
 alias list_ncvars `which list_ncvars.exe`
 
 # unique namelist name
-set nml_name = nml`date '+%j%H%M%S'`
+set nml_name = nml.$$.`date '+%j%H%M%S%N'`
 
 #-------------------------
 # loop thru netcdf files
