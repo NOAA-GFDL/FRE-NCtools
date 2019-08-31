@@ -15,9 +15,25 @@ AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O
 AC_FC_SRCEXT([f90])
 AC_FC_SRCEXT([F90])
-AC_MSG_NOTICE([FCFLAGS = $FCFLAGS])
 AC_FC_LINE_LENGTH([unlimited])
-AC_MSG_NOTICE([FCFLAGS = $FCFLAGS])
+AC_FC_FREEFORM()
+AX_REAL_KIND8_FLAG()
+AX_REAL_KIND4_FLAG()
+
+AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
+if test -n "$ASCIIDOC"; then
+  AC_MSG_CHECKING([for asciidoc version])
+  asciidoc_version=`$ASCIIDOC --version 2>/dev/null`
+  case "${asciidoc_version}" in
+  asciidoc' '8*)
+    AC_MSG_RESULT([${asciidoc_version}])
+    ;;
+  *)
+    AC_MSG_RESULT([${asciidoc_version} (unknown)])
+    ;;
+  esac
+fi
+AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 
 # Check for library
 AX_LIB_NETCDF()
@@ -35,33 +51,32 @@ fi
 # Check for typedefs, structures, and compiler characteristics
 
 # Check for library functions
-AC_FC_FREEFORM()
 
 # Set compiler family specific compiler options
-if test $CC = gcc; then
-  BASE_CFLAGS=
-fi
-if test $CC = icc; then
-  BASE_CFLAGS="-traceback"
-fi
-if test $FC = gfortran; then
-  BASE_FCFLAGS=""
-  BASE_FCFLAGS=""
-  R8_FCFLAGS="-fdefault-real-8"
-  R4_FCFLAGS=""
-  MODDIR_FCFLAGS="-J"
-fi
-if test $FC = ifort; then
-  BASE_FCFLAGS="-fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -traceback"
-  R8_FCFLAGS="-real_size 64"
-  R4_FCFLAGS="-real_size 32"
-  MODDIR_FCFLAGS="-module"
-fi
+#if test $CC = gcc; then
+#  BASE_CFLAGS=
+#fi
+#if test $CC = icc; then
+#  BASE_CFLAGS="-traceback"
+#fi
+#if test $FC = gfortran; then
+#  BASE_FCFLAGS=""
+#  BASE_FCFLAGS=""
+#  R8_FCFLAGS="-fdefault-real-8"
+#  R4_FCFLAGS=""
+#  MODDIR_FCFLAGS="-J"
+#fi
+#if test $FC = ifort; then
+#  BASE_FCFLAGS="-fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -traceback"
+#  R8_FCFLAGS="-real_size 64"
+#  R4_FCFLAGS="-real_size 32"
+#  MODDIR_FCFLAGS="-module"
+#fi
 
-AC_SUBST([BASE_CFLAGS])
-AC_SUBST([BASE_FCFLAGS])
-AC_SUBST([R8_FCFLAGS])
-AC_SUBST([R4_FCFLAGS])
+#AC_SUBST([BASE_CFLAGS])
+#AC_SUBST([BASE_FCFLAGS])
+#AC_SUBST([R8_FCFLAGS])
+#AC_SUBST([R4_FCFLAGS])
 
 # Output files
 AC_CONFIG_HEADERS([config.h])
