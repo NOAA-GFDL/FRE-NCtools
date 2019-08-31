@@ -6,4 +6,5 @@ LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 make_vgrid_SOURCES = create_vgrid.c \
+                     create_vgrid.h \
                      make_vgrid.c

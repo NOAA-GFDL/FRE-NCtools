@@ -1,5 +1,5 @@
 bin_PROGRAMS = TAVG.exe TAVG.r4.exe
-bin_SCRIPTS = timavg.csh
+dist_bin_SCRIPTS = timavg.csh
 
 AM_FCFLAGS =  $(NETCDF_FCFLAGS)
 LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)

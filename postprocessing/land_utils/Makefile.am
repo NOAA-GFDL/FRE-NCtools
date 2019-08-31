@@ -1,5 +1,5 @@
 bin_PROGRAMS = combine-ncc decompress-ncc is-compressed
-bin_SCRIPTS = combine-lumip-vars.py
+dist_bin_SCRIPTS = combine-lumip-vars.py
 
 AM_FCFLAGS =  $(NETCDF_FCFLAGS)
 

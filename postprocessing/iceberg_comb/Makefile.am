@@ -1,4 +1,5 @@
-bin_SCRIPTS = iceberg_comb.sh
+dist_bin_SCRIPTS = iceberg_comb.sh
+EXTRA_DIST = iceberg_comb.sh.txt asciidoc.conf
 
 # Documentation settings
 A2X = a2x

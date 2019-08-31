@@ -6,4 +6,5 @@ LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 make_solo_mosaic_SOURCES = get_contact.c \
+                           get_contact.h \
                            make_solo_mosaic.c

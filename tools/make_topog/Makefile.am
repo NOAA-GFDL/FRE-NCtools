@@ -6,4 +6,5 @@ LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 make_topog_SOURCES = make_topog.c \
-                     topog.c
+                     topog.c \
+                     topog.h

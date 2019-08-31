@@ -1,5 +1,5 @@
 bin_PROGRAMS = PLEV.exe PLEV.r4.exe
-bin_SCRIPTS = plevel.sh
+dist_bin_SCRIPTS = plevel.sh
 
 AM_FCFLAGS =  $(NETCDF_FCFLAGS)
 LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)

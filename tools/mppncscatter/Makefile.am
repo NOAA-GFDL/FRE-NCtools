@@ -5,9 +5,16 @@ AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
 LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
-mppncscatter_SOURCES = main.c \
+mppncscatter_SOURCES = common.h \
+                       main.c \
                        mppncscatter.c \
+                       mppncscatter.h \
                        opt.c \
+                       opt.h \
                        scatterdim.c \
+                       scatterdim.h \
                        strlist.c \
-                       xmalloc.c
+                       strlist.h \
+                       util.h \
+                       xmalloc.c \
+                       xmalloc.h

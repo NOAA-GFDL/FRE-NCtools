@@ -1,4 +1,5 @@
-bin_SCRIPTS = combine_restarts
+dist_bin_SCRIPTS = combine_restarts
+EXTRA_DIST = combine_restarts.txt asciidoc.conf
 
 # Documentation settings
 A2X = a2x
