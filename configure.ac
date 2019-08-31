@@ -52,32 +52,6 @@ fi
 
 # Check for library functions
 
-# Set compiler family specific compiler options
-#if test $CC = gcc; then
-#  BASE_CFLAGS=
-#fi
-#if test $CC = icc; then
-#  BASE_CFLAGS="-traceback"
-#fi
-#if test $FC = gfortran; then
-#  BASE_FCFLAGS=""
-#  BASE_FCFLAGS=""
-#  R8_FCFLAGS="-fdefault-real-8"
-#  R4_FCFLAGS=""
-#  MODDIR_FCFLAGS="-J"
-#fi
-#if test $FC = ifort; then
-#  BASE_FCFLAGS="-fltconsistency -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -traceback"
-#  R8_FCFLAGS="-real_size 64"
-#  R4_FCFLAGS="-real_size 32"
-#  MODDIR_FCFLAGS="-module"
-#fi
-
-#AC_SUBST([BASE_CFLAGS])
-#AC_SUBST([BASE_FCFLAGS])
-#AC_SUBST([R8_FCFLAGS])
-#AC_SUBST([R4_FCFLAGS])
-
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
