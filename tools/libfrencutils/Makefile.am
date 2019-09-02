@@ -1,4 +1,4 @@
-noinst_LIBRARIES = libfrencutils.a
+noinst_LIBRARIES = libfrencutils.a libfrencutils_mpi.a
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
 
@@ -22,3 +22,7 @@ libfrencutils_a_SOURCES = affinity.c \
                           read_mosaic.h \
                           tool_util.c \
                           tool_util.h
+
+libfrencutils_mpi_a_SOURCES = $(libfrencutils_a_SOURCES)
+libfrencutils_mpi_a_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
+libfrencutils_mpi_a_CC = $(MPICC)

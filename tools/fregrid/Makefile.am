@@ -1,4 +1,4 @@
-bin_PROGRAMS = fregrid
+bin_PROGRAMS = fregrid fregrid_parallel
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)
@@ -13,3 +13,7 @@ fregrid_SOURCES = bilinear_interp.c \
                   fregrid_util.h \
                   fregrid.c \
                   globals.h
+
+fregrid_parallel_SOURCES = $(fregrid_SOURCES)
+fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
+fregrid_parallel_LDADD = $(LDADD) $(MPI_CLDFLAGS)

@@ -1,4 +1,4 @@
-bin_PROGRAMS = make_hgrid
+bin_PROGRAMS = make_hgrid make_hgrid_parallel
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)
@@ -11,3 +11,7 @@ make_hgrid_SOURCES = create_conformal_cubic_grid.c \
                      create_hgrid.h \
                      create_lonlat_grid.c \
                      make_hgrid.c
+
+make_hgrid_parallel_SOURCES = $(make_hgrid_SOURCES)
+make_hgrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
+make_hgrid_parallel_LDADD = $(LDADD) $(MPI_CLDFLAGS)
