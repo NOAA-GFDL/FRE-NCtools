@@ -88,19 +88,19 @@ AS_IF([test x"$with_mpi" = x"yes"], [
       AC_REQUIRE([AC_PROG_CC])
       AS_IF([test ! -z "$MPICC"],
          [_LX_QUERY_MPI_COMPILER(MPICC, [$MPICC], C, [$MPI_PREFIX_BIN])],
-         [_LX_QUERY_MPI_COMPILER(MPICC, [mpicc mpiicc mpixlc mpipgcc cc], C, [$MPI_PREFIX_BIN])])
+         [_LX_QUERY_MPI_COMPILER(MPICC, [mpicc mpiicc mpixlc mpipgcc cc $CC], C, [$MPI_PREFIX_BIN])])
    ],
    [C++], [
       AC_REQUIRE([AC_PROG_CXX])
       AS_IF([test ! -z "$MPICXX"],
          [_LX_QUERY_MPI_COMPILER(MPICXX, [$MPICXX], CXX, [$MPI_PREFIX_BIN])],
-         [_LX_QUERY_MPI_COMPILER(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC CC], CXX, [$MPI_PREFIX_BIN])])
+         [_LX_QUERY_MPI_COMPILER(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC CC $CXX], CXX, [$MPI_PREFIX_BIN])])
    ],
    [F77], [
       AC_REQUIRE([AC_PROG_F77])
       AS_IF([test ! -z "$MPIF77" ],
          [_LX_QUERY_MPI_COMPILER(MPIF77, [$MPIF77], F77, [$MPI_PREFIX_BIN])],
-         [_LX_QUERY_MPI_COMPILER(MPIF77, [mpif77 mpiifort mpixlf77 mpixlf77_r ftn], F77, [$MPI_PREFIX_BIN])])
+         [_LX_QUERY_MPI_COMPILER(MPIF77, [mpif77 mpiifort mpixlf77 mpixlf77_r ftn $F77], F77, [$MPI_PREFIX_BIN])])
    ],
    [Fortran], [
       AC_REQUIRE([AC_PROG_FC])
@@ -110,7 +110,7 @@ AS_IF([test x"$with_mpi" = x"yes"], [
           mpi_intel_fc="mpiifort"
           mpi_xl_fc="mpixlf95 mpixlf95_r mpixlf90 mpixlf90_r mpixlf2003 mpixlf2003_r"
           mpi_pg_fc="mpipgf95 mpipgf90"
-          _LX_QUERY_MPI_COMPILER(MPIFC, [$mpi_default_fc $mpi_intel_fc $mpi_xl_fc $mpi_pg_fc ftn], F, [$MPI_PREFIX_BIN])])
+          _LX_QUERY_MPI_COMPILER(MPIFC, [$mpi_default_fc $mpi_intel_fc $mpi_xl_fc $mpi_pg_fc ftn $FC], F, [$MPI_PREFIX_BIN])])
    ])
 ])
 ])
@@ -137,7 +137,8 @@ mpi_prog_options="
    -showme:compile
    -showme
    -compile-info
-   -show"
+   -show
+   -craype-verbose"
 for mpiopttest in ${mpi_prog_options}; do
    AC_MSG_CHECKING([whether $$1 responds to '$mpiopttest'])
    case $mpiopttest in
@@ -167,6 +168,15 @@ for mpiopttest in ${mpi_prog_options}; do
    -show)
       lx_mpi_compile_line=$($$1 -show 2>/dev/null)
       AS_IF([test "$?" -eq 0],
+         [AC_MSG_RESULT([yes])
+          break],
+         [AC_MSG_RESULT([no])])
+      ;;
+   -craype-verbose)
+      lx_mpi_compile_line=$($$1 -craype-verbose 2>/dev/null)
+      # The Cray wrappers require a source, thus will always exit non-zero.
+      # the check is only to see if lx_mpi_compile_line is empty
+      AS_IF([test ! -z "$lx_mpi_compile_line"],
          [AC_MSG_RESULT([yes])
           break],
          [AC_MSG_RESULT([no])])
