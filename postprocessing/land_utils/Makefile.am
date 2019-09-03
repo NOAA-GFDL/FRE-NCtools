@@ -23,9 +23,9 @@ nfu.$(FC_MODEXT): nfu.$(OBJEXT)
 nfu_compress.$(FC_MODEXT): nfu_compress.$(OBJEXT)
 
 nfu_compress.$(OBJEXT): nfu.$(FC_MODEXT)
-combine_ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
-decompress_ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
-scatter_ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
+combine-ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
+decompress-ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
+scatter-ncc.$(OBJEXT): nfu.$(FC_MODEXT) nfu_compress.$(FC_MODEXT)
 
 clean-local:
 	$(RM) *.$(FC_MODEXT)
