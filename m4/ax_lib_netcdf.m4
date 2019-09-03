@@ -72,7 +72,7 @@
 # LICENSE
 #
 #   Copyright (c) 2016 Timothy Brown <tbrown@freeshell.org>
-#                 2016 Seth Underwood <underwoo@underwoo.io>
+#                 2018 Seth Underwood <underwoo@underwoo.io>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice

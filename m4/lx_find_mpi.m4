@@ -62,50 +62,62 @@
 #     have_F77_mpi     'yes' if we found MPI for F77, 'no' otherwise
 #     have_F_mpi       'yes' if we found MPI for Fortran, 'no' otherwise
 #
-AC_DEFUN([LX_FIND_MPI],
-[
-     AC_LANG_CASE(
-     [C], [
-         AC_REQUIRE([AC_PROG_CC])
-         if [[ ! -z "$MPICC" ]]; then
-             LX_QUERY_MPI_COMPILER(MPICC, [$MPICC], C)
-         else
-             LX_QUERY_MPI_COMPILER(MPICC, [mpicc mpiicc mpixlc mpipgcc], C)
-         fi
-     ],
-     [C++], [
-         AC_REQUIRE([AC_PROG_CXX])
-         if [[ ! -z "$MPICXX" ]]; then
-             LX_QUERY_MPI_COMPILER(MPICXX, [$MPICXX], CXX)
-         else
-             LX_QUERY_MPI_COMPILER(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC], CXX)
-         fi
-     ],
-     [F77], [
-         AC_REQUIRE([AC_PROG_F77])
-         if [[ ! -z "$MPIF77" ]]; then
-             LX_QUERY_MPI_COMPILER(MPIF77, [$MPIF77], F77)
-         else
-             LX_QUERY_MPI_COMPILER(MPIF77, [mpif77 mpiifort mpixlf77 mpixlf77_r], F77)
-         fi
-     ],
-     [Fortran], [
-         AC_REQUIRE([AC_PROG_FC])
-         if [[ ! -z "$MPIFC" ]]; then
-             LX_QUERY_MPI_COMPILER(MPIFC, [$MPIFC], F)
-         else
-             mpi_default_fc="mpif95 mpif90 mpigfortran mpif2003"
-             mpi_intel_fc="mpiifort"
-             mpi_xl_fc="mpixlf95 mpixlf95_r mpixlf90 mpixlf90_r mpixlf2003 mpixlf2003_r"
-             mpi_pg_fc="mpipgf95 mpipgf90"
-             LX_QUERY_MPI_COMPILER(MPIFC, [$mpi_default_fc $mpi_intel_fc $mpi_xl_fc $mpi_pg_fc], F)
-         fi
-     ])
+AC_DEFUN([LX_FIND_MPI], [
+
+AC_REQUIRE([AC_PROG_GREP])
+AC_REQUIRE([AC_PROG_SED])
+
+AC_ARG_WITH([mpi],
+   [AS_HELP_STRING(
+      [--with-mpi=[yes/no/PATH]],
+      [Use MPI compilers.  (PATH=path to MPI install location) (Default=no)])],
+   [if test "x${withval}" = "xno"; then
+      with_mpi=no
+    elif test "x${withval}" = "xyes"; then
+       with_mpi=yes
+       MPI_PREFIX_BIN=${PATH}
+    else
+      with_mpi=yes
+      MPI_PREFIX_BIN="${withval}/bin"
+    fi],
+   [with_mpi=no])
+
+AS_IF([test x"$with_mpi" = x"yes"], [
+   AC_LANG_CASE(
+   [C], [
+      AC_REQUIRE([AC_PROG_CC])
+      AS_IF([test ! -z "$MPICC"],
+         [_LX_QUERY_MPI_COMPILER(MPICC, [$MPICC], C, [$MPI_PREFIX_BIN])],
+         [_LX_QUERY_MPI_COMPILER(MPICC, [mpicc mpiicc mpixlc mpipgcc cc], C, [$MPI_PREFIX_BIN])])
+   ],
+   [C++], [
+      AC_REQUIRE([AC_PROG_CXX])
+      AS_IF([test ! -z "$MPICXX"],
+         [_LX_QUERY_MPI_COMPILER(MPICXX, [$MPICXX], CXX, [$MPI_PREFIX_BIN])],
+         [_LX_QUERY_MPI_COMPILER(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC CC], CXX, [$MPI_PREFIX_BIN])])
+   ],
+   [F77], [
+      AC_REQUIRE([AC_PROG_F77])
+      AS_IF([test ! -z "$MPIF77" ],
+         [_LX_QUERY_MPI_COMPILER(MPIF77, [$MPIF77], F77, [$MPI_PREFIX_BIN])],
+         [_LX_QUERY_MPI_COMPILER(MPIF77, [mpif77 mpiifort mpixlf77 mpixlf77_r ftn], F77, [$MPI_PREFIX_BIN])])
+   ],
+   [Fortran], [
+      AC_REQUIRE([AC_PROG_FC])
+      AS_IF([test ! -z "$MPIFC" ],
+         [_LX_QUERY_MPI_COMPILER(MPIFC, [$MPIFC], F, [$MPI_PREFIX_BIN])],
+         [mpi_default_fc="mpif95 mpif90 mpigfortran mpif2003"
+          mpi_intel_fc="mpiifort"
+          mpi_xl_fc="mpixlf95 mpixlf95_r mpixlf90 mpixlf90_r mpixlf2003 mpixlf2003_r"
+          mpi_pg_fc="mpipgf95 mpipgf90"
+          _LX_QUERY_MPI_COMPILER(MPIFC, [$mpi_default_fc $mpi_intel_fc $mpi_xl_fc $mpi_pg_fc ftn], F, [$MPI_PREFIX_BIN])])
+   ])
+])
 ])
 
 
 #
-# LX_QUERY_MPI_COMPILER([compiler-var-name], [compiler-names], [output-var-prefix])
+# LX_QUERY_MPI_COMPILER([compiler-var-name], [compiler-names], [output-var-prefix], [path])
 #  ------------------------------------------------------------------------
 # AC_SUBST variables:
 #     MPI_<prefix>FLAGS       Includes and defines for MPI compilation
@@ -114,90 +126,98 @@ AC_DEFUN([LX_FIND_MPI],
 # Shell variables output by this macro:
 #     found_mpi_flags         'yes' if we were able to get flags, 'no' otherwise
 #
-AC_DEFUN([LX_QUERY_MPI_COMPILER],
-[
-     # Try to find a working MPI compiler from the supplied names
-     AC_PATH_PROGS($1, [$2], [not-found])
+AC_DEFUN([_LX_QUERY_MPI_COMPILER],[
+# Try to find a working MPI compiler from the supplied names
+AC_PATH_PROGS($1, [$2], [not-found], [$4])
 
-     # Figure out what the compiler responds to to get it to show us the compile
-     # and link lines.  After this part of the macro, we'll have a valid
-     # lx_mpi_command_line
-     echo -n "Checking whether $$1 responds to '-showme:compile'... "
-     lx_mpi_compile_line=`$$1 -showme:compile 2>/dev/null`
-     if [[ "$?" -eq 0 ]]; then
-         echo yes
-         lx_mpi_link_line=`$$1 -showme:link 2>/dev/null`
-     else
-         echo no
-         echo -n "Checking whether $$1 responds to '-showme'... "
-         lx_mpi_command_line=`$$1 -showme 2>/dev/null`
-         if [[ "$?" -ne 0 ]]; then
-             echo no
-             echo -n "Checking whether $$1 responds to '-compile-info'... "
-             lx_mpi_compile_line=`$$1 -compile-info 2>/dev/null`
-             if [[ "$?" -eq 0 ]]; then
-                 echo yes
-                 lx_mpi_link_line=`$$1 -link-info 2>/dev/null`
-             else
-                 echo no
-                 echo -n "Checking whether $$1 responds to '-show'... "
-                 lx_mpi_command_line=`$$1 -show 2>/dev/null`
-                 if [[ "$?" -eq 0 ]]; then
-                     echo yes
-                 else
-                     echo no
-                 fi
-             fi
-         else
-             echo yes
-         fi
-     fi
+# Figure out what the compiler responds to to get it to show us the compile
+# and link lines.  After this part of the macro, we'll have a valid
+# lx_mpi_command_line
+mpi_prog_options="
+   -showme:compile
+   -showme
+   -compile-info
+   -show"
+for mpiopttest in ${mpi_prog_options}; do
+   AC_MSG_CHECKING([whether $$1 responds to '$mpiopttest'])
+   case $mpiopttest in
+   -showme:compile)
+      lx_mpi_compile_line=$($$1 -showme:compile 2>/dev/null)
+      AS_IF([test "$?" -eq 0],
+         [AC_MSG_RESULT([yes])
+          lx_mpi_link_line=$($$1 -showme:link 2>/dev/null)
+          break],
+         [AC_MSG_RESULT([no])])
+      ;;
+   -showme)
+      lx_mpi_compile_line=$($$1 -showme 2>/dev/null)
+      AS_IF([test "$?" -eq 0],
+         [AC_MSG_RESULT([yes])
+          break],
+         [AC_MSG_RESULT([no])])
+      ;;
+   -compile-info)
+      lx_mpi_compile_line=$($$1 -compile-info 2>/dev/null)
+      AS_IF([test "$?" -eq 0],
+         [AC_MSG_RESULT([yes])
+          lx_mpi_link_line=$($$1 -link-info 2>/dev/null)
+          break],
+         [AC_MSG_RESULT([no])])
+      ;;
+   -show)
+      lx_mpi_compile_line=$($$1 -show 2>/dev/null)
+      AS_IF([test "$?" -eq 0],
+         [AC_MSG_RESULT([yes])
+          break],
+         [AC_MSG_RESULT([no])])
+      ;;
+   esac
+done
 
-     if [[ ! -z "$lx_mpi_compile_line" -a ! -z "$lx_mpi_link_line" ]]; then
-         lx_mpi_command_line="$lx_mpi_compile_line $lx_mpi_link_line"
-     fi
+if test ! -z "$lx_mpi_compile_line" -a ! -z "$lx_mpi_link_line"; then
+   lx_mpi_command_line="$lx_mpi_compile_line $lx_mpi_link_line"
+fi
 
-     if [[ ! -z "$lx_mpi_command_line" ]]; then
-         # Now extract the different parts of the MPI command line.  Do these separately in case we need to
-         # parse them all out in future versions of this macro.
-         lx_mpi_defines=`    echo "$lx_mpi_command_line" | grep -o -- '\(^\| \)-D\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)'`
-         lx_mpi_includes=`   echo "$lx_mpi_command_line" | grep -o -- '\(^\| \)-I\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)'`
-         lx_mpi_link_paths=` echo "$lx_mpi_command_line" | grep -o -- '\(^\| \)-L\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)'`
-         lx_mpi_libs=`       echo "$lx_mpi_command_line" | grep -o -- '\(^\| \)-l\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)'`
-         lx_mpi_link_args=`  echo "$lx_mpi_command_line" | grep -o -- '\(^\| \)-Wl,\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)'`
+AS_IF([test ! -z "$lx_mpi_command_line"],
+   [# Now extract the different parts of the MPI command line.  Do these separately in case we need to
+    # parse them all out in future versions of this macro.
+    lx_mpi_defines=$(echo "$lx_mpi_command_line" | $GREP -o -- '\(^\| \)-D\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)')
+    lx_mpi_includes=$(echo "$lx_mpi_command_line" | $GREP -o -- '\(^\| \)-I\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)')
+    lx_mpi_link_paths=$(echo "$lx_mpi_command_line" | $GREP -o -- '\(^\| \)-L\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)')
+    lx_mpi_libs=$(echo "$lx_mpi_command_line" | $GREP -o -- '\(^\| \)-l\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)')
+    lx_mpi_link_args=$(echo "$lx_mpi_command_line" | $GREP -o -- '\(^\| \)-Wl,\([[^\"[:space:]]]\+\|\"[[^\"[:space:]]]\+\"\)')
 
-         # Create variables and clean up newlines and multiple spaces
-         MPI_$3FLAGS="$lx_mpi_defines $lx_mpi_includes"
-         MPI_$3LDFLAGS="$lx_mpi_link_paths $lx_mpi_libs $lx_mpi_link_args"
-         MPI_$3FLAGS=`  echo "$MPI_$3FLAGS"   | tr '\n' ' ' | sed 's/^[[ \t]]*//;s/[[ \t]]*$//' | sed 's/  +/ /g'`
-         MPI_$3LDFLAGS=`echo "$MPI_$3LDFLAGS" | tr '\n' ' ' | sed 's/^[[ \t]]*//;s/[[ \t]]*$//' | sed 's/  +/ /g'`
+    # Create variables and clean up newlines and multiple spaces
+    MPI_$3FLAGS="$lx_mpi_defines $lx_mpi_includes"
+    MPI_$3LDFLAGS="$lx_mpi_link_paths $lx_mpi_libs $lx_mpi_link_args"
+    MPI_$3FLAGS=$(echo "$MPI_$3FLAGS"   | tr '\n' ' ' | $SED 's/^[[ \t]]*//;s/[[ \t]]*$//' | $SED 's/  +/ /g')
+    MPI_$3LDFLAGS=$(echo "$MPI_$3LDFLAGS" | tr '\n' ' ' | $SED 's/^[[ \t]]*//;s/[[ \t]]*$//' | $SED 's/  +/ /g')
 
-         OLD_CPPFLAGS=$CPPFLAGS
-         OLD_LIBS=$LIBS
-         CPPFLAGS=$MPI_$3FLAGS
-         LIBS=$MPI_$3LDFLAGS
+    lx_find_mpi_save_CPPFLAGS=$CPPFLAGS
+    lx_find_mpi_save_LIBS=$LIBS
 
-         AC_TRY_LINK([#include <mpi.h>],
-                     [int rank, size;
-                      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-                      MPI_Comm_size(MPI_COMM_WORLD, &size);],
-                     [# Add a define for testing at compile time.
-                      AC_DEFINE([HAVE_MPI], [1], [Define to 1 if you have MPI libs and headers.])
-                      have_$3_mpi='yes'],
-                     [# zero out mpi flags so we don't link against the faulty library.
-                      MPI_$3FLAGS=""
-                      MPI_$3LDFLAGS=""
-                      have_$3_mpi='no'])
+    CPPFLAGS=$MPI_$3FLAGS
+    LIBS=$MPI_$3LDFLAGS
 
-         # AC_SUBST everything.
-         AC_SUBST($1)
-         AC_SUBST(MPI_$3FLAGS)
-         AC_SUBST(MPI_$3LDFLAGS)
+    AC_TRY_LINK([#include <mpi.h>],
+      [int rank, size;
+       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+       MPI_Comm_size(MPI_COMM_WORLD, &size);],
+      [# Add a define for testing at compile time.
+       AC_DEFINE([HAVE_MPI], [1], [Define to 1 if you have MPI libs and headers.])
+      have_$3_mpi='yes'],
+      [# zero out mpi flags so we don't link against the faulty library.
+       MPI_$3FLAGS=""
+       MPI_$3LDFLAGS=""
+       have_$3_mpi='no'])
 
-         LIBS=$OLD_LIBS
-         CPPFLAGS=$OLD_CPPFLAGS
-     else
-         echo Unable to find suitable MPI Compiler. Try setting $1.
-         have_$3_mpi='no'
-     fi
+    # AC_SUBST everything.
+    AC_SUBST($1)
+    AC_SUBST(MPI_$3FLAGS)
+    AC_SUBST(MPI_$3LDFLAGS)
+
+    LIBS=$lx_find_mpi_save_LIBS
+    CPPFLAGS=$lx_find_mpi_save_CPPFLAGS],
+   [echo Unable to find suitable MPI Compiler. Try setting $1.
+    have_$3_mpi='no'])
 ])
