@@ -23,5 +23,5 @@ env:
 
 script:
   - autoreconf -i
-  - ./configure
+  - ./configure $MPI_BUILD
   - make -j distcheck
