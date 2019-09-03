@@ -32,7 +32,7 @@ AS_IF([test x"$with_mpi" = x"yes"],
    [if test x"$have_C_mpi" = x"yes"; then
       build_mpi="yes"
     fi])
-AM_CONDITIONAL([WITH_MPI], [test x$"build_mpi" = yes])
+AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then

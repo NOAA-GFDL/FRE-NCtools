@@ -178,7 +178,6 @@ for mpiopttest in ${mpi_prog_options}; do
       # the check is only to see if lx_mpi_compile_line is empty
       AS_IF([test ! -z "$lx_mpi_compile_line"],
          [AC_MSG_RESULT([yes])
-          AC_MSG_NOTICE([lx_mpi_compile_line = $lx_mpi_compile_line])
           break],
          [AC_MSG_RESULT([no])])
       ;;

@@ -28,4 +28,3 @@ libfrencutils_a_SOURCES = affinity.c \
 
 libfrencutils_mpi_a_SOURCES = $(libfrencutils_a_SOURCES)
 libfrencutils_mpi_a_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
-libfrencutils_mpi_a_CC = $(MPICC)
