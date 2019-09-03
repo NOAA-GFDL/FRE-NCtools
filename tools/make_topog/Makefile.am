@@ -1,4 +1,7 @@
-bin_PROGRAMS = make_topog make_topog_parallel
+bin_PROGRAMS = make_topog
+if WITH_MPI
+  bin_PROGRAMS += make_topog_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

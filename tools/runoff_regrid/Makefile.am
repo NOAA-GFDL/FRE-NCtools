@@ -1,4 +1,7 @@
-bin_PROGRAMS = runoff_regrid runoff_regrid_parallel
+bin_PROGRAMS = runoff_regrid
+if WITH_MPI
+  bin_PROGRAMS += runoff_regrid_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

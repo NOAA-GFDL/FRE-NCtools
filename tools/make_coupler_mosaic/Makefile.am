@@ -1,4 +1,7 @@
-bin_PROGRAMS = make_coupler_mosaic make_coupler_mosaic_parallel
+bin_PROGRAMS = make_coupler_mosaic
+if WITH_MPI
+  bin_PROGRAMS += make_coupler_mosaic_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

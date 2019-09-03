@@ -102,14 +102,6 @@ AC_ARG_WITH([netcdf],
    [with_netcdf="yes"]
 )
 
-# Set defaults to blank
-NETCDF_CC=""
-NETCDF_VERSION=""
-NETCDF_CFLAGS=""
-NETCDF_CPPFLAGS=""
-NETCDF_LDFLAGS=""
-NETCDF_LIBS=""
-
 # Try and find NetCDF tools and options.
 if test "$with_netcdf" = "yes"; then
   if test -z "$NC_CONFIG"; then
@@ -143,10 +135,10 @@ where NetCDF has been installed.
     NETCDF_VERSION=$(eval $NC_CONFIG --version | $AWK '{print $[]2}')
 
     # Look for the CFLAGS
-    NETCDF_CFLAGS=$(eval $NC_CONFIG --cflags)
+    test -z "$NETCDF_CFLAGS" && NETCDF_CFLAGS=$(eval $NC_CONFIG --cflags)
 
     # Look for the CPPFLAGS
-    NETCDF_CPPFLAGS=$(eval $NC_CONFIG --cflags)
+    test -z "$NETCDF_CPPFLAGS" && NETCDF_CPPFLAGS=$(eval $NC_CONFIG --cflags)
 
     # Look for the LIBS and LDFLAGS
     NETCDF_tmp_clibs=$(eval $NC_CONFIG --libs)
@@ -154,14 +146,17 @@ where NetCDF has been installed.
     # Sort out the tmp libs based on their prefixes
     for arg in $NETCDF_tmp_clibs ; do
       case "$arg" in
-        -L*) echo $NETCDF_LDFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
-                || NETCDF_LDFLAGS="$arg $NETCDF_LDFLAGS"
+        -L*) echo $NETCDF_LDFLAGS_tmp | $GREP -e "$arg" 2>&1 >/dev/null \
+                || NETCDF_LDFLAGS_tmp="$arg $NETCDF_LDFLAGS_tmp"
               ;;
-        -l*) echo $NETCDF_LIBS | $GREP -e "$arg" 2>&1 >/dev/null \
-                || NETCDF_LIBS="$arg $NETCDF_LIBS"
+        -l*) echo $NETCDF_LIBS_tmp | $GREP -e "$arg" 2>&1 >/dev/null \
+                || NETCDF_LIBS_tmp="$arg $NETCDF_LIBS_tmp"
               ;;
       esac
     done
+
+    test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS=$NETCDF_LDFLAGS_tmp
+    test -z "$NETCDF_LIBS" && NETCDF_LIBS=$NETCDF_LIBS_tmp
 
     AC_MSG_RESULT([yes (version $[NETCDF_VERSION])])
 
@@ -228,13 +223,6 @@ AC_ARG_WITH([netcdf-fortran],
    [with_netcdf_fortran="yes"]
 )
 
-# Set defaults to blank
-NETCDF_FC=""
-NETCDF_FCCPPFLAGS=""
-NETCDF_FCFLAGS=""
-NETCDF_FCLIBS=""
-NETCDF_FCLDFLAGS=""
-
 # Try and find NetCDF tools and options.
 if test "$with_netcdf_fortran" = "yes"; then
   if test -z "$NF_CONFIG"; then
@@ -265,10 +253,10 @@ where NetCDF Fortran has been installed.
     NETCDFF_VERSION=$(eval $NF_CONFIG --version | $AWK '{print $[]2}')
 
     # Look for the CFLAGS
-    NETCDF_FCCPPFLAGS=$(eval $NF_CONFIG --cflags)
+    test -z "$NETCDF_FCCPPFLAGS" && NETCDF_FCCPPFLAGS=$(eval $NF_CONFIG --cflags)
 
     # Look for the FCFLAGS
-    NETCDF_FCFLAGS=$(eval $NF_CONFIG --fflags)
+    test -z "$NETCDF_FCFLAGS" && NETCDF_FCFLAGS=$(eval $NF_CONFIG --fflags)
 
     # Look for the LIBS and LDFLAGS
     NETCDF_tmp_fclibs=$(eval $NF_CONFIG --flibs)
@@ -276,14 +264,16 @@ where NetCDF Fortran has been installed.
     # Sort out the tmp libs based on their prefixes
     for arg in $NETCDF_tmp_fclibs ; do
       case "$arg" in
-        -L*) echo $NETCDF_FCLDFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
-                || NETCDF_FCLDFLAGS="$arg $NETCDF_FCLDFLAGS"
+        -L*) echo $NETCDF_FCLDFLAGS_tmp | $GREP -e "$arg" 2>&1 >/dev/null \
+                || NETCDF_FCLDFLAGS_tmp="$arg $NETCDF_FCLDFLAGS_tmp"
               ;;
-        -l*) echo $NETCDF_FCLIBS | $GREP -e "$arg" 2>&1 >/dev/null \
-                || NETCDF_FCLIBS="$arg $NETCDF_FCLIBS"
+        -l*) echo $NETCDF_FCLIBS_tmp | $GREP -e "$arg" 2>&1 >/dev/null \
+                || NETCDF_FCLIBS_tmp="$arg $NETCDF_FCLIBS_tmp"
               ;;
       esac
     done
+    test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS="$NETCDF_FCLDFLAGS_tmp"
+    test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS="$NETCDF_FCLIBS_tmp"
 
     AC_MSG_RESULT([yes (version $[NETCDFF_VERSION])])
 

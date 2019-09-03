@@ -1,4 +1,7 @@
-noinst_LIBRARIES = libfrencutils.a libfrencutils_mpi.a
+noinst_LIBRARIES = libfrencutils.a
+if WITH_MPI
+  noinst_LIBRARIES += libfrencutils_mpi.a
+endif
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
 

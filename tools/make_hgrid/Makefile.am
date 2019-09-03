@@ -1,4 +1,7 @@
-bin_PROGRAMS = make_hgrid make_hgrid_parallel
+bin_PROGRAMS = make_hgrid
+if WITH_MPI
+  bin_PROGRAMS += make_hgrid_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

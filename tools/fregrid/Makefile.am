@@ -1,4 +1,7 @@
-bin_PROGRAMS = fregrid fregrid_parallel
+bin_PROGRAMS = fregrid
+if WITH_MPI
+  bin_PROGRAMS += fregrid_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

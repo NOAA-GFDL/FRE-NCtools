@@ -1,4 +1,7 @@
-bin_PROGRAMS = remap_land remap_land_parallel
+bin_PROGRAMS = remap_land
+if WITH_MPI
+  bin_PROGRAMS += remap_land_parallel
+endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)

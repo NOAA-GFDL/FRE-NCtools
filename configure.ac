@@ -25,10 +25,14 @@ AX_REAL_KIND8_FLAG()
 AX_REAL_KIND4_FLAG()
 
 # Check for the MPI compilers
+# Default MPI build is off
+build_mpi=no
 LX_FIND_MPI()
-AC_MSG_NOTICE([MPICC = ${MPICC}])
-AC_MSG_NOTICE([MPI_CFLAGS = ${MPI_CFLAGS}])
-AC_MSG_NOTICE([MPI_CLDFLAGS = ${MPI_CLDFLAGS}])
+AS_IF([test x"$with_mpi" = x"yes"],
+   [if test x"$have_C_mpi" = x"yes"; then
+      build_mpi="yes"
+    fi])
+AM_CONDITIONAL([WITH_MPI], [test x$"build_mpi" = yes])
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
