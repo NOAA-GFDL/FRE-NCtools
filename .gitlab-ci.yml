@@ -14,6 +14,7 @@ variables:
     - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -P ${FMS_HOME}/local/opt/fre-nctools -s ${FRE_SITE} test
     - . ./env.sh
     - make
+    - make check
   artifacts:
     expire_in: 1 month
     paths:

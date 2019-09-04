@@ -26,3 +26,7 @@ SUBDIRS = postprocessing/combine_blobs \
           tools/remap_land \
           tools/river_regrid \
           tools/runoff_regrid
+
+if WITH_CHECK_PROGS
+SUBDIRS += t
+endif

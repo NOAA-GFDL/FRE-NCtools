@@ -49,6 +49,11 @@ if test -n "$ASCIIDOC"; then
 fi
 AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 
+AC_CHECK_PROGS(BATS, [bats])
+AC_CHECK_PROGS(PROVE, [prove])
+
+AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
+
 # Check for library
 AX_LIB_NETCDF()
 if test "$with_netcdf" = "no"; then
@@ -95,5 +100,6 @@ AC_CONFIG_FILES([Makefile
                  tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
-               ])
+		 t/Makefile
+])
 AC_OUTPUT
