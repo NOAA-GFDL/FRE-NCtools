@@ -1,4 +1,4 @@
-#!/bin/env bats
+#!/usr/bin/env bats
 
 @test "make_vgrid exists and is executable" {
   run command -v make_vgrid
@@ -13,6 +13,6 @@
       --bnds 0.,220.,5500. \
       --dbnds 10.,10.,367.14286 \
       --center c_cell \
-      --grid_name ocean_vgrid 
+      --grid_name ocean_vgrid
   [ "$status" -eq 0 ]
 }

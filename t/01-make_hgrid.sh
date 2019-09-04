@@ -1,4 +1,4 @@
-#!/bin/env bats
+#!/usr/bin/env bats
 
 @test "make_hgrid exists and is executable" {
   run command -v make_hgrid
