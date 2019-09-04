@@ -4,7 +4,7 @@ dist_bin_SCRIPTS = combine-lumip-vars.py
 noinst_LIBRARIES = libnfu.a
 
 AM_FCFLAGS =  $(FC_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
-AC_CFLAGS = $(NETCDF_CFLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS)
 
 libnfu_a_SOURCES = nfu.F90 nfu_compress.F90
 
