@@ -14,8 +14,7 @@ variables:
     - autoreconf -i
     - mkdir ${buildDir}
     - cd ${buildDir}
-    - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -P ${FMS_HOME}/local/opt/fre-nctools -s ${FRE_SITE} test
-    - . ./env.sh
+    - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/test/${FRE_SITE}
     - make -j
     - make -j check
   artifacts:
