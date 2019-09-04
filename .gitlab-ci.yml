@@ -7,14 +7,17 @@ before_script:
 
 variables:
   buildDir: build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
+  CONFIG_SITE: ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/config.site
 .buildScript: &buildScript
   script:
+    - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
+    - autoreconf -i
     - mkdir ${buildDir}
     - cd ${buildDir}
     - ${CI_PROJECT_DIR}/fre-nctools-make-package -n -P ${FMS_HOME}/local/opt/fre-nctools -s ${FRE_SITE} test
     - . ./env.sh
-    - make
-    - make check
+    - make -j
+    - make -j check
   artifacts:
     expire_in: 1 month
     paths:
@@ -23,7 +26,7 @@ variables:
 .deployScript: &deployScript
   script:
     - cd ${CI_PROJECT_DIR}/${buildDir}
-    - . ./env.sh
+    - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
     - make install
 
 build:gfdl-ws:
@@ -45,17 +48,6 @@ build:gfdl:
     FRE_SITE: gfdl
     FMS_HOME: /home/fms
   <<: *buildScript
-
-build:theia:
-  stage: build
-  tags:
-    - theia_deploy
-  variables:
-    GIT_STRATEGY: clone
-    FRE_SITE: theia
-    FMS_HOME: /home/fms
-  script:
-    - echo skipping theia for until their modules are fixed
 
 build:ncrc:
   stage: build
@@ -96,22 +88,6 @@ deploy:gfdl:
   dependencies:
     - build:gfdl
   <<: *deployScript
-
-deploy:theia:
-  stage: deploy
-  tags:
-    - theia_deploy
-  environment:
-    name: stage_theia
-  variables:
-    FRE_SITE: theia
-    FMS_HOME: /home/fms
-  only:
-    - master
-  dependencies:
-    - build:theia
-  script:
-    - echo skipping theia for until their modules are fixed
 
 deploy:ncrc:
   stage: deploy
