@@ -14,7 +14,7 @@ variables:
     - autoreconf -i
     - mkdir ${buildDir}
     - cd ${buildDir}
-    - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/test
+    - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/test/${FRE_SITE}
     - make -j
   artifacts:
     expire_in: 1 month
