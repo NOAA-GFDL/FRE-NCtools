@@ -10,12 +10,12 @@ variables:
   CONFIG_SITE: ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/config.site
 .buildScript: &buildScript
   script:
-    - autoconf -i
+    - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
+    - autoreconf -i
     - mkdir ${buildDir}
     - cd ${buildDir}
-    - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
     - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/test
-    - make
+    - make -j
   artifacts:
     expire_in: 1 month
     paths:
