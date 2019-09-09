@@ -1,4 +1,4 @@
-# AX_REAL_KIND8_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# GX_REAL_KIND8_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ----------------------------------------------------------------------
 # Look for the compiler flag that sets the default REAL kind to KIND=8.
 # Call ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
@@ -13,18 +13,18 @@
 #        -s real64: Cray
 #              -r8: Portland Group compiler
 #     -qrealsize=8: IBM compiler
-AC_DEFUN([AX_REAL_KIND8_FLAG],[
+AC_DEFUN([GX_REAL_KIND8_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 8 flag], [ax_cv_fc_real_kind8_flag],[
-ax_cv_fc_real_kind8_flag=unknown
-ax_real_kind8_flag_FCFLAGS_save=$FCFLAGS
+AC_CACHE_CHECK([for Fortran default REAL KIND 8 flag], [gx_cv_fc_real_kind8_flag],[
+gx_cv_fc_real_kind8_flag=unknown
+gx_real_kind8_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
                '-fdefault-real-8' \
                '-real_size 64' \
                '-s real64' \
                '-r8' \
                '-qrealsize=8'; do
-  test "x$ac_flag" != xnone && FCFLAGS="$ax_real_kind8_flag_FCFLAGS_save ${ac_flag}"
+  test "x$ac_flag" != xnone && FCFLAGS="$gx_real_kind8_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[
      program test
      interface
@@ -35,16 +35,16 @@ for ac_flag in none \
      real :: b=1.0
      call test_sub(b)
      end program test]],
-     [ax_cv_fc_real_kind8_flag=$ac_flag; break])
+     [gx_cv_fc_real_kind8_flag=$ac_flag; break])
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-FCFLAGS=$ax_real_kind8_flag_FCFLAGS_save
+FCFLAGS=$gx_real_kind8_flag_FCFLAGS_save
 ])
-if test "x$ax_cv_fc_real_kind8_flag" = xunknown; then
+if test "x$gx_cv_fc_real_kind8_flag" = xunknown; then
   m4_default([$3],
               [AC_MSG_ERROR([Fortran cannot set default real kind to 8])])
 else
-  FC_REAL_KIND8_FLAG=$ax_cv_fc_real_kind8_flag
+  FC_REAL_KIND8_FLAG=$gx_cv_fc_real_kind8_flag
   if test "x$FC_REAL_KIND8_FLAG" = xnone; then
     FC_REAL_KIND8_FLAG=
   fi
@@ -54,7 +54,7 @@ AC_LANG_POP([Fortran])
 AC_SUBST([FC_REAL_KIND8_FLAG])
 ])
 
-# AX_REAL_KIND4_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# GX_REAL_KIND4_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ----------------------------------------------------------------------
 # Look for the compiler flag that sets the default REAL kind to KIND=4.
 # Call ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
@@ -70,18 +70,18 @@ AC_SUBST([FC_REAL_KIND8_FLAG])
 #        -s real32: Cray
 #              -r4: Portland Group compiler
 #     -qrealsize=4: IBM compiler
-AC_DEFUN([AX_REAL_KIND4_FLAG],[
+AC_DEFUN([GX_REAL_KIND4_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 4 flag], [ax_cv_fc_real_kind4_flag],[
-ax_cv_fc_real_kind4_flag=unknown
-ax_real_kind4_flag_FCFLAGS_save=$FCFLAGS
+AC_CACHE_CHECK([for Fortran default REAL KIND 4 flag], [gx_cv_fc_real_kind4_flag],[
+gx_cv_fc_real_kind4_flag=unknown
+gx_real_kind4_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
                '-fdefault-real-4' \
                '-real_size 32' \
                '-s real32' \
                '-r4' \
                '-qrealsize=4'; do
-  test "x$ac_flag" != xnone && FCFLAGS="$ax_real_kind4_flag_FCFLAGS_save ${ac_flag}"
+  test "x$ac_flag" != xnone && FCFLAGS="$gx_real_kind4_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[
      program test
      interface
@@ -92,16 +92,16 @@ for ac_flag in none \
      real :: b=1.0
      call test_sub(b)
      end program test]],
-     [ax_cv_fc_real_kind4_flag=$ac_flag; break])
+     [gx_cv_fc_real_kind4_flag=$ac_flag; break])
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-FCFLAGS=$ax_real_kind4_flag_FCFLAGS_save
+FCFLAGS=$gx_real_kind4_flag_FCFLAGS_save
 ])
-if test "x$ax_cv_fc_real_kind4_flag" = xunknown; then
+if test "x$gx_cv_fc_real_kind4_flag" = xunknown; then
   m4_default([$3],
               [AC_MSG_ERROR([Fortran cannot set default real kind to 4])])
 else
-  FC_REAL_KIND4_FLAG=$ax_cv_fc_real_kind4_flag
+  FC_REAL_KIND4_FLAG=$gx_cv_fc_real_kind4_flag
   if test "x$FC_REAL_KIND4_FLAG" = xnone; then
     FC_REAL_KIND4_FLAG=
   fi
@@ -111,7 +111,7 @@ AC_LANG_POP([Fortran])
 AC_SUBST([FC_REAL_KIND4_FLAG])
 ])
 
-# AX_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# GX_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # -----------------------------------------------------------------------------
 # Look for the compiler flag that allows Fortran Cray Pointers.  Cray
 # pointers are an are part of a non-standard extension that provides a
@@ -119,7 +119,8 @@ AC_SUBST([FC_REAL_KIND4_FLAG])
 # nothing) if successful (i.e. can use Cray pointers) and
 # ACTION-IF-FAILURE (defaults to failing with an error message) if not.
 #
-# Sets the variable FC_CRAY_POINTER_FLAG to hold the flag.
+# Sets the variable FC_CRAY_POINTER_FLAG to hold the flag, and defines
+# HAVE_CRAY_POINTER.
 #
 # The known flags are:
 # -fcray-pointer: gfortran
@@ -127,31 +128,33 @@ AC_SUBST([FC_REAL_KIND4_FLAG])
 #        unknown: Cray
 # -Mcray=pointer: Portland Group compiler
 #           none: IBM compiler (No option required for Cray Pointers)
-AC_DEFUN([AX_CRAY_POINTER_FLAG],[
+AC_DEFUN([GX_CRAY_POINTER_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran Cray Pointer flag], [ax_cv_fc_cray_ptr_flag],[
-ax_cv_fc_cray_ptr_flag=unknown
-ax_cray_ptr_flag_FCFLAGS_save=$FCFLAGS
+AC_CACHE_CHECK([for Fortran Cray Pointer flag], [gx_cv_fc_cray_ptr_flag],[
+gx_cv_fc_cray_ptr_flag=unknown
+gx_cray_ptr_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
                '-fcray-pointer' \
                '-Mcray=pointer'; do
-  test "x$ac_flag" != xnone && FCFLAGS="$ax_cray_ptr_flag_FCFLAGS_save ${ac_flag}"
+  test "x$ac_flag" != xnone && FCFLAGS="$gx_cray_ptr_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[
      program test
      integer(kind=8) :: ipt
      integer iarri(10)
      pointer (ipt, iarr)
      end program test]],
-     [ax_cv_fc_cray_ptr_flag=$ac_flag; break])
+     [gx_cv_fc_cray_ptr_flag=$ac_flag; break])
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-FCFLAGS=$ax_cray_ptr_flag_FCFLAGS_save
+FCFLAGS=$gx_cray_ptr_flag_FCFLAGS_save
 ])
-if test "x$ax_cv_fc_cray_ptr_flag" = xunknown; then
+if test "x$gx_cv_fc_cray_ptr_flag" = "xunknown"; then
   m4_default([$3],
               [AC_MSG_ERROR([Fortran cannot use Cray pointers])])
 else
-  FC_CRAY_POINTER_FLAG=$ax_cv_fc_cray_ptr_flag
+  AC_DEFINE([HAVE_CRAY_POINTER], 1,
+            [Define to 1 if your Fortran compiler supports cray pointers])
+  FC_CRAY_POINTER_FLAG=$gx_cv_fc_cray_ptr_flag
   if test "x$FC_CRAY_POINTER_FLAG" = xnone; then
     FC_CRAY_POINTER_FLAG=
   fi
@@ -159,4 +162,31 @@ else
 fi
 AC_LANG_POP([Fortran])
 AC_SUBST([FC_CRAY_POINTER_FLAG])
+])
+
+# GX_FC_INTERNAL_FILE_NML
+# -----------------------------------------------------------------------------
+# Determine if the Fortran compiler supports reading Fortran namelists from
+# an internal file.  If supported, sets the define HAVE_INTERNAL_NML.
+AC_DEFUN([GX_FC_INTERNAL_FILE_NML],[
+AC_LANG_PUSH([Fortran])
+AC_CACHE_CHECK([if Fortran supports reading namelist from internal files], [gx_cv_fc_internal_file_nml],[
+gx_cv_fc_internal_file_nml=unknown
+AC_COMPILE_IFELSE([[
+   program test
+   implicit none
+   integer :: a = 1
+   real :: b = 0.1
+   character(LEN=20) :: internal_nml ="&test_nml a=2 b=1.0/"
+   namelist /test_nml/ a, b
+   read(internal_nml,test_nml)
+   end program test]],
+   [gx_cv_fc_internal_file_nml=yes],
+   [gx_cv_fc_internal_file_nml=no])])
+if test "x$gx_cv_fc_internal_file_nml" = "xyes"; then
+   AC_DEFINE([HAVE_INTERNAL_NML], 1,
+             [Define to 1 if your Fortran compiler supports reading namelists
+              from internal files])
+fi
+AC_LANG_POP([Fortran])
 ])

@@ -21,8 +21,8 @@ AC_FC_SRCEXT([F90])
 AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
 AC_FC_MODULE_EXTENSION()
-AX_REAL_KIND8_FLAG()
-AX_REAL_KIND4_FLAG()
+GX_REAL_KIND8_FLAG()
+GX_REAL_KIND4_FLAG()
 
 # Check for the MPI compilers
 # Default MPI build is off
@@ -100,6 +100,6 @@ AC_CONFIG_FILES([Makefile
                  tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
-		 t/Makefile
+                 t/Makefile
 ])
 AC_OUTPUT
