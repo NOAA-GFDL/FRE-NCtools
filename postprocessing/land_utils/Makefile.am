@@ -3,7 +3,7 @@ dist_bin_SCRIPTS = combine-lumip-vars.py
 # Helper library for the land utilties
 noinst_LIBRARIES = libnfu.a
 
-AM_FCFLAGS =  $(FC_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_FCFLAGS =  $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 AM_CFLAGS = $(NETCDF_CFLAGS)
 
 libnfu_a_SOURCES = nfu.F90 nfu_compress.F90

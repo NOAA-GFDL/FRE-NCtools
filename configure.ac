@@ -1,11 +1,12 @@
 # Prelude
 AC_INIT([FRE NC Tools], [1.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
 AC_PREREQ([2.63])
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
-AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
+
+AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
 AC_PROG_RANLIB
@@ -21,8 +22,8 @@ AC_FC_SRCEXT([F90])
 AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
 AC_FC_MODULE_EXTENSION()
-GX_REAL_KIND8_FLAG()
-GX_REAL_KIND4_FLAG()
+GX_FC_DEFAULT_REAL_KIND8_FLAG()
+GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
 # Check for the MPI compilers
 # Default MPI build is off
@@ -64,8 +65,6 @@ AX_LIB_NETCDFF()
 if test "$with_netcdf_fortran" = "no"; then
   AC_MSG_ERROR([Unable to find NetCDF Fortran library.])
 fi
-
-# Check for header files
 
 # Check for typedefs, structures, and compiler characteristics
 

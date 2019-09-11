@@ -1,11 +1,54 @@
-# GX_REAL_KIND8_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   GX_FC_DEFAULT_REAL_KIND8_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+#   GX_FC_DEFAULT_REAL_KIND4_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+#   GX_FC_QUAD_PRECISION()
+#   GX_FC_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+#   GX_FC_INTERNAL_FILE_NML()
+#   GX_FC_ISO_FORTRAN_ENV()
+#   GX_FC_ISO_C_BINDING()
+#
+# DESCRIPTION
+#
+#   Set of functions that check if the Fortran compiler supports certain
+#   Fortran feature, or if a specific compiler flag is needed to support
+#   the feature.  Full descriptions are avalable below.
+#
+# LICENSE
+#
+#   Copyright (c) 2019 Seth Underwood <underwoo@underwoo.io>
+#
+#   This program is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation; either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+
+# GX_FC_DEFAULT_REAL_KIND8_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ----------------------------------------------------------------------
 # Look for the compiler flag that sets the default REAL kind to KIND=8.
 # Call ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
 # compile with default REAL(KIND=8)) and ACTION-IF-FAILURE (defaults
 # to failing with an error message) if not.
 #
-# Sets the variable FC_REAL_KIND8_FLAG to hold the flag.
+# Sets the variable FC_DEFAULT_REAL_KIND8_FLAG to hold the flag.
 #
 # The known flags are:
 # -fdefault-real-8: gfortran
@@ -13,55 +56,55 @@
 #        -s real64: Cray
 #              -r8: Portland Group compiler
 #     -qrealsize=8: IBM compiler
-AC_DEFUN([GX_REAL_KIND8_FLAG],[
+AC_DEFUN([GX_FC_DEFAULT_REAL_KIND8_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 8 flag], [gx_cv_fc_real_kind8_flag],[
-gx_cv_fc_real_kind8_flag=unknown
-gx_real_kind8_flag_FCFLAGS_save=$FCFLAGS
+AC_CACHE_CHECK([for Fortran default REAL KIND 8 flag], [gx_cv_fc_default_real_kind8_flag],[
+gx_cv_fc_default_real_kind8_flag=unknown
+gx_fc_default_real_kind8_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
                '-fdefault-real-8' \
                '-real_size 64' \
                '-s real64' \
                '-r8' \
                '-qrealsize=8'; do
-  test "x$ac_flag" != xnone && FCFLAGS="$gx_real_kind8_flag_FCFLAGS_save ${ac_flag}"
+  test "x$ac_flag" != xnone && FCFLAGS="$gx_fc_default_real_kind8_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[
      program test
      interface
      subroutine test_sub(a)
-     real(kind=8) :: a
+     real(kind=selected_real_kind(15,307)) :: a
      end subroutine test_sub
      end interface
      real :: b=1.0
      call test_sub(b)
      end program test]],
-     [gx_cv_fc_real_kind8_flag=$ac_flag; break])
+     [gx_cv_fc_default_real_kind8_flag=$ac_flag; break])
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-FCFLAGS=$gx_real_kind8_flag_FCFLAGS_save
+FCFLAGS=$gx_fc_default_real_kind8_flag_FCFLAGS_save
 ])
-if test "x$gx_cv_fc_real_kind8_flag" = xunknown; then
-  m4_default([$3],
+if test "x$gx_cv_fc_default_real_kind8_flag" = xunknown; then
+  m4_default([$2],
               [AC_MSG_ERROR([Fortran cannot set default real kind to 8])])
 else
-  FC_REAL_KIND8_FLAG=$gx_cv_fc_real_kind8_flag
-  if test "x$FC_REAL_KIND8_FLAG" = xnone; then
-    FC_REAL_KIND8_FLAG=
+  FC_DEFAULT_REAL_KIND8_FLAG=$gx_cv_fc_default_real_kind8_flag
+  if test "x$FC_DEFAULT_REAL_KIND8_FLAG" = xnone; then
+    FC_DEFAULT_REAL_KIND8_FLAG=
   fi
-  $2
+  $1
 fi
 AC_LANG_POP([Fortran])
-AC_SUBST([FC_REAL_KIND8_FLAG])
+AC_SUBST([FC_DEFAULT_REAL_KIND8_FLAG])
 ])
 
-# GX_REAL_KIND4_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# GX_FC_DEFAULT_REAL_KIND4_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ----------------------------------------------------------------------
 # Look for the compiler flag that sets the default REAL kind to KIND=4.
 # Call ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
 # compile with default REAL(KIND=4)) and ACTION-IF-FAILURE (defaults
 # to failing with an error message) if not.
 #
-# Sets the variable FC_REAL_KIND4_FLAG to hold the flag.
+# Sets the variable FC_DEFAULT_REAL_KIND4_FLAG to hold the flag.
 #
 # The known flags are:
 #             none: gfortran (gfortran does not have an option to set the
@@ -70,48 +113,69 @@ AC_SUBST([FC_REAL_KIND8_FLAG])
 #        -s real32: Cray
 #              -r4: Portland Group compiler
 #     -qrealsize=4: IBM compiler
-AC_DEFUN([GX_REAL_KIND4_FLAG],[
+AC_DEFUN([GX_FC_DEFAULT_REAL_KIND4_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 4 flag], [gx_cv_fc_real_kind4_flag],[
-gx_cv_fc_real_kind4_flag=unknown
-gx_real_kind4_flag_FCFLAGS_save=$FCFLAGS
+AC_CACHE_CHECK([for Fortran default REAL KIND 4 flag], [gx_cv_fc_default_real_kind4_flag],[
+gx_cv_fc_default_real_kind4_flag=unknown
+gx_fc_default_real_kind4_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
                '-fdefault-real-4' \
                '-real_size 32' \
                '-s real32' \
                '-r4' \
                '-qrealsize=4'; do
-  test "x$ac_flag" != xnone && FCFLAGS="$gx_real_kind4_flag_FCFLAGS_save ${ac_flag}"
+  test "x$ac_flag" != xnone && FCFLAGS="$gx_fc_default_real_kind4_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[
      program test
      interface
      subroutine test_sub(a)
-     real(kind=4) :: a
+     real(kind=selected_real_kind(6, 37)) :: a
      end subroutine test_sub
      end interface
      real :: b=1.0
      call test_sub(b)
      end program test]],
-     [gx_cv_fc_real_kind4_flag=$ac_flag; break])
+     [gx_cv_fc_default_real_kind4_flag=$ac_flag; break])
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-FCFLAGS=$gx_real_kind4_flag_FCFLAGS_save
+FCFLAGS=$gx_fc_default_real_kind4_flag_FCFLAGS_save
 ])
-if test "x$gx_cv_fc_real_kind4_flag" = xunknown; then
-  m4_default([$3],
+if test "x$gx_cv_fc_default_real_kind4_flag" = xunknown; then
+  m4_default([$2],
               [AC_MSG_ERROR([Fortran cannot set default real kind to 4])])
 else
-  FC_REAL_KIND4_FLAG=$gx_cv_fc_real_kind4_flag
-  if test "x$FC_REAL_KIND4_FLAG" = xnone; then
-    FC_REAL_KIND4_FLAG=
+  FC_DEFAULT_REAL_KIND4_FLAG=$gx_cv_fc_real_kind4_flag
+  if test "x$FC_DEFAULT_REAL_KIND4_FLAG" = xnone; then
+    FC_DEFAULT_REAL_KIND4_FLAG=
   fi
-  $2
+  $1
 fi
 AC_LANG_POP([Fortran])
-AC_SUBST([FC_REAL_KIND4_FLAG])
+AC_SUBST([FC_DEFAULT_REAL_KIND4_FLAG])
 ])
 
-# GX_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# GX_FC_QUAD_PRECISION
+# -----------------------------------------------------------------------------
+# Determine if the Fortran compiler and target system have support for IEEE 754,
+# quadruple precision.  If supported, sets the define HAVE_QUAD_PRECISION.
+AC_DEFUN([GX_FC_QUAD_PRECISION],[
+AC_LANG_PUSH([Fortran])
+AC_CACHE_CHECK([if Fortran and target have IEEE 754 support], [gx_cv_fc_quad_precision],[
+gx_cv_fc_quad_precision=unknown
+AC_COMPILE_IFELSE([[
+   program test
+   real(KIND=selected_real_kind(33, 4931)) :: quad
+   end program test]],
+   [gx_cv_fc_quad_precision=yes],
+   [gx_cv_fc_quad_precision=no])])
+if test "x$gx_cv_fc_quad_precision" = "xyes"; then
+   AC_DEFINE([HAVE_QUAD_PRECISION], 1,
+             [Define to 1 if your Fortran and system have IEEE 754 support])
+fi
+AC_LANG_POP([Fortran])
+])
+
+# GX_FC_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # -----------------------------------------------------------------------------
 # Look for the compiler flag that allows Fortran Cray Pointers.  Cray
 # pointers are an are part of a non-standard extension that provides a
@@ -128,7 +192,7 @@ AC_SUBST([FC_REAL_KIND4_FLAG])
 #        unknown: Cray
 # -Mcray=pointer: Portland Group compiler
 #           none: IBM compiler (No option required for Cray Pointers)
-AC_DEFUN([GX_CRAY_POINTER_FLAG],[
+AC_DEFUN([GX_FC_CRAY_POINTER_FLAG],[
 AC_LANG_PUSH([Fortran])
 AC_CACHE_CHECK([for Fortran Cray Pointer flag], [gx_cv_fc_cray_ptr_flag],[
 gx_cv_fc_cray_ptr_flag=unknown
@@ -149,7 +213,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 FCFLAGS=$gx_cray_ptr_flag_FCFLAGS_save
 ])
 if test "x$gx_cv_fc_cray_ptr_flag" = "xunknown"; then
-  m4_default([$3],
+  m4_default([$2],
               [AC_MSG_ERROR([Fortran cannot use Cray pointers])])
 else
   AC_DEFINE([HAVE_CRAY_POINTER], 1,
@@ -158,7 +222,7 @@ else
   if test "x$FC_CRAY_POINTER_FLAG" = xnone; then
     FC_CRAY_POINTER_FLAG=
   fi
-  $2
+  $1
 fi
 AC_LANG_POP([Fortran])
 AC_SUBST([FC_CRAY_POINTER_FLAG])
@@ -187,6 +251,48 @@ if test "x$gx_cv_fc_internal_file_nml" = "xyes"; then
    AC_DEFINE([HAVE_INTERNAL_NML], 1,
              [Define to 1 if your Fortran compiler supports reading namelists
               from internal files])
+fi
+AC_LANG_POP([Fortran])
+])
+
+# GX_FC_ISO_FORTRAN_ENV
+# -----------------------------------------------------------------------------
+# Determine if the Fortran compiler has the iso_fortran_env module.  If
+# supported, sets the define HAVE_ISO_FORTRAN_ENV.
+AC_DEFUN([GX_FC_ISO_FORTRAN_ENV],[
+AC_LANG_PUSH([Fortran])
+AC_CACHE_CHECK([if Fortran has the iso_fortran_env module], [gx_cv_fc_iso_fortran_env],[
+gx_cv_fc_iso_fortran_env=unknown
+AC_COMPILE_IFELSE([[
+   program test
+   use iso_fortran_env
+   end program test]],
+   [gx_cv_fc_iso_fortran_env=yes],
+   [gx_cv_fc_iso_fortran_env=no])])
+if test "x$gx_cv_fc_iso_fortran_env" = "xyes"; then
+   AC_DEFINE([HAVE_ISO_FORTRAN_ENV], 1,
+             [Define to 1 if your Fortran has the iso_fortran_env module])
+fi
+AC_LANG_POP([Fortran])
+])
+
+# GX_FC_ISO_C_BINDING
+# -----------------------------------------------------------------------------
+# Determine if the Fortran compiler has the iso_c_binding module.  If
+# supported, sets the define HAVE_ISO_C_BINDING.
+AC_DEFUN([GX_FC_ISO_C_BINDING],[
+AC_LANG_PUSH([Fortran])
+AC_CACHE_CHECK([if Fortran has the iso_c_binding module], [gx_cv_fc_iso_c_binding],[
+gx_cv_fc_iso_c_binding=unknown
+AC_COMPILE_IFELSE([[
+   program test
+   use iso_c_binding
+   end program test]],
+   [gx_cv_fc_iso_c_binding=yes],
+   [gx_cv_fc_iso_c_binding=no])])
+if test "x$gx_cv_fc_iso_c_binding" = "xyes"; then
+   AC_DEFINE([HAVE_ISO_C_BINDING], 1,
+             [Define to 1 if your Fortran has the iso_c_binding module])
 fi
 AC_LANG_POP([Fortran])
 ])
