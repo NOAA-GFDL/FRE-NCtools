@@ -5,7 +5,7 @@ AC_PREREQ([2.63])
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
