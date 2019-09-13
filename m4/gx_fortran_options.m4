@@ -296,3 +296,30 @@ if test "x$gx_cv_fc_iso_c_binding" = "xyes"; then
 fi
 AC_LANG_POP([Fortran])
 ])
+
+# GX_FC_CHECK_MOD(module-name, [only], [action-if-found], [action-if-not-found])
+# -----------------------------------------------------------------------------
+# Check if a Fortran module module-name is available.  Execute shell commands
+# action-if-found, otherwise execute action-if-not-found.  If only is specified
+# then check if the Fortran module has the given symbol.
+AC_DEFUN([GX_FC_CHECK_MOD],[
+AC_LANG_PUSH([Fortran])
+m4_ifval([$2],[gx_fc_check_mod_only=",only:$2"],[gx_fc_check_mod_only=""])
+AS_LITERAL_WORD_IF([$1],
+  [AS_VAR_PUSHDEF([gx_mod], [gx_cv_fc_check_mod_$1])],
+  [AS_VAR_PUSHDEF([gx_mod], AS_TR_SH([gx_cv_check_mod_$1]))])
+AC_CACHE_CHECK([for Fortran module $1], [gx_mod],
+  [AC_COMPILE_IFELSE([[
+    program test
+    use $1$gx_fc_check_mod_only
+    end program test
+    ]],
+    [AS_VAR_SET([gx_mod], [yes])],
+    [AS_VAR_SET([gx_mod], [no])])])
+AS_VAR_IF([gx_mod], [yes],
+  [m4_default([$3],
+    [AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_$1), 1, [Define to 1 if the Fortran module $1 is found])])],
+  [$4])
+AS_VAR_POPDEF([gx_mod])
+AC_LANG_POP([Fortran])
+])
