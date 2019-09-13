@@ -7,8 +7,7 @@
 #   GX_FC_QUAD_PRECISION()
 #   GX_FC_CRAY_POINTER_FLAG([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 #   GX_FC_INTERNAL_FILE_NML()
-#   GX_FC_ISO_FORTRAN_ENV()
-#   GX_FC_ISO_C_BINDING()
+#   GX_FC_CHECK_MOD(module-name, [only], [action-if-found], [action-if-not-found])
 #
 # DESCRIPTION
 #
@@ -251,48 +250,6 @@ if test "x$gx_cv_fc_internal_file_nml" = "xyes"; then
    AC_DEFINE([HAVE_INTERNAL_NML], 1,
              [Define to 1 if your Fortran compiler supports reading namelists
               from internal files])
-fi
-AC_LANG_POP([Fortran])
-])
-
-# GX_FC_ISO_FORTRAN_ENV
-# -----------------------------------------------------------------------------
-# Determine if the Fortran compiler has the iso_fortran_env module.  If
-# supported, sets the define HAVE_ISO_FORTRAN_ENV.
-AC_DEFUN([GX_FC_ISO_FORTRAN_ENV],[
-AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([if Fortran has the iso_fortran_env module], [gx_cv_fc_iso_fortran_env],[
-gx_cv_fc_iso_fortran_env=unknown
-AC_COMPILE_IFELSE([[
-   program test
-   use iso_fortran_env
-   end program test]],
-   [gx_cv_fc_iso_fortran_env=yes],
-   [gx_cv_fc_iso_fortran_env=no])])
-if test "x$gx_cv_fc_iso_fortran_env" = "xyes"; then
-   AC_DEFINE([HAVE_ISO_FORTRAN_ENV], 1,
-             [Define to 1 if your Fortran has the iso_fortran_env module])
-fi
-AC_LANG_POP([Fortran])
-])
-
-# GX_FC_ISO_C_BINDING
-# -----------------------------------------------------------------------------
-# Determine if the Fortran compiler has the iso_c_binding module.  If
-# supported, sets the define HAVE_ISO_C_BINDING.
-AC_DEFUN([GX_FC_ISO_C_BINDING],[
-AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([if Fortran has the iso_c_binding module], [gx_cv_fc_iso_c_binding],[
-gx_cv_fc_iso_c_binding=unknown
-AC_COMPILE_IFELSE([[
-   program test
-   use iso_c_binding
-   end program test]],
-   [gx_cv_fc_iso_c_binding=yes],
-   [gx_cv_fc_iso_c_binding=no])])
-if test "x$gx_cv_fc_iso_c_binding" = "xyes"; then
-   AC_DEFINE([HAVE_ISO_C_BINDING], 1,
-             [Define to 1 if your Fortran has the iso_c_binding module])
 fi
 AC_LANG_POP([Fortran])
 ])
