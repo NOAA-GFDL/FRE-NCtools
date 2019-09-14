@@ -1,6 +1,10 @@
 # Prelude
-AC_INIT([FRE NC Tools], [1.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
 AC_PREREQ([2.63])
+AC_INIT([FRE NC Tools], [16.0.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
+# Place the git description informatin in the configure script
+m4_define([git_revision],
+  [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
+AC_REVISION([$git_revision])
 
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
@@ -70,6 +74,9 @@ fi
 
 # Check for library functions
 
+# Other defs
+AC_DEFINE([GIT_REVISION], "git_revision",
+          [Holds the 'git describe' information if configure ran within a git working directory])
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
