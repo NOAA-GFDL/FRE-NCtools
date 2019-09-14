@@ -1,4 +1,7 @@
 #!/usr/bin/env bats
+teardown () {
+  rm -f *.nc *.nc.????
+}
 
 @test "make_vgrid exists and is executable" {
   run command -v make_vgrid
