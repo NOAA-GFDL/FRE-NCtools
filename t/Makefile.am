@@ -11,7 +11,12 @@ TESTS = 01-make_hgrid.sh \
         01-make_vgrid.sh \
         01-mppnccombine.sh
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(TESTS) \
+             mppnccombine/mppnccombine.ncl.0000 \
+             mppnccombine/mppnccombine.ncl.0001 \
+             mppnccombine/mppnccombine.ncl.0002 \
+             mppnccombine/mppnccombine.ncl.0003
+
 
 clean-local:
 	$(RM) *.nc
