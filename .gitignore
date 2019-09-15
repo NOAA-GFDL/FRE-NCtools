@@ -13,6 +13,7 @@ Makefile.in
 /py-compile
 /test-driver
 /ylwrap
+/tap-driver.sh
 
 # http://www.gnu.org/software/autoconf
 

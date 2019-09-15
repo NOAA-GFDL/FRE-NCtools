@@ -1,13 +1,15 @@
-TESTS_ENVIRONMENT = \
+TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
     for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
 
 
-TEST_LOG_DRIVER = $(PROVE)
+LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+             $(top_srcdir)/tap-driver.sh
 
 TESTS = 01-make_hgrid.sh \
-        01-make_vgrid.sh
+        01-make_vgrid.sh \
+        01-mppnccombine.sh
 
 EXTRA_DIST = $(TESTS)
 
