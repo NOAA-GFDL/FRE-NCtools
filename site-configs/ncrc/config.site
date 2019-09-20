@@ -3,7 +3,7 @@
 # configure options
 test -z "$with_mpi" && with_mpi=yes
 # Standard prefix location for FRE distribution
-test "$prefix" = NONE && prefix=/ncrc/home2/fms/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc
+test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc
 
 # Compilers
 test -z "$CC" && CC=icc

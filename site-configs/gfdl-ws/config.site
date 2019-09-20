@@ -3,7 +3,7 @@
 # configure options
 test -z "$with_mpi" && with_mpi=yes
 # Standard prefix location for FRE distribution
-test "$prefix" = NONE && prefix=/home/fms/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl-ws
+test "$prefix" = NONE && prefix=/home/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl-ws
 
 # Standard compilers on gfdl-ws
 test -z "$CC" && CC=icc
