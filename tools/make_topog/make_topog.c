@@ -248,13 +248,15 @@ char *usage[] = {
   "",
   NULL };
 
-const int REALISTIC         = 1;
-const int RECTANGULAR_BASIN = 2;
-const int GAUSSIAN          = 3;
-const int BOWL              = 4;
-const int IDEALIZED         = 5;
-const int BOX_CHANNEL       = 6;
-const int DOME              = 7;
+enum{
+  REALISTIC         = 1,
+  RECTANGULAR_BASIN = 2,
+  GAUSSIAN          = 3,
+  BOWL              = 4,
+  IDEALIZED         = 5,
+  BOX_CHANNEL       = 6,
+  DOME              = 7,
+};
 
 char grid_version[] = "0.2";
 char tagname[] = "$Name: fre-nctools-bronx-10 $";

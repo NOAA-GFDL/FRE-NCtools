@@ -16,7 +16,7 @@ program decompress
   implicit none
   include 'netcdf.inc'
 
-  integer, parameter :: PATH_MAX = 1024 ! max len of the file name; 
+  integer, parameter :: PATH_MAX = 1024 ! max len of the file name;
   integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers;
   integer            :: blksz = 65536  ! blksz must be writable for nf__create
 
@@ -106,12 +106,12 @@ program decompress
         __NF_ASRT__(nf_copy_att(input(nfiles),varid,attname,ncid,varid1))
      enddo
      if(add_missing_value.and.is_compressed) then
-        ! check if missing_value or _FillValue attributes are present 
+        ! check if missing_value or _FillValue attributes are present
         if ( nf_inq_atttype(input(nfiles),varid,'missing_value',iret)/=NF_NOERR .and. &
              nf_inq_atttype(input(nfiles),varid,'_FillValue',iret)/=NF_NOERR ) then
            ! if not, define the missing value attribute
            select case(xtype)
-           case(NF_DOUBLE) 
+           case(NF_DOUBLE)
               missing = NF_FILL_DOUBLE
            case(NF_FLOAT)
               missing = NF_FILL_FLOAT
@@ -139,7 +139,7 @@ program decompress
   do varid=1,nvars
      __NF_ASRT__(nfu_inq_compressed_var(input(nfiles),varid,name=varname,dimlens=dimlens,has_records=has_records))
      if(has_records) then
-        ! just write an integer at the very end of the variable -- that extends the 
+        ! just write an integer at the very end of the variable -- that extends the
         ! record dimensions as well
         __NF_ASRT__(nf_inq_varid(ncid,varname,varid))
         __NF_ASRT__(nf_put_var1_int(ncid,varid,dimlens,0))
@@ -157,12 +157,12 @@ program decompress
      allocate(buffer(vsize),mask(vsize))
      mask(:) = .false.
      do_oceanValue=.false.
-     ocean_value = 0.0  
+     ocean_value = 0.0
      if(nfu_get_att(ncid,varname,'ocean_fillvalue',ocean_value)==NF_NOERR) then
        do_oceanValue=.true.
      endif
 
-     ! obtain the missing value 
+     ! obtain the missing value
      if(nfu_get_att(ncid,varname,'missing_value',missing)==NF_NOERR) then
         ! do nothing, the value is already in the "missing" variable
      else if(nfu_get_att(ncid,varname,'_FillValue',missing)==NF_NOERR) then
@@ -170,7 +170,7 @@ program decompress
      else
         ! get fill value for the type instead of the missing value
         select case(xtype)
-        case(NF_DOUBLE) 
+        case(NF_DOUBLE)
            missing = NF_FILL_DOUBLE
         case(NF_FLOAT)
            missing = NF_FILL_FLOAT
@@ -189,7 +189,7 @@ program decompress
      __NF_ASRT__(nfu_put_var_r8(ncid,varname,buffer))
      deallocate(buffer,mask)
   enddo
-     
+
   __NF_ASRT__(nf_close(ncid))
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -204,14 +204,14 @@ subroutine parse_command_line()
   logical :: do_interpret_arguments
   integer :: i, iostat
 
-  integer, external :: iargc
+  !integer, external :: iargc
 
   nargs = iargc()
   if(nargs==0) then
      call usage()
      call exit(1)
   endif
-  
+
   allocate(files(nargs))  ! allocate storage for all file names
   do_interpret_arguments = .true.
   add_missing_value = .false.
@@ -285,7 +285,7 @@ end subroutine
 subroutine assert(cond,message)
   logical     , intent(in) :: cond    ! condition to check
   character(*), intent(in) :: message ! error message to print if condition is not satisfied
-  
+
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
      call exit(1)
