@@ -3,7 +3,7 @@
 ! This program is distributed under the terms of the GNU General Public
 ! License. See the file COPYING contained in this directory
 !
-! This program reads several input netcdf files, presumably containing 
+! This program reads several input netcdf files, presumably containing
 ! "compressed by gathering" data, and combines them into a single output file
 !
 !-----------------------------------------------------------------------
@@ -16,15 +16,15 @@ program combine_res
   implicit none
   include 'netcdf.inc'
 
-  integer, parameter :: PATH_MAX = 1024 ! max len of the file name; 
-  integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers; 
+  integer, parameter :: PATH_MAX = 1024 ! max len of the file name;
+  integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers;
   integer            ::  blksz = 65536  ! blksz must be writable for nf__create
 
   character(PATH_MAX), allocatable :: files(:) ! names of all files on the command line
   character(PATH_MAX)              :: outfile  ! name of the output file
   character(PATH_MAX)              :: infile   ! name of input file
   integer :: nfiles    ! number of files on command line
-  integer :: nfiles_out ! number of output file 
+  integer :: nfiles_out ! number of output file
   integer :: npex_io    ! number of division in x-direction
   integer :: npey_io    ! number of division in y-direction
   integer :: nlon, nlat             ! global domain size
@@ -77,11 +77,11 @@ program combine_res
   !--- create the file
   nfiles_out = npex_io*npey_io
 
-  ! get the grid size 
+  ! get the grid size
   nlon = 0
   nlat = 0
   nz = 1
-  __NF_ASRT__(nf_inq_ndims(in_ncid,ndims))  
+  __NF_ASRT__(nf_inq_ndims(in_ncid,ndims))
   do dimid = 1,ndims
      __NF_ASRT__(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen))
      if( trim(dimname) == "lon" ) then
@@ -145,7 +145,7 @@ program combine_res
               dimlen_list(nn) = dimlen_list(nn)+1
            endif
         enddo
-        ! can't have 0-length dimension, since it is (mis-)understood by netcdf as 
+        ! can't have 0-length dimension, since it is (mis-)understood by netcdf as
         ! a record one.
         deallocate(buffer,mask)
      endif
@@ -183,15 +183,14 @@ program combine_res
 
   npts = nlon*nlat
   npts_local = nlon_local*nlat_local
-  !--- loop through each record  
+  !--- loop through each record
   do tlev = 1, nrec
 
 
      ! write out the data
      do varid = 1,nvars
         !-- make sure number of levels is no greater than 2.
-        __NF_ASRT__(nfu_inq_var(in_ncid,varid, ndims=ndims, dimids=dimids, dimlens=dimlens,&
-                    recsize=recsize,has_records=has_records))
+        __NF_ASRT__(nfu_inq_var(in_ncid,varid, ndims=ndims, dimids=dimids, dimlens=dimlens,recsize=recsize,has_records=has_records))
 
         if(.not. has_records .and. tlev>1) cycle
 
@@ -217,7 +216,7 @@ program combine_res
               __NF_ASRT__(nfu_inq_dim(in_ncid,dimids(dimid),dimname=dimname,dimlen=dimlen,is_unlim=has_records))
               if(has_records) then
                  t_id = dimid
-              else if(trim(dimname) == "zfull") then 
+              else if(trim(dimname) == "zfull") then
                  k_id = dimid
               endif
            enddo
@@ -231,14 +230,14 @@ program combine_res
 
            start(:) = 1; nread(:) = 1
            nread(1) = recsize
-           if(t_id > 0) start(t_id) = tlev           
+           if(t_id > 0) start(t_id) = tlev
            do k = 1, nz
               if(k_id>0) start(k_id)=k
               buffer(:) = 0
               mask(:) = .false.
               mask_2d(:,:) = .false.
               buffer_2d(:,:) = 0
-              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))          
+              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
               do l = 1, vsize
                  if(mask(l)) then
                     ij = mod((l-1), npts)+1
@@ -252,7 +251,7 @@ program combine_res
                     jj = mod((j-1),nlat_local) + 1
                     ll = (t-1)*npts_local + (jj-1)*nlon_local + ii
                     buffer_2d(ll,nn) = buffer(l)
-                    mask_2d(ll,nn) = mask(l)        
+                    mask_2d(ll,nn) = mask(l)
                  endif
               enddo
               do n = 1, nfiles_out
@@ -273,7 +272,7 @@ program combine_res
            if(has_records) then  ! record variable
               start(:) = 1; nread(:) = 1; nwrite(:) = 1
               start(1) = tlev
-              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))    
+              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
                  do n = 1, nfiles_out
                     __NF_ASRT__(nfu_put_vara_r8(out_ncid(n),varname,start, nwrite,buffer))
                  enddo
@@ -306,7 +305,7 @@ subroutine parse_command_line()
   logical :: do_interpret_arguments
   integer :: i, iostat
 
-  integer, external :: iargc
+  !integer, external :: iargc
 
   nargs = iargc()
   if(nargs==0) then
@@ -315,7 +314,7 @@ subroutine parse_command_line()
   endif
 
   npex_io = 0
-  npey_io = 0  
+  npey_io = 0
 
   allocate(files(nargs))  ! allocate storage for all file names
   do_interpret_arguments = .true.
@@ -346,7 +345,7 @@ subroutine parse_command_line()
            call getarg(i+1,param)
            read(param,*,iostat=iostat) npey_io
            call assert(iostat==0,trim(arg)//' flag must be followed by integer verbosity level')
-           i=i+1        
+           i=i+1
         case ('-h','-?','--help')
            call usage()
            call exit(1)
@@ -365,7 +364,7 @@ subroutine parse_command_line()
   if (nfiles==1) then
      infile = files(1)
   else if(nfiles==0) then
-     call assert(.false.,'infile is not specified')     
+     call assert(.false.,'infile is not specified')
   else
      call assert(.false.,'number of files specified must be 1')
   endif
@@ -390,7 +389,7 @@ subroutine usage()
   write(*,'(a)')'in.nc            Input file name'
   write(*,'(a)')
   write(*,'(a)')'WARNING: output file is overwritten.'
-  
+
 end subroutine
 
 
@@ -399,7 +398,7 @@ end subroutine
 subroutine assert(cond,message)
   logical     , intent(in) :: cond    ! condition to check
   character(*), intent(in) :: message ! error message to print if condition is not satisfied
-  
+
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
      call exit(1)

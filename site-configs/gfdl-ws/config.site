@@ -1,0 +1,14 @@
+# Default site configuration for GFDL Workstation platforms
+#
+# configure options
+test -z "$with_mpi" && with_mpi=yes
+# Standard prefix location for FRE distribution
+test "$prefix" = NONE && prefix=/home/fms/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl-ws
+
+# Standard compilers on gfdl-ws
+test -z "$CC" && CC=icc
+test -z "$FC" && FC=ifort
+
+# Compile/Link flags
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"
+

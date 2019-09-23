@@ -1,7 +1,7 @@
 # FRE-NCtools 
 
 FRE NCtools are a collection of tools to help with the creation and
-mamnipulation of netCDF files used or written out by the climate
+manipulation of netCDF files used or written out by the climate
 models developed at the
 [Geophysical Fluid Dynamics Laboratory](https://www.gfdl.noaa.gov)
 (GFDL).  These tools were primarally written by members of the GFDL
