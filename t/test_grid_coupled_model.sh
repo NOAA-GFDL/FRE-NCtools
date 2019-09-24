@@ -25,4 +25,13 @@
 		--center c_cell \
 		--grid_name ocean_vgrid 
   [ "$status" -eq 0 ]
+
+#Make_solo_mosaic: create ocean solo mosaic
+  run command make_solo_mosaic \
+		--num_tiles 1 \
+		--dir . \
+		--mosaic_name ocean_mosaic \
+		--tile_file ocean_hgrid.nc \
+		--periodx 360
+  [ "$status" -eq 0 ]
 }
