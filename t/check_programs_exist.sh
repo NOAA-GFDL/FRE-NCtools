@@ -104,6 +104,13 @@
 @test "Test 16: Check mppncscatter exists and is executable" {
   run command -v mppncscatter
   [ "$status" -eq 0 ]
-
 }
+
+@test "Test 17: Check mppnccombine exists and is executable" {
+  run command -v mppnccombine
+  [ "$status" -eq 0 ]
+  run mppnccombine -h
+  [ "$status" -eq 1 ]
+}
+
 
