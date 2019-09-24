@@ -1,11 +1,10 @@
 #!/usr/bin/env bats
 
-# Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid.
+# Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
 
-# Test 1: Create ocean_hgrid
-  
-@test "Make_hgrid: create ocean_hgrid" {
+@test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
 cd grid_coupled_model
+#Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
 		--grid_type tripolar_grid \
 		--nxbnd 2 \
@@ -17,11 +16,8 @@ cd grid_coupled_model
 		--grid_name ocean_hgrid \
 		--center c_cell
   [ "$status" -eq 0 ]
-}
 
-# Test 2: Create ocean_vgrid
-@test "Make_vgrid: create ocean_vgrid" {
-cd grid_coupled_model
+#Make_vgrid: create ocean_vgrid
   run command make_vgrid \
 		--nbnds 3 \
 		--bnds 0.,220.,5500. \
@@ -29,11 +25,8 @@ cd grid_coupled_model
 		--center c_cell \
 		--grid_name ocean_vgrid 
   [ "$status" -eq 0 ]
-}
 
-# Test 3: Create ocean solo mosaic
-@test "Make_solo_mosaic: create ocean solo mosaic" {
-cd grid_coupled_model
+#Make_solo_mosaic: create ocean solo mosaic
   run command make_solo_mosaic \
 		--num_tiles 1 \
 		--dir . \
@@ -41,11 +34,8 @@ cd grid_coupled_model
 		--tile_file ocean_hgrid.nc \
 		--periodx 360
   [ "$status" -eq 0 ]
-}
 
-# Test 4: Create ocean topography data with and without parallel and compare
-@test "Make_topog: create ocean topography data" {
-cd grid_coupled_model
+#Make_topog: create ocean topography data
   run command make_topog \
 		--mosaic ocean_mosaic.nc \
 		--topog_type realistic \
@@ -69,32 +59,23 @@ cd grid_coupled_model
 
 #  run command nccmp -md topog.nc topog_parallel.nc
 #  [ "$status" -eq 0 ]
-}
 
-# Test 5: Create C48 grid for atmos/land
-@test "Make_hgrid: create C48 grid for atmos/land" {
-cd grid_coupled_model
+#Make_hgrid: create C48 grid for atmos/land
   run command make_hgrid \
 		--grid_type gnomonic_ed \
 		--nlon 96 \
 		--grid_name C48_grid \
   [ "$status" -eq 0 ]
-}
 
-# Test 6: Create C48 solo mosaic for atmos/land
-@test "Make_solo_mosaic: create C48 solo mosaic for atmos/land" {
-cd grid_coupled_model
+#Make_solo_mosaic: create C48 solo mosaic for atmos/land
   run command make_solo_mosaic \
 		--num_tiles 6 \
 		--dir . \
 		--mosaic C48_mosaic \
 		--tile_file C48_grid.tile1.nc,C48_grid.tile2.nc,C48_grid.tile3.nc,C48_grid.tile4.nc,C48_grid.tile5.nc,C48_grid.tile6.nc
   [ "$status" -eq 0 ]
-}
 
-# Test 7: Make the coupler_mosaic with and without parallel and compare
-@test "Make_coupler_mosaic: coupler_mosaic with and without parallel and compare" {
-cd grid_coupled_model
+#Make_coupler_mosaic: coupler_mosaic with and without parallel and compare
   run command make_coupler_mosaic \
 		--atmos_mosaic C48_mosaic.nc \
 		--ocean_mosaic ocean_mosaic.nc \
@@ -113,5 +94,5 @@ cd grid_coupled_model
 #		--mosaic_name grid_spec  \
 #		--area_ratio_thresh 1.e-10
 #  [ "$status" -eq 0 ]
-}
 
+}
