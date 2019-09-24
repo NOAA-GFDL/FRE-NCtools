@@ -9,7 +9,8 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 
 TESTS = 01-mppnccombine.sh \
         check_programs_exist.sh \
-        test_grid_coupled_model.sh
+        test_grid_coupled_model.sh \
+        test_grid_coupled_nest.sh 
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
