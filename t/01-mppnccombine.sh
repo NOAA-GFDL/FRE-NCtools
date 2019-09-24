@@ -1,24 +1,15 @@
 #!/usr/bin/env bats
-setup () {
+
+@test "mppnccombine combines" {
+  mkdir work_dir_2
+  cd work_dir_2
+
+  #Generate the netcdf files from the .ncl 
   for f in $top_srcdir/t/mppnccombine/*.ncl.????
   do
     ncgen -o mppnccombine.nc.${f##*.} $f
   done
-}
 
-teardown () {
-  rm -f *.nc *.nc.????
-}
-
-@test "mppnccombine exists and is executable" {
-  run command -v mppnccombine
-  [ "$status" -eq 0 ]
-  run mppnccombine -h
-  [ "$status" -eq 1 ]
-}
-
-@test "mppnccombine combines" {
-  skip "The test fails on travis"
   run command mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????
@@ -26,4 +17,7 @@ teardown () {
   [ -e mppnccombine_output.nc ]
   run ncdump -h mppnccombine_output.nc
   [ "$status" -eq 0 ]
+
+  cd ..
+  rm -rf work_dir_2
 }
