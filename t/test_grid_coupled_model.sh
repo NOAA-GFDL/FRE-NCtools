@@ -3,7 +3,7 @@
 # Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
-cd grid_coupled_model
+
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
 		--grid_type tripolar_grid \
@@ -17,4 +17,12 @@ cd grid_coupled_model
 		--center c_cell
   [ "$status" -eq 0 ]
 
+#Make_vgrid: create ocean_vgrid
+  run command make_vgrid \
+		--nbnds 3 \
+		--bnds 0.,220.,5500. \
+		--dbnds 10.,10.,367.14286 \
+		--center c_cell \
+		--grid_name ocean_vgrid 
+  [ "$status" -eq 0 ]
 }
