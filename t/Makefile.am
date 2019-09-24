@@ -15,8 +15,15 @@ EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
              mppnccombine/mppnccombine.ncl.0001 \
              mppnccombine/mppnccombine.ncl.0002 \
-             mppnccombine/mppnccombine.ncl.0003
-
+             mppnccombine/mppnccombine.ncl.0003 \
+             grid_coupled_model/OCCAM_p5degree.nc \
+             grid_coupled_model/C48_mosaic.nc \
+             grid_coupled_model/C48_grid.tile1.nc \
+             grid_coupled_model/C48_grid.tile2.nc \
+             grid_coupled_model/C48_grid.tile3.nc \
+             grid_coupled_model/C48_grid.tile4.nc \
+             grid_coupled_model/C48_grid.tile5.nc \
+             grid_coupled_model/C48_grid.tile6.nc
 
 clean-local:
 	$(RM) *.nc
