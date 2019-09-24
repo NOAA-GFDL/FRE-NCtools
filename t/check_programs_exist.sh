@@ -1,7 +1,4 @@
 #!/usr/bin/env bats
-teardown () {
-  rm -f *.nc *.nc.????
-}
 
 @test "Test 01: Check make_hgrid exists and is executable" {
   run command -v make_hgrid
