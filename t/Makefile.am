@@ -10,7 +10,9 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 TESTS = 01-mppnccombine.sh \
         check_programs_exist.sh \
         test_grid_coupled_model.sh \
-        test_grid_coupled_nest.sh 
+        test_grid_coupled_nest.sh \
+        test_remap_c48_regular.sh \
+        test_regrid_extrap.sh 
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
@@ -24,7 +26,12 @@ EXTRA_DIST = $(TESTS) \
              grid_coupled_model/C48_grid.tile3.nc \
              grid_coupled_model/C48_grid.tile4.nc \
              grid_coupled_model/C48_grid.tile5.nc \
-             grid_coupled_model/C48_grid.tile6.nc
-
+             grid_coupled_model/C48_grid.tile6.nc \
+             grid_coupled_model/19800101.atmos_daily.tile1.nc \
+             grid_coupled_model/19800101.atmos_daily.tile2.nc \
+             grid_coupled_model/19800101.atmos_daily.tile3.nc \
+             grid_coupled_model/19800101.atmos_daily.tile4.nc \
+             grid_coupled_model/19800101.atmos_daily.tile5.nc \
+             grid_coupled_model/19800101.atmos_daily.tile6.nc
 clean-local:
 	$(RM) *.nc
