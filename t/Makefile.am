@@ -32,6 +32,11 @@ EXTRA_DIST = $(TESTS) \
              grid_coupled_model/19800101.atmos_daily.tile3.nc \
              grid_coupled_model/19800101.atmos_daily.tile4.nc \
              grid_coupled_model/19800101.atmos_daily.tile5.nc \
-             grid_coupled_model/19800101.atmos_daily.tile6.nc
+             grid_coupled_model/19800101.atmos_daily.tile6.nc \
+             regrid_extrap/ocean_hgrid.nc \
+             regrid_extrap/ocean_mosaic.nc \
+             regrid_extrap/ocean_vgrid.nc \
+             regrid_extrap/WOA09_ann_theta.nc 
+
 clean-local:
 	$(RM) *.nc
