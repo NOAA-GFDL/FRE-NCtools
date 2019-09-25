@@ -38,7 +38,8 @@ EXTRA_DIST = $(TESTS) \
              regrid_extrap/ocean_mosaic.nc \
              regrid_extrap/ocean_vgrid.nc \
              regrid_extrap/WOA09_ann_theta.nc \
-             runoff_regrid
+             runoff_regrid \
+             river_regrid
 
 clean-local:
 	$(RM) *.nc
