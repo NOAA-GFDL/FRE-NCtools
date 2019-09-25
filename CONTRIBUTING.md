@@ -10,7 +10,7 @@ files for use with the [Geophysical Fluid Dynamics Laboratory](https://www.gfdl.
 available on GitHub in the [NOAA-GFDL](https://github.com/NOAA-GFDL)
 organization.
 
-What follows is set of guidelines and how-tos for contributing to FRE-NCtools.  
+What follows is a set of guidelines and how-tos for contributing to FRE-NCtools.  
 These are guidelines, not rules.  Use your best judgement and feel free to
 propose changes to this document in a pull request.
 
