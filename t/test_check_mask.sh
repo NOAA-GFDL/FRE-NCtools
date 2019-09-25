@@ -16,3 +16,5 @@ cp $top_srcdir/t/checkmask_baltic1/* .
 
 cd ..
 rm -rf work_dir_7
+
+}

@@ -14,7 +14,8 @@ TESTS = 01-mppnccombine.sh \
         test_remap_c48_regular.sh \
         test_regrid_extrap.sh \
         test_runoff_regrid.sh \
-        test_check_mask.sh
+        test_check_mask.sh \
+        test_check_mask_MOM.sh 
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
