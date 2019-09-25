@@ -1,4 +1,4 @@
-code># Contributing to FRE NCtools
+# Contributing to FRE NCtools
 
 Thank you for taking time to contribute.
 
