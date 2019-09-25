@@ -13,7 +13,8 @@ TESTS = 01-mppnccombine.sh \
         test_grid_coupled_nest.sh \
         test_remap_c48_regular.sh \
         test_regrid_extrap.sh \
-        test_runoff_regrid.sh 
+        test_runoff_regrid.sh \
+        test_check_mask.sh
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
@@ -39,7 +40,8 @@ EXTRA_DIST = $(TESTS) \
              regrid_extrap/ocean_vgrid.nc \
              regrid_extrap/WOA09_ann_theta.nc \
              runoff_regrid \
-             river_regrid
+             river_regrid \
+             checkmask_baltic1
 
 clean-local:
 	$(RM) *.nc
