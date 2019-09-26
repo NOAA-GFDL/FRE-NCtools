@@ -43,7 +43,6 @@ EXTRA_DIST = $(TESTS) \
              river_regrid \
              checkmask_baltic1 \
              remap_land \
-             regional_regrid
 
 clean-local:
 	$(RM) *.nc
