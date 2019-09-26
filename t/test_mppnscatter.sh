@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# mppncscatter first use mppncscatter to split the file
+# first use mppncscatter to split the file
 #             and then use mppnccombine to combine the file. The output should reproduce
 #             original file
 

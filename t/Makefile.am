@@ -18,7 +18,8 @@ TESTS = 01-mppnccombine.sh \
         test_check_mask_MOM.sh \
         test_remap_land_res.sh \
         test_make_regional_mosaic.sh \
-        test_mppnscatter.sh 
+        test_mppnscatter.sh \
+        test_make_quick_mosaic.sh
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \

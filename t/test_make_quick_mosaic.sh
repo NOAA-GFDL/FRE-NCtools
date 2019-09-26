@@ -1,0 +1,62 @@
+#!/usr/bin/env bats
+# test make_quick_mosaic
+
+#First create an ocean_mosaic and ocean_topog.nc
+#Make_hgrid: create ocean_hgrid"
+
+@test "Test mppncscatter and  mppnccombine" {
+  mkdir work_dir_12
+  cd work_dir_12
+  cp $top_srcdir/t/grid_coupled_model/OCCAM_p5degree.nc OCCAM_p5degree.nc
+
+  run command make_hgrid \
+		--grid_type tripolar_grid \
+		--nxbnd 2 \
+		--nybnd 7 \
+		--xbnd -280,80 \
+		--ybnd -82,-30,-10,0,10,30,90 \
+		--dlon 1.0,1.0 \
+		--dlat 1.0,1.0,0.6666667,0.3333333,0.6666667,1.0,1.0 \
+		--grid_name ocean_hgrid \
+		--center c_cell
+  [ "$status" -eq 0 ]
+
+#Make_vgrid: create ocean_vgrid
+  run command make_vgrid \
+		--nbnds 3 \
+		--bnds 0.,220.,5500. \
+		--dbnds 10.,10.,367.14286 \
+		--center c_cell \
+		--grid_name ocean_vgrid 
+  [ "$status" -eq 0 ]
+
+#Make_solo_mosaic: create ocean solo mosaic
+  run command make_solo_mosaic \
+		--num_tiles 1 \
+		--dir . \
+		--mosaic_name ocean_mosaic \
+		--tile_file ocean_hgrid.nc \
+		--periodx 360
+  [ "$status" -eq 0 ]
+
+#Make_topog: create ocean topography data
+  run command make_topog \
+		--mosaic ocean_mosaic.nc \
+		--topog_type realistic \
+		--topog_file OCCAM_p5degree.nc \
+		--topog_field TOPO \
+		--scale_factor -1 \
+		--vgrid ocean_vgrid.nc \
+		--output ocean_topog.nc 
+  [ "$status" -eq 0 ]
+
+#Make the quick mosaic 
+  run command make_quick_mosaic \
+		--input_mosaic ocean_mosaic.nc \
+		--ocean_topog ocean_topog.nc 
+  [ "$status" -eq 0 ]
+
+  cd ..
+  rm -rf work_dir_12
+
+}
