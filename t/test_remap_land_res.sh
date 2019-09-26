@@ -31,9 +31,9 @@
 		--remap_file remap_file_C48_to_C192 --print_memory
   [ "$status" -eq 0 ]
 
+#TO DO: Try this in a loop? 
+
 #Try to remap the soil restart
-  set filetype = soil
-  set restart = soil 
   run command remap_land \
 		--file_type soil \
 		--src_mosaic C48_mosaic/C48_mosaic.nc \
@@ -41,6 +41,84 @@
 		--src_restart src_restart/soil.res \
 		--dst_restart soil.res \
 		--dst_cold_restart dst_cold_restart/soil.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the snow restart
+  run command remap_land \
+		--file_type snow \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/snow.res \
+		--dst_restart snow.res \
+		--dst_cold_restart dst_cold_restart/snow.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the cana restart
+  run command remap_land \
+		--file_type cana \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/cana.res \
+		--dst_restart cana.res \
+		--dst_cold_restart dst_cold_restart/cana.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the glac restart
+  run command remap_land \
+		--file_type glac \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/glac.res \
+		--dst_restart glac.res \
+		--dst_cold_restart dst_cold_restart/glac.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the lake restart
+  run command remap_land \
+		--file_type lake \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/lake.res \
+		--dst_restart lake.res \
+		--dst_cold_restart dst_cold_restart/lake.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the vegn1 restart
+  run command remap_land \
+		--file_type vegn \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/vegn1.res \
+		--dst_restart vegn1.res \
+		--dst_cold_restart dst_cold_restart/vegn1.res \
+		--land_src_restart src_restart/land.res \
+		--land_cold_restart dst_cold_restart/land.res \
+		--remap_file remap_file_C48_to_C192 --print_memory
+  [ "$status" -eq 0 ] 
+
+#Try to remap the vegn2 restart
+  run command remap_land \
+		--file_type vegn \
+		--src_mosaic C48_mosaic/C48_mosaic.nc \
+		--dst_mosaic C192_mosaic/C192_mosaic.nc \
+		--src_restart src_restart/vegn2.res \
+		--dst_restart vegn2.res \
+		--dst_cold_restart dst_cold_restart/vegn2.res \
 		--land_src_restart src_restart/land.res \
 		--land_cold_restart dst_cold_restart/land.res \
 		--remap_file remap_file_C48_to_C192 --print_memory
