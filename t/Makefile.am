@@ -17,7 +17,8 @@ TESTS = 01-mppnccombine.sh \
         test_check_mask.sh \
         test_check_mask_MOM.sh \
         test_remap_land_res.sh \
-        test_make_regional_mosaic.sh 
+        test_make_regional_mosaic.sh \
+        test_mppnscatter.sh 
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
@@ -42,7 +43,8 @@ EXTRA_DIST = $(TESTS) \
              runoff_regrid \
              river_regrid \
              checkmask_baltic1 \
-             remap_land 
+             remap_land \
+             mppncscatter 
 
 clean-local:
 	$(RM) *.nc
