@@ -11,6 +11,7 @@
   cp $top_srcdir/t/mppncscatter/* .
   cd ..
 
+#TO DO: For loop through tiles?
 #Tile1 
 #Split the file: 
   run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile1.nc
@@ -89,8 +90,28 @@
 #  run command nccmp -md fv_core.res.tile6.nc input/fv_core.res.tile6.nc
 #  [ "$status" -eq 0 ]
 
-# To do: This works on GAEA, but can't run in on travis because the files are too large 
-#		(add ocean_temp_salt.res.nc and ice_model.res.nc
+# To do: This works on GAEA, but can't run in on travis because the files are too large, 
+#		(add ocean_temp_salt.res.nc and ice_model.res.nc) to put on git
+
+#Try with ocean_temp_salt.res.nc
+#  run command mppncscatter  -i 7 -j 7 -x 21 -y 14  input/ocean_temp_salt.res.nc
+#  [ "$status" -eq 0 ]
+
+#  run command mppnccombine -64 ocean_temp_salt.res.nc ocean_temp_salt.res.nc.???? 
+#  [ "$status" -eq 0 ]
+
+#  run command nccmp -md ocean_temp_salt.res.nc input/ocean_temp_salt.res.nc
+#  [ "$status" -eq 0 ]
+
+#Try with ice_model.res.nc
+#  run command mppncscatter  -i 7 -j 7 -x 21 -y 14  input/ice_model.res.nc
+#  [ "$status" -eq 0 ]
+
+#  run command mppnccombine -64 ice_model.res.nc ice_model.res.nc.???? 
+#  [ "$status" -eq 0 ]
+
+#  run command nccmp -md ice_model.res.nc input/ice_model.res.nc
+#  [ "$status" -eq 0 ]
 
   cd ..
   rm -rf work_dir_11
