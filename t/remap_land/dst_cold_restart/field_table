@@ -1,0 +1,27 @@
+# specific humidity for moist runs
+ "TRACER", "atmos_mod", "sphum" 
+           "longname",     "specific humidity"
+           "units",        "kg/kg" 
+	   "profile_type", "fixed", "surface_value=3.e-6" /
+ "TRACER", "land_mod", "sphum"
+           "longname",     "specific humidity"
+           "units",        "kg/kg" /
+# co2 tracers
+  "TRACER", "atmos_mod",    "co2"
+            "longname",     "carbon dioxide"
+            "units",        "kg/kg"
+            "convection",   "all"
+            "profile_type","fixed","surface_value = 434.5626E-06"/
+  "TRACER", "land_mod",     "co2"
+            "longname",     "carbon dioxide"
+            "units",        "kg/kg" /
+# prognostic cloud scheme tracers
+  "TRACER", "atmos_mod", "liq_wat"
+            "longname",     "cloud liquid specific humidity"
+            "units",        "kg/kg" /
+  "TRACER", "atmos_mod", "ice_wat"
+            "longname",     "cloud ice water specific humidity"
+            "units",        "kg/kg" /
+  "TRACER", "atmos_mod", "cld_amt"
+            "longname",     "cloud fraction"
+            "units",        "none" /
