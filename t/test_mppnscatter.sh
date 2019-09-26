@@ -21,8 +21,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile1.nc input/fv_core.res.tile1.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile1.nc input/fv_core.res.tile1.nc
+#  [ "$status" -eq 0 ]
 
 #Tile2 
 #Split the file: 
@@ -34,8 +34,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile2.nc input/fv_core.res.tile2.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile2.nc input/fv_core.res.tile2.nc
+#  [ "$status" -eq 0 ]
 
 #Tile3 
 #Split the file: 
@@ -47,8 +47,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile3.nc input/fv_core.res.tile3.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile3.nc input/fv_core.res.tile3.nc
+#  [ "$status" -eq 0 ]
 
 #Tile4 
 #Split the file: 
@@ -60,8 +60,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile4.nc input/fv_core.res.tile4.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile4.nc input/fv_core.res.tile4.nc
+#  [ "$status" -eq 0 ]
 
 #Tile5 
 #Split the file: 
@@ -73,8 +73,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile5.nc input/fv_core.res.tile5.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile5.nc input/fv_core.res.tile5.nc
+#  [ "$status" -eq 0 ]
 
 #Tile6 
 #Split the file: 
@@ -86,8 +86,8 @@
   [ "$status" -eq 0 ]
 
 #Compare the two:
-  run command nccmp -md fv_core.res.tile6.nc input/fv_core.res.tile6.nc
-  [ "$status" -eq 0 ]
+#  run command nccmp -md fv_core.res.tile6.nc input/fv_core.res.tile6.nc
+#  [ "$status" -eq 0 ]
 
 # To do: This works on GAEA, but can't run in on travis because the files are too large 
 #		(add ocean_temp_salt.res.nc and ice_model.res.nc
