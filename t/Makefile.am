@@ -16,7 +16,8 @@ TESTS = 01-mppnccombine.sh \
         test_runoff_regrid.sh \
         test_check_mask.sh \
         test_check_mask_MOM.sh \
-        test_remap_land_res.sh
+        test_remap_land_res.sh \
+        test_make_regional_mosaic.sh 
 
 EXTRA_DIST = $(TESTS) \
              mppnccombine/mppnccombine.ncl.0000 \
@@ -37,14 +38,12 @@ EXTRA_DIST = $(TESTS) \
              grid_coupled_model/19800101.atmos_daily.tile4.nc \
              grid_coupled_model/19800101.atmos_daily.tile5.nc \
              grid_coupled_model/19800101.atmos_daily.tile6.nc \
-             regrid_extrap/ocean_hgrid.nc \
-             regrid_extrap/ocean_mosaic.nc \
-             regrid_extrap/ocean_vgrid.nc \
-             regrid_extrap/WOA09_ann_theta.nc \
+             regrid_extrap \
              runoff_regrid \
              river_regrid \
              checkmask_baltic1 \
-             remap_land
+             remap_land \
+             regional_regrid
 
 clean-local:
 	$(RM) *.nc
