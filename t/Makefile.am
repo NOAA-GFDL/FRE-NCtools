@@ -7,8 +7,8 @@ TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
              $(top_srcdir)/tap-driver.sh
 
-TESTS = Test02-mppnccombine.sh \
-        check_programs_exist.sh \
+TESTS = Test01-check_programs_exist.sh \
+        Test02-mppnccombine.sh \        
         Test03-grid_coupled_model.sh \
         Test04-grid_coupled_nest.sh \
         Test05-remap_c48_regular.sh \
