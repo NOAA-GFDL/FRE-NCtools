@@ -40,6 +40,7 @@
 		--check_conserve
   [ "$status" -eq 0 ]
 
+#TO DO: This fails, it can probably work with npes>1 and in parallel 
   run command fregrid    \
 		--input_mosaic latlon_mosaic.nc    \
 		--input_dir ./   \

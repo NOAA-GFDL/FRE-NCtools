@@ -20,33 +20,19 @@ TESTS = 01-mppnccombine.sh \
         test_make_regional_mosaic.sh \
         test_mppnscatter.sh \
         test_make_quick_mosaic.sh \
-        test_remap_ocean.sh 
+        test_remap_ocean.sh \
+        test_regrid_land.sh
 
 EXTRA_DIST = $(TESTS) \
-             mppnccombine/mppnccombine.ncl.0000 \
-             mppnccombine/mppnccombine.ncl.0001 \
-             mppnccombine/mppnccombine.ncl.0002 \
-             mppnccombine/mppnccombine.ncl.0003 \
-             grid_coupled_model/OCCAM_p5degree.nc \
-             grid_coupled_model/C48_mosaic.nc \
-             grid_coupled_model/C48_grid.tile1.nc \
-             grid_coupled_model/C48_grid.tile2.nc \
-             grid_coupled_model/C48_grid.tile3.nc \
-             grid_coupled_model/C48_grid.tile4.nc \
-             grid_coupled_model/C48_grid.tile5.nc \
-             grid_coupled_model/C48_grid.tile6.nc \
-             grid_coupled_model/19800101.atmos_daily.tile1.nc \
-             grid_coupled_model/19800101.atmos_daily.tile2.nc \
-             grid_coupled_model/19800101.atmos_daily.tile3.nc \
-             grid_coupled_model/19800101.atmos_daily.tile4.nc \
-             grid_coupled_model/19800101.atmos_daily.tile5.nc \
-             grid_coupled_model/19800101.atmos_daily.tile6.nc \
+             mppnccombine \
+             grid_coupled_model \
              regrid_extrap \
              runoff_regrid \
              river_regrid \
              checkmask_baltic1 \
              remap_land \
-             mppncscatter 
+             mppncscatter \
+             regrid_with_cell_measures
 
 clean-local:
 	$(RM) *.nc
