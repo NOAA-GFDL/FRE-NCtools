@@ -4,9 +4,13 @@
 
 @test "Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region" {
 
-mkdir work_dir_1
-cd work_dir_1
-cp $top_srcdir/t/grid_coupled_model/OCCAM_p5degree.nc OCCAM_p5degree.nc
+  if [ ! -d "Test04" ] 
+  then
+  		mkdir Test04
+  fi
+
+  cd Test04
+  cp $top_srcdir/t/Test03-input/OCCAM_p5degree.nc OCCAM_p5degree.nc
 
 #create ocean_hgrid 
 run command make_hgrid \
@@ -114,6 +118,6 @@ run command make_solo_mosaic  \
 #   nccmp -md $file ../$file
 
 #Remove the workdir 
-cd ..
-rm -rf work_dir_1
+  cd ..
+  rm -rf Test04
 }
