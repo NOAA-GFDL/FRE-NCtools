@@ -3,9 +3,13 @@
 
 @test "Test  remap runoff data from regular lat-lon grid onto cm2m grid" {
 
-mkdir work_dir_5
-cd work_dir_5
-cp $top_srcdir/t/runoff_regrid/* .
+  if [ ! -d "Test07" ] 
+  then
+  		mkdir Test07
+  fi
+
+  cd Test07
+  cp $top_srcdir/t/Test07-input/* .
 
   run command runoff_regrid \
 		--input_file runoff.daitren.iaf.nc \
@@ -15,6 +19,6 @@ cp $top_srcdir/t/runoff_regrid/* .
 		--output_file runoff.cm2m.nc
   [ "$status" -eq 0 ]
 
-cd ..
-rm -rf work_dir_5
+  cd ..
+  rm -rf Test07
 }
