@@ -4,9 +4,13 @@
 @test "Test remap ocean restart file" {
   skip "Skipping this for now because the input files needed are too large" 
 
-  mkdir work_dir_13
-  cd work_dir_13
-  cp $top_srcdir/t/CM2.1_to_CM2.5/* . 
+  if [ ! -d "Test14" ] 
+  then
+  		mkdir Test14
+  fi
+
+  cd Test14
+  cp $top_srcdir/t/Test14-input/* . 
 
 #Create a OM3-like regular lat-lon grid.
   run command make_hgrid \
@@ -53,5 +57,5 @@
   [ "$status" -eq 0 ]
 
   cd ..
-  rm -rf work_dir_13
+  rm -rf Test14
 }

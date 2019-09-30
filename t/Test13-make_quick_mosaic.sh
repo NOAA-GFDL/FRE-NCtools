@@ -5,9 +5,13 @@
 #Make_hgrid: create ocean_hgrid"
 
 @test "Test make_quick_mosaic" {
-  mkdir work_dir_12
-  cd work_dir_12
-  cp $top_srcdir/t/grid_coupled_model/OCCAM_p5degree.nc OCCAM_p5degree.nc
+  if [ ! -d "Test13" ] 
+  then
+  		mkdir Test13
+  fi
+
+  cd Test13
+  cp $top_srcdir/t/Test03-input/OCCAM_p5degree.nc OCCAM_p5degree.nc
 
   run command make_hgrid \
 		--grid_type tripolar_grid \
@@ -57,6 +61,6 @@
   [ "$status" -eq 0 ]
 
   cd ..
-  rm -rf work_dir_12
+  rm -rf Test13
 
 }

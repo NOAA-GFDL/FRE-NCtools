@@ -19,7 +19,7 @@ TESTS = Test02-mppnccombine.sh \
         Test10-remap_land_res.sh \
         Test11-make_regional_mosaic.sh \
         Test12-mppnscatter.sh \
-        test_make_quick_mosaic.sh \
+        Test13-make_quick_mosaic.sh \
         test_remap_ocean.sh \
         test_regrid_land.sh
 
