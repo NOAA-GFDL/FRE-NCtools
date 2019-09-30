@@ -1,9 +1,14 @@
 #!/usr/bin/env bats
 
 @test "remap data from C48 to regular lat-lon grid" {
-  mkdir work_dir_3
-  cd work_dir_3
-  cp $top_srcdir/t/grid_coupled_model/* .
+
+  if [ ! -d "Test05" ] 
+  then
+  		mkdir Test05
+  fi
+
+  cd Test05
+  cp $top_srcdir/t/Test03-input/* .
 
   mkdir output
 
@@ -21,6 +26,6 @@
   [ "$status" -eq 0 ]
 
   cd ..
-  rm -rf work_dir_3
+  rm -rf Test05
 }
 

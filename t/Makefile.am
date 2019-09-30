@@ -11,7 +11,7 @@ TESTS = Test02-mppnccombine.sh \
         check_programs_exist.sh \
         Test03-grid_coupled_model.sh \
         Test04-grid_coupled_nest.sh \
-        test_remap_c48_regular.sh \
+        Test05-remap_c48_regular.sh \
         test_regrid_extrap.sh \
         test_runoff_regrid.sh \
         test_check_mask.sh \
