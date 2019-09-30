@@ -13,8 +13,8 @@ TESTS = Test02-mppnccombine.sh \
         Test04-grid_coupled_nest.sh \
         Test05-remap_c48_regular.sh \
         Test06-regrid_extrap.sh \
-        test_runoff_regrid.sh \
-        test_check_mask.sh \
+        Test07-runoff_regrid.sh \
+        Test08-check_mask.sh \
         test_check_mask_MOM.sh \
         test_remap_land_res.sh \
         test_make_regional_mosaic.sh \
@@ -27,9 +27,9 @@ EXTRA_DIST = $(TESTS) \
              Test02-input\
              Test03-input \
              Test06-input \
-             runoff_regrid \
+             Test07-input \
              river_regrid \
-             checkmask_baltic1 \
+             Test08-input \
              remap_land \
              mppncscatter \
              regrid_with_cell_measures
