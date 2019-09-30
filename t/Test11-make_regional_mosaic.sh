@@ -4,9 +4,13 @@
 
 @test "Test make_regional_mosaic" {
   skip "Skip for now because the input files are too big" 
-  mkdir work_dir_10
-  cd work_dir_10
-  cp $top_srcdir/t/regional_regrid/* . 
+  if [ ! -d "Test11" ] 
+  then
+  		mkdir Test11
+  fi
+
+  cd Test11
+  cp $top_srcdir/t/Test11-input/* . 
 
   run command make_regional_mosaic \
 		--global_mosaic C192-rot-120.-0.-r1_mosaic.nc \
@@ -67,7 +71,7 @@
   [ "$status" -eq 0 ] 
 
   cd ..
-  rm -rf work_dir_10
+  rm -rf Test11
 
 }
 
