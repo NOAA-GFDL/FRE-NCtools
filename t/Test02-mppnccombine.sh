@@ -1,8 +1,12 @@
 #!/usr/bin/env bats
 
 @test "mppnccombine combines" {
-  mkdir work_dir_2
-  cd work_dir_2
+  if [ ! -d "Test02" ] 
+  then
+  mkdir Test02
+  fi
+
+  cd Test02
 
   #Generate the netcdf files from the .ncl 
   for f in $top_srcdir/t/mppnccombine/*.ncl.????
@@ -10,6 +14,7 @@
     ncgen -o mppnccombine.nc.${f##*.} $f
   done
 
+  #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????
@@ -18,6 +23,7 @@
   run ncdump -h mppnccombine_output.nc
   [ "$status" -eq 0 ]
 
+  #Clean up 
   cd ..
-  rm -rf work_dir_2
+  rm -rf Test02
 }
