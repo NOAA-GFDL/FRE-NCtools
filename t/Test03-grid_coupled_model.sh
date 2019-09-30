@@ -61,15 +61,15 @@
   [ "$status" -eq 0 ]
 
 #Skipping this for now because it fails 
-#  run command mpirun -n 2 make_topog_parallel \
-#		--mosaic ocean_mosaic.nc \
-#		--topog_type realistic \
-#		--topog_file OCCAM_p5degree.nc \
-#		--topog_field TOPO \
-#		--scale_factor -1 \
-#		--vgrid ocean_vgrid.nc \
-#		--output topog_parallel.nc
-#  [ "$status" -eq 0 ]
+  run command mpirun -n 2 make_topog_parallel \
+		--mosaic ocean_mosaic.nc \
+		--topog_type realistic \
+		--topog_file OCCAM_p5degree.nc \
+		--topog_field TOPO \
+		--scale_factor -1 \
+		--vgrid ocean_vgrid.nc \
+		--output topog_parallel.nc
+  [ "$status" -eq 0 ]
 
 #  run command nccmp -md topog.nc topog_parallel.nc
 #  [ "$status" -eq 0 ]
