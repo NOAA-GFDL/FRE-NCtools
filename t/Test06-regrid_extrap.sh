@@ -3,9 +3,13 @@
 
 @test "Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation" {
 
-mkdir work_dir_4
-cd work_dir_4
-cp $top_srcdir/t/regrid_extrap/* .
+  if [ ! -d "Test06" ] 
+  then
+  		mkdir Test06
+  fi
+
+  cd Test06
+  cp $top_srcdir/t/Test06-input/* .
 
   run command make_hgrid \
 		--grid_type regular_lonlat_grid \
@@ -37,7 +41,7 @@ cp $top_srcdir/t/regrid_extrap/* .
 		--check_conserve
   [ "$status" -eq 0 ]
 
-cd ..
-rm -rf work_dir_4
+  cd ..
+  rm -rf Test06
 
 }

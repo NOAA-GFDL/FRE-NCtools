@@ -12,7 +12,7 @@ TESTS = Test02-mppnccombine.sh \
         Test03-grid_coupled_model.sh \
         Test04-grid_coupled_nest.sh \
         Test05-remap_c48_regular.sh \
-        test_regrid_extrap.sh \
+        Test06-regrid_extrap.sh \
         test_runoff_regrid.sh \
         test_check_mask.sh \
         test_check_mask_MOM.sh \
@@ -26,7 +26,7 @@ TESTS = Test02-mppnccombine.sh \
 EXTRA_DIST = $(TESTS) \
              Test02-input\
              Test03-input \
-             regrid_extrap \
+             Test06-input \
              runoff_regrid \
              river_regrid \
              checkmask_baltic1 \
