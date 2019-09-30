@@ -3,9 +3,13 @@
 
 @test "Test  remap runoff data from regular lat-lon grid onto cm2m grid" {
 
-mkdir work_dir_6
-cd work_dir_6
-cp $top_srcdir/t/river_regrid/* .
+  if [ ! -d "Test16" ] 
+  then
+  		mkdir Test16
+  fi
+
+  cd Test16
+  cp $top_srcdir/t/Test16-input/* .
 
   run command river_regrid \
 		--mosaic grid_spec.nc \
@@ -14,6 +18,6 @@ cp $top_srcdir/t/river_regrid/* .
 		--land_thresh 0.000001 \
   [ "$status" -eq 0 ]
 
-cd ..
-rm -rf work_dir_6
+  cd ..
+  rm -rf Test16
 }

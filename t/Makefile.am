@@ -21,18 +21,19 @@ TESTS = Test02-mppnccombine.sh \
         Test12-mppnscatter.sh \
         Test13-make_quick_mosaic.sh \
         Test14-remap_ocean.sh \
-        Test15-regrid_land.sh
+        Test15-regrid_land.sh \
+        Test16-river_regrid.sh 
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
              Test03-input \
              Test06-input \
              Test07-input \
-             river_regrid \
              Test08-input \
              Test10-input \
              Test12-input \
-             Test15-input
+             Test15-input \
+             Test16-input 
 
 clean-local:
 	$(RM) *.nc
