@@ -1,8 +1,7 @@
 #!/usr/bin/env bats
-# Test check_mask: create mask_table to mask out some all-land domain
-# to save processor usage for a coupled model with cm2m grid.
+# Test check_mask for MOM6 grid 
 
-@test "Test check_ mask for baltic1 experiment" {
+@test "Test check_mask for MOM6 grid " {
 skip "Skip this for now because the input files is too big" 
 
   if [ ! -d "Test09" ] 
