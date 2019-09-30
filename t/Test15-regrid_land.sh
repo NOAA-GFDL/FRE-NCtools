@@ -3,9 +3,13 @@
 
 @test "Test regrid land data" {
 
-  mkdir work_dir_14
-  cd work_dir_14
-  cp $top_srcdir/t/regrid_with_cell_measures/* .
+  if [ ! -d "Test15" ] 
+  then
+  		mkdir Test15
+  fi
+
+  cd Test15
+  cp $top_srcdir/t/Test15-input/* .
 
   run command fregrid \
 		--input_mosaic C180_mosaic.nc \
@@ -43,5 +47,5 @@
 #  [ "$status" -eq 0 ] 
 
   cd ..
-  rm -rf work_dir_14
+  rm -rf Test15
 }

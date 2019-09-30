@@ -20,8 +20,8 @@ TESTS = Test02-mppnccombine.sh \
         Test11-make_regional_mosaic.sh \
         Test12-mppnscatter.sh \
         Test13-make_quick_mosaic.sh \
-        test_remap_ocean.sh \
-        test_regrid_land.sh
+        Test14-remap_ocean.sh \
+        Test15-regrid_land.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
@@ -32,7 +32,7 @@ EXTRA_DIST = $(TESTS) \
              Test08-input \
              Test10-input \
              Test12-input \
-             regrid_with_cell_measures
+             Test15-input
 
 clean-local:
 	$(RM) *.nc
