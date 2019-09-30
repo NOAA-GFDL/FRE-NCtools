@@ -9,7 +9,7 @@ LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 
 TESTS = Test02-mppnccombine.sh \
         check_programs_exist.sh \
-        test_grid_coupled_model.sh \
+        Test03-grid_coupled_model.sh \
         test_grid_coupled_nest.sh \
         test_remap_c48_regular.sh \
         test_regrid_extrap.sh \
@@ -24,8 +24,8 @@ TESTS = Test02-mppnccombine.sh \
         test_regrid_land.sh
 
 EXTRA_DIST = $(TESTS) \
-             mppnccombine \
-             grid_coupled_model \
+             Test02-input\
+             Test03-input \
              regrid_extrap \
              runoff_regrid \
              river_regrid \

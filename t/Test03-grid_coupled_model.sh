@@ -4,15 +4,19 @@
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
 
-mkdir work_dir
-cd work_dir
-cp $top_srcdir/t/grid_coupled_model/OCCAM_p5degree.nc OCCAM_p5degree.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile1.nc C48_grid.tile1.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile2.nc C48_grid.tile2.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile3.nc C48_grid.tile3.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile4.nc C48_grid.tile4.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile5.nc C48_grid.tile5.nc
-cp $top_srcdir/t/grid_coupled_model/C48_grid.tile6.nc C48_grid.tile6.nc
+  if [ ! -d "Test03" ] 
+  then
+  		mkdir Test03
+  fi
+
+  cd Test03
+  cp $top_srcdir/t/Test03-input/OCCAM_p5degree.nc OCCAM_p5degree.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile1.nc C48_grid.tile1.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile2.nc C48_grid.tile2.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile3.nc C48_grid.tile3.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile4.nc C48_grid.tile4.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile5.nc C48_grid.tile5.nc
+  cp $top_srcdir/t/Test03-input/C48_grid.tile6.nc C48_grid.tile6.nc
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
@@ -106,6 +110,6 @@ cp $top_srcdir/t/grid_coupled_model/C48_grid.tile6.nc C48_grid.tile6.nc
 #  [ "$status" -eq 0 ]
 
 #Remove the workdir 
-cd ..
-rm -rf work_dir
+  cd ..
+  rm -rf Test03
 }

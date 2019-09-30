@@ -9,7 +9,7 @@
   cd Test02
 
   #Generate the netcdf files from the .ncl 
-  for f in $top_srcdir/t/mppnccombine/*.ncl.????
+  for f in $top_srcdir/t/Test02-input/*.ncl.????
   do
     ncgen -o mppnccombine.nc.${f##*.} $f
   done
