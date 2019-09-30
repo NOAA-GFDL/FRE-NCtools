@@ -18,7 +18,7 @@ TESTS = Test02-mppnccombine.sh \
         Test09-check_mask_MOM.sh \
         Test10-remap_land_res.sh \
         Test11-make_regional_mosaic.sh \
-        test_mppnscatter.sh \
+        Test12-mppnscatter.sh \
         test_make_quick_mosaic.sh \
         test_remap_ocean.sh \
         test_regrid_land.sh
@@ -31,7 +31,7 @@ EXTRA_DIST = $(TESTS) \
              river_regrid \
              Test08-input \
              Test10-input \
-             mppncscatter \
+             Test12-input \
              regrid_with_cell_measures
 
 clean-local:

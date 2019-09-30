@@ -4,11 +4,15 @@
 #             original file
 
 @test "Test mppncscatter and  mppnccombine" {
-  mkdir work_dir_11
-  cd work_dir_11
+  if [ ! -d "Test12" ] 
+  then
+  		mkdir Test12
+  fi
+
+  cd Test12
   mkdir input
   cd input
-  cp $top_srcdir/t/mppncscatter/* .
+  cp $top_srcdir/t/Test12-input/* .
   cd ..
 
 #TO DO: For loop through tiles?
@@ -114,6 +118,6 @@
 #  [ "$status" -eq 0 ]
 
   cd ..
-  rm -rf work_dir_11
+  rm -rf Test12
 
 }
