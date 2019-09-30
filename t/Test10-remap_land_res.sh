@@ -2,23 +2,27 @@
 # Test remap_land: remap land restart files.
 
 @test "Test remap_land: remap land restart files" {
-  mkdir work_dir_9
-  cd work_dir_9
+  if [ ! -d "Test10" ] 
+  then
+  		mkdir Test10
+  fi
+
+  cd Test10
   mkdir src_restart
   cd src_restart
-  cp $top_srcdir/t/remap_land/src_restart/* . 
+  cp $top_srcdir/t/Test10-input/src_restart/* . 
   cd ..
   mkdir dst_cold_restart
   cd dst_cold_restart
-  cp $top_srcdir/t/remap_land/dst_cold_restart/* . 
+  cp $top_srcdir/t/Test10-input/dst_cold_restart/* . 
   cd ..
   mkdir C48_mosaic
   cd C48_mosaic
-  cp $top_srcdir/t/remap_land/C48_mosaic/* . 
+  cp $top_srcdir/t/Test10-input/C48_mosaic/* . 
   cd ..
   mkdir C192_mosaic
   cd C192_mosaic
-  cp $top_srcdir/t/remap_land/C192_mosaic/* . 
+  cp $top_srcdir/t/Test10-input/C192_mosaic/* . 
   cd ..
 
   run command remap_land \
@@ -125,6 +129,6 @@
   [ "$status" -eq 0 ] 
 
   cd ..
-  rm -rf work_dir_9
+  rm -rf Test10
 
 }
