@@ -4,7 +4,7 @@
 #First create an ocean_mosaic and ocean_topog.nc
 #Make_hgrid: create ocean_hgrid"
 
-@test "Test mppncscatter and  mppnccombine" {
+@test "Test make_quick_mosaic" {
   mkdir work_dir_12
   cd work_dir_12
   cp $top_srcdir/t/grid_coupled_model/OCCAM_p5degree.nc OCCAM_p5degree.nc
