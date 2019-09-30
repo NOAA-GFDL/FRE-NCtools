@@ -5,9 +5,13 @@
 @test "Test check_ mask for baltic1 experiment" {
 skip "Skip this for now because the input files is too big" 
 
-mkdir work_dir_8
-cd work_dir_8
-cp $top_srcdir/t/checkmask_MOM6/* .
+  if [ ! -d "Test09" ] 
+  then
+  		mkdir Test09
+  fi
+
+  cd Test09
+  cp $top_srcdir/t/Test09-input/* .
 
   run command check_mask \
 		--grid_file ocean_mosaic.nc \
@@ -15,7 +19,7 @@ cp $top_srcdir/t/checkmask_MOM6/* .
 		--layout 45,72
   [ "$status" -eq 0 ]
 
-cd ..
-rm -rf work_dir_8
+  cd ..
+  rm -rf Test09
 
 }

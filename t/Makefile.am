@@ -15,7 +15,7 @@ TESTS = Test02-mppnccombine.sh \
         Test06-regrid_extrap.sh \
         Test07-runoff_regrid.sh \
         Test08-check_mask.sh \
-        test_check_mask_MOM.sh \
+        Test09-check_mask_MOM.sh \
         test_remap_land_res.sh \
         test_make_regional_mosaic.sh \
         test_mppnscatter.sh \
