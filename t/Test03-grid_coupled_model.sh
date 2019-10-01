@@ -60,7 +60,7 @@
 		--output topog.nc 
   [ "$status" -eq 0 ]
 
-#Skipping this for now because it fails 
+#TO DO: Skipping this for now because it fails 
 #  run command mpirun -n 2 make_topog_parallel \
 #		--mosaic ocean_mosaic.nc \
 #		--topog_type realistic \
@@ -98,7 +98,7 @@
 		--area_ratio_thresh 1.e-10 \
   [ "$status" -eq 0 ]
 
-#Skipping this for now because it fails 
+#TO DO: Skipping this for now because it fails 
 #  run command cd parallel
 
 #  run command aprun -n 2 make_coupler_mosaic_parallel \

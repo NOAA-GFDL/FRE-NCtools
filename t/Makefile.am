@@ -31,6 +31,7 @@ EXTRA_DIST = $(TESTS) \
              Test07-input \
              Test08-input \
              Test10-input \
+             Test11-input \
              Test12-input \
              Test15-input \
              Test16-input 

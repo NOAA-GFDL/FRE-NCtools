@@ -106,6 +106,7 @@ run command make_solo_mosaic  \
 		--tile_file land_grid.tile1.nc,land_grid.tile2.nc,land_grid.tile3.nc,land_grid.tile4.nc,land_grid.tile5.nc,land_grid.tile6.nc
   [ "$status" -eq 0 ]
 
+# TO DO: Skipping this because it fails 
 #make the coupler_mosaic
 #run command aprun -n $npes2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc --land_mosaic land_mosaic.nc \
 #          --ocean_mosaic ocean_mosaic.nc --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check

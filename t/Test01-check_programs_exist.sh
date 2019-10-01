@@ -29,7 +29,7 @@
 }
 
 @test "Check make_topog_parallel exists and is executable" {
-  skip "The test fails on travis"
+  skip "TO DO: The test fails on travis"
   run command -v make_topog_parallel
   [ "$status" -eq 0 ]
 }
@@ -42,7 +42,7 @@
 }
 
 @test "Check coupler_mosaic_parallel exists and is executable" {
-  skip "The test fails on travis"
+  skip "TO DO: The test fails on travis"
   run command -v make_coupler_mosaic_parallel
   [ "$status" -eq 0 ]
 }
@@ -55,7 +55,7 @@
 }
 
 @test "Check fregrid_parallel exists and is executable" {
-  skip "The test fails on travis"
+  skip "TO DO: The test fails on travis"
   run command -v fregrid_parallel
   [ "$status" -eq 0 ]
 }
@@ -89,7 +89,7 @@
 }
 
 @test "Check remap_land_parallel exists and is executable" {
-  skip "The test fails on travis"
+  skip "TO DO: The test fails on travis"
   run command -v remap_land_parallel
   [ "$status" -eq 0 ]
 }
