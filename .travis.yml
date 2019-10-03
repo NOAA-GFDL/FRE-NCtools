@@ -24,4 +24,4 @@ env:
 script:
   - autoreconf -i
   - ./configure $MPI_BUILD
-  - make -j distcheck
+  - make -j distcheck LOG_DRIVER_FLAGS=--comments
