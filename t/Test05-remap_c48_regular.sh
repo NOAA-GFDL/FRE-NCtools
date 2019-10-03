@@ -8,7 +8,20 @@
   fi
 
   cd Test05
-  cp $top_srcdir/t/Test03-input/* .
+  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
+  ncgen -o C48_mosaic.nc $top_srcdir/t/Test03-input/C48_mosaic.ncl
+  ncgen -o C48_grid.tile1.nc $top_srcdir/t/Test03-input/C48_grid.tile1.ncl
+  ncgen -o C48_grid.tile2.nc $top_srcdir/t/Test03-input/C48_grid.tile2.ncl
+  ncgen -o C48_grid.tile3.nc $top_srcdir/t/Test03-input/C48_grid.tile3.ncl
+  ncgen -o C48_grid.tile4.nc $top_srcdir/t/Test03-input/C48_grid.tile4.ncl
+  ncgen -o C48_grid.tile5.nc $top_srcdir/t/Test03-input/C48_grid.tile5.ncl
+  ncgen -o C48_grid.tile6.nc $top_srcdir/t/Test03-input/C48_grid.tile6.ncl
+  ncgen -o 19800101.atmos_daily.tile1.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile1.ncl
+  ncgen -o 19800101.atmos_daily.tile2.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile2.ncl
+  ncgen -o 19800101.atmos_daily.tile3.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile3.ncl
+  ncgen -o 19800101.atmos_daily.tile4.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile4.ncl
+  ncgen -o 19800101.atmos_daily.tile5.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile5.ncl
+  ncgen -o 19800101.atmos_daily.tile6.nc $top_srcdir/t/Test03-input/19800101.atmos_daily.tile6.ncl
 
   mkdir output
 

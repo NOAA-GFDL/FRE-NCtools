@@ -9,17 +9,18 @@
   fi
 
   cd Test07
-  cp $top_srcdir/t/Test06-input/ocean_hgrid.nc ocean_hgrid.nc
-  cp $top_srcdir/t/Test06-input/ocean_mosaic.nc ocean_mosaic.nc
-  cp $top_srcdir/t/Test06-input/ocean_vgrid.nc ocean_vgrid.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile1.nc C48_grid.tile1.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile2.nc C48_grid.tile2.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile3.nc C48_grid.tile3.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile4.nc C48_grid.tile4.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile5.nc C48_grid.tile5.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile6.nc C48_grid.tile6.nc
-  cp $top_srcdir/t/Test03-input/C48_mosaic.nc C48_mosaic.nc
-  cp $top_srcdir/t/Test07-input/* .
+  ncgen -o ocean_hgrid.nc $top_srcdir/t/Test06-input/ocean_hgrid.ncl
+  ncgen -o ocean_mosaic.nc $top_srcdir/t/Test06-input/ocean_mosaic.ncl
+  ncgen -o ocean_vgrid.nc $top_srcdir/t/Test06-input/ocean_vgrid.ncl
+  ncgen -o C48_grid.tile1.nc $top_srcdir/t/Test03-input/C48_grid.tile1.ncl
+  ncgen -o C48_grid.tile2.nc $top_srcdir/t/Test03-input/C48_grid.tile2.ncl
+  ncgen -o C48_grid.tile3.nc $top_srcdir/t/Test03-input/C48_grid.tile3.ncl
+  ncgen -o C48_grid.tile4.nc $top_srcdir/t/Test03-input/C48_grid.tile4.ncl
+  ncgen -o C48_grid.tile5.nc $top_srcdir/t/Test03-input/C48_grid.tile5.ncl
+  ncgen -o C48_grid.tile6.nc $top_srcdir/t/Test03-input/C48_grid.tile6.ncl
+  ncgen -o C48_mosaic.nc $top_srcdir/t/Test03-input/C48_mosaic.ncl
+  ncgen -o runoff.daitren.iaf.nc $top_srcdir/t/Test07-input/runoff.daitren.iaf.ncl
+  ncgen -o topog.nc $top_srcdir/t/Test07-input/topog.ncl
 
   run command runoff_regrid \
 		--input_file runoff.daitren.iaf.nc \

@@ -12,7 +12,13 @@
   cd Test12
   mkdir input
   cd input
-  cp $top_srcdir/t/Test12-input/* .
+  ncgen -o fv_core.res.tile1.nc $top_srcdir/t/Test12-input/fv_core.res.tile1.ncl
+  ncgen -o fv_core.res.tile2.nc $top_srcdir/t/Test12-input/fv_core.res.tile2.ncl
+  ncgen -o fv_core.res.tile3.nc $top_srcdir/t/Test12-input/fv_core.res.tile3.ncl
+  ncgen -o fv_core.res.tile4.nc $top_srcdir/t/Test12-input/fv_core.res.tile4.ncl
+  ncgen -o fv_core.res.tile5.nc $top_srcdir/t/Test12-input/fv_core.res.tile5.ncl
+  ncgen -o fv_core.res.tile6.nc $top_srcdir/t/Test12-input/fv_core.res.tile6.ncl
+
   cd ..
 
 #TO DO: For loop through tiles?
@@ -94,7 +100,7 @@
 #  run command nccmp -md fv_core.res.tile6.nc input/fv_core.res.tile6.nc
 #  [ "$status" -eq 0 ]
 
-# To do: This works on GAEA, but can't run in on travis because the files are too large, 
+# TO DO: This works on GAEA, but can't run in on travis because the files are too large, 
 #		(add ocean_temp_salt.res.nc and ice_model.res.nc) to put on git
 
 #Try with ocean_temp_salt.res.nc

@@ -9,7 +9,7 @@
   fi
 
   cd Test09
-  cp $top_srcdir/t/Test03-input/OCCAM_p5degree.nc OCCAM_p5degree.nc
+  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \

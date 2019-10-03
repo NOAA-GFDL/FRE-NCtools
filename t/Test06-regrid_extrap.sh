@@ -9,7 +9,10 @@
   fi
 
   cd Test06
-  cp $top_srcdir/t/Test06-input/* .
+  ncgen -o ocean_hgrid.nc $top_srcdir/t/Test06-input/ocean_hgrid.ncl
+  ncgen -o ocean_mosaic.nc $top_srcdir/t/Test06-input/ocean_mosaic.ncl
+  ncgen -o ocean_vgrid.nc $top_srcdir/t/Test06-input/ocean_vgrid.ncl
+  ncgen -o WOA09_ann_theta.nc $top_srcdir/t/Test06-input/WOA09_ann_theta.ncl
 
   run command make_hgrid \
 		--grid_type regular_lonlat_grid \

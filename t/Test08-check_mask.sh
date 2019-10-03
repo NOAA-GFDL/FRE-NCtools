@@ -10,7 +10,7 @@
   fi
 
   cd Test08
-  cp $top_srcdir/t/Test08-input/* .
+  ncgen -o baltic1_grid_spec.nc $top_srcdir/t/Test08-input/baltic1_grid_spec.ncl
 
   run command check_mask \
 		--grid_file baltic1_grid_spec.nc \

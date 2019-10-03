@@ -2,7 +2,7 @@
 # test remap ocean restart file from CM2.1 to CM2.5
 
 @test "Test remap ocean restart file" {
-  skip "Skipping this for now because the input files needed are too large" 
+  skip "TO DO: the input files needed are too large" 
 
   if [ ! -d "Test14" ] 
   then

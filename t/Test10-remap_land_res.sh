@@ -11,18 +11,41 @@
   mkdir src_restart
   cd src_restart
   cp $top_srcdir/t/Test10-input/src_restart/* . 
+  files=`ls`
+  for file in $files
+  do
+	 ncgen -o ${file:0:-1} ${file}
+  done
   cd ..
+
   mkdir dst_cold_restart
   cd dst_cold_restart
   cp $top_srcdir/t/Test10-input/dst_cold_restart/* . 
+  files=`ls`
+  for file in $files
+  do
+	 ncgen -o ${file:0:-1} ${file}
+  done
   cd ..
+
   mkdir C48_mosaic
   cd C48_mosaic
   cp $top_srcdir/t/Test10-input/C48_mosaic/* . 
+  files=`ls`
+  for file in $files
+  do
+	 ncgen -o ${file:0:-1} ${file}
+  done
+
   cd ..
   mkdir C192_mosaic
   cd C192_mosaic
   cp $top_srcdir/t/Test10-input/C192_mosaic/* . 
+  files=`ls`
+  for file in $files
+  do
+	 ncgen -o ${file:0:-1} ${file}
+  done
   cd ..
 
   run command remap_land \

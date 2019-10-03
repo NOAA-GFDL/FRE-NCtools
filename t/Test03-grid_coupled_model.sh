@@ -10,13 +10,13 @@
   fi
 
   cd Test03
-  cp $top_srcdir/t/Test03-input/OCCAM_p5degree.nc OCCAM_p5degree.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile1.nc C48_grid.tile1.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile2.nc C48_grid.tile2.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile3.nc C48_grid.tile3.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile4.nc C48_grid.tile4.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile5.nc C48_grid.tile5.nc
-  cp $top_srcdir/t/Test03-input/C48_grid.tile6.nc C48_grid.tile6.nc
+  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
+  ncgen -o C48_grid.tile1.nc $top_srcdir/t/Test03-input/C48_grid.tile1.ncl
+  ncgen -o C48_grid.tile2.nc $top_srcdir/t/Test03-input/C48_grid.tile2.ncl
+  ncgen -o C48_grid.tile3.nc $top_srcdir/t/Test03-input/C48_grid.tile3.ncl
+  ncgen -o C48_grid.tile4.nc $top_srcdir/t/Test03-input/C48_grid.tile4.ncl
+  ncgen -o C48_grid.tile5.nc $top_srcdir/t/Test03-input/C48_grid.tile5.ncl
+  ncgen -o C48_grid.tile6.nc $top_srcdir/t/Test03-input/C48_grid.tile6.ncl
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \

@@ -9,7 +9,19 @@
   fi
 
   cd Test15
-  cp $top_srcdir/t/Test15-input/* .
+  ncgen -o 00050101.land_static.tile1.nc $top_srcdir/t/Test15-input/00050101.land_static.tile1.ncl
+  ncgen -o 00050101.land_static.tile2.nc $top_srcdir/t/Test15-input/00050101.land_static.tile2.ncl
+  ncgen -o 00050101.land_static.tile3.nc $top_srcdir/t/Test15-input/00050101.land_static.tile3.ncl
+  ncgen -o 00050101.land_static.tile4.nc $top_srcdir/t/Test15-input/00050101.land_static.tile4.ncl
+  ncgen -o 00050101.land_static.tile5.nc $top_srcdir/t/Test15-input/00050101.land_static.tile5.ncl
+  ncgen -o 00050101.land_static.tile6.nc $top_srcdir/t/Test15-input/00050101.land_static.tile6.ncl
+  ncgen -o C180_grid.tile1.nc $top_srcdir/t/Test15-input/C180_grid.tile1.ncl
+  ncgen -o C180_grid.tile2.nc $top_srcdir/t/Test15-input/C180_grid.tile2.ncl
+  ncgen -o C180_grid.tile3.nc $top_srcdir/t/Test15-input/C180_grid.tile3.ncl
+  ncgen -o C180_grid.tile4.nc $top_srcdir/t/Test15-input/C180_grid.tile4.ncl
+  ncgen -o C180_grid.tile5.nc $top_srcdir/t/Test15-input/C180_grid.tile5.ncl
+  ncgen -o C180_grid.tile6.nc $top_srcdir/t/Test15-input/C180_grid.tile6.ncl
+  ncgen -o C180_mosaic.nc $top_srcdir/t/Test15-input/C180_mosaic.ncl
 
   run command fregrid \
 		--input_mosaic C180_mosaic.nc \
