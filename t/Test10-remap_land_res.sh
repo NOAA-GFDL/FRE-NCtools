@@ -60,7 +60,7 @@
 
 
 #TO DO: Commenting this out because it requires too many files 
-:'
+: '
 #TO DO: Try this in a loop? 
 
 #Try to remap the soil restart
@@ -152,8 +152,8 @@
 		--land_src_restart src_restart/land.res \
 		--land_cold_restart dst_cold_restart/land.res \
 		--remap_file remap_file_C48_to_C192 --print_memory
-  [ "$status" -eq 0 ] 
-'
+  [ "$status" -eq 0 ] '
+
   cd ..
   rm -rf Test10
 
