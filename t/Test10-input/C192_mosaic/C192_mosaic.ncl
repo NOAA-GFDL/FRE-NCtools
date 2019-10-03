@@ -2,24 +2,24 @@ netcdf C192_mosaic {
 dimensions:
 	ntiles = 6 ;
 	ncontact = 12 ;
-	string = 255 ;
+	str = 255 ;
 variables:
-	char mosaic(string) ;
+	char mosaic(str) ;
 		mosaic:standard_name = "grid_mosaic_spec" ;
 		mosaic:children = "gridtiles" ;
 		mosaic:contact_regions = "contacts" ;
 		mosaic:grid_descriptor = "" ;
-	char gridlocation(string) ;
+	char gridlocation(str) ;
 		gridlocation:standard_name = "grid_file_location" ;
-	char gridfiles(ntiles, string) ;
-	char gridtiles(ntiles, string) ;
-	char contacts(ncontact, string) ;
+	char gridfiles(ntiles, str) ;
+	char gridtiles(ntiles, str) ;
+	char contacts(ncontact, str) ;
 		contacts:standard_name = "grid_contact_spec" ;
 		contacts:contact_type = "boundary" ;
 		contacts:alignment = "true" ;
 		contacts:contact_index = "contact_index" ;
 		contacts:orientation = "orient" ;
-	char contact_index(ncontact, string) ;
+	char contact_index(ncontact, str) ;
 		contact_index:standard_name = "starting_ending_point_index_of_contact" ;
 
 // global attributes:

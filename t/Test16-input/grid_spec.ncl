@@ -1,37 +1,37 @@
 netcdf grid_spec {
 dimensions:
-	string = 255 ;
+	str = 255 ;
 	nfile_aXo = 6 ;
 	nfile_aXl = 6 ;
 	nfile_lXo = 6 ;
 variables:
-	char atm_mosaic_dir(string) ;
+	char atm_mosaic_dir(str) ;
 		atm_mosaic_dir:standard_name = "directory_storing_atmosphere_mosaic" ;
-	char atm_mosaic_file(string) ;
+	char atm_mosaic_file(str) ;
 		atm_mosaic_file:standard_name = "atmosphere_mosaic_file_name" ;
-	char atm_mosaic(string) ;
+	char atm_mosaic(str) ;
 		atm_mosaic:standard_name = "atmosphere_mosaic_name" ;
-	char lnd_mosaic_dir(string) ;
+	char lnd_mosaic_dir(str) ;
 		lnd_mosaic_dir:standard_name = "directory_storing_land_mosaic" ;
-	char lnd_mosaic_file(string) ;
+	char lnd_mosaic_file(str) ;
 		lnd_mosaic_file:standard_name = "land_mosaic_file_name" ;
-	char lnd_mosaic(string) ;
+	char lnd_mosaic(str) ;
 		lnd_mosaic:standard_name = "land_mosaic_name" ;
-	char ocn_mosaic_dir(string) ;
+	char ocn_mosaic_dir(str) ;
 		ocn_mosaic_dir:standard_name = "directory_storing_ocean_mosaic" ;
-	char ocn_mosaic_file(string) ;
+	char ocn_mosaic_file(str) ;
 		ocn_mosaic_file:standard_name = "ocean_mosaic_file_name" ;
-	char ocn_mosaic(string) ;
+	char ocn_mosaic(str) ;
 		ocn_mosaic:standard_name = "ocean_mosaic_name" ;
-	char ocn_topog_dir(string) ;
+	char ocn_topog_dir(str) ;
 		ocn_topog_dir:standard_name = "directory_storing_ocean_topog" ;
-	char ocn_topog_file(string) ;
+	char ocn_topog_file(str) ;
 		ocn_topog_file:standard_name = "ocean_topog_file_name" ;
-	char aXo_file(nfile_aXo, string) ;
+	char aXo_file(nfile_aXo, str) ;
 		aXo_file:standard_name = "atmXocn_exchange_grid_file" ;
-	char aXl_file(nfile_aXl, string) ;
+	char aXl_file(nfile_aXl, str) ;
 		aXl_file:standard_name = "atmXlnd_exchange_grid_file" ;
-	char lXo_file(nfile_lXo, string) ;
+	char lXo_file(nfile_lXo, str) ;
 		lXo_file:standard_name = "lndXocn_exchange_grid_file" ;
 
 // global attributes:

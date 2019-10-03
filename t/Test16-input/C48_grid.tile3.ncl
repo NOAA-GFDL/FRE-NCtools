@@ -1,12 +1,12 @@
 netcdf C48_grid.tile3 {
 dimensions:
-	string = 255 ;
+	str = 255 ;
 	nx = 96 ;
 	ny = 96 ;
 	nxp = 97 ;
 	nyp = 97 ;
 variables:
-	char tile(string) ;
+	char tile(str) ;
 		tile:standard_name = "grid_tile_spec" ;
 		tile:geometry = "spherical" ;
 		tile:north_pole = "0.0 90.0" ;
@@ -34,7 +34,7 @@ variables:
 	double angle_dy(nyp, nxp) ;
 		angle_dy:standard_name = "grid_vertex_y_angle_WRT_geographic_north" ;
 		angle_dy:units = "degrees_north" ;
-	char arcx(string) ;
+	char arcx(str) ;
 		arcx:standard_name = "grid_edge_x_arc_type" ;
 		arcx:north_pole = "0.0 90.0" ;
 

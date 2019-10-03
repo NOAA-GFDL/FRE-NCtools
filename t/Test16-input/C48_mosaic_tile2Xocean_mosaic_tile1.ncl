@@ -1,10 +1,10 @@
 netcdf C48_mosaic_tile2Xocean_mosaic_tile1 {
 dimensions:
-	string = 255 ;
+	str = 255 ;
 	ncells = 15761 ;
 	two = 2 ;
 variables:
-	char contact(string) ;
+	char contact(str) ;
 		contact:standard_name = "grid_contact_spec" ;
 		contact:contact_type = "exchange" ;
 		contact:parent1_cell = "tile1_cell" ;
