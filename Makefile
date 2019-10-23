@@ -23,7 +23,7 @@ PREFIX := .
 toolsSRC := check_mask fregrid make_coupler_mosaic make_hgrid make_regional_mosaic
 toolsSRC += make_quick_mosaic make_solo_mosaic make_topog make_vgrid ncexists
 toolsSRC += remap_land river_regrid runoff_regrid transfer_to_mosaic_grid 
-toolsSRC += mppncscatter make_land_domain
+toolsSRC += mppncscatter make_land_domain make_remap_file
 
 postpSRC := land_utils list_ncvars combine_blobs mppnccombine plevel timavg
 postpSRC += split_ncvars iceberg_comb combine_restarts
@@ -187,6 +187,9 @@ ncexists:
 remap_land:
 	make -C tools/remap_land SRCDIR=$(SRCDIR)/tools/remap_land
 
+make_remap_file:
+	make -C tools/make_remap_file SRCDIR=$(SRCDIR)/tools/make_remap_file
+
 river_regrid:
 	make -C tools/river_regrid SRCDIR=$(SRCDIR)/tools/river_regrid
 
@@ -234,6 +237,9 @@ ncexists-install:
 
 remap_land-install:
 	make -C tools/remap_land PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/remap_land install
+
+make_remap_file-install:
+	make -C tools/make_remap_file PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/make_remap_file install
 
 river_regrid-install:
 	make -C tools/river_regrid PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/river_regrid install
@@ -283,6 +289,9 @@ ncexists-docs:
 remap_land-docs:
 	make -C tools/remap_land SRCDIR=$(SRCDIR)/tools/remap_land docs
 
+make_remap_file-docs:
+	make -C tools/make_remap_file SRCDIR=$(SRCDIR)/tools/make_remap_file docs
+
 river_regrid-docs:
 	make -C tools/river_regrid SRCDIR=$(SRCDIR)/tools/river_regrid docs
 
@@ -330,6 +339,9 @@ ncexists-install-docs:
 
 remap_land-install-docs:
 	make -C tools/remap_land PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/remap_land install-docs
+
+make_remap_file-install-docs:
+	make -C tools/make_remap_file PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/make_remap_file install-docs
 
 river_regrid-install-docs:
 	make -C tools/river_regrid PREFIX=$(PREFIX) SRCDIR=$(SRCDIR)/tools/river_regrid install-docs

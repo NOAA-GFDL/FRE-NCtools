@@ -207,6 +207,7 @@ toolsSRC="check_mask \
           remap_land \
           river_regrid \
           runoff_regrid \
+          make_remap_file \
           transfer_to_mosaic_grid"
 # Directories in the 'postprocessing' directory that need to be compiled
 postpSRC="combine_blobs \
