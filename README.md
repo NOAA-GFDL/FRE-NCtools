@@ -77,6 +77,25 @@ make
 make install
 ```
 
+The above steps may need to be augmented depending upon your user evironment setup. 
+For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the 
+configure command in this directory. You may tell the bash shell, for example, 
+the location of both by this command:
+
+export PATH=/home/MyUsername/FRE-NCtools:$PATH
+
+Additionally, installing into a non-default directory may be desired or neccesary. 
+For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools 
+building is configured by:
+
+autoreconf -i
+configure --prefix=/home/MyUsername/bin
+
+Finally compile and install the tools as usual:
+
+make
+make install
+
 Some FRE-NCtools applications can be run in parallel using MPI.  If the
 `--with-mpi` option is given to `configure`, the MPI version of those
 applications will be built.
@@ -95,6 +114,17 @@ Most commands support either a `-h` or `--help` options.  In some cases, this
 should be enough to get you started using the commands.  We are in the process
 of collecting more information on the tools available in this package.  These
 will be added when available.
+
+Commonly, to combine restart and history files, one should run is-compressed on
+the candidate file first.
+
+If it returns 0, it's land compressed file that needs:
+1. combine-ncc inputfile1 inputfile2 outputfile
+2. decompress-ncc inputfile outputfile
+
+If is-compressed returns non-zero, it's a regular distributed file that gets:
+1. mppnccombine outputfile inputfile1 inputfile2 ...
+
 
 ## Disclaimer
 
