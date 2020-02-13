@@ -30,8 +30,8 @@ void usage(const char* name)
 void check_error(int ierr, const char* file, int line)
 {
    if (ierr!=NC_NOERR) {
-      fprintf(stderr,"ERROR :: FILE \"%s\" LINE %d :: %s\n",
-	      file,line,nc_strerror(ierr));
+      fprintf(stderr,"ERROR :: %s\n",
+	      nc_strerror(ierr));
       exit(ierr);
    }
 }

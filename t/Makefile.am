@@ -22,7 +22,9 @@ TESTS = Test01-check_programs_exist.sh \
         Test13-make_quick_mosaic.sh \
         Test14-remap_ocean.sh \
         Test15-regrid_land.sh \
-        Test16-river_regrid.sh 
+        Test16-river_regrid.sh \
+	01-make_hgrid.sh \
+        01-make_vgrid.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\

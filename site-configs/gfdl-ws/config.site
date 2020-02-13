@@ -11,4 +11,3 @@ test -z "$FC" && FC=ifort
 
 # Compile/Link flags
 test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"
-

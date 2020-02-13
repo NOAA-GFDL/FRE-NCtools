@@ -17,4 +17,3 @@ test -z "$NETCDF_LIBS" && NETCDF_LIBS="-lnetcdf -lhdf5_hl -lhdf5 -lz -lm"
 test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS="-L${NETCDF_DIR}/lib -L${HDF5_DIR}/lib"
 test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS="-lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz -lm"
 test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS="-L${NETCDF_DIR}/lib -L${HDF5_DIR}/lib"
-

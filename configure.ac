@@ -107,6 +107,7 @@ AC_CONFIG_FILES([Makefile
                  tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
+                 tools/transfer_to_mosaic_grid/Makefile
                  t/Makefile
 ])
 AC_OUTPUT
