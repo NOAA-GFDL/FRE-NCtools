@@ -1,0 +1,13 @@
+# Default site configuration for GFDL RDHPCS's Pan platforms
+#
+# configure options
+test -z "$with_mpi" && with_mpi=yes
+# Standard prefix location for FRE distribution
+test "$prefix" = NONE && prefix=/apps/contrib/gfdl/fre-nctools/${PACKAGE_VERSION}/msu
+
+# Compilers
+test -z "$CC" && CC=icc
+test -z "$FC" && FC=ifort
+
+# Compile/Link flags
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"

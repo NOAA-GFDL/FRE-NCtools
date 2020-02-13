@@ -1,0 +1,13 @@
+# **********************************************************************
+# Setup and Load the Modules
+# **********************************************************************
+source $MODULESHOME/init/sh
+module load intel/2019.5
+module load netcdf
+module load hdf5
+
+# **********************************************************************
+# Set environment variablesSetup and Load the Modules
+# **********************************************************************
+LD_RUN_PATH=$LD_LIBRARY_PATH
+export LD_RUN_PATH
