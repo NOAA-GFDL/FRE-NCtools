@@ -21,9 +21,9 @@ int main (int argc, char **argv)
   char *gattr = NULL;
   int ncid;
   char *var_name = NULL;
-  int vr_len;
+  size_t vr_len;
   int var_id;
-  int t_len;
+  size_t t_len;
   int global = 0;
   int c;
   char *usage = "Usage: ncexists -f filename [ -g global_attribute || -v variable || -v variable -a attribute ]\n       Returns 1 if variable or attribute is found, 0 if not found.\n";
