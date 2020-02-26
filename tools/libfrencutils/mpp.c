@@ -156,7 +156,7 @@ void mpp_send_int(const int* data, int size, int to_pe)
     MPI_Wait( request+to_pe, &status );
   }  
   void* temp_data = data;
-  MPI_Isend(data, size, MPI_INT, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
+  MPI_Isend(temp_data, size, MPI_INT, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
 #endif
   
 }; /* mpp_send_int */
