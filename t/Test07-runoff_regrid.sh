@@ -28,9 +28,8 @@
 		--output_mosaic ocean_mosaic.nc \
 		--output_topog topog.nc \
 		--output_file runoff.cm2m.nc
-  if [ "$status" -eq 0 ]
-  then
+  [ "$status" -eq 0 ]
+
   cd ..
   rm -rf Test07
-  fi
 }
