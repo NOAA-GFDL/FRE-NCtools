@@ -8,13 +8,14 @@
   fi
 
   cd Test10
+
   mkdir src_restart
   cd src_restart
   cp $top_srcdir/t/Test10-input/src_restart/* . 
   files=`ls`
   for file in $files
   do
-	 ncgen -o ${file:0:-1} ${file}
+	 ncgen -o ${file:0:${#file}-1} ${file}
   done
   cd ..
 
@@ -24,7 +25,7 @@
   files=`ls`
   for file in $files
   do
-	 ncgen -o ${file:0:-1} ${file}
+	 ncgen -o ${file:0:${#file}-1} ${file}
   done
   cd ..
 
@@ -34,7 +35,7 @@
   files=`ls`
   for file in $files
   do
-	 ncgen -o ${file:0:-1} ${file}
+	 ncgen -o ${file:0:${#file}-1} ${file}
   done
 
   cd ..
@@ -44,7 +45,7 @@
   files=`ls`
   for file in $files
   do
-	 ncgen -o ${file:0:-1} ${file}
+	 ncgen -o ${file:0:${#file}-1} ${file}
   done
   cd ..
 
@@ -57,7 +58,6 @@
 		--dst_cold_restart dst_cold_restart/land.res \
 		--remap_file remap_file_C48_to_C192 --print_memory
   [ "$status" -eq 0 ]
-
 
 #TO DO: Commenting this out because it requires too many files 
 : '

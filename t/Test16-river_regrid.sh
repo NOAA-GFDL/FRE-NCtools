@@ -13,7 +13,7 @@
   files=`ls`
   for file in $files
   do
-	 ncgen -o ${file:0:-1} ${file}
+	 ncgen -o ${file:0:${#file}-1} ${file}
   done
 
   run command river_regrid \
