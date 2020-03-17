@@ -113,4 +113,12 @@
   [ "$status" -eq 1 ]
 }
 
+@test "Check combine-ncc exists and is executable" {
+  run command -v combine-ncc
+  [ "$status" -eq 0 ]
+}
 
+@test "Check decompress-ncc exists and is executable" {
+  run command -v decompress-ncc
+  [ "$status" -eq 0 ]
+}
