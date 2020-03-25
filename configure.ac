@@ -109,5 +109,10 @@ AC_CONFIG_FILES([Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
                  t/Makefile
+                 tools/simple_hydrog/postp/Makefile
+                 tools/simple_hydrog/lakes/Makefile 
+                 tools/simple_hydrog/rmvpr/Makefile
+ 
+
 ])
 AC_OUTPUT
