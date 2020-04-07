@@ -12,6 +12,7 @@
  
   ncks $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc combine-ncc.atmos_daily.nc.copy
 
+
   #Combine netcdf copy file 
   run command combine-ncc \
       combine-ncc.atmos_daily.nc.copy \
