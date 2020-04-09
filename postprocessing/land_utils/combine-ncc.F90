@@ -60,6 +60,7 @@ program combine_res
      write(*,'("output file : ",a)')'"'//trim(outfile)//'"'
   endif
 
+
   ! open all input files and determine the creation mode of output file:
   ! if any of the input files is 64-bit then the output is 64-bit as well,
   ! otherwise it's 32-bit
