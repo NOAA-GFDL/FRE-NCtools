@@ -10,7 +10,6 @@
 
   ncks $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc decompress-ncc.atmos_daily.nc.copy  
 
-
   #Decompress compressed netcdf file(s) into 1
   run command decompress-ncc \
       decompress-ncc.atmos_daily.nc.copy \
