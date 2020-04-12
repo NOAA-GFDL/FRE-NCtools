@@ -23,9 +23,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test14-remap_ocean.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
-        Test17-combine-ncc.sh \
-        Test18-decompress-ncc.sh \
-        Test20-fregrid.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 

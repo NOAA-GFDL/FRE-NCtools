@@ -261,7 +261,7 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   grid->xc1d = (double *)malloc(nxp*sizeof(double));
   grid->yc1d = (double *)malloc(nyp*sizeof(double));
   grid->xc   = (double *)malloc(nxp*nyp*sizeof(double));
-  grid->yc   = (double *)malloc(nyp*nyp*sizeof(double));
+  grid->yc   = (double *)malloc(nyp*nxp*sizeof(double));
   grid->mask = (double *)malloc(nx*ny*sizeof(double));
   grid->area = (double *)malloc(nx*ny*sizeof(double));
   
