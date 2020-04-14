@@ -1,5 +1,5 @@
-ACLOCAL_AMFLAGS = -I m4
-
+ACLOCAL_AMFLAGS = -I m4 
+LDFLAGS="-L /usr/lib -lm"
 SUBDIRS = postprocessing/combine_blobs \
           postprocessing/combine_restarts \
           postprocessing/iceberg_comb \
