@@ -30,6 +30,8 @@ AC_FC_MODULE_EXTENSION()
 GX_FC_DEFAULT_REAL_KIND8_FLAG()
 GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
+AC_SEARCH_LIBS([ceil],[m])
+
 # Check for the MPI compilers
 # Default MPI build is off
 build_mpi=no

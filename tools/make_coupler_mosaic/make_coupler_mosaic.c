@@ -1998,7 +1998,7 @@ int main (int argc, char *argv[])
 				"land fraction at T-cell centers", "units", "none");
 	  mpp_end_def(fid);
 	  mpp_put_var_value(fid, id_mask, mask);
-	  free(mask);
+          free(mask);
 	  mpp_close(fid);
 	}
       }        
@@ -3277,7 +3277,7 @@ int main (int argc, char *argv[])
 	double ocn_frac;
 	int    id_mask, fid, dims[2];
 	char   wav_mask_file[STRING];
-	double *mask, *mask2;
+	double *mask;
 	int ny;
 
 	for(nw=0; nw<ntile_wav; nw++) {
@@ -3307,7 +3307,6 @@ int main (int argc, char *argv[])
 	  mpp_put_var_value(fid, id_mask, mask);
 	  mpp_close(fid);
 	  free(mask);
-	  free(mask2);
 	}
       }
     }
