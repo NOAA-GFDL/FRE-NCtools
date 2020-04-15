@@ -9,9 +9,9 @@
   fi
 
   cd Test24
-  cp /archive/fms/tools/input/CM2.1_to_CM2.5/CM2.1_mosaic.nc .
-  cp /archive/fms/tools/input/CM2.1_to_CM2.5/CM2.1_grid.nc .
-  cp /archive/fms/tools/input/CM2.1_to_CM2.5/ocean_temp_salt.res.nc . 
+  cp $top_srcdir/t/Test20-input/CM2.1_mosaic.nc .
+  cp $top_srcdir/t/Test20-input/CM2.1_grid.nc .
+  cp $top_srcdir/t/Test20-input/ocean_temp_salt.res.nc .
 
 #Create regular lat-lon grid (100:160, -15:15, size is 360x180)
   run command make_hgrid  \
