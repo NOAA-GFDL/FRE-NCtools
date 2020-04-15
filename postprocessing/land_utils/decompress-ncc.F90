@@ -68,7 +68,6 @@ program decompress
      call assert(.false.,'Unknown netCDF format')
   endif
 
-
   ! create output file
   __NF_ASRT__(nf__create(outfile,cmode,0,blksz,ncid))
 
