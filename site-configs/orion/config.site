@@ -1,0 +1,13 @@
+# Default site configuration for MSU Orion platforms
+#
+# configure options
+test -z "$with_mpi" && with_mpi=yes
+# Standard prefix location for FRE distribution
+test "$prefix" = NONE && prefix=/apps/contrib/gfdl/fre-nctools/${PACKAGE_VERSION}/orion
+
+# Compilers
+test -z "$CC" && CC=icc
+test -z "$FC" && FC=ifort
+
+# Compile/Link flags
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"

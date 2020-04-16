@@ -1,4 +1,4 @@
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4 
 
 SUBDIRS = postprocessing/combine_blobs \
           postprocessing/combine_restarts \
