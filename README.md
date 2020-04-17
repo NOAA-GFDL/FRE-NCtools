@@ -72,9 +72,17 @@ autoconf files:
 
 ```
 autoreconf -i
-configure
+./configure
 make
 make install
+```
+
+Additionally, you will probably need to set the environment variable CONFIG_SITE
+and set the recommended environment (modules):
+
+```
+export CONFIG_SITE=/path/to/package/site-configs/<site>/config.site
+source /path/to/package/site-configs/<site>/env.sh
 ```
 
 The above steps may need to be augmented depending upon your user evironment setup. 
@@ -89,7 +97,7 @@ For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools
 building is configured by:
 
 autoreconf -i
-configure --prefix=/home/MyUsername/bin
+./configure --prefix=/home/MyUsername/bin
 
 Finally compile and install the tools as usual:
 
