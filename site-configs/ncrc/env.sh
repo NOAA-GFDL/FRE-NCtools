@@ -28,4 +28,4 @@ export KMP_STACKSIZE
 export F_UFMTENDIAN
 export NC_BLKSZ
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64:/opt/cray/pe/hdf5/1.10.2.0/intel/16.0/include
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64:/opt/cray/pe/hdf5/1.8.16/cray/8.3/include
