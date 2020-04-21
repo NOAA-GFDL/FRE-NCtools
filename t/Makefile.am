@@ -26,6 +26,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test17-combine-ncc.sh \
         Test18-decompress-ncc.sh \
         Test20-fregrid.sh \
+        Test25-hydrology.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 
@@ -41,7 +42,8 @@ EXTRA_DIST = $(TESTS) \
              Test16-input \
              Test17-input \
              Test18-input \
-             Test20-input
+             Test20-input \
+             Test25-input
 
 clean-local:
 	$(RM) *.nc

@@ -76,7 +76,7 @@ set glcc_file = gigbp2_0ll.nc
 
 # set file for the disaggregated, extended river network
 
-set river_network_ext_file = river_network_fill_coast.nc
+set river_network_ext_file = network_river_fill_coast.nc
 
 if (! -e OUTPUT) then
       mkdir -p OUTPUT/{river_regrid,post_regrid,rmv_parallel_rivers,post_rmvp}
@@ -98,7 +98,7 @@ echo $#river_input_files > fort.5
 foreach file ($river_input_files)
    echo OUTPUT/river_regrid/$file:t >> fort.5
 end
-cho ""
+echo ""
 echo RUN POST-PROCESSOR
 cp_river_vars < fort.5
 if ($status != 0) then
