@@ -6,7 +6,7 @@ AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
 AM_FCFLAGS =  -I$(top_srcdir)/tools/libfrencutils \
             $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) -lnetcdf -lnetcdff
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) -lnetcdff -lnetcdf -lhdf5_hl  -lhdf5 -lz -ldl
 
 rmv_parallel_rivers_SOURCES = rmv_parallel_rivers.f90  
 
