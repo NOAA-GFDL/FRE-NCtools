@@ -15,11 +15,8 @@
 
   #Run wrapper hydrology script
   chmod 775 run.cr_hydrology.csh
-  run.cr_hydrology.csh \
-  -f 0. \
-  -t 1.e-5 \
-  -m $top_srcdir/t/Test25-input/grid_spec.nc
-   status=$(echo "$?")
+  run.cr_hydrology.csh -f 0. -t 1.e-5 -m $top_srcdir/t/Test25-input/grid_spec.nc
+  status=$(echo "$?")
   [ "$status" -eq 0 ]
   [ -e lake_frac.tile6.nc ]
   run ncdump -h lake_frac.tile6.nc
