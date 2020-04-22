@@ -7,6 +7,7 @@ module load PrgEnv-intel/6.0.3
 module swap intel intel/18.0.6.288 
 module load cray-netcdf/4.4.0
 module load cray-hdf5/1.8.16
+module load nco/4.5.5
 
 # Add bats to PATH
 PATH=${PATH}:/ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin
@@ -28,4 +29,4 @@ export KMP_STACKSIZE
 export F_UFMTENDIAN
 export NC_BLKSZ
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64:/opt/cray/pe/netcdf/4.4.0/INTEL/150/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64
