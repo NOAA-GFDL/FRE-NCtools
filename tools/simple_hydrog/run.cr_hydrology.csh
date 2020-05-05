@@ -172,13 +172,13 @@ endif
 @ k = 0
 while ($k < $#river_input_files)
   @ k = $k + 1
-  mv OUTPUT/post_rmvp/river_network.tile"$k".nc OUTPUT/hydrography.tile"$k".nc
+  cp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
 end
-set hydro_files = OUTPUT/hydrography*.nc
+
+set hydro_files = hydrography*.nc
 foreach file ($hydro_files)
    set tn = `echo "$file" | awk -Ftile '{print $2}'`
    ncks -A -a -v lake_frac,lake_depth_sill,lake_tau,WaterBod,PWetland,connected_to_next,whole_lake_area,max_slope_to_next \
      lake_frac.tile"$tn" "$file:t"
 end
-
 
