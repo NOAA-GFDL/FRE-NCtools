@@ -27,6 +27,7 @@ SUBDIRS = postprocessing/combine_blobs \
           tools/river_regrid \
           tools/runoff_regrid \
           tools/transfer_to_mosaic_grid \
+          tools/simple_hydrog \
           tools/simple_hydrog/postp \
           tools/simple_hydrog/lakes \
           tools/simple_hydrog/rmvpr 

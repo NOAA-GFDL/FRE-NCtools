@@ -72,10 +72,15 @@ endif
 set riv_regrd = river_regrid
 
 # set file for GLCC data (waterbod)
+
+ncgen gigbp2_0ll.cdl -o gigbp2_0ll.nc
+
 set glcc_file = gigbp2_0ll.nc
 
 # set file for the disaggregated, extended river network
 
+ncgen network_river_fill_coast.cdl -o network_river_fill_coast.nc
+ 
 set river_network_ext_file = network_river_fill_coast.nc
 
 if (! -e OUTPUT) then
@@ -175,6 +180,8 @@ while ($k < $#river_input_files)
   cp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
 end
 
+rm -rf network_river_fill_coast.nc gigbp2_0ll.nc
+ 
 set hydro_files = hydrography*.nc
 foreach file ($hydro_files)
    set tn = `echo "$file" | awk -Ftile '{print $2}'`
