@@ -26,11 +26,16 @@ TESTS = Test01-check_programs_exist.sh \
         Test17-combine-ncc.sh \
         Test18-decompress-ncc.sh \
         Test20-fregrid.sh \
+        Test21-reference_mppnccombine.sh \
+        Test22-reference_combine-ncc.sh \
+        Test23-reference_decompress-ncc.sh \
+        Test24-reference_fregrid.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
+             Test02-reference \
              Test03-input \
              Test06-input \
              Test07-input \
@@ -41,7 +46,10 @@ EXTRA_DIST = $(TESTS) \
              Test16-input \
              Test17-input \
              Test18-input \
-             Test20-input
+             Test20-input \
+             Test17-reference \
+             Test18-reference \
+             Test20-reference 
 
 clean-local:
 	$(RM) *.nc
