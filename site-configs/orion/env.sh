@@ -5,6 +5,7 @@ source $MODULESHOME/init/sh
 module load intel/2019.5
 module load netcdf
 module load hdf5
+module load nccmp
 
 # **********************************************************************
 # Set environment variables
