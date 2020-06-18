@@ -46,6 +46,9 @@
    [ -e ocean_temp_salt.res.latlon.nc ]
    [ -e $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc ]
 
+   run nccmp -V
+   [ "$status" -eq 0 ]
+
    run nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
    [ "$status" -eq 0 ]
 

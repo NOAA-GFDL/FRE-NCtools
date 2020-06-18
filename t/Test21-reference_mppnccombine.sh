@@ -26,6 +26,9 @@
 
   [ -e $top_srcdir/t/Test02-reference/mppnccombine_output.nc ]
 
+  run nccmp -V
+  [ "$status" -eq 0 ]
+
   run nccmp -d mppnccombine_output.nc  $top_srcdir/t/Test02-reference/mppnccombine_output.nc
   [ "$status" -eq 0 ]
 

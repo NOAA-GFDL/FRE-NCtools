@@ -21,6 +21,9 @@
 
   [ -e $top_srcdir/t/Test18-reference/decompress-ncc_output.nc ]
 
+  run nccmp -V
+  [ "$status" -eq 0 ]
+
   run nccmp -d decompress-ncc_output.nc  $top_srcdir/t/Test18-reference/decompress-ncc_output.nc
   [ "$status" -eq 0 ]
 
