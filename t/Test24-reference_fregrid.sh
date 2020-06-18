@@ -43,8 +43,15 @@
 		--check_conserve
   [ "$status" -eq 0 ]
 
+   [ -e ocean_temp_salt.res.latlon.nc ]
+   [ -e $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc ]
+
    run nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
    [ "$status" -eq 0 ]
+
+   [ -e latlon_mosaic.nc ]
+   [ -e $top_srcdir/t/Test20-reference/latlon_mosaic.nc ]
+
    run nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
    [ "$status" -eq 0 ]
 

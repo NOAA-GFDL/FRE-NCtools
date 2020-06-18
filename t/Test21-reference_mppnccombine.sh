@@ -12,6 +12,7 @@
   for f in $top_srcdir/t/Test02-input/*.ncl.????
   do
     ncgen -o mppnccombine.nc.${f##*.} $f
+    [ -e mppnccombine.nc.${f##*.} ]
   done
 
   #Combine the files into 1
@@ -22,6 +23,8 @@
   [ -e mppnccombine_output.nc ]
   run ncdump -h mppnccombine_output.nc
   [ "$status" -eq 0 ]
+
+  [ -e $top_srcdir/t/Test02-reference/mppnccombine_output.nc ]
 
   run nccmp -d mppnccombine_output.nc  $top_srcdir/t/Test02-reference/mppnccombine_output.nc
   [ "$status" -eq 0 ]
