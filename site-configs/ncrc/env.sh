@@ -7,6 +7,7 @@ module load PrgEnv-intel/6.0.3
 module swap intel intel/18.0.6.288 
 module load cray-netcdf/4.4.0
 module load cray-hdf5/1.8.16
+module load nco/4.5.5
 module load nccmp
 
 # Add bats to PATH
@@ -28,3 +29,5 @@ export MPICH_PTL_UNEX_EVENTS
 export KMP_STACKSIZE
 export F_UFMTENDIAN
 export NC_BLKSZ
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64

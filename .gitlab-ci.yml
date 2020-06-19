@@ -98,7 +98,7 @@ deploy:ncrc:
     name: stage_ncrc
   variables:
     FRE_SITE: ncrc
-    FMS_HOME: /home/fms
+    FMS_HOME: /ncrc/home2/fms
   only:
     - master
   dependencies:
