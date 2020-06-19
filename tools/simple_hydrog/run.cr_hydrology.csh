@@ -10,10 +10,22 @@
 #    -- add GLCC waterbod fractions
 # =========================================================================
 
-#set echo on
+if (`gfdl_platform` == "hpcs-csc") then
+    wipetmp
+else
+    if ($?TMPDIR) then
+        echo WARNING
+        echo "WARNING: Intended for PP/AN use; may not work properly on this site"
+        echo WARNING
+        echo
+    else
+        echo 'FATAL: $TMPDIR needed'
+        exit 1
+    endif
+endif
 
 set outdir = ""
-set argv = (`getopt  hc:o:f:t:m: $*`)
+set argv = (`getopt ho:f:t:m:d $*`)
 
 while ("$argv[1]" != "--")
     switch ($argv[1])
@@ -27,6 +39,8 @@ while ("$argv[1]" != "--")
             set land_thresh = $argv[2]; shift argv; breaksw
         case -m:
             set mosaic_file = $argv[2]; shift argv; breaksw
+        case -d:
+            set echo on; breaksw
     endsw
     shift argv
 end
@@ -61,27 +75,27 @@ if ($?help) then
    echo "                         recommend 1.e-5"
    echo "         -m mosaic:      required, mosaic file location"
    echo "         -o outdir:      output directory (optional)"
+   echo "         -d:             turn echo on for debugging"
    echo
    exit 1
 endif
 
 set riv_regrd = river_regrid
 
-# set file for GLCC data (waterbod)
+set share_dir = `dirname $0`/../share
 
-ncgen gigbp2_0ll.cdl -o gigbp2_0ll.nc
+# set path for the disaggregated, extended river network
+set river_network_ext_file = $share_dir/river_network_mrg_0.5deg_ad3nov_fill_coast_auto1_0.125.nc
 
-set glcc_file = gigbp2_0ll.nc
+# set path for GLCC data (waterbod)
+set glcc_file = $share_dir/gigbp2_0ll.nc
 
-# set file for the disaggregated, extended river network
+echo River network input dataset: $river_network_ext_file
+echo GLCC input dataset: $glcc_file
 
-ncgen network_river_fill_coast.cdl -o network_river_fill_coast.nc
- 
-set river_network_ext_file = network_river_fill_coast.nc
+cd $TMPDIR
 
-if (! -e OUTPUT) then
-      mkdir -p OUTPUT/{river_regrid,post_regrid,rmv_parallel_rivers,post_rmvp}
-endif
+mkdir -p OUTPUT/{river_regrid,post_regrid,rmv_parallel_rivers,post_rmvp}
 
 # ------------------------------------------------
 #  RUN RIVER_REGRID
@@ -159,7 +173,7 @@ echo $#river_input_files > fort.5
 foreach file ($river_input_files)
    echo OUTPUT/post_rmvp/$file:t >> fort.5
 end
-echo $glcc_file:t >> fort.5
+echo $glcc_file >> fort.5
 echo $travel_thresh >> fort.5
 touch input.nml
 echo ""
@@ -173,11 +187,9 @@ endif
 @ k = 0
 while ($k < $#river_input_files)
   @ k = $k + 1
-  cp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
+  gcp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
 end
 
-rm -rf network_river_fill_coast.nc gigbp2_0ll.nc
- 
 set hydro_files = hydrography*.nc
 foreach file ($hydro_files)
    set tn = `echo "$file" | awk -Ftile '{print $2}'`
@@ -185,3 +197,13 @@ foreach file ($hydro_files)
      lake_frac.tile"$tn" "$file:t"
 end
 
+if ($outdir != "") then
+    gcp -v hydrography.tile*nc $outdir/
+    echo ""
+    echo SUCCESS!
+    ls -lh $outdir/hydrography*
+else
+    echo ""
+    echo SUCCESS!
+    ls -lh $TMPDIR/hydrography*
+endif
