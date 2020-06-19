@@ -136,8 +136,8 @@ void mpp_send_double(const double* data, int size, int to_pe)
   if(request[to_pe] != MPI_REQUEST_NULL) {
     MPI_Wait( request+to_pe, &status );
   }
-    
-  MPI_Isend(data, size, MPI_DOUBLE, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
+  void* temp_data = data; 
+  MPI_Isend(temp_data, size, MPI_DOUBLE, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
 #endif
   
 }; /* mpp_send_double */
@@ -155,8 +155,8 @@ void mpp_send_int(const int* data, int size, int to_pe)
   if(request[to_pe] != MPI_REQUEST_NULL) {
     MPI_Wait( request+to_pe, &status );
   }  
-
-  MPI_Isend(data, size, MPI_INT, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
+  void* temp_data = data;
+  MPI_Isend(temp_data, size, MPI_INT, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
 #endif
   
 }; /* mpp_send_int */
