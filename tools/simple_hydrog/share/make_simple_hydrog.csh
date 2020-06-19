@@ -173,7 +173,9 @@ echo $#river_input_files > fort.5
 foreach file ($river_input_files)
    echo OUTPUT/post_rmvp/$file:t >> fort.5
 end
-echo $glcc_file >> fort.5
+# limit on filepath size
+ln -s $glcc_file .
+echo $glcc_file:t >> fort.5
 echo $travel_thresh >> fort.5
 touch input.nml
 echo ""
@@ -187,7 +189,7 @@ endif
 @ k = 0
 while ($k < $#river_input_files)
   @ k = $k + 1
-  gcp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
+  cp OUTPUT/post_rmvp/river_network.tile"$k".nc hydrography.tile"$k".nc
 end
 
 set hydro_files = hydrography*.nc
@@ -198,7 +200,7 @@ foreach file ($hydro_files)
 end
 
 if ($outdir != "") then
-    gcp -v hydrography.tile*nc $outdir/
+    cp -v hydrography.tile*nc $outdir/
     echo ""
     echo SUCCESS!
     ls -lh $outdir/hydrography*
@@ -207,3 +209,5 @@ else
     echo SUCCESS!
     ls -lh $TMPDIR/hydrography*
 endif
+
+exit 0
