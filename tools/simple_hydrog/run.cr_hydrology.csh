@@ -12,8 +12,7 @@
 
 #set echo on
 
-source $MODULESHOME/init/csh
-
+set outdir = ""
 set argv = (`getopt  hc:o:f:t:m: $*`)
 
 while ("$argv[1]" != "--")
@@ -22,8 +21,6 @@ while ("$argv[1]" != "--")
             set help; breaksw
         case -o:
             set outdir = $argv[2]; shift argv; breaksw
-        case -c:
-            set compile = $argv[2]; shift argv; breaksw
         case -f:
             set min_frac = $argv[2]; shift argv; breaksw
         case -t:
@@ -56,14 +53,13 @@ endif
 if ($?help) then
    set cmdname = `basename $0`
    echo
-   echo "USAGE:  $cmdname [-f min_frac] [-t land_thresh] [-m mosaic] [-c compile] [-o outdir]"
+   echo "USAGE:  $cmdname [-f min_frac] [-t land_thresh] [-m mosaic] [-o outdir]"
    echo
    echo "         -f min_frac:    required, river-regrid, min land fraction; set to 0 to retain small "
    echo "                         land fractions from gridspec"
    echo "         -t land_thresh: required, river-regrid, land fraction exceeding (1-land_thresh) is set to 1;"
    echo "                         recommend 1.e-5"
    echo "         -m mosaic:      required, mosaic file location"
-   echo "         -c compile:     use '-c compile' to compile code (optional)"
    echo "         -o outdir:      output directory (optional)"
    echo
    exit 1
