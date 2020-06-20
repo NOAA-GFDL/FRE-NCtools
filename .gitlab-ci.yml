@@ -7,11 +7,9 @@ before_script:
 
 variables:
   buildDir: build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
-  TMPDIR: ${CI_PROJECT_DIR}/tmpdir
   CONFIG_SITE: ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/config.site
 .buildScript: &buildScript
   script:
-    - mkdir ${TMPDIR}
     - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
     - autoreconf -i
     - mkdir ${buildDir}
@@ -26,7 +24,6 @@ variables:
 
 .deployScript: &deployScript
   script:
-    - mkdir ${TMPDIR}
     - cd ${CI_PROJECT_DIR}
     - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
     - autoreconf -i

@@ -12,6 +12,9 @@
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh
   [ "$status" -eq 1 ]
 
+  mkdir tmpdir
+  export TMPDIR=tmpdir
+
   #Run wrapper hydrology script
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh -f 0. -t 1.e-5 -m $top_srcdir/t/Test25-input/grid_spec.nc
   [ "$status" -eq 0 ]
