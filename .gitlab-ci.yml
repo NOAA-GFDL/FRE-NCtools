@@ -26,6 +26,7 @@ variables:
 
 .deployScript: &deployScript
   script:
+    - mkdir ${TMPDIR}
     - cd ${CI_PROJECT_DIR}
     - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
     - autoreconf -i
