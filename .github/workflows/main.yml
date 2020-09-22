@@ -1,0 +1,17 @@
+name: build_FRE-NCtools
+
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        run: sudo apt-get install -y libnetcdf-dev libnetcdff-dev netcdf-bin gcc
+      - name: Build
+        run: | 
+          autoreconf -i configure.ac
+          ./configure
+          make
+          sudo make install
