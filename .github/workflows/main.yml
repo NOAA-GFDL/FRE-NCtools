@@ -1,17 +1,24 @@
+# Github actions CI file
+# Ryan Mulhall 2020
+# Configures with and without mpi and runs make check
 name: build_FRE-NCtools
 
-on: [push]
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        with_mpi: ['--with-mpi', '']
+    env:
+      MPI: ${{ matrix.with_mpi }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup
-        run: sudo apt-get install -y libnetcdf-dev libnetcdff-dev netcdf-bin gcc
+        run: sudo apt-get install -y libnetcdf-dev libnetcdff-dev netcdf-bin libopenmpi-dev openmpi-bin 
       - name: Build
         run: | 
           autoreconf -i configure.ac
-          ./configure
-          make
-          sudo make install
+          ./configure $MPI
+          make -j check LOG_DRIVER_FLAGS=--comments
