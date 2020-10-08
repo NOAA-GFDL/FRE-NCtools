@@ -30,7 +30,8 @@ SUBDIRS = postprocessing/combine_blobs \
           tools/simple_hydrog \
           tools/simple_hydrog/postp \
           tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr 
+          tools/simple_hydrog/rmvpr \
+          tools/nc_null_check
 
 if WITH_CHECK_PROGS
 SUBDIRS += t

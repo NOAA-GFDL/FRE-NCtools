@@ -3,12 +3,11 @@
 # **********************************************************************
 source $MODULESHOME/init/sh
 module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
-module load PrgEnv-intel/6.0.3
+module load PrgEnv-intel/6.0.5
 module swap intel intel/18.0.6.288 
-module load cray-netcdf/4.4.0
-module load cray-hdf5/1.8.16
-module load nco/4.5.5
-module load nccmp
+module load cray-netcdf/4.6.3.2
+module load cray-hdf5/1.10.5.2
+module load nccmp/1.8.6.5
 
 # Add bats to PATH
 PATH=${PATH}:/ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin

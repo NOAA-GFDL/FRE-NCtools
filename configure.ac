@@ -106,6 +106,7 @@ AC_CONFIG_FILES([Makefile
                  tools/make_vgrid/Makefile
                  tools/mppncscatter/Makefile
                  tools/ncexists/Makefile
+                 tools/nc_null_check/Makefile
                  tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
