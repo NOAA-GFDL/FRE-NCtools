@@ -33,6 +33,7 @@ The tools available in FRE-NCtools are:
 * split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
 * timavg -- Create a time average netCDF file
 * ncexists -- Checks for variables and attributes in a netCDF file
+* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
 
 ### Grid Tools
 * check_mask -- Configure the processors which contains all land points to be masked out for ocean model
