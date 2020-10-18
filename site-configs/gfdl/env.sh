@@ -2,7 +2,8 @@
 # Setup and Load the Modules
 # **********************************************************************
 source /usr/local/Modules/default/init/sh
-module load intel_compilers/15.0.1 mpich2/1.2.1p1 netcdf/4.2
+module load intel_compilers/18.0.5 mpich2/1.2.1p1 netcdf/4.2
+module load nccmp
 
 # Need a newer autoconf/automake than what is curerntly on the system.
 # This is needed until there is a module for these.

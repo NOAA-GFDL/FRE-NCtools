@@ -25,7 +25,9 @@ SUBDIRS = postprocessing/combine_blobs \
           tools/ncexists \
           tools/remap_land \
           tools/river_regrid \
-          tools/runoff_regrid
+          tools/runoff_regrid \
+          tools/transfer_to_mosaic_grid \
+          tools/nc_null_check
 
 if WITH_CHECK_PROGS
 SUBDIRS += t

@@ -33,6 +33,7 @@ The tools available in FRE-NCtools are:
 * split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
 * timavg -- Create a time average netCDF file
 * ncexists -- Checks for variables and attributes in a netCDF file
+* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
 
 ### Grid Tools
 * check_mask -- Configure the processors which contains all land points to be masked out for ocean model
@@ -72,9 +73,17 @@ autoconf files:
 
 ```
 autoreconf -i
-configure
+./configure
 make
 make install
+```
+
+Additionally, you will probably need to set the environment variable CONFIG_SITE
+and set the recommended environment (modules):
+
+```
+export CONFIG_SITE=/path/to/package/site-configs/<site>/config.site
+source /path/to/package/site-configs/<site>/env.sh
 ```
 
 The above steps may need to be augmented depending upon your user evironment setup. 
@@ -82,19 +91,25 @@ For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create 
 configure command in this directory. You may tell the bash shell, for example, 
 the location of both by this command:
 
+```
 export PATH=/home/MyUsername/FRE-NCtools:$PATH
+```
 
 Additionally, installing into a non-default directory may be desired or neccesary. 
 For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools 
 building is configured by:
 
+```
 autoreconf -i
-configure --prefix=/home/MyUsername/bin
+./configure --prefix=/home/MyUsername/bin
+```
 
 Finally compile and install the tools as usual:
 
+```
 make
 make install
+```
 
 Some FRE-NCtools applications can be run in parallel using MPI.  If the
 `--with-mpi` option is given to `configure`, the MPI version of those

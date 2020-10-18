@@ -30,6 +30,8 @@ AC_FC_MODULE_EXTENSION()
 GX_FC_DEFAULT_REAL_KIND8_FLAG()
 GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
+AC_SEARCH_LIBS([ceil],[m])
+
 # Check for the MPI compilers
 # Default MPI build is off
 build_mpi=no
@@ -104,9 +106,11 @@ AC_CONFIG_FILES([Makefile
                  tools/make_vgrid/Makefile
                  tools/mppncscatter/Makefile
                  tools/ncexists/Makefile
+                 tools/nc_null_check/Makefile
                  tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
+                 tools/transfer_to_mosaic_grid/Makefile
                  t/Makefile
 ])
 AC_OUTPUT
