@@ -1,24 +1,28 @@
 # Github actions CI file
 # Ryan Mulhall 2020
-# Configures with and without mpi and runs make check
-name: build_FRE-NCtools
-
+# Builds and runs make check in two containers, one with mpi, one without
+name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        with_mpi: ['--with-mpi', '']
+        with_mpi: ['','--with-mpi']
     env:
-      MPI: ${{ matrix.with_mpi }}
+        MPI: ${{ matrix.with_mpi }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        run: sudo apt-get install -y libnetcdf-dev libnetcdff-dev netcdf-bin libopenmpi-dev openmpi-bin 
-      - name: Build
-        run: | 
-          autoreconf -i configure.ac
-          ./configure $MPI
-          make -j check LOG_DRIVER_FLAGS=--comments
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build container
+      run: |
+        if [[ "$MPI" != "" ]]; then sed -i 's/autoconf/autoconf libopenmpi-dev openmpi-bin/' Dockerfile; fi
+        docker build . -t fre-nctools$MPI
+    - name: Build and run tests
+      run: docker run -u root --entrypoint "/bin/sh" fre-nctools$MPI /build.sh
+    - name: Save log file on failure
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-suite${{ matrix.with_mpi}}.log
+          path: t/test-suite.log
