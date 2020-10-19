@@ -122,3 +122,19 @@
   run command -v decompress-ncc
   [ "$status" -eq 0 ]
 }
+
+@test "Check cr_lake_files exists and is executable" {
+     run command -v cr_lake_files
+     [ "$status" -eq 0 ]
+}
+
+@test "Check cp_river_vars exists and is executable" {
+     run command -v cp_river_vars
+     [ "$status" -eq 0 ]
+}
+
+@test "Check rmv_parallel_rivers exists and is executable" {
+     run command -v rmv_parallel_rivers
+     [ "$status" -eq 0 ]
+}
+

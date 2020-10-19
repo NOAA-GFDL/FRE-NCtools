@@ -30,6 +30,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test22-reference_combine-ncc.sh \
         Test23-reference_decompress-ncc.sh \
         Test24-reference_fregrid.sh \
+        Test25-hydrology.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 
@@ -49,7 +50,8 @@ EXTRA_DIST = $(TESTS) \
              Test20-input \
              Test17-reference \
              Test18-reference \
-             Test20-reference 
+             Test20-reference \
+             Test25-input
 
 clean-local:
 	$(RM) *.nc
