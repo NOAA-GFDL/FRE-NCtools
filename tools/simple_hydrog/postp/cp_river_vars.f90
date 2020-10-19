@@ -36,10 +36,7 @@ integer, dimension (ntilmx)            :: itw, ite, its, itn
 integer, dimension (ncrosmx)           :: tcros
 integer, dimension (ncrosmx,ncrosij)   :: icros, jcros
 
-real, dimension (ni_cells,nj_cells)    :: out_flow = &
-    (/  8.,   4.,   2., &
-       16.,   0.,   1., &
-       32.,  64., 128. /)
+real, dimension (ni_cells,nj_cells)    :: out_flow 
 
 character(len=100), dimension (ntilmx)  :: river_input_file
 
@@ -51,7 +48,9 @@ real, allocatable, dimension (:)        :: lat_idx, lon_idx, bas_area, lat_to, &
 real, allocatable, dimension (:,:,:)    :: cell_a, tocell, land_fr, suba, &
                                            travel, cell_l, basin, rivlen
 real, allocatable, dimension (:,:,:)    :: lat, latb, lon, lonb, arlat, &
-                                           sin_lat, cos_lat, drn_idx
+     sin_lat, cos_lat, drn_idx
+
+out_flow  = reshape((/ 8.,  4.,  2., 16.,  0., 1., 32., 64., 128. /),shape(out_flow))
 
 write_rivlen= .true.
 !write_rivlen= .false.

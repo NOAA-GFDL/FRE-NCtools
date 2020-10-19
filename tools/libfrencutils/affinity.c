@@ -28,10 +28,12 @@
 #include <sys/syscall.h>
 
 #ifndef __APPLE__
+#ifndef __USE_GNU
 static pid_t gettid(void)
 {
   return syscall(__NR_gettid);
 }
+#endif
 #endif
 
 /*

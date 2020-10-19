@@ -1,1 +1,0 @@
-/home/fms/fre-nctools/share-datasets/river_network_mrg_0.5deg_ad3nov_fill_coast_auto1_0.125_v001.nc

@@ -49,10 +49,7 @@ integer, dimension (ncrosij)           :: ipv, jpv
 
 real, dimension (ncrosij)              :: sba
 
-real, dimension (ni_cells,nj_cells)    :: out_flow = &
-    (/  8.,   4.,   2., &
-       16.,   0.,   1., &
-       32.,  64., 128. /)
+real, dimension (ni_cells,nj_cells)    :: out_flow
        
 character(len=4) :: vname_cvr= "frac"
 
@@ -67,12 +64,14 @@ real, allocatable, dimension (:,:,:)    :: cell_a, tocell, land_fr, suba, &
                                            travel_temp, celll_temp, basin_temp,&
                                            suba_wo_const, drn_idx
 real, allocatable, dimension (:,:,:)    :: lat, latb, lon, lonb, arlat, &
-                                           sin_lat, cos_lat, tocell_new
+     sin_lat, cos_lat, tocell_new
+
+out_flow  = reshape((/ 8.,  4.,  2., 16.,  0., 1., 32., 64., 128. /),shape(out_flow))
 
 pi= 4.*atan(1.)
 dtr= pi/180.
 
-add_ocean_const= "F"
+add_ocean_const= .false.
 
 open (10, file= 'out.rmv_parallel_rivers', form= 'formatted')
 
