@@ -19,7 +19,7 @@ jobs:
         if [[ "$MPI" != "" ]]; then sed -i 's/autoconf/autoconf libopenmpi-dev openmpi-bin/' Dockerfile; fi
         docker build . -t fre-nctools$MPI
     - name: Build and run tests
-      run: docker run -u root --entrypoint "/bin/sh" fre-nctools$MPI /build.sh
+      run: docker run -u root --entrypoint "/bin/sh" --env MPI fre-nctools$MPI /build.sh
     - name: Save log file on failure
       uses: actions/upload-artifact@v2
       if: failure()
