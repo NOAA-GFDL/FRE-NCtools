@@ -27,8 +27,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#ifndef HAVE_GETTID
 #ifndef __APPLE__
-#ifndef __USE_GNU
 static pid_t gettid(void)
 {
   return syscall(__NR_gettid);

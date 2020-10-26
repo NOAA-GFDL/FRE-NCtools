@@ -66,6 +66,7 @@ real, allocatable, dimension (:,:,:)    :: cell_a, tocell, land_fr, suba, &
 real, allocatable, dimension (:,:,:)    :: lat, latb, lon, lonb, arlat, &
      sin_lat, cos_lat, tocell_new
 
+!!Recall Fortran row-major order. Below, 8., 4., 2. occupy the 1st column. 
 out_flow  = reshape((/ 8.,  4.,  2., 16.,  0., 1., 32., 64., 128. /),shape(out_flow))
 
 pi= 4.*atan(1.)
