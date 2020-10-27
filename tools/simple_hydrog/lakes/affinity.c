@@ -9,6 +9,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include "config.h"
+
 #ifndef HAVE_GETTID
 static pid_t gettid(void)
 {

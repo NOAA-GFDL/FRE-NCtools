@@ -42,6 +42,9 @@ AS_IF([test x"$with_mpi" = x"yes"],
     fi])
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 
+AC_CHECK_FUNCS(gettid, [], [])
+
+
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
   AC_MSG_CHECKING([for asciidoc version])
