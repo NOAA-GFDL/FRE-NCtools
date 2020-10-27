@@ -44,6 +44,15 @@ AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 
 AC_CHECK_FUNCS(gettid, [], [])
 
+# Check if Fortran compiler has Cray pointer support
+GX_FC_CRAY_POINTER_FLAG()
+
+
+ # Add Cray Pointer support flag
+if test ! -z "$FC_CRAY_POINTER_FLAG"; then
+   FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"
+fi
+
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
