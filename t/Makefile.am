@@ -31,6 +31,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test23-reference_decompress-ncc.sh \
         Test24-reference_fregrid.sh \
         Test25-hydrology.sh \
+        Test26-reference_fregrid_gcc.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 

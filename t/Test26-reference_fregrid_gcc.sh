@@ -1,15 +1,14 @@
 #!/usr/bin/env bats
 # test regrid ocean restart file 
-
+# same as Test24 except checks result with float tolerance, added in for compatibility with gcc
 @test "Test fregrid ocean data" {
 
-  if [ "$CC" != "icc" ]; then skip "Test fails reference check without icc"; fi
-  if [ ! -d "Test24" ] 
+  if [ ! -d "Test26" ] 
   then
-  		mkdir Test24
+  		mkdir Test26
   fi
 
-  cd Test24
+  cd Test26
   cp $top_srcdir/t/Test20-input/CM2.1_mosaic.nc .
   cp $top_srcdir/t/Test20-input/CM2.1_grid.nc .
   cp $top_srcdir/t/Test20-input/ocean_temp_salt.res.nc .
@@ -49,8 +48,8 @@
 
    run nccmp -V
    [ "$status" -eq 0 ]
-   # This check will fail if fregrid was not compiled with icc due to differences in reference file
-   run nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
+   # checks values with float tolerance to bypass any result differences from compilers
+   run nccmp -d -t 0.000001  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
    [ "$status" -eq 0 ]
 
    [ -e latlon_mosaic.nc ]
@@ -60,5 +59,5 @@
    [ "$status" -eq 0 ]
 
   cd ..
-  rm -rf Test24
+  rm -rf Test26
 }
