@@ -27,11 +27,15 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include "config.h"
+
+#ifndef HAVE_GETTID
 #ifndef __APPLE__
 static pid_t gettid(void)
 {
   return syscall(__NR_gettid);
 }
+#endif
 #endif
 
 /*

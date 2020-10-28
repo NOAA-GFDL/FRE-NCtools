@@ -1,4 +1,4 @@
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4 
 
 SUBDIRS = postprocessing/combine_blobs \
           postprocessing/combine_restarts \
@@ -27,6 +27,10 @@ SUBDIRS = postprocessing/combine_blobs \
           tools/river_regrid \
           tools/runoff_regrid \
           tools/transfer_to_mosaic_grid \
+          tools/simple_hydrog \
+          tools/simple_hydrog/postp \
+          tools/simple_hydrog/lakes \
+          tools/simple_hydrog/rmvpr \
           tools/nc_null_check
 
 if WITH_CHECK_PROGS

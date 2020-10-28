@@ -1,6 +1,6 @@
 # Prelude
 AC_PREREQ([2.63])
-AC_INIT([FRE NC Tools], [16.1.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
+AC_INIT([FRE NC Tools], [18.0.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
 # Place the git description informatin in the configure script
 m4_define([git_revision],
   [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
@@ -41,6 +41,18 @@ AS_IF([test x"$with_mpi" = x"yes"],
       build_mpi="yes"
     fi])
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
+
+AC_CHECK_FUNCS(gettid, [], [])
+
+# Check if Fortran compiler has Cray pointer support
+GX_FC_CRAY_POINTER_FLAG()
+
+
+ # Add Cray Pointer support flag
+if test ! -z "$FC_CRAY_POINTER_FLAG"; then
+   FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"
+fi
+
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
@@ -112,5 +124,11 @@ AC_CONFIG_FILES([Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
                  t/Makefile
+                 tools/simple_hydrog/Makefile
+                 tools/simple_hydrog/postp/Makefile
+                 tools/simple_hydrog/lakes/Makefile 
+                 tools/simple_hydrog/rmvpr/Makefile
+ 
+
 ])
 AC_OUTPUT
