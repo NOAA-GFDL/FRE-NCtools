@@ -91,19 +91,25 @@ For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create 
 configure command in this directory. You may tell the bash shell, for example, 
 the location of both by this command:
 
+```
 export PATH=/home/MyUsername/FRE-NCtools:$PATH
+```
 
 Additionally, installing into a non-default directory may be desired or neccesary. 
 For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools 
 building is configured by:
 
+```
 autoreconf -i
 ./configure --prefix=/home/MyUsername/bin
+```
 
 Finally compile and install the tools as usual:
 
+```
 make
 make install
+```
 
 Some FRE-NCtools applications can be run in parallel using MPI.  If the
 `--with-mpi` option is given to `configure`, the MPI version of those
