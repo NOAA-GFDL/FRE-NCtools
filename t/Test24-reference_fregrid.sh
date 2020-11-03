@@ -3,6 +3,7 @@
 
 @test "Test fregrid ocean data" {
 
+  if [ "$CC" != "icc" ]; then skip "Test fails reference check without icc"; fi
   if [ ! -d "Test24" ] 
   then
   		mkdir Test24
@@ -48,7 +49,7 @@
 
    run nccmp -V
    [ "$status" -eq 0 ]
-
+   # This check will fail if fregrid was not compiled with icc due to differences in reference file
    run nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
    [ "$status" -eq 0 ]
 

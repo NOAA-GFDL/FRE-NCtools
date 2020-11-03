@@ -28,3 +28,5 @@ export MPICH_PTL_UNEX_EVENTS
 export KMP_STACKSIZE
 export F_UFMTENDIAN
 export NC_BLKSZ
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64
