@@ -6,3 +6,6 @@
 2017-03-17 Seth Underwood <Seth.Underwood@noaa.gov>
     * Changed Makefile to match new build system
 
+2020-11-20 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Updates for C99 standards
+    * Remove trailing whitespace

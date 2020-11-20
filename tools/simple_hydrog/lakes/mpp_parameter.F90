@@ -8,8 +8,8 @@ module mpp_parameter_mod
 #include<file_version.h>
   public version
 
-  !--- public paramters which is used by mpp_mod and its components. 
-  !--- All othere modules should import these parameters from mpp_mod. 
+  !--- public paramters which is used by mpp_mod and its components.
+  !--- All othere modules should import these parameters from mpp_mod.
   public :: MAXPES, MPP_VERBOSE, MPP_DEBUG, ALL_PES, ANY_PE, NULL_PE, NOTE, WARNING, FATAL
   public :: MPP_WAIT, MPP_READY, MAX_CLOCKS, MAX_EVENT_TYPES, MAX_EVENTS, MPP_CLOCK_SYNC
   public :: MPP_CLOCK_DETAILED, CLOCK_COMPONENT, CLOCK_SUBCOMPONENT, CLOCK_MODULE_DRIVER
@@ -24,8 +24,8 @@ module mpp_parameter_mod
   public :: COMM_TAG_17, COMM_TAG_18, COMM_TAG_19, COMM_TAG_20
   public :: MPP_FILL_INT, MPP_FILL_FLOAT, MPP_FILL_DOUBLE
 
-  !--- public paramters which is used by mpp_domains_mod and its components. 
-  !--- All othere modules should import these parameters from mpp_domains_mod. 
+  !--- public paramters which is used by mpp_domains_mod and its components.
+  !--- All othere modules should import these parameters from mpp_domains_mod.
   public :: GLOBAL_DATA_DOMAIN, CYCLIC_GLOBAL_DOMAIN, BGRID_NE, BGRID_SW, CGRID_NE, CGRID_SW
   public :: DGRID_NE, DGRID_SW, FOLD_WEST_EDGE, FOLD_EAST_EDGE, FOLD_SOUTH_EDGE, FOLD_NORTH_EDGE
   public :: WUPDATE, EUPDATE, SUPDATE, NUPDATE, XUPDATE, YUPDATE, BITWISE_EXACT_SUM, NON_BITWISE_EXACT_SUM
@@ -36,8 +36,8 @@ module mpp_parameter_mod
   public :: ZERO, NINETY, MINUS_NINETY, ONE_HUNDRED_EIGHTY
   public :: NONBLOCK_UPDATE_TAG, EDGEUPDATE, EDGEONLY, NONSYMEDGEUPDATE, NONSYMEDGE
 
-  !--- public paramters which is used by mpp_domains_mod and its components. 
-  !--- All othere modules should import these parameters from mpp_io_mod. 
+  !--- public paramters which is used by mpp_domains_mod and its components.
+  !--- All othere modules should import these parameters from mpp_io_mod.
   public :: MPP_WRONLY, MPP_RDONLY, MPP_APPEND, MPP_OVERWR, MPP_ASCII, MPP_IEEE32
   public :: MPP_NATIVE, MPP_NETCDF, MPP_SEQUENTIAL, MPP_DIRECT, MPP_SINGLE, MPP_MULTI
   public :: MPP_DELETE, MPP_COLLECT, NULLUNIT, NULLTIME
@@ -62,7 +62,7 @@ module mpp_parameter_mod
   !--- using CLOCK_LOOP and above may distort coarser-grain measurements
   integer, parameter :: CLOCK_COMPONENT=1      !component level, e.g model, exchange
   integer, parameter :: CLOCK_SUBCOMPONENT=11  !top level within a model component, e.g dynamics, physics
-  integer, parameter :: CLOCK_MODULE_DRIVER=21 !module driver level, e.g adriver that calls multiple 
+  integer, parameter :: CLOCK_MODULE_DRIVER=21 !module driver level, e.g adriver that calls multiple
                                                !related physics routines
   integer, parameter :: CLOCK_MODULE=31        !module level, e.g main subroutine of a physics module
   integer, parameter :: CLOCK_ROUTINE=41       !level of individual subroutine or function
@@ -98,7 +98,7 @@ module mpp_parameter_mod
 ! combination with the flag parameter defined above to create a unique identifier for
 ! each Domain+flags combination. Therefore, the value of any flag must not exceed DOMAIN_ID_BASE.
 ! integer(LONG_KIND), parameter :: DOMAIN_ID_BASE=INT( 2**(4*LONG_KIND),KIND=LONG_KIND )
-  integer(LONG_KIND), parameter :: DOMAIN_ID_BASE=Z'0000000100000000' ! Workaround for 64bit init problem
+  integer(LONG_KIND), parameter :: DOMAIN_ID_BASE=int(Z'0000000100000000',KIND=LONG_KIND) ! Workaround for 64bit init problem
   integer, parameter :: NON_BITWISE_EXACT_SUM=0
   integer, parameter :: BITWISE_EXACT_SUM=1
   integer, parameter :: BITWISE_EFP_SUM=2
@@ -112,7 +112,7 @@ module mpp_parameter_mod
   integer, parameter :: MPP_SEQUENTIAL=300, MPP_DIRECT=301 !access
   integer, parameter :: MPP_SINGLE=400, MPP_MULTI=401      !threading, fileset
   integer, parameter :: MPP_DELETE=501, MPP_COLLECT=502    !action on close
-  integer, parameter :: NULLUNIT=-1                        !returned by PEs not participating in    
+  integer, parameter :: NULLUNIT=-1                        !returned by PEs not participating in
                                                            !IO after a collective call with threading
                                                            !equal to MPP_SINGLE
   !--- unique tag used in FMS
@@ -123,7 +123,7 @@ module mpp_parameter_mod
   integer, parameter :: COMM_TAG_17 = 17, COMM_TAG_18 = 18, COMM_TAG_19 = 19, COMM_TAG_20 = 20
 
   integer, parameter :: ROOT_GLOBAL = 9
-  integer, parameter :: GLOBAL_ROOT_ONLY = 2**ROOT_GLOBAL 
+  integer, parameter :: GLOBAL_ROOT_ONLY = 2**ROOT_GLOBAL
   real(DOUBLE_KIND), parameter :: NULLTIME=-1.
 #ifdef LARGE_FILE
   integer(LONG_KIND), parameter :: MAX_FILE_SIZE = 4294967295

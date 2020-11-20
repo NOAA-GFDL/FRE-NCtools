@@ -18,10 +18,10 @@
    It will be used to interpolation data in 1-D space.
 
    INPUT Arguments:
-    grid1:    grid for input data grid.          
-    grid2:    grid for output data grid.         
-    size1:    size of input grid.                
-    size2:    size of output grid.               
+    grid1:    grid for input data grid.
+    grid2:    grid for output data grid.
+    size1:    size of input grid.
+    size2:    size of output grid.
     data1:    input data associated with grid1.
 
    OUTPUT ARGUMENTS:
@@ -70,7 +70,7 @@ void cubic_spline_sp(int size1, int size2, const double *grid1, const double *gr
          d[k] = 0.0;
      }
   }
-/* 
+/*
 End slopes
 */
   kmax = size1-1;
@@ -80,7 +80,7 @@ End slopes
      d[0] = 0.0;
   }
   else {
-     if ( delta[0]*delta[1] < 0.0 && abs(d[0]) > abs(3.0*delta[0])) {
+     if ( delta[0]*delta[1] < 0.0 && fabs(d[0]) > fabs(3.0*delta[0])) {
         d[0]=3.0*delta[0];
      }
   }
@@ -90,11 +90,11 @@ End slopes
      d[kmax] = 0.0;
   }
   else {
-     if ( delta[kmax-1]*delta[kmax-2] < 0.0 && abs(d[kmax]) > abs(3.0*delta[kmax-1])) {
+     if ( delta[kmax-1]*delta[kmax-2] < 0.0 && fabs(d[kmax]) > fabs(3.0*delta[kmax-1])) {
         d[kmax]=3.0*delta[kmax-1];
      }
   }
-  
+
 /* Precalculate coefficients */
   b = (double *)malloc((size1-1)*sizeof(double));
   c = (double *)malloc((size1-1)*sizeof(double));
@@ -140,10 +140,10 @@ End slopes
    and its boundaries. It will be used to interpolation data in 1-D space.
 
    INPUT Arguments:
-    grid1:    grid for input data grid.          
-    grid2:    grid for output data grid.         
-    size1:    size of input grid.                
-    size2:    size of output grid.               
+    grid1:    grid for input data grid.
+    grid2:    grid for output data grid.
+    size1:    size of input grid.
+    size2:    size of output grid.
     data1:    input data associated with grid1.
     yp1:      first derivative of starting point.
               Set to 0 to be "natural"           (INPUT)
@@ -155,21 +155,21 @@ End slopes
 
 *********************************************************************/
 
-                                     
+
 void cubic_spline(int size1, int size2, const double *grid1, const double *grid2, const double *data1,
 		  double *data2, double yp1, double ypn  )
 {
   double *y2=NULL, *u=NULL;
   double p, sig, qn, un, h, a, b;
   int i, k, n, klo, khi;
-  
+
   for(i=1; i<size1; i++) {
     if( grid1[i] <= grid1[i-1] ) error_handler("cubic_spline: grid1 is not monotonic increasing");
   }
 
   for(i=0; i<size2; i++) {
     if( grid2[i] < grid1[0] || grid2[i] > grid1[size1-1]) error_handler("cubic_spline: grid2 lies outside grid1");
-  }  
+  }
 
   if(size1 < 2) error_handler("cubic_spline: the size of input grid should be at least 2");
   if(size1 == 2) {  /* when size1 is 2, it just reduced to a linear interpolation */
@@ -196,7 +196,7 @@ void cubic_spline(int size1, int size2, const double *grid1, const double *grid2
 	      /(grid1[i]-grid1[i-1]))/(grid1[i+1]-grid1[i-1])-sig*u[i-1])/p;
 
   }
-  
+
   if (ypn > .99e30) {
     qn=0.;
     un=0.;
@@ -233,7 +233,7 @@ void cubic_spline(int size1, int size2, const double *grid1, const double *grid2
 
   free(y2);
   free(u);
-  
+
 };/* cubic spline */
 
 
@@ -248,8 +248,8 @@ void conserve_interp(int nx_src, int ny_src, int nx_dst, int ny_dst, const doubl
 {
   int n, nxgrid;
   int *xgrid_i1, *xgrid_j1, *xgrid_i2, *xgrid_j2;
-  double *xgrid_area, *dst_area, *area_frac; 
-  
+  double *xgrid_area, *dst_area, *area_frac;
+
   /* get the exchange grid between source and destination grid. */
   xgrid_i1   = (int    *)malloc(MAXXGRID*sizeof(int));
   xgrid_j1   = (int    *)malloc(MAXXGRID*sizeof(int));
@@ -265,10 +265,10 @@ void conserve_interp(int nx_src, int ny_src, int nx_dst, int ny_dst, const doubl
   */
   for(n=0; n<nx_dst*ny_dst; n++) dst_area[n] = 0;
   for(n=0; n<nxgrid; n++) dst_area[xgrid_j2[n]*nx_dst+xgrid_i2[n]] += xgrid_area[n];
-  
+
   area_frac = (double *)malloc(nxgrid*sizeof(double));
   for(n=0; n<nxgrid; n++) area_frac[n] = xgrid_area[n]/dst_area[xgrid_j2[n]*nx_dst+xgrid_i2[n]];
-  
+
   for(n=0; n<nx_dst*ny_dst; n++) {
     data_dst[n] = 0;
   }
@@ -283,7 +283,7 @@ void conserve_interp(int nx_src, int ny_src, int nx_dst, int ny_dst, const doubl
   free(xgrid_area);
   free(dst_area);
   free(area_frac);
-  
+
 }; /* conserve_interp */
 
 /*------------------------------------------------------------------------------
@@ -298,8 +298,8 @@ void conserve_interp_great_circle(int nx_src, int ny_src, int nx_dst, int ny_dst
 {
   int n, nxgrid;
   int *xgrid_i1, *xgrid_j1, *xgrid_i2, *xgrid_j2;
-  double *xgrid_area, *dst_area, *area_frac, *xgrid_di, *xgrid_dj; 
-  
+  double *xgrid_area, *dst_area, *area_frac, *xgrid_di, *xgrid_dj;
+
   /* get the exchange grid between source and destination grid. */
   xgrid_i1   = (int    *)malloc(MAXXGRID*sizeof(int));
   xgrid_j1   = (int    *)malloc(MAXXGRID*sizeof(int));
@@ -317,10 +317,10 @@ void conserve_interp_great_circle(int nx_src, int ny_src, int nx_dst, int ny_dst
   */
   for(n=0; n<nx_dst*ny_dst; n++) dst_area[n] = 0;
   for(n=0; n<nxgrid; n++) dst_area[xgrid_j2[n]*nx_dst+xgrid_i2[n]] += xgrid_area[n];
-  
+
   area_frac = (double *)malloc(nxgrid*sizeof(double));
   for(n=0; n<nxgrid; n++) area_frac[n] = xgrid_area[n]/dst_area[xgrid_j2[n]*nx_dst+xgrid_i2[n]];
-  
+
   for(n=0; n<nx_dst*ny_dst; n++) {
     data_dst[n] = 0;
   }
@@ -335,13 +335,13 @@ void conserve_interp_great_circle(int nx_src, int ny_src, int nx_dst, int ny_dst
   free(xgrid_area);
   free(dst_area);
   free(area_frac);
-  
+
 }; /* conserve_interp_great_circle */
 
 
 
 void linear_vertical_interp(int nx, int ny, int nk1, int nk2, const double *grid1, const double *grid2,
-			    double *data1, double *data2) 
+			    double *data1, double *data2)
 {
   int n1, n2, i, n, k, l;
   double w;
@@ -352,11 +352,11 @@ void linear_vertical_interp(int nx, int ny, int nk1, int nk2, const double *grid
   for(k=1; k<nk2; k++) {
     if(grid2[k] <= grid2[k-1]) error_handler("interp.c: grid2 not monotonic");
   }
-  
+
   if (grid1[0] > grid2[0] ) error_handler("interp.c: grid2 lies outside grid1");
   if (grid1[nk1-1] < grid2[nk2-1] ) error_handler("interp.c: grid2 lies outside grid1");
 
-  for(k=0; k<nk2; k++) {    
+  for(k=0; k<nk2; k++) {
     n = nearest_index(grid2[k],grid1,nk1);
     if (grid1[n] < grid2[k]) {
       w = (grid2[k]-grid1[n])/(grid1[n+1]-grid1[n]);
