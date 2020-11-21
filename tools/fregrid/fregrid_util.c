@@ -1903,12 +1903,12 @@ void get_field_attribute( int ntiles, Field_config *field)
       field[n].var[l].offset  = 0;
       if(!field[n].var[l].do_regrid) continue;
       field[n].var[l].vid = mpp_get_varid(*(field[n].fid), field[n].var[l].name);
-      if( field[n].var[l].has_missing == mpp_var_att_exist(*(field[n].fid), field[n].var[l].vid, "missing_value") ) {
+      if( (field[n].var[l].has_missing = mpp_var_att_exist(*(field[n].fid), field[n].var[l].vid, "missing_value")) ) {
 	mpp_get_var_att_double(*(field[n].fid), field[n].var[l].vid, "missing_value", &(field[n].var[l].missing));
       }
       /* also check for _FillValue */
       if( !field[n].var[l].has_missing ) {
-         if( field[n].var[l].has_missing == mpp_var_att_exist(*(field[n].fid), field[n].var[l].vid, "_FillValue") ) {
+         if( (field[n].var[l].has_missing = mpp_var_att_exist(*(field[n].fid), field[n].var[l].vid, "_FillValue")) ) {
            mpp_get_var_att_double(*(field[n].fid), field[n].var[l].vid, "_FillValue", &(field[n].var[l].missing));
         }
       }
