@@ -191,18 +191,18 @@ int main(int argc, char* argv[])
    */
 
   static struct option long_options[] = {
-    {"src_mosaic",            required_argument, NULL, 'a'},
-    {"dst_mosaic",            required_argument, NULL, 'b'},
-    {"src_restart",           required_argument, NULL, 'c'},
-    {"dst_restart",           required_argument, NULL, 'o'},
-    {"dst_cold_restart",      required_argument, NULL, 'd'},
-    {"file_type",             required_argument, NULL, 't'},
-    {"land_src_restart",      required_argument, NULL, 'l'},
-    {"land_cold_restart",     required_argument, NULL, 'm'},
-    {"remap_file",            required_argument, NULL, 'r'},
-    {"print_memory",          no_argument,       NULL, 'p'},
-    {"help",                  no_argument,       NULL, 'h'},
-    {0, 0, 0, 0},
+					 {"src_mosaic",            required_argument, NULL, 'a'},
+					 {"dst_mosaic",            required_argument, NULL, 'b'},
+					 {"src_restart",           required_argument, NULL, 'c'},
+					 {"dst_restart",           required_argument, NULL, 'o'},
+					 {"dst_cold_restart",      required_argument, NULL, 'd'},
+					 {"file_type",             required_argument, NULL, 't'},
+					 {"land_src_restart",      required_argument, NULL, 'l'},
+					 {"land_cold_restart",     required_argument, NULL, 'm'},
+					 {"remap_file",            required_argument, NULL, 'r'},
+					 {"print_memory",          no_argument,       NULL, 'p'},
+					 {"help",                  no_argument,       NULL, 'h'},
+					 {0, 0, 0, 0},
   };
 
   /* start parallel */
@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
     vid = mpp_get_varid(fid_src[0], varname);
     var_type[l] = mpp_get_var_type(fid_src[0], vid);
     if( var_type[l] != MPP_INT && var_type[l] != MPP_DOUBLE)
-	mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE");
+      mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE");
     
     ndim_src[l] = mpp_get_var_ndim(fid_src[0], vid);
     if(ndim_src[l] > 3) mpp_error("remap_land: number of dimensions for the field in src_restart is greater than 3");
@@ -579,7 +579,7 @@ int main(int argc, char* argv[])
   GLAC_CHECK:
     if( mpp_pe() == mpp_root_pe() ) {
       if(has_glac)
-         printf("remap_land: there is glac in cold restart file\n");
+	printf("remap_land: there is glac in cold restart file\n");
       else
 	printf("remap_land: there is no glac in cold restart file\n");
     }
@@ -597,7 +597,7 @@ int main(int argc, char* argv[])
   LAKE_CHECK:
     if( mpp_pe() == mpp_root_pe() ) {
       if(has_lake)
-         printf("remap_land: there is lake in cold restart file\n");
+	printf("remap_land: there is lake in cold restart file\n");
       else
 	printf("remap_land: there is no lake in cold restart file\n");
     }
@@ -1050,17 +1050,17 @@ int main(int argc, char* argv[])
 	  mpp_close(fid);
 	}
 	else {
-	    /* compute remap info for soil */
-	    full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, soil_count_src, nxc_dst,
-				x_dst, y_dst, soil_count_cold, idx_map_soil, face_map_soil);
-	    /* compute remap info for glac */
-	    if(has_glac)
-	      full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, glac_count_src, nxc_dst,
-				  x_dst, y_dst, glac_count_cold, idx_map_glac, face_map_glac);
-	    /* compute remap info for lake */
-	    if(has_lake)
-	      full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, lake_count_src, nxc_dst,
-				  x_dst, y_dst, lake_count_cold, idx_map_lake, face_map_lake);
+	  /* compute remap info for soil */
+	  full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, soil_count_src, nxc_dst,
+			      x_dst, y_dst, soil_count_cold, idx_map_soil, face_map_soil);
+	  /* compute remap info for glac */
+	  if(has_glac)
+	    full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, glac_count_src, nxc_dst,
+				x_dst, y_dst, glac_count_cold, idx_map_glac, face_map_glac);
+	  /* compute remap info for lake */
+	  if(has_lake)
+	    full_search_nearest(nface_src, nx_src*ny_src, x_src, y_src, lake_count_src, nxc_dst,
+				x_dst, y_dst, lake_count_cold, idx_map_lake, face_map_lake);
 	}
 
 	if(write_remap_file) { /* write out restart file */
@@ -1326,15 +1326,15 @@ int main(int argc, char* argv[])
 	    mpp_put_var_value(fid_dst, vid_dst, &scalar_data);
 	  }
  	  else if( !strcmp(varname, LON_NAME) )  
-	     mpp_put_var_value(fid_dst, vid_dst, lon_axis_dst ); 
+	    mpp_put_var_value(fid_dst, vid_dst, lon_axis_dst ); 
  	  else if( !strcmp(varname, LAT_NAME) )
-	     mpp_put_var_value(fid_dst, vid_dst, lat_axis_dst );
+	    mpp_put_var_value(fid_dst, vid_dst, lat_axis_dst );
 	  else if( !strcmp(varname, TILE_NAME) )
-	     mpp_put_var_value(fid_dst, vid_dst, tile_axis_data );
+	    mpp_put_var_value(fid_dst, vid_dst, tile_axis_data );
 	  else if( !strcmp(varname, LEVEL_NAME) )
-	     mpp_put_var_value(fid_dst, vid_dst, z_axis_data );
+	    mpp_put_var_value(fid_dst, vid_dst, z_axis_data );
 	  else if( !strcmp(varname, COHORT_NAME) )
-	     mpp_put_var_value(fid_dst, vid_dst, cohort_data );	  
+	    mpp_put_var_value(fid_dst, vid_dst, cohort_data );	  
 	  else if( !strcmp(varname, TILE_INDEX_NAME) || !strcmp(varname, COHORT_INDEX_NAME)  ) {
 	    compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, idx_dst, idata_global, use_all_tile);
 	    mpp_put_var_value(fid_dst, vid_dst, idata_global);
@@ -1345,8 +1345,8 @@ int main(int argc, char* argv[])
 	  }
  	  else if( !strcmp(varname, GLAC_NAME) ) {
 	    if(has_glac) {
-	       compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, glac_tag_dst, idata_global, use_all_tile);
- 	       mpp_put_var_value(fid_dst, vid_dst, idata_global);
+	      compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, glac_tag_dst, idata_global, use_all_tile);
+	      mpp_put_var_value(fid_dst, vid_dst, idata_global);
 	    }
 	  }
  	  else if( !strcmp(varname, LAKE_NAME) ) {
@@ -1553,64 +1553,64 @@ void get_actual_file_name(int nface, int face, const char *file_orig, char *file
 /********************************************************************************
 void get_land_tile_info( )
 ********************************************************************************/
- void get_land_tile_info(int fid, const char *name1, const char *name2, int nidx, const int *idx_in, const double *frac_in,
-			 int nx, int ny, int ntile, int isc, int iec, int *count, double *frac, int *tag1, int *tag2, int *idx, int all_tile)
- {
+void get_land_tile_info(int fid, const char *name1, const char *name2, int nidx, const int *idx_in, const double *frac_in,
+			int nx, int ny, int ntile, int isc, int iec, int *count, double *frac, int *tag1, int *tag2, int *idx, int all_tile)
+{
   
-   int vid, l, i, j, k, p, nxc, pos; 
-   int *tmp1=NULL;
-   int *tmp2=NULL;
+  int vid, l, i, j, k, p, nxc, pos; 
+  int *tmp1=NULL;
+  int *tmp2=NULL;
 
-   nxc = iec - isc + 1;
+  nxc = iec - isc + 1;
    
-   tmp1 = (int *)malloc(nidx*sizeof(int));
+  tmp1 = (int *)malloc(nidx*sizeof(int));
    
-    vid = mpp_get_varid(fid, name1);
-    mpp_get_var_value(fid, vid, tmp1);
-    if(tag2) {
-      if(!name2) mpp_error("remap_land: name2 can not be NULL when tag2 is not NULL");
-      tmp2 = (int *)malloc(nidx*sizeof(int));
-      vid = mpp_get_varid(fid, name2);
-      mpp_get_var_value(fid, vid, tmp2);
-    }
+  vid = mpp_get_varid(fid, name1);
+  mpp_get_var_value(fid, vid, tmp1);
+  if(tag2) {
+    if(!name2) mpp_error("remap_land: name2 can not be NULL when tag2 is not NULL");
+    tmp2 = (int *)malloc(nidx*sizeof(int));
+    vid = mpp_get_varid(fid, name2);
+    mpp_get_var_value(fid, vid, tmp2);
+  }
       
-    /* set count to 0 */
-    for(i=0; i<nxc; i++) count[i] = 0;
-    for(i=0; i<ntile*nxc; i++) {
-      frac[i] = MPP_FILL_DOUBLE;
-      tag1[i] = MPP_FILL_INT;
-      if(tag2) tag2[i] = MPP_FILL_INT;
-      if(idx) idx[i] = MPP_FILL_INT;
-    }
-    pos = 0;
-    for(l=0; l<nidx; l++) {
-      if(tmp1[l] != MPP_FILL_INT ) {
-	i = idx_in[l]%nx;
-	k = idx_in[l]/nx;
-	j = k%ny;
-	p = j*nx+i;
-	if(p<isc || p >iec) continue;
-	p = p - isc;
-	if(count[p] > ntile) mpp_error("remap_land: number of tiles is greater than allowed ntiles on one grid cell");
-        frac[ntile*p+count[p]] = frac_in[l];
-	tag1[ntile*p+count[p]] = tmp1[l];
-	if(tag2) tag2[ntile*p+count[p]] = tmp2[l];
-	if(idx) {
-	  if(all_tile)
-	    idx[ntile*p+count[p]] = l;
-	  else
-	    idx[ntile*p+count[p]] = pos;
-	}
-	pos++;
-	count[p]++;
+  /* set count to 0 */
+  for(i=0; i<nxc; i++) count[i] = 0;
+  for(i=0; i<ntile*nxc; i++) {
+    frac[i] = MPP_FILL_DOUBLE;
+    tag1[i] = MPP_FILL_INT;
+    if(tag2) tag2[i] = MPP_FILL_INT;
+    if(idx) idx[i] = MPP_FILL_INT;
+  }
+  pos = 0;
+  for(l=0; l<nidx; l++) {
+    if(tmp1[l] != MPP_FILL_INT ) {
+      i = idx_in[l]%nx;
+      k = idx_in[l]/nx;
+      j = k%ny;
+      p = j*nx+i;
+      if(p<isc || p >iec) continue;
+      p = p - isc;
+      if(count[p] > ntile) mpp_error("remap_land: number of tiles is greater than allowed ntiles on one grid cell");
+      frac[ntile*p+count[p]] = frac_in[l];
+      tag1[ntile*p+count[p]] = tmp1[l];
+      if(tag2) tag2[ntile*p+count[p]] = tmp2[l];
+      if(idx) {
+	if(all_tile)
+	  idx[ntile*p+count[p]] = l;
+	else
+	  idx[ntile*p+count[p]] = pos;
       }
+      pos++;
+      count[p]++;
     }
+  }
        
-    free(tmp1);
-    if(tmp2) free(tmp2);
+  free(tmp1);
+  if(tmp2) free(tmp2);
     
 
- } 
+} 
   
 
 /********************************************************************
@@ -1642,19 +1642,19 @@ void full_search_nearest(int nface_src, int npts_src, const double *lon_src, con
 	l = m*npts_src + i_src;
 	/*
 	  if(face_cur==2 && i_dst == 16*192+168 && m==2 && (i_src==185 ||i_src==186 ||i_src==187||
-							  i_src==233 ||i_src==234 ||i_src==235)) {
-	     printf("at i_src=%d, mask_src=%d\n", i_src, mask_src[l]);
-	}
+	  i_src==233 ||i_src==234 ||i_src==235)) {
+	  printf("at i_src=%d, mask_src=%d\n", i_src, mask_src[l]);
+	  }
 	*/
 	if( mask_src[l] == 0 ) continue;
         p2[0] = lon_src[l];
         p2[1] = lat_src[l];
 	d = great_circle_distance(p1, p2);
 	/*
-if(face_cur==2 && i_dst == 16*192+168 && m==2 && (i_src==185 ||i_src==186 ||i_src==187||
-							  i_src==233 ||i_src==234 ||i_src==235)) {
-  printf("grid=%g,%g, d=%g,d_cur=%g,ind_cur=%d\n", p2[0]*R2D, p2[1]*R2D, d, d_cur, ind_cur);
- }
+	  if(face_cur==2 && i_dst == 16*192+168 && m==2 && (i_src==185 ||i_src==186 ||i_src==187||
+	  i_src==233 ||i_src==234 ||i_src==235)) {
+	  printf("grid=%g,%g, d=%g,d_cur=%g,ind_cur=%d\n", p2[0]*R2D, p2[1]*R2D, d, d_cur, ind_cur);
+	  }
 	*/
 	if( d_cur < 0 || d<d_cur) {
 	  ind_cur  = i_src;
@@ -1667,9 +1667,9 @@ if(face_cur==2 && i_dst == 16*192+168 && m==2 && (i_src==185 ||i_src==186 ||i_sr
       mpp_error("remap_land(full_search_nearest): no nearest point is found");
     else {
       /*
-      if(face_cur==2 && i_dst == 16*192+168) printf("at (169,17), i_dst=%d\n", ind_cur);
-      if(face_cur==2 && i_dst == 16*192+169) printf("at (170,17), i_dst=%d\n", ind_cur);
-      if(face_cur==2 && i_dst == 16*192+168) printf("at (169,17), grid=%g,%g\n", p1[0]*R2D,p1[1]*R2D);
+	if(face_cur==2 && i_dst == 16*192+168) printf("at (169,17), i_dst=%d\n", ind_cur);
+	if(face_cur==2 && i_dst == 16*192+169) printf("at (170,17), i_dst=%d\n", ind_cur);
+	if(face_cur==2 && i_dst == 16*192+168) printf("at (169,17), grid=%g,%g\n", p1[0]*R2D,p1[1]*R2D);
       */
       face_map[i_dst] = face_cur;
       idx_map[i_dst] = ind_cur;
