@@ -1782,17 +1782,65 @@ int main(int argc, char *argv[]) {
 	    //Does this data need to be compressed?
 	    //Placed in in a global character area?
 	    //Use only one face in reading data?
-	    
+
 	    printf("\n*RL species_names field : varnameO=%s nface_src=%d nz_src[l]=%d\n",varname, nface_src, nz_src[l]);
+
+	    //nc_get_var_float(ncid, lat_varid, &lats[0])))
+
+	    //Determine the size of the block to copy for  species_names[nspecies][textlen]
+      //For the moment, assume one face is to be used.
+	    int nd_nspecies = mpp_get_dimlen(fid_src[0], NSPECIES_NAME);
+	    int * species_idata = (int *) malloc(nd_nspecies * sizeof(int));
+
+	    int nd_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
+	    //int * textlen_idata = (int *) malloc(nd_textlen * sizeof(int));
+      int * tmp = (int *) malloc(nd_textlen * sizeof(int));
+	    //Get thr number of chars per name
+	    // int nchars_per_s = 64;
+	    int nchars_per_s = 0;
 	    
-	    //TODO: Determined the size of the block to copy
-	    int nchars_per = 64;
-	    //for (k = 0; k < nz_src[l]; k++) { nread *=  //kth dim
+	    //for (int itl = 0; itl<n_textlen; itl++){
+	    //  nchars_per_s += textlen_idata[itl];
+	    // }
+
+	    int tl_vid = mpp_get_varid(fid_src[0], TEXTLEN_NAME);
+	    mpp_get_var_value(fid_src[0], tl_vid, tmp);
+	    int tlengths = 0;
+	    for (int i = 0; i< nd_textlen; i++){
+	      tlengths += tmp [i];
+	    }
+
+      printf("*RM SPECIES NAMES CHARS nd_nspecis=%d nd_textlen=%d tlengths=%d", nd_nspecies, nd_textlen, tlengths);
+	    
+	    /*
+	    //if all faces need to be used:
+	    for (m = 1; m < nface_src; m++) {
+	      dimsize = mpp_get_dimlen(fid_src[m], TEXTLEN_NAME);
+	      if (dimsize != n_textlen)
+		  mpp_error( "remap_land: the dimension size of textlen is different between faces");
+	      tmp = (int *)malloc(n_textlen * sizeof(int));
+	      vid = mpp_get_varid(fid_src[m], TEXTLEN_NAME);
+	      mpp_get_var_value(fid_src[m], vid, tmp);
+	      for (i = 0; i < n_textlen; i++) {
+		  if (textlen_data[i] != tmp[i]) {
+		    mpp_error("remap_land: textlen value is different between faces");
+		  }
+	      }
+	      free(tmp);
+	    }
+	    */
+
+	    //Read as one large block? tdata_src[] may need to be 2D
+	    char * tcdata_src  = (char *)malloc(tlengths * nd_nspecies * sizeof(char));
 	    size_t cstart[1], cnread[1];
 	    cstart[0] = 0;
-	    cnread[0] = nchars_per;
-	    mpp_get_var_value_block(fid_src[m], vid_src, cstart, cnread, cdata_src );
-	    mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread,cdata_src);
+	    cnread[0] = nd_textlen * nd_nspecies;
+      printf("*RL species name pre readblock");
+	    mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, tcdata_src );
+	    printf("*RL species name post read block: %s", tcdata_src);
+	    mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread,tcdata_src);
+      printf("*RL species name post write block");
+	    //TODO: free data
 	  } else { /* other fields, read source data and do remapping */
 	    printf("\n*RL Other field varnameO=%s nface_src=%d nz_src[l]=%d\n",varname, nface_src, nz_src[l]);
 	    if(nz_src[l] <= 0 || nface_src <=1){
