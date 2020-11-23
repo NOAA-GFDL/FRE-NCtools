@@ -1776,25 +1776,39 @@ int main(int argc, char *argv[]) {
                               use_all_tile);
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
 
-          }
-          else { /* other fields, read source data and do remapping */
+          }else if (!strcmp(varname, SPECIES_NAMES)) {
+	    //TODO:
+	    //Is species names the only character data?
+	    //Does this data need to be compressed?
+	    //Placed in in a global character area?
+	    //Use only one face in reading data?
+	    
+	    printf("\n*RL species_names field : varnameO=%s nface_src=%d nz_src[l]=%d\n",varname, nface_src, nz_src[l]);
+	    
+	    //TODO: Determined the size of the block to copy
+	    int nchars_per = 64;
+	    //for (k = 0; k < nz_src[l]; k++) { nread *=  //kth dim
+	    size_t cstart[1], cnread[1];
+	    cstart[0] = 0;
+	    cnread[0] = nchars_per;
+	    mpp_get_var_value_block(fid_src[m], vid_src, cstart, cnread, cdata_src );
+	    mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread,cdata_src);
+	  } else { /* other fields, read source data and do remapping */
 	    printf("\n*RL Other field varnameO=%s nface_src=%d nz_src[l]=%d\n",varname, nface_src, nz_src[l]);
-            if(nz_src[l] <= 0 || nface_src <=1){
+	    if(nz_src[l] <= 0 || nface_src <=1){
 	      //TODO: This should not be allowed in this section?
 	      printf("***RLE (nz_src[l] <= 0 || nface_src <=1 ) for ther field varnameO=%s\n",varname);
-            }
-            start_pos[0] = 0;
-            for (m = 1; m < nface_src; m++) {
-              start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
-            }
-
-            for (k = 0; k < nz_src[l]; k++) {
-              printf("*RL Other field varname=%s at k=%d\n",varname, k);  
+	    }
+	    start_pos[0] = 0;
+	    for (m = 1; m < nface_src; m++) {
+	      start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
+	    }
+	    
+	    for (k = 0; k < nz_src[l]; k++) {
               pos = 0;
               int kid;
               /* read the source data */
               for (m = 0; m < nface_src; m++) {
-                printf("*RL Other field varname=%s at k=%d face m=%d\n",varname, k,m);  
 
                 kid = 0;
                 if (has_taxis[l]) {
@@ -1865,7 +1879,9 @@ int main(int argc, char *argv[]) {
                                         rdata_global);
               }
 	      if (var_type[l] == MPP_CHAR) {
-		//TODO: It is not clear how to handle MPP_CHAR in tis section.
+		//TODO: See comments above unders species_names
+		//It is not clear how to handle MPP_CHAR in tis section.
+		//Possible all character data to behandled like species_names.
                 for (m = 0; m < ntile_dst * nxc_dst; m++) {
                   int face, lll;
                   if (land_idx_map[m] < 0) {
