@@ -584,7 +584,7 @@ int main(int argc, char *argv[]) {
         mpp_error("remap_land: dimension cohort should exist when file_type is vegn");
       ncohort = mpp_get_dimlen(fid_src[0], COHORT_NAME);
       if (ncohort != 1){
-        mpp_error("remap_land: size of cohort should be 1, contact developer");
+        //mpp_error("remap_land: size of cohort should be 1, contact developer");
         //TODO: higher dimensional cohort data seems to be needed Nov 2020
       }
 
@@ -623,8 +623,8 @@ int main(int argc, char *argv[]) {
       int dimsize, m, vid, i;
       int *tmp;
       n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
-      if (n_sc_cohort != 1)
-        mpp_error("remap_land: size of sc_cohort should be 1, contact developer");
+      //if (n_sc_cohort != 1)
+      // mpp_error("remap_land: size of sc_cohort should be 1, contact developer");
 
       
         src_has_sc_cohort = 1;
@@ -662,8 +662,8 @@ int main(int argc, char *argv[]) {
       int *tmp;
      
       n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
-      if (n_lc_cohort != 1)
-        mpp_error("remap_land: size of lc_cohort should be 1, contact developer");
+      //if (n_lc_cohort != 1)
+      //mpp_error("remap_land: size of lc_cohort should be 1, contact developer");
 
      
         src_has_lc_cohort = 1;
@@ -692,7 +692,7 @@ int main(int argc, char *argv[]) {
   /*------------------------------------------------------------------------------
   get the nspecies data
   ------------------------------------------------------------------------*/
-  {
+  /*TODO: UNDO  {
     n_nspecies = 0;
     src_has_nspecies = 0;
     if (filetype == VEGNTYPE) {
@@ -724,12 +724,13 @@ int main(int argc, char *argv[]) {
       }
     }
   }
+  */
   
   //TODO: verify textlen code below
   /*-----------------------------------------------------------------------------
   get the textlen data
   -------------------------------------------------------------------------------*/
-{
+  /*TODO: UNDO{
     n_textlen = 0;
     src_has_textlen = 0;
     if (filetype == VEGNTYPE) {
@@ -1726,16 +1727,16 @@ int main(int argc, char *argv[]) {
             //TODO: inst this data multi dim
             printf("**RME : writing sc_cohort\n");
             //TODO: Should this be sc_cohort_index_data?
-	          mpp_put_var_value(fid_dst, vid_dst, sc_cohort_data);
+	    // mpp_put_var_value(fid_dst, vid_dst, sc_cohort_data);
 	        }
           else if (!strcmp(varname, LC_COHORT_NAME)){
             printf("**RME : writing lc_cohort\n");
             //TODO: Should this be sc_cohort_index_data?
-	          mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
+	    //mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
 	        }
-          else if (!strcmp(varname, COHORT_NAME))
+          else if (!strcmp(varname, COHORT_NAME)){
             mpp_put_var_value(fid_dst, vid_dst, cohort_data);
-          else if (!strcmp(varname, TILE_INDEX_NAME) ||
+	  }else if (!strcmp(varname, TILE_INDEX_NAME) ||
                    !strcmp(varname, COHORT_INDEX_NAME)){
             compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global,
                               land_count_dst, idx_dst, idata_global,use_all_tile);
@@ -1794,23 +1795,22 @@ int main(int argc, char *argv[]) {
 
 	    int nd_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
 	    //int * textlen_idata = (int *) malloc(nd_textlen * sizeof(int));
-      int * tmp = (int *) malloc(nd_textlen * sizeof(int));
+	    int * tmp = (int *) malloc(nd_textlen * sizeof(int));
 	    //Get thr number of chars per name
 	    // int nchars_per_s = 64;
-	    int nchars_per_s = 0;
 	    
 	    //for (int itl = 0; itl<n_textlen; itl++){
 	    //  nchars_per_s += textlen_idata[itl];
 	    // }
 
-	    int tl_vid = mpp_get_varid(fid_src[0], TEXTLEN_NAME);
-	    mpp_get_var_value(fid_src[0], tl_vid, tmp);
+	    //int tl_vid = mpp_get_varid(fid_src[0], TEXTLEN_NAME);
+	    // mpp_get_var_value(fid_src[0], tl_vid, tmp);
 	    int tlengths = 0;
-	    for (int i = 0; i< nd_textlen; i++){
-	      tlengths += tmp [i];
-	    }
+	    //for (int i = 0; i< nd_textlen; i++){
+	    // tlengths += tmp [i];
+	    // }
 
-      printf("*RM SPECIES NAMES CHARS nd_nspecis=%d nd_textlen=%d tlengths=%d", nd_nspecies, nd_textlen, tlengths);
+	    printf("*RM species_names nd_nspecis=%d nd_textlen=%d \n", nd_nspecies, nd_textlen);
 	    
 	    /*
 	    //if all faces need to be used:
@@ -1831,15 +1831,18 @@ int main(int argc, char *argv[]) {
 	    */
 
 	    //Read as one large block? tdata_src[] may need to be 2D
-	    char * tcdata_src  = (char *)malloc(tlengths * nd_nspecies * sizeof(char));
-	    size_t cstart[1], cnread[1];
-	    cstart[0] = 0;
-	    cnread[0] = nd_textlen * nd_nspecies;
-      printf("*RL species name pre readblock");
+	    //char * tcdata_src  = (char *)malloc(tlengths * nd_nspecies * sizeof(char) );
+	    char * tcdata_src  = (char *)malloc(nd_textlen * nd_nspecies * sizeof(char));
+	    size_t cstart[2], cnread[2];
+	    cstart[0] = 0;   //1D: cnread[0] = nd_textlen * nd_nspecies;
+	    cnread[0] = nd_nspecies;
+	    cstart[1] = 0;
+	    cnread[1] = nd_textlen;
+	    printf("*RL species name pre readblock\n");
 	    mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, tcdata_src );
-	    printf("*RL species name post read block: %s", tcdata_src);
+	    printf("*RL species name post read block: %s\n", tcdata_src);
 	    mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread,tcdata_src);
-      printf("*RL species name post write block");
+	    printf("*RL species name post write block\n");
 	    //TODO: free data
 	  } else { /* other fields, read source data and do remapping */
 	    printf("\n*RL Other field varnameO=%s nface_src=%d nz_src[l]=%d\n",varname, nface_src, nz_src[l]);
@@ -1867,14 +1870,15 @@ int main(int argc, char *argv[]) {
                 start[ndim_src[l] - 1] = 0;
                 nread[ndim_src[l] - 1] = nidx_src[m];
                 vid_src = mpp_get_varid(fid_src[m], varname);
-                printf("*RL C VBB  for varname=%s vid%d vartype=%d k=%d nz_src[k]=%d start=%lu, nread=%lu\n",
-                    varname, vid_src, var_type[l], k, nz_src[k], start[0], nread[ndim_src[l] - 1]);
+                printf("*RL C VBB  for varname=%s vid%d vartype=%d k=%d nz_src[l]=%d start=%lu, nread=%lu\n",
+                    varname, vid_src, var_type[l], k, nz_src[l], start[0], nread[ndim_src[l] - 1]);
                 if (var_type[l] == MPP_INT) {
                   mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
                 } else if (var_type[l] == MPP_DOUBLE) {
                   mpp_get_var_value_block(fid_src[m], vid_src, start, nread, data_src + pos);
-                } if (var_type[l] == MPP_CHAR) {
-                  mpp_get_var_value_block(fid_src[m], vid_src, start, nread, cdata_src + pos);
+                } else if (var_type[l] == MPP_CHAR) {
+		  printf("TODO: UNDO\n");
+		  // mpp_get_var_value_block(fid_src[m], vid_src, start, nread, cdata_src + pos);
 		} else{
 		  mpp_error("remap_land : reading block for vartype other than INT or DOUBLE or CHAR");
 		}
@@ -1926,11 +1930,11 @@ int main(int argc, char *argv[]) {
                 mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite,
                                         rdata_global);
               }
-	      if (var_type[l] == MPP_CHAR) {
+	      else if (var_type[l] == MPP_CHAR) {
 		//TODO: See comments above unders species_names
 		//It is not clear how to handle MPP_CHAR in tis section.
 		//Possible all character data to behandled like species_names.
-                for (m = 0; m < ntile_dst * nxc_dst; m++) {
+		/*  for (m = 0; m < ntile_dst * nxc_dst; m++) {
                   int face, lll;
                   if (land_idx_map[m] < 0) {
                     idata_dst[m] = MPP_FILL_INT;
@@ -1939,11 +1943,13 @@ int main(int argc, char *argv[]) {
                   face = land_face_map[m];
                   lll = start_pos[face] + land_idx_map[m];
                   cdata_dst[m] = cdata_src[lll];
-                }
+		  }*/
 		//TODO: compress_char_data does not yet exist.
                 //compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global,
 		//land_count_dst, idata_dst, idata_global,use_all_tile);
-                mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite,cdata_global);
+                //mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite,cdata_global);
+
+		printf("TODO: UNDO\n");
               }
 
               else {
