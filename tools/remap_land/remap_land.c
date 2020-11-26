@@ -150,7 +150,7 @@ const int VEGNTYPE = 5;
 const int CANATYPE = 6;
 const int SNOWTYPE = 7;
 
-extern int soil_tag_src_error = 0;
+int soil_tag_src_error = 0; //TODO:
 
 int main(int argc, char *argv[]) {
   char *src_mosaic = NULL;
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
   int *textlen_data = NULL;
   int n_textlen = 0;
   int *spc_idx_src = NULL; //TODO: put such indecies in structure.
-  int *textl_idx_src = NULL;
+  //int *textl_idx_src = NULL;
 
   int *idx_soil_src = NULL, *idx_glac_src = NULL, *idx_lake_src = NULL;
   int *soil_count_src = NULL, *glac_count_src = NULL, *lake_count_src = NULL;
@@ -499,7 +499,7 @@ int main(int argc, char *argv[]) {
   kz_src = (int *)malloc(nvar_src * sizeof(int));
   var_type = (int *)malloc(nvar_src * sizeof(int));
   spc_idx_src = (int *)malloc(nvar_src * sizeof(int)); 
-  textl_idx_src = (int *)malloc(nvar_src * sizeof(int));
+  //textl_idx_src = (int *)malloc(nvar_src * sizeof(int));
 
 
   for (l = 0; l < nvar_src; l++) {
@@ -515,12 +515,15 @@ int main(int argc, char *argv[]) {
     var_type[l] = mpp_get_var_type(fid_src[0], vid);
     ndim_src[l] = mpp_get_var_ndim(fid_src[0], vid);
 
+    nz_src[l] = -1;
+    kz_src[l] = -1;
+    has_taxis[l] = 0;
+
     if (var_type[l] == MPP_INT || var_type[l] == MPP_DOUBLE) {
       if (ndim_src[l] > 3){
         mpp_error( "remap_land: number of dimensions for the field in src_restart is "
             "greater than 3");
       }
-      nz_src[l] = -1;
       for (m = 0; m < ndim_src[l]; m++) {
         mpp_get_var_dimname(fid_src[0], vid, m, vdname);
         if (!strcmp(vdname, timename)){
@@ -554,16 +557,16 @@ int main(int argc, char *argv[]) {
         }else  if (!strcmp(vdname, NSPECIES_NAME)){
           spc_idx_src[l] = m; 
         }
-        else if (!strcmp(vdname, TEXTLEN_NAME)){
-          textl_idx_src [l] = m;
-        }
-        printf("RL CHAR vname=%s dname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d kz =%d nz=%d\n",
-	       varname, vdname, l, vid, var_type[l], ndim_src[l], has_taxis[l],kz_src[l], nz_src[l]);
-        if(has_taxis[l] == 1){
-	  //TODO:
-	  //mpp_error("remap_land: char varname has time axis");
-          printf("**RL : char varname=%s has time axis\n", varname);
-        }
+        //else if (!strcmp(vdname, TEXTLEN_NAME)){
+        //  textl_idx_src [l] = m;
+	//  }
+      }
+      printf("RL CHAR vname=%s dname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d kz =%d nz=%d\n",
+	     varname, vdname, l, vid, var_type[l], ndim_src[l], has_taxis[l],kz_src[l], nz_src[l]);
+      if(has_taxis[l] == 1){
+	//TODO:
+	//mpp_error("remap_land: char varname has time axis");
+	printf("**RL : char varname=%s has time axis\n", varname);
       }
     }else {
       mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE or MPP_CHAR");
@@ -1055,8 +1058,8 @@ int main(int argc, char *argv[]) {
                   if (soil_tag_src_error == 0) {
                     //TODO:
                     printf("**RLE remap_land: soil_tag_src is not defined for src soil check\n");
+		    soil_tag_src_error++;
                   }
-                  soil_tag_src_error++;
                 }
               }
             }
@@ -1748,15 +1751,12 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, textlen_data);
 	  else if (!strcmp(varname, SC_COHORT_NAME)){
             //TODO: inst this data multi dim
-            printf("**RME : writing sc_cohort\n");
-            //TODO: Should this be sc_cohort_index_data?
+            //TODO: Should this be higher dim ?
 	    // mpp_put_var_value(fid_dst, vid_dst, sc_cohort_data);
-	        }
+	  }
           else if (!strcmp(varname, LC_COHORT_NAME)){
-            printf("**RME : writing lc_cohort\n");
-            //TODO: Should this be sc_cohort_index_data?
-	    //mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
-	        }
+	    // mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
+	  }
           else if (!strcmp(varname, COHORT_NAME)){
             mpp_put_var_value(fid_dst, vid_dst, cohort_data);
 	  }else if (!strcmp(varname, TILE_INDEX_NAME) ||
@@ -1766,7 +1766,7 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
           }else if (!strcmp(varname, SC_COHORT_INDEX_NAME) ||
                    !strcmp(varname, LC_COHORT_INDEX_NAME)) {
-            printf("**RME : writing sc or lc _cohort INDEX \n");
+            mpp_error("land_remap : writing sc or lc _cohort INDEX ");
             compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global,
                               land_count_dst, idx_dst, idata_global,use_all_tile);
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
