@@ -173,11 +173,11 @@ int main(int argc, char *argv[]) {
   int *nidx_src = NULL, *nidx_land_src = NULL;
 
   int *sc_cohort_data = NULL, *lc_cohort_data = NULL;
-  int n_sc_cohort, n_lc_cohort;
+  int n_sc_cohort, n_lc_cohort = 0;
 
-  int *nspecies_data = NULL;
+  double *nspecies_data = NULL;
   int n_nspecies = 0;
-  int *textlen_data = NULL;
+  double *textlen_data = NULL;
   int n_textlen = 0;
   int *spc_idx_src = NULL; //TODO: put such indecies in structure.
   //int *textl_idx_src = NULL;
@@ -365,10 +365,13 @@ int main(int argc, char *argv[]) {
     get source and destination grid size
     --------------------------------------------------------------------------*/
   {
+    printf("**RL starting check for source and destination grid size");
+	
     int *nx, *ny;
     int n;
     nface_src = read_mosaic_ntiles(src_mosaic);
     nface_dst = read_mosaic_ntiles(dst_mosaic);
+    printf(" nface_src=%d nface_dst=%d\n",nface_src, nface_dst);
     nx = (int *)malloc(nface_src * sizeof(int));
     ny = (int *)malloc(nface_src * sizeof(int));
     read_mosaic_grid_sizes(src_mosaic, nx, ny);
@@ -405,13 +408,15 @@ int main(int argc, char *argv[]) {
   {
     int n, pos;
 
+    printf("**RL starting check for tile_index size\n");
+
     fid_src = (int *)malloc(nface_src * sizeof(int));
     nidx_src = (int *)malloc(nface_src * sizeof(int));
     nidx_land_src = (int *)malloc(nface_src * sizeof(int));
     nidx_tot_src = 0;
     for (n = 0; n < nface_src; n++) {
       int nlon, nlat;
-      char file[512];
+      char file[1024];
       int fid_land;
 
       get_actual_file_name(nface_src, n, src_restart_file, file);
@@ -445,8 +450,6 @@ int main(int argc, char *argv[]) {
     y_src = (double *)malloc(nface_src * nx_src * ny_src * sizeof(double));
 
     for (n = 0; n < nface_src; n++) {
-      int i;
-
       read_mosaic_grid_data(src_mosaic, "x", nx_src, ny_src,
                             x_src + n * nx_src * ny_src, n, 1, 1);
       read_mosaic_grid_data(src_mosaic, "y", nx_src, ny_src,
@@ -462,6 +465,7 @@ int main(int argc, char *argv[]) {
   /*-----------------------------------------------------------------------------
     Get the time information, time axis only exists for static vegetation.
     ---------------------------------------------------------------------------*/
+  printf("**RL starting check for time information\n");
   time_exist = mpp_get_record_name(fid_src[0], timename);
   ntime = 1;
   if (time_exist) {
@@ -501,28 +505,27 @@ int main(int argc, char *argv[]) {
   spc_idx_src = (int *)malloc(nvar_src * sizeof(int)); 
   //textl_idx_src = (int *)malloc(nvar_src * sizeof(int));
 
+  printf("**RL starting getting dim of each var, nvar_scr=%d\n", nvar_src);
+
 
   for (l = 0; l < nvar_src; l++) {
-    char varname[256];
-    char vdname[256]; //var dimname
+    char varname[512];
+    char vdname[512]; //var dimname
     int vid, m, klev;
 
-    has_taxis[l] = 0;
-    nz_src[l] = 1;
-    kz_src[l] = 0;
     mpp_get_varname(fid_src[0], l, varname);
     vid = mpp_get_varid(fid_src[0], varname);
+    
     var_type[l] = mpp_get_var_type(fid_src[0], vid);
     ndim_src[l] = mpp_get_var_ndim(fid_src[0], vid);
 
-    nz_src[l] = -1;
-    kz_src[l] = -1;
     has_taxis[l] = 0;
+    nz_src[l] = -1; //  TODO: nz_src[l] = 1;
+    kz_src[l] = -1; //  TODO: kz_src[l] = 0;
 
     if (var_type[l] == MPP_INT || var_type[l] == MPP_DOUBLE) {
       if (ndim_src[l] > 3){
-        mpp_error( "remap_land: number of dimensions for the field in src_restart is "
-            "greater than 3");
+        mpp_error( "remap_land: more than 3 dimensions for the field in src_restart");
       }
       for (m = 0; m < ndim_src[l]; m++) {
         mpp_get_var_dimname(fid_src[0], vid, m, vdname);
@@ -533,16 +536,16 @@ int main(int argc, char *argv[]) {
             kz_src[l] = m; //The DIM that has zlevel info
             nz_src[l] = mpp_get_dimlen(fid_src[0], vdname);
         }
-        printf("RL vname=%s \t dname=%s \t\t l=%d vid=%d vtype=%d ndim=%d taxis=%d kz =%d nz=%d\n",
+        printf("vname=%s  dname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d kz =%d nz=%d\n",
              varname, vdname, l, vid, var_type[l], ndim_src[l], has_taxis[l],kz_src[l], nz_src[l]);
       }
       if( nz_src[l] == -1){
-        printf("**RL Vertical dimimension name should be zfull. Varname=%s\n", varname);
+	// TODO: What is the conseuence of not having a verical dimension
         //mpp_error("remap_land: The vertical dimension name should be zfull");
       }
       
       if (ndim_src[l] == 3 && !has_taxis[l]) {
-        //TODO:
+        //TODO: What is the consequence of not having a time dimension.
         //mpp_error("remap_land: field must have time dimension when ndim = 3");
         printf("**RL ndim is %d and without time axis \n", ndim_src[l]);
       }
@@ -550,29 +553,31 @@ int main(int argc, char *argv[]) {
     } else if (var_type[l] == MPP_CHAR) {
       for (m = 0; m < ndim_src[l]; m++) {
         mpp_get_var_dimname(fid_src[0], vid, m, vdname);
-        if (!strcmp(vdname, timename)) has_taxis[l] = 1;
-        if (!strcmp(vdname, LEVEL_NAME)) {
+        if (!strcmp(vdname, timename)){
+	  has_taxis[l] = 1;
+	  //TODO:
+	  mpp_error("remap_land: char varname has time axis");
+	}
+        else if (!strcmp(vdname, LEVEL_NAME)) {
           kz_src[l] = m;
           nz_src[l] = mpp_get_dimlen(fid_src[0], vdname);
-        }else  if (!strcmp(vdname, NSPECIES_NAME)){
+        }else if (!strcmp(vdname, NSPECIES_NAME)){
           spc_idx_src[l] = m; 
         }
+	//TODO
         //else if (!strcmp(vdname, TEXTLEN_NAME)){
         //  textl_idx_src [l] = m;
 	//  }
       }
       printf("RL CHAR vname=%s dname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d kz =%d nz=%d\n",
 	     varname, vdname, l, vid, var_type[l], ndim_src[l], has_taxis[l],kz_src[l], nz_src[l]);
-      if(has_taxis[l] == 1){
-	//TODO:
-	//mpp_error("remap_land: char varname has time axis");
-	printf("**RL : char varname=%s has time axis\n", varname);
-      }
     }else {
       mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE or MPP_CHAR");
     }
   }
 
+  mpp_sync();
+  sleep(1);
   /*------------------------------------------------------------------------------
     get the cohort data, currently it only contains in vegn data
     -----------------------------------------------------------------------------*/
@@ -598,7 +603,6 @@ int main(int argc, char *argv[]) {
         cohort_data = (int *)malloc(ncohort * sizeof(int));
         vid = mpp_get_varid(fid_src[0], COHORT_NAME);
         mpp_get_var_value(fid_src[0], vid, cohort_data); 
-        //printf("**RL  COHORT_ exists for fid_src[0]=%d vi=%d \n", fid_src[0],vid);
         for (m = 1; m < nface_src; m++) {
           dimsize = mpp_get_dimlen(fid_src[m], COHORT_NAME);
           if (dimsize != ncohort)
@@ -632,10 +636,10 @@ int main(int argc, char *argv[]) {
 
       if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
         src_has_sc_cohort = 1;
+	n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
         sc_cohort_data = (int *)malloc(n_sc_cohort * sizeof(int));
         vid = mpp_get_varid(fid_src[0], SC_COHORT_NAME);
         mpp_get_var_value(fid_src[0], vid, sc_cohort_data);
-	printf("**RL  SC_COHORT_ exists for fid_src[0]=%d vi=%d \n", fid_src[0], vid );
         for (m = 1; m < nface_src; m++) {
           dimsize = mpp_get_dimlen(fid_src[m], SC_COHORT_NAME);
           if (dimsize != n_sc_cohort)
@@ -658,6 +662,7 @@ int main(int argc, char *argv[]) {
     get the lc_cohort data, currently it only contains in vegn data
     -----------------------------------------------------------------------------*/
   //TODO : Verify lc_cohort_data dimension does not have a size restriction.
+
   {
     n_lc_cohort = 0;
     src_has_lc_cohort = 0;
@@ -674,7 +679,6 @@ int main(int argc, char *argv[]) {
         lc_cohort_data = (int *)malloc(n_lc_cohort * sizeof(int));
         vid = mpp_get_varid(fid_src[0], LC_COHORT_NAME);
         mpp_get_var_value(fid_src[0], vid, lc_cohort_data);
-      	printf("**RL  LC_COHORT_ exists for fid_src[0]=%d vid=%d \n", fid_src[0], vid );
         for (m = 1; m < nface_src; m++) {
           dimsize = mpp_get_dimlen(fid_src[m], LC_COHORT_NAME);
           if (dimsize != n_lc_cohort)
@@ -693,17 +697,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
-
   /*------------------------------------------------------------------------------
   get the nspecies data
   ------------------------------------------------------------------------*/
-  
   {
     n_nspecies = 0;
     src_has_nspecies = 0;
     if (filetype == VEGNTYPE) {
       int dimsize, vid;
-      int *tmp;
 
       //TODO: Verify that dim length info is in all faces.
       //TODO: Raise error if "nspecies"  var does not exist for ?
@@ -713,20 +714,20 @@ int main(int argc, char *argv[]) {
       if (mpp_var_exist(fid_src[0], NSPECIES_NAME)) {
 	src_has_nspecies = 1;
 	n_nspecies = mpp_get_dimlen(fid_src[0], NSPECIES_NAME);
-	//printf("**RL nspecies var exists for fid_src[0]=%d dimlen=%d\n", fid_src[0], n_nspecies);
-        nspecies_data = (int *)malloc(n_nspecies * sizeof(int));  // TODO: verify its int
-	sleep(5);
+        nspecies_data = (double *)malloc(n_nspecies *  sizeof(double));
         vid = mpp_get_varid(fid_src[0], NSPECIES_NAME);
         mpp_get_var_value(fid_src[0], vid, nspecies_data);
         for (int m = 1; m < nface_src; m++) {
-          dimsize = mpp_get_dimlen(fid_src[m], NSPECIES_NAME);
+	  dimsize = mpp_get_dimlen(fid_src[m], NSPECIES_NAME);
           if (dimsize != n_nspecies)
             mpp_error( "remap_land: the dimension size of nspecies is different between faces");
-          tmp = (int *)malloc(n_nspecies * sizeof(int));
+          double * tmp = (double *)malloc(n_nspecies *  sizeof(double));
           vid = mpp_get_varid(fid_src[m], NSPECIES_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
           for (int i = 0; i < n_nspecies; i++) {
             if (nspecies_data[i] != tmp[i]) {
+	      free(tmp);
+	      tmp = NULL;
               mpp_error("remap_land: nspecies value is different between faces");
             }
           }
@@ -736,59 +737,47 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  
-   /*
-   char tempfile[512];
-   get_actual_file_name(nface_src, m, src_restart_file, tempfile);
-   fid_src[n] = mpp_open(file, MPP_READ);
-   */
 
-
-  //TODO: verify textlen code below
   /*-----------------------------------------------------------------------------
   get the textlen data
   -------------------------------------------------------------------------------*/
-  
    {
-    n_textlen = 0;
-    src_has_textlen = 0;
-    if (filetype == VEGNTYPE) {
+     n_textlen = 0;
+     src_has_textlen = 0;
+     if (filetype == VEGNTYPE) {
       int dimsize, vid;
-      int *tmp;
 
-      //TODO: Raise error if it does not exist
+      //TODO:
       //if (!mpp_dim_exist(fid_src[0], TEXTLEN_NAME)) {
       //mpp_error("remap_land: dimension textlen should exist when file_type is vegn");
       //}
-      
-      printf("**RL textlen dim exists for fid_src[0]=%d \n", fid_src[0]);
 
       if (mpp_var_exist(fid_src[0], TEXTLEN_NAME)) {
 	src_has_textlen = 1;
 	n_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
-	//printf("**RL textlen var exists for fid_src[0]=%d dimlen=%d\n", fid_src[0], n_textlen);
-        textlen_data = (int *)malloc(n_textlen * sizeof(int));  // TODO: verify it should be int
+        textlen_data = (double *)malloc(n_textlen *  sizeof(double)); 
         vid = mpp_get_varid(fid_src[0], TEXTLEN_NAME);
         mpp_get_var_value(fid_src[0], vid, textlen_data);
         for (int m = 1; m < nface_src; m++) {
           dimsize = mpp_get_dimlen(fid_src[m], TEXTLEN_NAME);
           if (dimsize != n_textlen)
             mpp_error( "remap_land: the dimension size of textlen is different between faces");
-          tmp = (int *)malloc(n_textlen * sizeof(int));
+          double * tmp = (double *)malloc(n_textlen * sizeof(double));
           vid = mpp_get_varid(fid_src[m], TEXTLEN_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
           for (int i = 0; i < n_textlen; i++) {
             if (textlen_data[i] != tmp[i]) {
+	      free(tmp);
+	      tmp = NULL;
               mpp_error("remap_land: textlen value is different between faces");
             }
           }
           free(tmp);
 	  tmp = NULL;
-        }
+        } 
       }
     }
   }
-
   
   /*-----------------------------------------------------------------------------
     Check if the cold_restart has lake or glac. soil is required to be existed
@@ -796,7 +785,7 @@ int main(int argc, char *argv[]) {
   {
     int max_nidx, face_dst, vid, i;
     int *fid = NULL;
-    char file[512];
+    char file[1024];
     int *nidx = NULL;
     int *tmp = NULL;
 
@@ -883,6 +872,8 @@ int main(int argc, char *argv[]) {
   /*-----------------------------------------------------------------------------
     get the tile data
     ----------------------------------------------------------------------------*/
+  printf("remap_land : getting tile data\n");
+  
   if (!mpp_dim_exist(fid_src[0], TILE_NAME))
     mpp_error("remap_land: dimension tile should exist");
 
@@ -957,7 +948,7 @@ int main(int argc, char *argv[]) {
       double *frac_land_src = NULL;
       int *idx_src = NULL;
       int *idx_land_src = NULL;
-      char file[512];
+      char file[1024];
 
       int n, max_nidx, pos1, pos2;
       max_nidx = 0;
@@ -1029,7 +1020,6 @@ int main(int argc, char *argv[]) {
           idx_src = (int *)malloc(max_nidx * sizeof(int));
           vid = mpp_get_varid(fid_src[n], TILE_INDEX_NAME);
           mpp_get_var_value(fid_src[n], vid, idx_src);
-	        printf("LR tile_index_name vid =%d \n", vid);
           if (filetype == CANATYPE || filetype == SNOWTYPE) {
             int i;
             for (i = 0; i < nidx_land_src[n]; i++)
@@ -1071,7 +1061,6 @@ int main(int argc, char *argv[]) {
       if (filetype != LANDTYPE) free(idx_src);
     }
   }
-
 
   /* define history attribute */
   {
@@ -1208,7 +1197,7 @@ int main(int argc, char *argv[]) {
       char *cdata_global = NULL;
 
       size_t start[4], nread[4], nwrite[4];
-      char land_cold[512], file_dst[512], file_cold[512];
+      char land_cold[1024], file_dst[1024], file_cold[1024];
 
       get_actual_file_name(nface_dst, face_dst, dst_restart_file, file_dst);
       get_actual_file_name(nface_dst, face_dst, dst_cold_restart, file_cold);
@@ -1332,7 +1321,7 @@ int main(int argc, char *argv[]) {
       {
         int remap_file_exist;
         int write_remap_file;
-        char file[512];
+        char file[1024];
         remap_file_exist = 0;
         write_remap_file = 0;
         if (remap_file) {
@@ -1444,8 +1433,6 @@ int main(int argc, char *argv[]) {
                             "standard_name", "lake remap index");
           }
           mpp_def_global_att(fid, "history", history);
-
-          //printf("LRE A fid = %d\n", fid);
 
           mpp_end_def(fid);
 
@@ -1563,7 +1550,6 @@ int main(int argc, char *argv[]) {
       }
       nidx_dst_global = nidx_dst;
       mpp_sum_int(1, &nidx_dst_global);
-      printf("\nnidx_dst=%d nidx_dst_global=%d\n", nidx_dst, nidx_dst_global);
 
       /* compute tile_index */
       for (i = 0; i < ntile_dst * nxc_dst; i++) idx_dst[i] = MPP_FILL_INT;
@@ -1593,20 +1579,46 @@ int main(int argc, char *argv[]) {
         if (zaxis_exist) dim_z = mpp_def_dim(fid_dst, LEVEL_NAME, nz);
         if (filetype == VEGNTYPE) {
           dim_cohort = mpp_def_dim(fid_dst, COHORT_NAME, ncohort);
-          dim_cohort_index = mpp_def_dim(fid_dst, COHORT_INDEX_NAME, max(nidx_dst_global, 1));
+	  dim_cohort_index = mpp_def_dim(fid_dst, COHORT_INDEX_NAME, max(nidx_dst_global, 1));
+	}
 
-          //These DIMS are new Nov 2020
-          dim_nspecies = mpp_def_dim(fid_dst, NSPECIES_NAME, n_nspecies); 
-          dim_textlen = mpp_def_dim(fid_dst, TEXTLEN_NAME, n_textlen); 
-          dim_sc_cohort = mpp_def_dim(fid_dst, SC_COHORT_NAME, n_sc_cohort);
-          dim_sc_cohort_index = mpp_def_dim(fid_dst, SC_COHORT_INDEX_NAME,max(nidx_dst_global, 1));
-          dim_lc_cohort = mpp_def_dim(fid_dst, LC_COHORT_NAME, n_lc_cohort);
-          dim_lc_cohort_index = mpp_def_dim(fid_dst, LC_COHORT_INDEX_NAME,  max(nidx_dst_global, 1));
-        }
+	//TODO Noew 2020
+	if( (filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
+	  if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
+	    n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
+	    dim_sc_cohort = mpp_def_dim(fid_dst, SC_COHORT_NAME, n_sc_cohort);
+	  }
+	  if (mpp_var_exist(fid_src[0], LC_COHORT_NAME)) {
+	    //    src_has_lc_cohort = 1;
+	    n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
+	    dim_lc_cohort = mpp_def_dim(fid_dst, LC_COHORT_NAME, n_lc_cohort);
+	  }
+  
+	  if (mpp_var_exist(fid_src[0], NSPECIES_NAME)) {
+	    // src_has_nspecies = 1;
+	    n_nspecies = mpp_get_dimlen(fid_src[0], NSPECIES_NAME);
+	    dim_nspecies = mpp_def_dim(fid_dst, NSPECIES_NAME, n_nspecies);
+	  }
+
+	  if (mpp_var_exist(fid_src[0], TEXTLEN_NAME)) {
+	    n_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
+	    dim_textlen = mpp_def_dim(fid_dst, TEXTLEN_NAME, n_textlen);
+	  }
+	  printf("\nRL: n_sc_cohort n_lc_cohort n_nspecies, n_textlen: %d %d %d %d\n",
+		 n_sc_cohort, n_lc_cohort, n_nspecies, n_textlen);
+
+	  //TODO:
+	  // dim_sc_cohort_index = mpp_def_dim(fid_dst, SC_COHORT_INDEX_NAME,max(nidx_dst_global, 1));
+	  // dim_lc_cohort_index = mpp_def_dim(fid_dst, LC_COHORT_INDEX_NAME,  max(nidx_dst_global, 1));
+	}
+
+
+
+	
         if (time_exist) dim_time = mpp_def_dim(fid_dst, timename, NC_UNLIMITED);
 
         for (l = 0; l < nvar_src; l++) {
-          char varname[256], dimname[256];
+          char varname[512], dimname[512];
           int vid1, vid2, ndim, m, dims[4];
 
           mpp_get_varname(fid_src[0], l, varname);
@@ -1617,7 +1629,6 @@ int main(int argc, char *argv[]) {
 
           for (m = 0; m < ndim; m++) {
             mpp_get_var_dimname(fid_src[0], vid1, m, dimname);
-            //printf("LRE dimm = %d vid1=%d dimname=%s\n", m, vid1, dimname);
 
             if (!strcmp(dimname, timename))
               dims[m] = dim_time;
@@ -1640,15 +1651,15 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(dimname, TEXTLEN_NAME))
               dims[m] = dim_textlen;
             else if (!strcmp(dimname, SC_COHORT_NAME))
-              dims[m] = dim_lc_cohort;
-            else if (!strcmp(dimname, LC_COHORT_NAME))
               dims[m] = dim_sc_cohort;
+            else if (!strcmp(dimname, LC_COHORT_NAME))
+              dims[m] = dim_lc_cohort;
             else if (!strcmp(dimname, SC_COHORT_INDEX_NAME)){
-              dims[m] = dim_sc_cohort_index;
+              //dims[m] = dim_sc_cohort_index;
               mpp_error("REMAP_LAND: using SC_COHORT_INDEX_NAME ");
             }
             else if (!strcmp(dimname, LC_COHORT_INDEX_NAME)){
-              dims[m] = dim_lc_cohort_index;
+              //dims[m] = dim_lc_cohort_index;
               mpp_error("REMAP_LAND: using LC_COHORT_INDEX_NAME ");
             }
             else {
@@ -1656,6 +1667,7 @@ int main(int argc, char *argv[]) {
               mpp_error("REMAP_LAND: invalid dimension name ");
             }
           }
+
           vid2 = mpp_def_var(fid_dst, varname, var_type[l], ndim, dims, 0);
           mpp_copy_var_att(fid_src[0], vid1, fid_dst, vid2);
         }
@@ -1696,8 +1708,6 @@ int main(int argc, char *argv[]) {
 
           if (!has_taxis[l] && t > 0) continue;
           mpp_get_varname(fid_src[0], l, varname);
-	  
-	  printf("\n*LR reading/writing for varname  = %s at t=%d\n", varname, t);
 	  
           if (nidx_dst_global == 0) {
             if (strcmp(varname, LON_NAME) && strcmp(varname, LAT_NAME) &&
@@ -1755,6 +1765,7 @@ int main(int argc, char *argv[]) {
 	    // mpp_put_var_value(fid_dst, vid_dst, sc_cohort_data);
 	  }
           else if (!strcmp(varname, LC_COHORT_NAME)){
+	    //TODO:
 	    // mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
 	  }
           else if (!strcmp(varname, COHORT_NAME)){
@@ -2075,7 +2086,7 @@ int main(int argc, char *argv[]) {
   mpp_end();
 
   return 0;
-};  // main
+}  // main
 
 void get_actual_file_name(int nface, int face, const char *file_orig,
                           char *file) {
