@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-ustar])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
