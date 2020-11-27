@@ -2,6 +2,8 @@
 
 @test "Wrapper complete hydrology test" {
 
+  # Not all systems have /bin/csh, skip if it doesn't exist
+  test ! -e /bin/csh && skip 'System does not have /bin/csh'
   if [ ! -d "Test25" ]
   then
                 mkdir Test25
@@ -24,4 +26,3 @@
   rm -rf Test25
 
 }
-
