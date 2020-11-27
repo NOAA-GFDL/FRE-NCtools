@@ -126,9 +126,8 @@ AC_CONFIG_FILES([Makefile
                  t/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
-                 tools/simple_hydrog/lakes/Makefile 
+                 tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
- 
-
+                 tools/simple_hydrog/libfmslite/Makefile
 ])
 AC_OUTPUT

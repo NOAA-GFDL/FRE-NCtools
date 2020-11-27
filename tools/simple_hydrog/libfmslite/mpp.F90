@@ -23,7 +23,7 @@
 !!                                                                   !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 module mpp_mod
-  use ISO_FORTRAN_ENV
+  use ISO_FORTRAN_ENV, only: OUTPUT_UNIT, ERROR_UNIT
 
   implicit none
   private

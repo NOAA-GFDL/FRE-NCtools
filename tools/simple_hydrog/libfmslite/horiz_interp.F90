@@ -547,7 +547,7 @@ contains
   ! interpolates from a uniformly spaced grid to any output grid.
   ! interp_method can be the value "onservative","bilinear" or "spherical".
   ! horiz_interp_new don't need to be called before calling this routine.
-  subroutine horiz_interp_solo_1d_src ( data_in, lon_in, lat_in, lon_out, lat_out, data_out,&
+  subroutine horiz_interp_solo_1d_src(data_in, lon_in, lat_in, lon_out, lat_out, data_out,&
       & verbose, mask_in, mask_out, interp_method, missing_value, missing_permit, num_nbrs,&
       & max_dist, src_modulo, grid_at_center)
     real, intent(in), dimension(:,:) :: data_in

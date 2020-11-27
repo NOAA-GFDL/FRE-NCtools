@@ -32,7 +32,7 @@ module horiz_interp_bilinear_mod
   !! There is an optional mask field for missing input data.
   !! An optional output mask field may be used in conjunction with
   !! the input mask to show where output data exists.
-  use ISO_FORTRAN_ENV
+  use ISO_FORTRAN_ENV, only: OUTPUT_UNIT
   use mpp_mod,               only: mpp_error, FATAL
   use constants_mod,         only: PI
   use horiz_interp_type_mod, only: horiz_interp_type, stats
