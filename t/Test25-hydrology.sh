@@ -6,7 +6,7 @@
   test ! -e /bin/csh && skip 'System does not have /bin/csh'
   # Skip if Test25-input is missing
   # TODO: Get a way to download Test25-input if missing
-  test ! -e $(readlink -f Test25-input) && skip 'Input directory does not exist on this system'
+  test ! -e $top_srcdir/t/Test25-input/grid_spec.nc && skip 'Input directory does not exist on this system'
 
   if [ ! -d "Test25" ]
   then

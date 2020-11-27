@@ -89,6 +89,9 @@ fi
 
 # Check for library functions
 
+# Check if Test25-input link points to an existing directory
+AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
+
 # Other defs
 AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
