@@ -4,8 +4,9 @@ bin_PROGRAMS = cr_lake_files
 # TODO: allow builder to override and use a different libfms.
 FMSROOT = $(top_builddir)/tools/simple_hydrog/libfmslite
 
-LDADD = $(NETCDF_LDFLAGS) -lnetcdff $(NETCDF_LIBS) -lhdf5_hl -lhdf5 -lz -ldl
+AM_CFLAGS = $(NETCDF_CFLAGS)
 AM_FCFLAGS = -I$(FMSROOT) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(NETCDF_FCLIBS)
 
 cr_lake_files_SOURCES = cr_lake_files.f90
 cr_lake_files_LDADD = $(FMSROOT)/libfms.a $(LDADD)
