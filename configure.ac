@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-ustar])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
@@ -89,6 +89,9 @@ fi
 
 # Check for library functions
 
+# Check if Test25-input link points to an existing directory
+AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
+
 # Other defs
 AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
@@ -126,9 +129,8 @@ AC_CONFIG_FILES([Makefile
                  t/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
-                 tools/simple_hydrog/lakes/Makefile 
+                 tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
- 
-
+                 tools/simple_hydrog/libfmslite/Makefile
 ])
 AC_OUTPUT

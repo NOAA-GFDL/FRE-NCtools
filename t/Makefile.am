@@ -3,6 +3,11 @@ TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
 
+if HAVE_TEST25_INPUT
+# Data for test 25 is only available on some systems as the directory
+# is a symlink
+test25_data = Test25-input
+endif
 
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
              $(top_srcdir)/tap-driver.sh
@@ -32,27 +37,27 @@ TESTS = Test01-check_programs_exist.sh \
         Test24-reference_fregrid.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
-	01-make_hgrid.sh \
+        01-make_hgrid.sh \
         01-make_vgrid.sh
 
 EXTRA_DIST = $(TESTS) \
-             Test02-input\
-             Test02-reference \
-             Test03-input \
-             Test06-input \
-             Test07-input \
-             Test08-input \
-             Test10-input \
-             Test12-input \
-             Test15-input \
-             Test16-input \
-             Test17-input \
-             Test18-input \
-             Test20-input \
-             Test17-reference \
-             Test18-reference \
-             Test20-reference \
-             Test25-input
+            Test02-input\
+            Test02-reference \
+            Test03-input \
+            Test06-input \
+            Test07-input \
+            Test08-input \
+            Test10-input \
+            Test12-input \
+            Test15-input \
+            Test16-input \
+            Test17-input \
+            Test18-input \
+            Test20-input \
+            Test17-reference \
+            Test18-reference \
+            Test20-reference \
+            $(test25_data)
 
 clean-local:
 	$(RM) *.nc
