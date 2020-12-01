@@ -109,6 +109,12 @@ AS_IF([test ! -z "${NC_CONFIG+x}"],[
   _ax_c_lib_netcdf_version=$(eval $NC_CONFIG --version 2> /dev/null | $AWK '{print $[]2}')
   test -z $_ax_c_lib_netcdf_prefix && _ax_c_lib_netcdf_prefix=$(eval $NC_CONFIG --prefix 2> /dev/null)
   _ax_c_lib_netcdf_cflags=$(eval $NC_CONFIG --cflags 2> /dev/null)
+  # Some systems (e.g. Cray) use a compiler wrapper that automatically add the required flag, which
+  # has nc-config --cflags not return the -I flag.  This causes issues if trying to not use the
+  # wrapper.  Thus, we add the -I flag if the cflags variable doesn't have it.  This should be
+  # harmless.
+  _ax_c_lib_netcdf_includedir=$(eval $NC_CONFIG --includedir 2> /dev/null)
+  echo "$_ax_c_lib_netcdf_cflags" | $GREP -e "-I$_ac_c_lib_netcdf_includedir" 2>&1 > /dev/null || _ax_c_lib_netcdf_cflags="$_ax_c_lib_netcdf_cflags -I$_ax_c_lib_netcdf_includedir"
   # LIBS and LDFLAGS sorted based on prefix (e.g. -L and -l)
   for arg in $(eval $NC_CONFIG --libs 2> /dev/null) ; do :
     AS_CASE([$arg],
@@ -122,7 +128,9 @@ AS_IF([test ! -z "${_ax_c_lib_netcdf_prefix}"], [
   test -z "$_ax_c_lib_netcdf_ldflags" && _ax_c_lib_netcdf_ldflags=-L$_ax_c_lib_netcdf_prefix/lib
   test -z "$_ax_c_lib_netcdf_libs" && _ax_c_lib_netcdf_libs=-lnetcdf
 ])
-
+AS_VAR_SET_IF([_ax_c_lib_netcdf_cc],
+              [AS_VAR_SET([NETCDF_CC],[$_ax_c_lib_netcdf_cc])],
+              [AS_VAR_SET([NETCDF_CC],[unknown])])
 # Check for the netCDF library
 # This is essentially the AC_SEARCH_LIBS, but as we need to loop through
 # different libs and ldflag combinations to verify if -lnetcdf works.
@@ -247,6 +255,12 @@ AS_IF([test ! -z "${NF_CONFIG+x}"],[
   _ax_fc_lib_netcdf_version=$(eval $NF_CONFIG --version 2> /dev/null)
   test -z $_ax_fc_lib_netcdf_prefix && _ax_fc_lib_netcdf_prefix=$(eval $NF_CONFIG --prefix 2> /dev/null)
   _ax_fc_lib_netcdf_fcflags=$(eval $NF_CONFIG --fflags 2> /dev/null)
+  # Some systems (e.g. Cray) use a compiler wrapper that automatically add the required flag, which
+  # has nf-config --fflags not return the -I flag.  This causes issues if trying to not use the
+  # wrapper.  Thus, we add the -I flag if the cflags variable doesn't have it.  This should be
+  # harmless.
+  _ax_c_lib_netcdf_includedir=$(eval $NC_CONFIG --includedir 2> /dev/null)
+  echo "$_ax_c_lib_netcdf_cflags" | $GREP -e "-I$_ac_c_lib_netcdf_includedir" 2>&1 > /dev/null || _ax_c_lib_netcdf_cflags="$_ax_c_lib_netcdf_cflags -I$_ax_c_lib_netcdf_includedir"
   # LIBS and LDFLAGS sorted based on prefix (e.g. -L and -l)
   for arg in $(eval $NF_CONFIG --flibs 2> /dev/null) ; do
     AS_CASE([$arg],
@@ -258,9 +272,11 @@ AS_IF([test ! -z ${_ax_fc_lib_netcdf_prefix+x}], [
   # Guess the locations for libs and headers, and libs flags
   test -z "$_ax_fc_lib_netcdf_fcflags" && _ax_fc_lib_netcdf_fcflags=-I$_ax_fc_lib_netcdf_prefix/include
   test -z "$_ax_fc_lib_netcdf_ldflags" && _ax_fc_lib_netcdf_ldflags=-L$_ax_fc_lib_netcdf_prefix/lib
-  test -z "$_ax_fc_lib_netcdf_libs" && _ax_c_lib_netcdf_libs=-lnetcdff
+  test -z "$_ax_fc_lib_netcdf_libs" && _ax_fc_lib_netcdf_libs=-lnetcdff
 ])
-
+AS_VAR_SET_IF([_ax_fc_lib_netcdf_fc],
+              [AS_VAR_SET([NETCDF_FC],[$_ax_fc_lib_netcdf_fc])],
+              [AS_VAR_SET([NETCDF_FC],[unknown])])
 # Check for the netCDF Fortran library
 # This is essentially the AC_SEARCH_LIBS, but as we need to loop through
 # different libs and ldflags combinations to verify if -lnetcdff works.
@@ -272,7 +288,7 @@ _ax_fc_lib_netcdf_save_LDFLAGS=$LDFLAGS
 # Did the user set the NETCDF_LDFLAGS and/or NETCDF_LIBS?
 test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS=$_ax_fc_lib_netcdf_ldflags
 test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS=$_ax_fc_lib_netcdf_libs
-AC_LANG_CONFTEST([AC_LANG_PROGRAM([], [print*, nf_inq_libver])])
+AC_LANG_CONFTEST([AC_LANG_PROGRAM([], [      print*, nf_inq_libvers()])])
 for ax_netcdff_ldflag in '' "$NETCDF_FCLDFLAGS"; do
   AS_IF([test -z "$ax_netcdff_ldflag"],
         [ax_netcdff_ldflags_res="none required" && LDFLAGS="$_ax_fc_lib_netcdf_save_LDFLAGS"],
@@ -295,7 +311,7 @@ LDFLAGS=$_ax_fc_lib_netcdf_save_LDFLAGS
 AS_VAR_COPY([ax_netcdff_lib_res], [ax_netcdff_lib_search])
 AS_VAR_COPY([ax_netcdff_ldflags_res], [ax_netcdff_ldflags_search])
 AS_IF([test "$ax_netcdff_lib_res" != no && test "$ax_netcdff_ldflags_res" != no],
-      [test "$ax_netcdff_lib_res" = "none required" || NETCDF_FCLIBS=$ax_netcdf_lib_res
+      [test "$ax_netcdff_lib_res" = "none required" || NETCDF_FCLIBS=$ax_netcdff_lib_res
        test "$ax_netcdff_ldflags_res" = "none required" || NETCDF_FCLDFLAGS=$ax_netcdff_ldflags_res
        ax_netcdff_lib_search="yes"])
 ])
@@ -349,7 +365,7 @@ AS_IF([test $ax_netcdff_lib_search = "no"],
   LDFLAGS="$NETCDF_FCLDFLAGS $_ax_fc_lib_netcdf_save_LDFLAGS"
   LIBS="$NETCDF_FCLIBS $_ax_fc_lib_netcdf_save_LIBS"
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [      use netcdf
-      print*, nf90_inq_libver()])], [AS_VAR_SET([ax_netcdf_lib_f90], [yes])], [AS_VAR_SET([ax_netcdf_lib_f90], [no])])
+      print*, nf90_inq_libvers()])], [AS_VAR_SET([ax_netcdf_lib_f90], [yes])], [AS_VAR_SET([ax_netcdf_lib_f90], [no])])
   FCFLAGS=$_ax_fc_lib_netcdf_save_FCFLAGS
   LDFLAGS=$_ax_fc_lib_netcdf_save_LDFLAGS
   LIBS=$_ax_fc_lib_netcdf_save_LIBS])
