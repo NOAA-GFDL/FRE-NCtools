@@ -114,13 +114,13 @@ AS_IF([test ! -z "${NC_CONFIG+x}"],[
     AS_CASE([$arg],
             [-L*], [echo $_ax_c_lib_netcdf_ldflags | $GREP -e "$arg" 2>&1 >/dev/null || _ax_c_lib_netcdf_ldflags="$arg $_ax_c_lib_netcdf_ldflags"],
             [-l*], [echo $_ax_c_lib_netcdf_libs | $GREP -e "$arg" 2>&1 >/dev/null || _ax_c_lib_netcdf_libs="$arg $_ax_c_lib_netcdf_libs"])
-  done],
-  [test ! -z ${_ax_c_lib_netcdf_prefix+x}], [
-  # nc-config not found, and we were given a location of NetCDF.
-  # Guess the locations for libs and headers
-  _ax_c_lib_netcdf_cflags=-I$_ax_c_lib_netcdf_prefix/include
-  _ax_c_lib_netcdf_ldflags=-L$_ax_c_lib_netcdf_prefix/lib
-  _ax_c_lib_netcdf_libs=-lnetcdf
+  done])
+AS_IF([test ! -z "${_ax_c_lib_netcdf_prefix}"], [
+  # Check if nc-config was able to give us specific information.  If not,
+  # Guess the locations for libs and headers, and libs flags
+  test -z "$_ax_c_lib_netcdf_cflags" && _ax_c_lib_netcdf_cflags=-I$_ax_c_lib_netcdf_prefix/include
+  test -z "$_ax_c_lib_netcdf_ldflags" && _ax_c_lib_netcdf_ldflags=-L$_ax_c_lib_netcdf_prefix/lib
+  test -z "$_ax_c_lib_netcdf_libs" && _ax_c_lib_netcdf_libs=-lnetcdf
 ])
 
 # Check for the netCDF library
@@ -252,13 +252,13 @@ AS_IF([test ! -z "${NF_CONFIG+x}"],[
     AS_CASE([$arg],
             [-L*], [echo $_ax_fc_lib_netcdf_ldflags | $GREP -e "$arg" 2>&1 >/dev/null || _ax_fc_lib_netcdf_ldflags="$arg $_ax_c_lib_netcdf_ldflags"],
             [-l*], [echo $_ax_fc_lib_netcdf_libs | $GREP -e "$arg" 2>&1 >/dev/null || _ax_fc_lib_netcdf_libs="$arg $_ax_c_lib_netcdf_libs"])
-  done],
-  [test ! -z ${_ax_fc_lib_netcdf_prefix+x}], [
-  # nf-config not found, and we were given a location of NetCDF
-  # Guess the locations for libs and headers
-  _ax_fc_lib_netcdf_fcflags=-I$_ax_fc_lib_netcdf_prefix/include
-  _ax_fc_lib_netcdf_ldflags=-L$_ax_fc_lib_netcdf_prefix/lib
-  _ax_c_lib_netcdf_libs=-lnetcdff
+  done])
+AS_IF([test ! -z ${_ax_fc_lib_netcdf_prefix+x}], [
+  # Check if nc-config was able to give us specific information.  If not,
+  # Guess the locations for libs and headers, and libs flags
+  test -z "$_ax_fc_lib_netcdf_fcflags" && _ax_fc_lib_netcdf_fcflags=-I$_ax_fc_lib_netcdf_prefix/include
+  test -z "$_ax_fc_lib_netcdf_ldflags" && _ax_fc_lib_netcdf_ldflags=-L$_ax_fc_lib_netcdf_prefix/lib
+  test -z "$_ax_fc_lib_netcdf_libs" && _ax_c_lib_netcdf_libs=-lnetcdff
 ])
 
 # Check for the netCDF Fortran library
