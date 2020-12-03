@@ -801,10 +801,12 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 
     if ( cell_methods == CELL_METHODS_SUM ) {
       for(i=0; i<nx2*ny2*nz; i++) {
-        if(out_miss[i] == 0)
-          for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
-        else
-          for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
+        if(out_area[i] == 0) {
+          if(out_miss[i] == 0)
+            for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+          else
+            for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
+        }
       }
     }
     else {
