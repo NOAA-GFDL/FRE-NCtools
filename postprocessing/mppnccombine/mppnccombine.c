@@ -5,6 +5,8 @@
                  programming interface "mpp_io_mod"
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
+  V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
+          Updates for C99 standards.
   V2.2.5: Seth Underwood <Seth.Underwood@noaa.gov>
           Fix for NetCDF files that do not have a time dimension.
   V2.2.4:  Tushar.Mohan@noaa.gov
@@ -20,7 +22,7 @@
            Added a -x option to print estimate resident memory footprint and exit
            Changed default blocking factor 1, so the combine behaves as the
            combine of the past if no "-k" option is set. This is useful
-           for low-memory nodes. 
+           for low-memory nodes.
 
   V2.2.1:  Do not bail out when we cannot write variables to output file.
            Instead, issue a warning and set an error condition. Continue
@@ -32,16 +34,16 @@
 
   V2.2:    Added record blocking (see, the -k option) to the memory buffering
            code. This significantly improves performance, by buffering multiple
-           records of decomposed variables in memory. Output I/O performance 
+           records of decomposed variables in memory. Output I/O performance
            improves, due to reduced seeks and larger contiguous writes. We also
-           reduce the number of file open/close operations in the input files 
+           reduce the number of file open/close operations in the input files
            (by the blocking factor), thus we can expect better performance on
            file-systems with expensive metadata operations (such as Lustre).
            This performance improvement comes at the cost of increased resident
-           memory size (by the blocking factor).  For questions regarding these 
+           memory size (by the blocking factor).  For questions regarding these
            changes, contact: Tushar Mohan (Tushar.Mohan@noaa.gov) 08/03/2011.
            Also added fixes to the following bugs:
-             - flush_decomp ignored errors, when it was not able to 
+             - flush_decomp ignored errors, when it was not able to
                write variables to the output file. We now exit on such errors.
              - when -n and -e are used and files are not present then
                the message of the number of files remaining was misleading.
@@ -156,6 +158,7 @@ int process_vars(struct fileinfo *, struct fileinfo *, unsigned char, int *,
 int flush_decomp(struct fileinfo *, int, int, int, unsigned char);
 void print_debug(struct fileinfo *, unsigned char);
 char *nc_type_to_str(nc_type);
+int min(int, int);
 
 static void ***varbuf = NULL;  /* Buffers for multiple records of decomposed var */
 
@@ -164,8 +167,8 @@ static unsigned long maxrss = 0; /* maximum memory used so far in kilobytes */
 static int print_mem_usage = 0;
 static unsigned long mem_allocated = 0; /* memory allocated so far */
 
-static const char version[] = "2.2.5";
-static const char last_updated[] = "Mar-02-2012";
+static const char version[] = "2.2.6";
+static const char last_updated[] = "2020-11-20";
 
 static unsigned long estimated_maxrss = 0; /* see option: -x */
 static int mem_dry_run = 0; /* set if -x option is used */
@@ -306,7 +309,7 @@ int main(int argc, char *argv[])
       else if (!strcmp(argv[a], "-d"))
 	{
 	  a++;
-	  if ( a < argc) 
+	  if ( a < argc)
 	    {
 	      deflate = 1;
 	      deflation = atoi(argv[a]);
@@ -327,7 +330,8 @@ int main(int argc, char *argv[])
       usage(); return(1);
      }
    if (argc-1 > outputarg) inputarg=outputarg+1;
-   sprintf(outfilename,argv[outputarg]); outlen=strlen(outfilename);
+   sprintf(outfilename,"%s",argv[outputarg]);
+   outlen=strlen(outfilename);
    if (outlen > 4)
      {
       strptr=outfilename+outlen-5;
@@ -385,7 +389,7 @@ int main(int argc, char *argv[])
         for (block=0; block < nblocks; block++)
           {
            if (verbose) printf("block = %d\n",block);
-           f=0; 
+           f=0;
            for (a=nstart; a <= nend; a++)
              {
 	       if (peWidth<0)
@@ -443,7 +447,7 @@ int main(int argc, char *argv[])
                  break;
                 }
              }
-           if (num_infiles_used == 0) 
+           if (num_infiles_used == 0)
              {
                fprintf(stderr, "Warning: No input file found in range.\n");
                unlink(outfilename);
@@ -453,8 +457,8 @@ int main(int argc, char *argv[])
            if (verbose && print_mem_usage) printf("freeing memory allocated in block\n");
            for (k=0; k< bf; k++)
              for (v=0; v < NC_MAX_VARS; v++)
-                if (varbuf && (varbuf[k][v]!=NULL)) 
-                  { 
+                if (varbuf && (varbuf[k][v]!=NULL))
+                  {
                     free(varbuf[k][v]); varbuf[k][v] = NULL;
                   }
           }
@@ -526,8 +530,8 @@ int main(int argc, char *argv[])
             if (verbose && print_mem_usage) printf("freeing memory allocated in block\n");
             for (k=0; k< bf; k++)
               for (v=0; v < NC_MAX_VARS; v++)
-                if (varbuf && (varbuf[k][v]!=NULL)) 
-                  { 
+                if (varbuf && (varbuf[k][v]!=NULL))
+                  {
                     free(varbuf[k][v]); varbuf[k][v] = NULL;
                   }
            }
@@ -578,8 +582,8 @@ int main(int argc, char *argv[])
         if (verbose && print_mem_usage) printf("freeing memory allocated in block\n");
         for (k=0; k< bf; k++)
           for (v=0; v < NC_MAX_VARS; v++)
-            if (varbuf && (varbuf[k][v]!=NULL)) 
-              { 
+            if (varbuf && (varbuf[k][v]!=NULL))
+              {
                  free(varbuf[k][v]); varbuf[k][v] = NULL;
               }
        }
@@ -697,7 +701,7 @@ void usage()
   }
 
 
-inline int min(int a, int b)
+int min(int a, int b)
 {
   if (a<b) return a;
   return b;
@@ -914,7 +918,7 @@ int process_file(char *ncname, unsigned char appendnc,
 	{
 	  for (v=0; v < ncinfile->nvars; v++)
 	    {
-	      if ( nc_def_var_deflate(ncoutfile->ncfid,v,shuffle,deflate,deflation) != NC_NOERR ) 
+	      if ( nc_def_var_deflate(ncoutfile->ncfid,v,shuffle,deflate,deflation) != NC_NOERR )
 		{
 		  fprintf(stderr,"Error: nc_def_var_deflate failed! Are you setting NETCDF4?\n");
 		  usage();
@@ -934,13 +938,13 @@ int process_file(char *ncname, unsigned char appendnc,
    /* from other input files */
    int r = block * (*bf); // the position of r is absolute
    unsigned long mem_for_rec, tmp_mem_alloc;
-   do 
+   do
      {
       tmp_mem_alloc = mem_allocated; /* store current memory usage in a temporary */
       ncinfileerror+=process_vars(ncinfile,ncoutfile,appendnc,nrecs,nblocks,bf,r,*nfiles,
                                  f,verbose,missing);
       mem_for_rec= mem_allocated - tmp_mem_alloc;
-      if (verbose && print_mem_usage) 
+      if (verbose && print_mem_usage)
         if (mem_for_rec > 0) printf("  mem alloc for r=%d, infile=%s is %lu KB\n", r, ncname, mem_for_rec/1024);
       r++;
       appendnc = 1;
@@ -983,7 +987,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
      {
        *nrecs=recdimsize;
 
-      if ((*bf) >= 1) 
+      if ((*bf) >= 1)
         {
          if ((*bf) > (*nrecs)) {
            fprintf(stderr, "blocking factor (k) > total records (%d). Setting blocking factor to %d.\n",
@@ -993,7 +997,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
          if (((*nrecs) % (*bf)) != 0) *nblocks = (int)((*nrecs)/(*bf)) + 1;
          else *nblocks = (int)((*nrecs)/(*bf));
         }
-      else 
+      else
         {
          /* bf was set to zero, so we do full buffering */
          *bf = min(MAX_BF,*nrecs); // we use the maximum blocking factor in our capacity
@@ -1010,7 +1014,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
        }
 
     /* Allocate memory for the decomposed variables, if none has been allocated yet
-       We use an optimized algorithm to malloc and set up a double dimension array 
+       We use an optimized algorithm to malloc and set up a double dimension array
        using a single malloc call. We do the cross-linking after the malloc, so
        the entire allocation appears to be a double-dimensional array. The memory
        allocated below is a trivial amount. The real allocation will happen later.
@@ -1139,7 +1143,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
          /* rather than checking for whether this is the first file, and so */
          /* we do this once per record per variable for each block */
          /* if (f==0)  */
-         if (varbuf[(r % (*bf))][v] == NULL) 
+         if (varbuf[(r % (*bf))][v] == NULL)
            {
             varbufsize=nctypelen(ncinfile->datatype[v])*recfullsize;
             if (verbose && print_mem_usage)

@@ -1,7 +1,7 @@
 /***********************************************************************
                       mosaic_util.h
     This header file provide some utilities routine that will be used in many tools.
-    
+
     contact: Zhi.Liang@noaa.gov
 ***********************************************************************/
 #ifndef MOSAIC_UTIL_H_
@@ -16,7 +16,7 @@
 #define SMALL_VALUE ( 1.e-10 )
 struct Node{
   double x, y, z, u, u_clip;
-  int intersect; /* indicate if this point is an intersection, 0 = no, 1= yes, 2=both intersect and vertices */ 
+  int intersect; /* indicate if this point is an intersection, 0 = no, 1= yes, 2=both intersect and vertices */
   int inbound;      /* -1 uninitialized, 0 coincident, 1 outbound, 2 inbound */
   int initialized; /* = 0 means empty list */
   int isInside;   /* = 1 means one point is inside the other polygon, 0 is not, -1 undecided. */
@@ -32,7 +32,7 @@ int lon_fix(double *x, double *y, int n_in, double tlon);
 double minval_double(int size, const double *data);
 double maxval_double(int size, const double *data);
 double avgval_double(int size, const double *data);
-void latlon2xyz(int size, const double *lon, const double *lat, double *x, double *y, double *z); 
+void latlon2xyz(int size, const double *lon, const double *lat, double *x, double *y, double *z);
 void xyz2latlon(int size, const double *x, const double *y, const double *z, double *lon, double *lat);
 double box_area(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
 double poly_area(const double lon[], const double lat[], int n);
@@ -63,8 +63,10 @@ void rewindList(void);
 struct Node *getNext();
 void initNode(struct Node *node);
 void addEnd(struct Node *list, double x, double y, double z, int intersect, double u, int inbound, int inside);
-int addIntersect(struct Node *list, double x, double y, double z, int intersect, double u1, double u2, 
+int addIntersect(struct Node *list, double x, double y, double z, int intersect, double u1, double u2,
                 int inbound, int is1, int ie1, int is2, int ie2);
+void insertIntersect(struct Node *list, double x, double y, double z, double u1, double u2, int inbound,
+                     double x2, double y2, double z2);
 int length(struct Node *list);
 int samePoint(double x1, double y1, double z1, double x2, double y2, double z2);
 int sameNode(struct Node node1, struct Node node2);
