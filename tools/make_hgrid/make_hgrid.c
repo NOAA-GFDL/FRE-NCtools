@@ -10,7 +10,11 @@
 
   Modifications:
   05/10/2020  -- Added multiple nest capability.  Bill Ramstrom, AOML/HRD
-
+  11/23/2020  -- Updated usage statement, sanity check w/runs against
+                 new FV3 dycore codebase. Modify refine_ratio option for
+                 global grid refinement (old code no longer valid,
+                 see comment with tag [Ahern]). Formatting changes.
+                 Kyle Ahern, AOML/HRD
 
 */
 #include <stdlib.h>
@@ -57,8 +61,14 @@ char *usage[] = {
   "                  --simple_dx simple_dx --simple_dy simple_dy                    ",
   "                  --grid_name gridname --center center --verbose --shift_fac #   ",
   "                  --do_schmidt --stretch_fac # --target_lon # --target_lat #     ",
-  "                  --nest_grid --parent_tile # --refine_ratio # --halo #          ",
-  "                  --istart_nest # --iend_nest # --jstart_nest # --jend_nest #    ",
+  "                  --nest_grids nests                                             ",
+  "                  --parent_tile parent_tile(1),...parent_tile(nests-1)           ",
+  "                  --refine_ratio refine_ratio(1),...refine_ratio(nests-1)        ",
+  "                  --halo #                                                       ",
+  "                  --istart_nest istart_nest(1),...istart_nest(nests-1)           ",
+  "                  --iend_nest iend_nest(1),...iend_nest(nests-1)                 ",
+  "                  --jstart_nest jstart_nest(1),...jstart_nest(nests-1)           ",
+  "                  --jend_nest jend_nest(1),...jend_nest(nests-1)                 ",
   "                  --great_circle_algorithm --out_halo #                          ",
   "                                                                                 ",
   "   This program can generate different types of horizontal grid. The             ",
@@ -194,37 +204,51 @@ char *usage[] = {
   "                                                                                 ",
   "   --target_lat #             center latitude of the highest resolution tile     ",
   "                                                                                 ",
-  "  OBSOLETE  --nest_grid               set to create nest grid as well as the global grid.",
+  "   --nest_grids nests         set to create this # nested grids as well as the   ",
+  "                              global grid. This replaces the option --nest_grid. ",
+  "                              This option could only be set when grid_type is    ",
+  "                              'gnomonic_ed'. When it is set, besides 6 tile grid ",
+  "                              files created, there are #  more nest grids with   ",
+  "                              file name = $grid_name.tile${parent_tile}.nest.nc  ",
+  "                                                                                 ",
+  "   --nest_grid                >!OBSOLETE!< set to create nest grid as well as the",
+  "                              global grid.                                       ",
   "                              This option could only be set when grid_type is    ",
   "                              'gnomonic_ed'. When it is set, besides 6 tile grid ",
   "                              files created, there is one more nest grid with    ",
   "                              file name = $grid_name.tile${parent_tile}.nest.nc  ",
   "                                                                                 ",
-  " REPLACEMENT  --nest_grids #    set to create this many nested grids as well as the global grid.",
-  "                              This option could only be set when grid_type is    ",
-  "                              'gnomonic_ed'. When it is set, besides 6 tile grid ",
-  "                              files created, there are #  more nest grids with    ",
-  "                              file name = $grid_name.tile${parent_tile}.nest.nc  ",
+  "   --parent_tile parent_tile(1),...parent_tile(nests-1)                          ",
+  "                              Specify the comma-separated list of the parent tile",
+  "                              number(s) of nest grid(s).                         ",
   "                                                                                 ",
-  "   --parent_tile #            Specify the comma-separated list of the parent tile number(s) of nest grid(s).       ",
-  "                                                                                 ",
-  "   --refine_ratio #           Specify the comma-separated list of  refinement ratio(s) for nest grid(s).        ",
-  "                                                                                 ",
-  "   --istart_nest #            Specify the comma-separated list of starting i-direction index(es) of nest     ",
-  "                              grid(s) in parent tile supergrid(Fortran index).      ",
-  "                                                                                 ",
-  "   --iend_nest #              Specify the comma-separated list of ending i-direction index(es) of nest       ",
-  "                              grids in parent tile supergrid(Fortran index).      ",  
-  "                                                                                 ",
-  "   --jstart_nest #            Specify the comma-separated list of starting j-direction index(es) of nest     ",
-  "                              grids in parent tile supergrid(Fortran index).      ",
-  "                                                                                 ",
-  "   --jend_nest #              Specify the comma-separated list of ending j-direction index(es) of nest       ",
-  "                              grids in parent tile supergrid(Fortran index).      ",
+  "   --refine_ratio refine_ratio(1),...refine_ratio(nests-1)                       ",
+  "                              Specify the comma-separated list of refinement     ",
+  "                              ratio(s) for nest grid(s).                         ",
   "                                                                                 ",
   "   --halo #                   halo size to used in the atmosphere cubic sphere   ",
   "                              model. It only needs to be specified when          ",
-  "                              --nest_grid is set.                                ",
+  "                              --nest_grid(s) is set.                             ",
+  "                                                                                 ",
+  "   --istart_nest istart_nest(1),...istart_nest(nests-1)                          ",
+  "                              Specify the comma-separated list of starting       ",
+  "                              i-direction index(es) of nest                      ",
+  "                              grid(s) in parent tile supergrid(Fortran index).   ",
+  "                                                                                 ",
+  "   --iend_nest iend_nest(1),...iend_nest(nests-1)                                ",
+  "                              Specify the comma-separated list of ending         ",
+  "                              i-direction index(es) of nest                      ",
+  "                              grids in parent tile supergrid(Fortran index).     ",
+  "                                                                                 ",
+  "   --jstart_nest jstart_nest(1),...jstart_nest(nests-1)                          ",
+  "                              Specify the comma-separated list of starting       ",
+  "                              j-direction index(es) of nest                      ",
+  "                              grids in parent tile supergrid(Fortran index).     ",
+  "                                                                                 ",
+  "   --jend_nest jend_nest(1),...jend_nest(nests-1)                                ",
+  "                              Specify the comma-separated list of ending         ",
+  "                              j-direction index(es) of nest                      ",
+  "                              grids in parent tile supergrid(Fortran index).     ",
   "                                                                                 ",
   "   --great_circle_algorithm   When specified, great_circle_algorithm will be     ",
   "                              used to compute grid cell area.                    ",
@@ -453,12 +477,12 @@ int main(int argc, char* argv[])
 
   
   // Array variables for nests
-  int    parent_tile[MAX_NESTS];
-  int    refine_ratio[MAX_NESTS];
-  int    istart_nest[MAX_NESTS];
-  int    iend_nest[MAX_NESTS];
-  int    jstart_nest[MAX_NESTS];
-  int    jend_nest[MAX_NESTS];
+  int    parent_tile[MAX_NESTS] = { 0 };
+  int    refine_ratio[MAX_NESTS] = { 0 };
+  int    istart_nest[MAX_NESTS] = { 0 };
+  int    iend_nest[MAX_NESTS] = { 0 };
+  int    jstart_nest[MAX_NESTS] = { 0 };
+  int    jend_nest[MAX_NESTS] = { 0 };
 
   int    halo = 0;
   int    out_halo=0;
@@ -916,10 +940,21 @@ int main(int argc, char* argv[])
   }
   else {
     if( my_grid_type == GNOMONIC_ED || my_grid_type == CONFORMAL_CUBIC_GRID ) {
+      /* NOTE: The if-block in the loop below is changed with multiple nests.
+               It appeared to allow refinement of the global grid
+               without using any nests. However, the method used the
+               nesting parameters "parent_tile" and "refine_ratio" to
+               achieve this, which was enabled by setting parent_tile = 0 .
+               This is no longer possible, as parent_tile is now an array.
+               Instead, if the first value in the list of parent_tile values is 0,
+               then the first value in the list of refine_ratio values will be
+               applied to the global grid. This global-refinement application
+               may not be valid for all permutations of nesting and refinement. [Ahern]
+      */
       for(n=0; n<ntiles_global; n++) {	
 	nxl[n] = nlon[0];
 	nyl[n] = nxl[n];
-	if(nest_grids && parent_tile == 0) {
+	if(nest_grids && parent_tile[0] == 0) {
 	  nxl[n] *= refine_ratio[0];
 	  nyl[n] *= refine_ratio[0];
 	}
