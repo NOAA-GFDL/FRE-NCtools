@@ -4,8 +4,10 @@
     It also creates nest grids if they are defined.
   Modifications:
   05/10/2020  -- Added multiple nest capability.  Bill Ramstrom, AOML/HRD
-                 Nests can be specified on any parent tile, and can each be different sizes.
-                 Nests with different refinement ratios have NOT been tested and should be considered unsupported.
+                 Nests can be specified on any parent tile, and can each be
+                 different sizes. Nests with different refinement ratios
+                 have NOT been tested and should be considered unsupported.
+  12/07/2020  -- Global refinement bug fix. Kyle Ahern, AOML/HRD
 
 *******************************************************************************/
 
@@ -388,11 +390,10 @@ for (nn=0; nn < num_nest_grids; nn++) {
     yc = (double *)malloc(npts*sizeof(double));  
     for(n=0; n<ntiles; n++) {
       printf("[INFO] calling setup_aligned_nest, n=%d\n",n);
-      setup_aligned_nest(ni2, ni2, xc2+ni2p*ni2p*n, yc2+ni2p*ni2p*n, 0, refine_ratio[n],
-      			 1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip );      
-
-
-
+      /* zeroth index of refine_ratio array                  *
+       * is assigned to all tiles if global_nest = 1 [Ahern] */
+      setup_aligned_nest(ni2, ni2, xc2+ni2p*ni2p*n, yc2+ni2p*ni2p*n, 0, refine_ratio[0],
+      			 1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip );
     }
   }
   else if( num_nest_grids > 0 ) {
