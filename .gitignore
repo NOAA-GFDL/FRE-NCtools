@@ -3,6 +3,7 @@
 *.tar
 *.gz
 build.fre-nctools*
+build
 
 # http://www.gnu.org/software/automake
 
