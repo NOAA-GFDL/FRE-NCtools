@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+set -x
 
 @test "Wrapper complete hydrology test" {
 
@@ -18,7 +19,7 @@
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh
   [ "$status" -eq 1 ]
 
-  mkdir tmpdir
+  mkdir -p tmpdir
   export TMPDIR=tmpdir
 
   #Run wrapper hydrology script
