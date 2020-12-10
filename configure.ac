@@ -1,3 +1,22 @@
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE NCtools).
+#
+# FRE NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+#**********************************************************************/
+
 # Prelude
 AC_PREREQ([2.63])
 AC_INIT([FRE NC Tools], [18.0.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
@@ -16,6 +35,13 @@ AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 # Check for programs
 AC_PROG_RANLIB
 AM_PROG_AR
+
+AC_ARG_ENABLE([quad-precision],
+  [AS_HELP_STRING([--enable-quad-precision],
+    [build using higher (quad) precision])])
+AS_IF([test ${enable_quad_precision:-no} = no],
+  [enable_quad_precision=no],
+  [enable_quad_precision=yes])
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
@@ -86,6 +112,14 @@ if test "$with_netcdf_fortran" = "no"; then
 fi
 
 # Check for typedefs, structures, and compiler characteristics
+# Check if the C compiler supports a working `long double` with more range
+# or precision than `double`.
+AS_IF([test $enable_quad_precision = yes], [
+AC_TYPE_LONG_DOUBLE_WIDER
+AS_IF([test $ac_cv_type_long_double_wider = no],
+  [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])
+  ])
+])
 
 # Check for library functions
 

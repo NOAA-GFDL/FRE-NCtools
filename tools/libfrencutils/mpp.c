@@ -1,3 +1,25 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE NCtools).
+ *
+ * FRE NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+/**
+ * \author Zhi Liang
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -136,7 +158,6 @@ void mpp_send_double(const double* data, int size, int to_pe)
   if(request[to_pe] != MPI_REQUEST_NULL) {
     MPI_Wait( request+to_pe, &status );
   }
-  /*void* temp_data = data; */
   MPI_Isend(data, size, MPI_DOUBLE, to_pe, tag, MPI_COMM_WORLD, request+to_pe);
 #endif
 

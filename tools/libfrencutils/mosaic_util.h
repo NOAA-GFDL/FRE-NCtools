@@ -1,15 +1,36 @@
 /***********************************************************************
-                      mosaic_util.h
-    This header file provide some utilities routine that will be used in many tools.
-
-    contact: Zhi.Liang@noaa.gov
-***********************************************************************/
-#ifndef MOSAIC_UTIL_H_
-#define MOSAIC_UTIL_H_
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE NCtools).
+ *
+ * FRE NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+#ifndef _MOSAIC_UTIL_H
+#define _MOSAIC_UTIL_H 1
 
 #ifndef RANGE_CHECK_CRITERIA
 #define RANGE_CHECK_CRITERIA 0.05
 #endif
+
+#ifndef _MATH_H
+#include <math.h>
+#endif
+
+/* override the `fabs` function based on the type */
+#define fabs(X) _Generic((X), \
+     long double: fabsl, \
+          double: fabs)(X)
 
 #define min(a,b) (a<b ? a:b)
 #define max(a,b) (a>b ? a:b)
@@ -40,10 +61,10 @@ double poly_area_dimensionless(const double lon[], const double lat[], int n);
 double poly_area_no_adjust(const double x[], const double y[], int n);
 int fix_lon(double lon[], double lat[], int n, double tlon);
 void tokenize(const char * const string, const char *tokens, unsigned int varlen,
-	      unsigned int maxvar, char * pstring, unsigned int * const nstr);
+         unsigned int maxvar, char * pstring, unsigned int * const nstr);
 double great_circle_distance(double *p1, double *p2);
 double spherical_excess_area(const double* p_ll, const double* p_ul,
-			     const double* p_lr, const double* p_ur, double radius);
+              const double* p_lr, const double* p_ur, double radius);
 void vect_cross(const double *p1, const double *p2, double *e );
 double spherical_angle(const double *v1, const double *v2, const double *v3);
 void normalize_vect(double *e);
@@ -52,7 +73,7 @@ double great_circle_area(int n, const double *x, const double *y, const double *
 double * cross(const double *p1, const double *p2);
 double dot(const double *p1, const double *p2);
 int intersect_tri_with_line(const double *plane, const double *l1, const double *l2, double *p,
-			     double *t);
+              double *t);
 int invert_matrix_3x3(long double m[], long double m_inv[]);
 void mult(long double m[], long double v[], long double out_v[]);
 double metric(const double *p);
@@ -77,7 +98,7 @@ void copyNode(struct Node *node_out, struct Node node_in);
 void printNode(struct Node *list, char *str);
 int intersectInList(struct Node *list, double x, double y, double z);
 void insertAfter(struct Node *list, double x, double y, double z, int intersect, double u, int inbound,
-		 double x2, double y2, double z2);
+       double x2, double y2, double z2);
 double gridArea(struct Node *grid);
 int isIntersect(struct Node node);
 int getInbound( struct Node node );

@@ -1,12 +1,35 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE NCtools).
+ *
+ * FRE NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+/**
+ * \author Zhi Liang
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include "mosaic_util.h"
+#include "constant.h"
+
 #ifdef use_libMPI
 #include <mpi.h>
 #endif
-#include "mosaic_util.h"
-#include "constant.h"
 
 #define HPI (0.5*M_PI)
 #define TPI (2.0*M_PI)
@@ -25,14 +48,6 @@ void set_reproduce_siena_true(void)
 {
   reproduce_siena = 1;
 }
-
-#ifndef __AIX
-void set_reproduce_siena_true_(void)
-{
-  reproduce_siena = 1;
-}
-#endif
-
 
 void error_handler(const char *msg)
 {
@@ -57,7 +72,6 @@ void error_handler(const char *msg)
      value:  arbitrary data...same units as elements in "array"
      array:  array of data points  (must be monotonically increasing)
      ia   :  size of array.
-
  ********************************************************************/
 int nearest_index(double value, const double *array, int ia)
 {
@@ -77,12 +91,12 @@ int nearest_index(double value, const double *array, int ia)
       i=0;
       keep_going = 1;
       while (i < ia && keep_going) {
-	i = i+1;
-	if (value <= array[i]) {
-	  index = i;
-	  if (array[i]-value > value-array[i-1]) index = i-1;
-	  keep_going = 0;
-	}
+   i = i+1;
+   if (value <= array[i]) {
+     index = i;
+     if (array[i]-value > value-array[i-1]) index = i-1;
+     keep_going = 0;
+   }
       }
     }
   return index;
@@ -92,7 +106,7 @@ int nearest_index(double value, const double *array, int ia)
 /******************************************************************/
 
 void tokenize(const char * const string, const char *tokens, unsigned int varlen,
-	      unsigned int maxvar, char * pstring, unsigned int * const nstr)
+         unsigned int maxvar, char * pstring, unsigned int * const nstr)
 {
   size_t i, j, nvar, len, ntoken;
   int found, n;
@@ -107,17 +121,17 @@ void tokenize(const char * const string, const char *tokens, unsigned int varlen
     if(string[i] != ' ' && string[i] != '\t'){
       found = 0;
       for(n=0; n<ntoken; n++) {
-	if(string[i] == tokens[n] ) {
-	  found = 1;
-	  break;
-	}
+   if(string[i] == tokens[n] ) {
+     found = 1;
+     break;
+   }
       }
       if(found) {
-	if( j != 0) { /* remove :: */
-	  *(pstring + (nvar++)*varlen + j) = 0;
-	  j = 0;
-	  if(nvar >= maxvar) error_handler("Error from tokenize: number of variables exceeds limit");
-	}
+   if( j != 0) { /* remove :: */
+     *(pstring + (nvar++)*varlen + j) = 0;
+     j = 0;
+     if(nvar >= maxvar) error_handler("Error from tokenize: number of variables exceeds limit");
+   }
       }
       else {
         *(pstring + nvar*varlen + j++) = string[i];
@@ -278,12 +292,12 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
       area -= dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
-	area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
+   area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
       }
       else {
-	dy = 0.5*(lat1-lat2);
-	dat = sin(dy)/dy;
-	area -= dx*sin(0.5*(lat1+lat2))*dat;
+   dy = 0.5*(lat1-lat2);
+   dat = sin(dy)/dy;
+   area -= dx*sin(0.5*(lat1+lat2))*dat;
       }
     }
   }
@@ -315,12 +329,12 @@ double poly_area(const double x[], const double y[], int n)
       area -= dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
-	area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
+   area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
       }
       else {
-	dy = 0.5*(lat1-lat2);
-	dat = sin(dy)/dy;
-	area -= dx*sin(0.5*(lat1+lat2))*dat;
+   dy = 0.5*(lat1-lat2);
+   dat = sin(dy)/dy;
+   area -= dx*sin(0.5*(lat1+lat2))*dat;
       }
     }
   }
@@ -505,10 +519,11 @@ double great_circle_area(int n, const double *x, const double *y, const double *
 double spherical_angle(const double *v1, const double *v2, const double *v3)
 {
   double angle;
-#ifdef NO_QUAD_PRECISION
+#ifndef HAVE_LONG_DOUBLE_WIDER
   double px, py, pz, qx, qy, qz, ddd;
 #else
   long double px, py, pz, qx, qy, qz, ddd;
+
 #endif
 
   /* vector product between v1 and v2 */
@@ -525,14 +540,14 @@ double spherical_angle(const double *v1, const double *v2, const double *v3)
     angle = 0. ;
   else {
     ddd = (px*qx+py*qy+pz*qz) / sqrt(ddd);
-    if( fabsl(ddd-1) < EPSLN30 ) ddd = 1;
-    if( fabsl(ddd+1) < EPSLN30 ) ddd = -1;
+    if( fabs(ddd-1) < EPSLN30 ) ddd = 1;
+    if( fabs(ddd+1) < EPSLN30 ) ddd = -1;
     if ( ddd>1. || ddd<-1. ) {
       /*FIX (lmh) to correctly handle co-linear points (angle near pi or 0) */
       if (ddd < 0.)
-	angle = M_PI;
+   angle = M_PI;
       else
-	angle = 0.;
+   angle = 0.;
     }
     else
       angle = acosl( ddd );
@@ -548,7 +563,7 @@ double spherical_angle(const double *v1, const double *v2, const double *v3)
   [area units are m^2]
   ----------------------------------------------------------------------------*/
 double spherical_excess_area(const double* p_ll, const double* p_ul,
-			     const double* p_lr, const double* p_ur, double radius)
+              const double* p_lr, const double* p_ur, double radius)
 {
   double area, ang1, ang2, ang3, ang4;
   double v1[3], v2[3], v3[3];
@@ -669,7 +684,7 @@ void unit_vect_latlon(int size, const double *lon, const double *lat, double *vl
    NOTE: the intersection doesn't have to be inside the tri or line for this to return true
 */
 int intersect_tri_with_line(const double *plane, const double *l1, const double *l2, double *p,
-			    double *t) {
+             double *t) {
 
   long double M[3*3], inv_M[3*3];
   long double V[3];
@@ -836,7 +851,7 @@ void addEnd(struct Node *list, double x, double y, double z, int intersect, doub
 /* return 1 if the point (x,y,z) is added in the list, return 0 if it is already in the list */
 
 int addIntersect(struct Node *list, double x, double y, double z, int intersect, double u1, double u2, int inbound,
-		 int is1, int ie1, int is2, int ie2)
+       int is1, int ie1, int is2, int ie2)
 {
 
   double u1_cur, u2_cur;
@@ -982,7 +997,7 @@ void printNode(struct Node *list, char *str)
   while(temp) {
     if(temp->initialized ==0) break;
     printf(" (x, y, z, interset, inbound, isInside) = (%19.15f,%19.15f,%19.15f,%d,%d,%d)\n",
-	   temp->x, temp->y, temp->z, temp->intersect, temp->inbound, temp->isInside);
+      temp->x, temp->y, temp->z, temp->intersect, temp->inbound, temp->isInside);
     temp = temp->Next;
   }
   printf("\n");
@@ -1073,7 +1088,7 @@ void insertIntersect(struct Node *list, double x, double y, double z, double u1,
   while ( temp2 ) {
     if( temp2->intersect == 1 ) {
       if( temp2->u > u_cur ) {
-	break;
+   break;
       }
     }
     else
@@ -1213,25 +1228,25 @@ void setInbound(struct Node *interList, struct Node *list)
   while(temp) {
     if( !temp->inbound) {
       /* search in grid1 to find the prev and next point of temp, when prev point is outside and next point is inside
-	 inbound = 2, else inbound = 1*/
+    inbound = 2, else inbound = 1*/
       temp1 = list;
       temp1_prev = NULL;
       temp1_next = NULL;
       while(temp1) {
-	if(sameNode(*temp1, *temp)) {
-	  if(!temp1_prev) temp1_prev = getLast(list);
-	  temp1_next = temp1->Next;
-	  if(!temp1_next) temp1_next = list;
-	  break;
-	}
-	temp1_prev = temp1;
-	temp1 = temp1->Next;
+   if(sameNode(*temp1, *temp)) {
+     if(!temp1_prev) temp1_prev = getLast(list);
+     temp1_next = temp1->Next;
+     if(!temp1_next) temp1_next = list;
+     break;
+   }
+   temp1_prev = temp1;
+   temp1 = temp1->Next;
       }
       if(!temp1_next) error_handler("Error from create_xgrid.c: temp is not in list1");
       if( temp1_prev->isInside == 0 && temp1_next->isInside == 1)
-	temp->inbound = 2;   /* go inside */
+   temp->inbound = 2;   /* go inside */
       else
-	temp->inbound = 1;
+   temp->inbound = 1;
     }
     temp=temp->Next;
   }
