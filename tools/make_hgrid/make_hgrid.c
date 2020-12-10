@@ -268,6 +268,9 @@ char *usage[] = {
   "   --out_halo #               extra halo size data to be written out. This is    ",
   "                              only works for gnomonic_ed.                        ",
   "                                                                                 ",
+  "   --non_length_angle         When specified, will not output length(dx,dy) and  ",
+  "                              angle (angle_dx, angle_dy)                         ",
+  "                                                                                 ",
   "   --verbose                  Will print out running time message when this      ",
   "                              option is set. Otherwise the run will be silent    ",
   "                              when there is no error.                            ",
@@ -1026,10 +1029,10 @@ int main(int argc, char* argv[])
     if (verbose) fprintf(stderr, "[INFO] Allocating arrays of size %d for x, y based on nxp: %d nyp: %d ntiles: %d\n", size1, nxp, nyp, ntiles);
     x        = (double *) malloc(size1*sizeof(double));
     y        = (double *) malloc(size1*sizeof(double));
+    area     = (double *) malloc(size4*sizeof(double));
     if (output_length_angle) {
       dx       = (double *) malloc(size2*sizeof(double));
       dy       = (double *) malloc(size3*sizeof(double));
-      area     = (double *) malloc(size4*sizeof(double));
       angle_dx = (double *) malloc(size1*sizeof(double));
       if( strcmp(conformal,"true") !=0 )
         angle_dy = (double *) malloc(size1*sizeof(double));
