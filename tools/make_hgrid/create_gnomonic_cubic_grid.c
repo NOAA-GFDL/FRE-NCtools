@@ -8,6 +8,8 @@
                  different sizes. Nests with different refinement ratios
                  have NOT been tested and should be considered unsupported.
   12/07/2020  -- Global refinement bug fix. Kyle Ahern, AOML/HRD
+  12/10/2020  -- Make multiple nest functionality consistent with latest
+                 NOAA-GFDL source. Kyle Ahern, AOML/HRD
 
 *******************************************************************************/
 
@@ -52,6 +54,8 @@ void cell_north(int ni, int nj, const double *lonc, const double *latc, double *
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area);
 void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
 		      int n, double *lon, double *lat);
+void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, 
+          double lon_p, double lat_p, int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
                         double *xc, double *yc);
@@ -66,17 +70,17 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
 *******************************************************************************/
 void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *x, double *y,
 				 double *dx, double *dy, double *area, double *angle_dx,
-				 double *angle_dy, double shift_fac, int do_schmidt, double stretch_factor,
+				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
 				 double target_lon, double target_lat, int num_nest_grids,
 				 int parent_tile[MAX_NESTS], int refine_ratio[MAX_NESTS], int istart_nest[MAX_NESTS],
-				 int iend_nest[MAX_NESTS], int jstart_nest[MAX_NESTS], int jend_nest[MAX_NESTS], 
-				 int halo)
+				 int iend_nest[MAX_NESTS], int jstart_nest[MAX_NESTS], int jend_nest[MAX_NESTS],
+				 int halo, int output_length_angle)
 {
   const int ntiles = 6;
   int verbose = 1;
-  int ntiles2, global_nest=0;
+  long ntiles2, global_nest=0;
 
-  int nx, ny, nxp, nyp, ni, nj, nip, njp;
+  long nx, ny, nxp, nyp, ni, nj, nip, njp;
 
   int nx_nest[MAX_NESTS], ny_nest[MAX_NESTS];
   int ni_nest[MAX_NESTS], nj_nest[MAX_NESTS];
@@ -87,16 +91,15 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   int *ni_nest_arr=NULL;
   int *nj_nest_arr=NULL;
 
-
-  int ni2, nj2, ni2p, nj2p, n1, n2;
+  long ni2, nj2, ni2p, nj2p, n1, n2;
   int *nxl=NULL, *nyl=NULL, *nil=NULL, *njl=NULL;
   int *tile_offset=NULL;
   int *tile_offset_supergrid=NULL;
   int *tile_offset_supergrid_m=NULL;
   int *tile_offset_area=NULL;
 
-  int i, j, n, npts, nn;
-  int npts_supergrid, npts_supergrid_m, npts_area;
+  long i, j, n, npts, nn;
+  long npts_supergrid, npts_supergrid_m, npts_area;
 
   double p1[2], p2[2];
   double *lon=NULL, *lat=NULL;
@@ -152,10 +155,10 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   else {
     for (nn=0; nn < num_nest_grids; nn++) {
       ntiles2 = ntiles+num_nest_grids;
-      if( (istart_nest[nn]+1)%2 ) mpp_error("create_gnomonic_cubic_grid: istart_nest+1 is not divisbile by 2");
-      if( iend_nest[nn]%2 ) mpp_error("create_gnomonic_cubic_grid: iend_nest is not divisbile by 2");
-      if( (jstart_nest[nn]+1)%2 ) mpp_error("create_gnomonic_cubic_grid: jstart_nest+1 is not divisbile by 2");
-      if( jend_nest[nn]%2 ) mpp_error("create_gnomonic_cubic_grid: jend_nest is not divisbile by 2");  
+      if( (istart_nest[nn]+1)%2 ) mpp_error("create_gnomonic_cubic_grid: istart_nest+1 is not divisible by 2");
+      if( iend_nest[nn]%2 ) mpp_error("create_gnomonic_cubic_grid: iend_nest is not divisible by 2");
+      if( (jstart_nest[nn]+1)%2 ) mpp_error("create_gnomonic_cubic_grid: jstart_nest+1 is not divisible by 2");
+      if( jend_nest[nn]%2 ) mpp_error("create_gnomonic_cubic_grid: jend_nest is not divisible by 2");  
       istart[nn] = (istart_nest[nn]+1)/2;
       iend[nn]   = iend_nest[nn]/2;
       jstart[nn] = (jstart_nest[nn]+1)/2;
@@ -237,7 +240,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   nip=ni+1;
   njp=nj+1;
   
-  if ( do_schmidt && fabs(stretch_factor-1.) > EPSLN5 ) stretched_grid = 1;
+  if ( (do_schmidt || do_cube_transform) && fabs(stretch_factor-1.) > EPSLN5 ) stretched_grid = 1;
   
   lon = (double *)malloc(nip*nip*sizeof(double));
   lat = (double *)malloc(nip*nip*sizeof(double));
@@ -303,7 +306,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   // Operate only on the 6 parent tiles
   for(n=0; n<ntiles*nip*nip; n++) {
     /* This will result in the corner close to east coast of china */
-    if( do_schmidt == 0 && shift_fac > EPSLN4) xc[n] -= M_PI/18.;
+    if( do_schmidt && do_cube_transform == 0 && shift_fac > EPSLN4) xc[n] -= M_PI/18.;
     if(xc[n] < 0.) xc[n] += 2.*M_PI;
     if(fabs(xc[n]) < EPSLN10) xc[n] = 0;
     if(fabs(yc[n]) < EPSLN10) yc[n] = 0;
@@ -352,11 +355,20 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   /* Schmidt transformation */
   if ( do_schmidt ) {
     for(n=0; n<ntiles; n++) {
-      
+
       if (verbose) fprintf(stderr, "[INFO] Calling direct_transform for tile %d\n", n);
 
       direct_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
 		       n, xc+n*nip*nip, yc+n*nip*nip);
+
+    }
+  } else if ( do_cube_transform ) {
+    for (n=0; n<ntiles; n++) {
+
+      if (verbose) fprintf(stderr, "[INFO] Calling cube_transform for tile %d\n", n);
+
+      cube_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
+           n, xc+n*nip*nip, yc+n*nip*nip);
     }
   }
 
@@ -440,9 +452,9 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       
 
   for(n=0; n<ntiles2; n++) {
-    int min_n1 = -1;
-    int max_n1 = -1;
-    
+    // long n1,n2 // aren't these already declared at the function start? [Ahern]
+    long min_n1 = -1;
+    long max_n1 = -1;
 
     /* copy C-cell to supergrid */
     if (verbose) {
@@ -539,120 +551,151 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   if (verbose) fprintf(stderr, "[INFO] M\n");
   
   /* calculate grid cell length */
+  if (output_length_angle) {
+    /* Calculate dx */
+    for(n=0; n<ntiles2; n++) {
+      if (verbose) fprintf(stderr, "[INFO] M1 Calculating dx for tile n: %d ntiles2: %d\n", n, ntiles2);
+      for(j=0; j<=nyl[n]; j++) {
+        for(i=0; i<nxl[n]; i++) {
 
-  /* Calculate dx */
-  for(n=0; n<ntiles2; n++) {
-    if (verbose) fprintf(stderr, "[INFO] M1 Calculating dx for tile n: %d ntiles2: %d\n", n, ntiles2);
-    
-    for(j=0; j<=nyl[n]; j++) {
-      for(i=0; i<nxl[n]; i++) {
+          p1[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
+          p1[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
+          p2[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i+1];
+          p2[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i+1];
 
-	p1[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
-	p1[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
-	p2[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i+1];
-	p2[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i+1];
+          dx[tile_offset_supergrid_m[n] + j*nxl[n]+i] = great_circle_distance(p1, p2);
 
-	dx[tile_offset_supergrid_m[n] + j*nxl[n]+i] = great_circle_distance(p1, p2);
+        } /* i < nxl[n] */
+      } /* j <= nyl[n] */
+    } /* n < ntiles2 */
 
-      }
-    }
-  }
+    /* Calculate dy */
+    for(n=0; n<ntiles2; n++) {
+      if (verbose) fprintf(stderr, "[INFO] M2a Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
 
-  /* Calculate dy */
-  for(n=0; n<ntiles2; n++) {
-    if (verbose) fprintf(stderr, "[INFO] M2a Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+      //if( stretched_grid || n==ntiles ) { 
+      if( stretched_grid || (n >= 6) ) { 
+        if (verbose) fprintf(stderr, "[INFO] M2b Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+        for(j=0; j<nyl[n]; j++) {
+          for(i=0; i<=nxl[n]; i++) {
+            p1[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
+            p1[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
+            p2[0] = x[tile_offset_supergrid[n] + (j+1)*(nxl[n]+1)+i];
+            p2[1] = y[tile_offset_supergrid[n] + (j+1)*(nxl[n]+1)+i];
 
-    //if( stretched_grid || n==ntiles ) { 
-    if( stretched_grid || (n >= 6) ) { 
-      if (verbose) fprintf(stderr, "[INFO] M2b Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
-      for(j=0; j<nyl[n]; j++) {
-	for(i=0; i<=nxl[n]; i++) {
-	  p1[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
-	  p1[1] = y[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
-	  p2[0] = x[tile_offset_supergrid[n] + (j+1)*(nxl[n]+1)+i];
-	  p2[1] = y[tile_offset_supergrid[n] + (j+1)*(nxl[n]+1)+i];
+            dy[tile_offset_supergrid_m[n] + j*(nxl[n]+1)+i] = great_circle_distance(p1, p2);
+          } /* i <= nxl[n] */
+        } /* j < nyl[n] */
+      } else /* (!(stretched_grid || n >= 6)) */ {
+        if (verbose) fprintf(stderr, "[INFO] M2c Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+        for(j=0; j<nyp; j++) {
+          for(i=0; i<nx; i++) dy[tile_offset_supergrid_m[n] + i*nxp+j] = dx[tile_offset_supergrid_m[n] + j*nx+i];
+        }
+      } /* else (!(stretched_grid || n >= 6)) */
+    } /* n < ntiles2 */
 
-	  dy[tile_offset_supergrid_m[n] + j*(nxl[n]+1)+i] = great_circle_distance(p1, p2);
-	}
-      }
-    }
-    else {
-      if (verbose) fprintf(stderr, "[INFO] M2c Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
-      for(j=0; j<nyp; j++) {
-	for(i=0; i<nx; i++) dy[tile_offset_supergrid_m[n] + i*nxp+j] = dx[tile_offset_supergrid_m[n] + j*nx+i];
-      }
-    }
-  }
+    /* ensure consistency on the boundaries between tiles */
+    for(j=0; j<nx; j++) {
+      long n11, n21, n31, n41, n51, n61, n71, n81, n91;
+      long n12, n22, n32, n42, n52, n62, n72, n82, n92;
+
+      n11 = j*nxp;
+      n12 = 4*nx*nxp+nx*nx+nx-j-1;
+
+      n21 = j*nxp+nx;
+      n22 = nxp*nx+j*nxp;
+
+      n31 = nxp*nx+j*nxp+nx;
+      n32 = 3*nx*nxp+(nx-j-1);
+
+      n41 = 2*nxp*nx+j*nxp;
+      n42 = nx*nx+nx-j-1;
+
+      n51 = 2*nxp*nx+j*nxp+nx;
+      n52 = 3*nxp*nx+j*nxp;
+
+      n61 = 3*nxp*nx+j*nxp+nx;
+      n62 = 5*nx*nxp+(nx-j-1);
+
+      n71 = 4*nxp*nx+j*nxp;
+      n72 = 2*nx*nxp+nx*nx+nx-j-1;
+
+      n81 = 4*nxp*nx+j*nxp+nx;
+      n82 = 5*nxp*nx+j*nxp;
+
+      n91= 5*nxp*nx+j*nxp+nx;
+      n92 = nx*nxp+(nx-j-1);
+
+      dy[n11] = dx[n12]; /* 5N -> 1W */
+      dy[n21] = dy[n22]; /* 2W -> 1E */
+      dy[n31] = dx[n32]; /* 4S -> 2E */
+      dy[n41] = dx[n42]; /* 1N -> 3W */
+      dy[n51] = dy[n52]; /* 4W -> 3E */
+      dy[n61] = dx[n62]; /* 4S -> 2E */
+      dy[n71] = dx[n72]; /* 3N -> 5W */
+      dy[n81] = dy[n82]; /* 6W -> 5E */
+      dy[n91] = dx[n92]; /* 2S -> 6E */
+    } /* j < nx */
+  } /* output_length_angle */
 
   if (verbose) fprintf(stderr, "[INFO] N\n");
-
-  
-  /* ensure consistency on the boundaries between tiles */
-  for(j=0; j<nx; j++) {
-    dy[j*nxp]             = dx[4*nx*nxp+nx*nx+nx-j-1]; /* 5N -> 1W */
-    dy[j*nxp+nx]          = dy[nxp*nx+j*nxp];          /* 2W -> 1E */
-    dy[nxp*nx+j*nxp+nx]   = dx[3*nx*nxp+(nx-j-1)];     /* 4S -> 2E */
-    dy[2*nxp*nx+j*nxp]    = dx[nx*nx+nx-j-1];          /* 1N -> 3W */
-    dy[2*nxp*nx+j*nxp+nx] = dy[3*nxp*nx+j*nxp];        /* 4W -> 3E */
-    dy[3*nxp*nx+j*nxp+nx] = dx[5*nx*nxp+(nx-j-1)];     /* 4S -> 2E */
-    dy[4*nxp*nx+j*nxp]    = dx[2*nx*nxp+nx*nx+nx-j-1]; /* 3N -> 5W */
-    dy[4*nxp*nx+j*nxp+nx] = dy[5*nxp*nx+j*nxp];        /* 6W -> 5E */
-    dy[5*nxp*nx+j*nxp+nx] = dx[nx*nxp+(nx-j-1)];       /* 2S -> 6E */    
-  }
-
-  if (verbose) fprintf(stderr, "[INFO] O\n");
 
   if(do_schmidt) { /* calculate area for each tile */
     for(n=0; n<ntiles; n++) {
       if (verbose) fprintf(stderr, "[INFO] call calc_cell_area do_schmidt for tile n=%d\n", n);
       calc_cell_area(nx, ny, x + tile_offset_supergrid[n], y + tile_offset_supergrid[n], area + tile_offset_area[n]);
     }
-  }
-  else  {
+  } else {
     if (verbose) fprintf(stderr, "[INFO] call calc_cell_area for first tile.\n");
     calc_cell_area(nx, ny, x, y, area);
     for(j=0; j<nx; j++) {
       for(i=0; i<nx; i++) {
-	double ar;
-	/* all the faces have the same area */
-	ar = area[j*nx+i];
-	area[nx*nx+j*nx+i] = ar;
-	area[2*nx*nx+j*nx+i] = ar;
-	area[3*nx*nx+j*nx+i] = ar;
-	area[4*nx*nx+j*nx+i] = ar;
-	area[5*nx*nx+j*nx+i] = ar;        
+        double ar;
+        /* all the faces have the same area */
+        ar = area[j*nx+i];
+        area[nx*nx+j*nx+i] = ar;
+        area[2*nx*nx+j*nx+i] = ar;
+        area[3*nx*nx+j*nx+i] = ar;
+        area[4*nx*nx+j*nx+i] = ar;
+        area[5*nx*nx+j*nx+i] = ar;
       }
     }
-  
   }
+
   if (verbose) fprintf(stderr, "[INFO] P\n");
 
+  /* calculate nested grid area */
   for (nn=0; nn < num_nest_grids; nn++) {
     if (verbose) {
       fprintf(stderr, "[INFO] call calc_cell_area  for nest nn=%d tile n=%d\n", nn, ntiles+nn);
-      fprintf(stderr, "[INFO] Q1\n");
     }
-
-      calc_cell_area(nx_nest_arr[nn], ny_nest_arr[nn], x + tile_offset_supergrid[ntiles+nn], y + tile_offset_supergrid[ntiles+nn], area + tile_offset_area[ntiles+nn]);
+    calc_cell_area(nx_nest_arr[nn], ny_nest_arr[nn],
+                   x + tile_offset_supergrid[ntiles+nn],
+                   y + tile_offset_supergrid[ntiles+nn],
+                   area + tile_offset_area[ntiles+nn]);
   }
 
-  if (verbose) fprintf(stderr, "[INFO] Q2\n");
+  if (verbose) fprintf(stderr, "[INFO] Q\n");
 
-  /*calculate rotation angle, just some workaround, will modify this in the future. */
-  calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
+  if (output_length_angle) {
+    /*calculate rotation angle, just some workaround, will modify this in the future. */
+    calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
+
+    /* since angle is used in the model, set angle to 0 for nested region */
+    for(nn=0; nn < num_nest_grids; nn++) {
+      for(i=0; i<=(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
+        angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
+        angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
+      }
+    }
+  }
 
   if (verbose) fprintf(stderr, "[INFO] R\n");
 
-  /* since angle is used in the model, set angle to 0 for nested region */
-  for(nn=0; nn < num_nest_grids; nn++) {
-    for(i=0; i<=(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
-      angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
-      angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
-    }
-  }
-
   /* convert grid location from radians to degree */
-  if (verbose) fprintf(stderr, "[INFO] Convert radians to degrees: npts = %d npts_supergrid: %d\n", npts, npts_supergrid);
+  if (verbose) fprintf(stderr, "[INFO] Convert radians to degrees: npts = %d npts_supergrid: %d\n",
+                       npts, npts_supergrid);
+
   for(i=0; i<npts_supergrid; i++) {
     x[i] = x[i]*R2D;
     y[i] = y[i]*R2D;
@@ -663,7 +706,6 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   if (verbose) fprintf(stderr, "[INFO] Z\n");
 
-  
 }; /* void create_gnomonic_cubic_grid */
 
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area)
@@ -674,7 +716,6 @@ void calc_cell_area(int nx, int ny, const double *x, const double *y, double *ar
   nxp = nx+1;
   for(j=0; j<ny; j++) {
     for(i=0; i<nx; i++) {
-      //printf("[INFO] calc_cell_area: i: %d j: %d\n", i, j);
       p_ll[0] = x[j*nxp+i];       p_ll[1] = y[j*nxp+i];
       p_ul[0] = x[(j+1)*nxp+i];   p_ul[1] = y[(j+1)*nxp+i];
       p_lr[0] = x[j*nxp+i+1];     p_lr[1] = y[j*nxp+i+1];
@@ -758,7 +799,76 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
   
 }; /* direct_transform */
 
+/*-------------------------------------------------------------------------
+  void cube_transform(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
+                        double *lon, double *lat)
 
+  This is a direct transformation of the standard (symmetrical) cubic grid
+  to a locally enhanced high-res grid on the sphere; it is an application
+  of the Schmidt transformation at the **north** pole followed by a 
+  pole_shift_to_target (rotation) operation
+
+  arguments:
+    c            : Stretching factor
+    lon_p, lat_p : center location of the target face, radian
+    n            : grid face number
+    i1,i2,j1,j2  : starting and ending index in i- and j-direction
+    lon          : longitude. 0 <= lon <= 2*pi
+    lat          : latitude. -pi/2 <= lat <= pi/2
+  ------------------------------------------------------------------------*/
+
+void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
+                      int n, double *lon, double *lat)
+{
+#ifdef NO_QUAD_PRECISION
+  double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  double c2p1, c2m1;
+#else
+  long double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  long double c2p1, c2m1;
+#endif
+  int i, j, l, nxp;
+
+  nxp = i2-i1+1;
+  p2 = 0.5*M_PI;
+  two_pi = 2.*M_PI;
+  if(n==0) printf("create_gnomonic_cubic_grid: Cube transformation (revised Schmidt): stretching factor=%g, center=(%g,%g)\n",
+                  stretch_factor, lon_p, lat_p);
+
+  c2p1 = 1. + stretch_factor*stretch_factor;
+  c2m1 = 1. - stretch_factor*stretch_factor;
+
+  sin_p = sin(lat_p);
+  cos_p = cos(lat_p);
+  /* Try rotating pole around before doing the regular rotation */
+  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+      l = j*nxp+i;
+      if ( fabs(c2m1) > EPSLN7 ) {
+        sin_lat = sin(lat[l]);
+        lat_t   = asin( (c2m1+c2p1*sin_lat)/(c2p1+c2m1*sin_lat) );
+      }
+      else {
+        lat_t = lat[l];
+      }
+      sin_lat = sin(lat_t);
+      cos_lat = cos(lat_t);
+      lon[l] = lon[l] + M_PI; /* rotate around first to get final orientation correct */
+      sin_o = -(sin_p*sin_lat + cos_p*cos_lat*cos(lon[l]));
+      if ( (1.-fabs(sin_o)) < EPSLN7 ) {    /* poles */
+        lon[l] = 0.;
+        lat[l] = (sin_o < 0) ? -p2:p2;
+      }
+      else {
+        lat[l] = asin( sin_o );
+        lon[l] = lon_p + atan2(-cos_lat*sin(lon[l]), -sin_lat*cos_p+cos_lat*sin_p*cos(lon[l]));
+        if ( lon[l] < 0. )
+          lon[l] +=two_pi;
+        else if( lon[l] >= two_pi )
+          lon[l] -=two_pi;
+      }
+  }
+  
+}; /* cube_transform */
 
 /*-----------------------------------------------------
   void gnomonic_ed
@@ -1222,19 +1332,21 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 {
   int ip1, im1, jp1, jm1, tp1, tm1, i, j, n, ntiles, nx;
   double lon_scale;
+  unsigned int n1, n2, n3;
 
   nx = nxp-1;
   ntiles = 6;
   for(n=0; n<ntiles; n++) {
     for(j=0; j<nxp; j++) {
       for(i=0; i<nxp; i++) {
-	lon_scale = cos(y[n*nxp*nxp+j*nxp+i]*D2R);
-	tp1 = n;
-	tm1 = n;
-	ip1 = i+1;
-	im1 = i-1;
-	jp1 = j;
-	jm1 = j;
+        n1 = n*nxp*nxp+j*nxp+i;
+        lon_scale = cos(y[n1]*D2R);
+        tp1 = n;
+        tm1 = n;
+        ip1 = i+1;
+        im1 = i-1;
+        jp1 = j;
+        jm1 = j;
 
         if(ip1 >= nxp) {  /* find the neighbor tile. */
 	  if(n % 2 == 0) { /* tile 1, 3, 5 */
@@ -1260,15 +1372,16 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 	    im1 = nx;
 	  }
 	}
-
-	angle_dx[n*nxp*nxp+j*nxp+i] = atan2(y[tp1*nxp*nxp+jp1*nxp+ip1]-y[tm1*nxp*nxp+jm1*nxp+im1],
-					    (x[tp1*nxp*nxp+jp1*nxp+ip1]-x[tm1*nxp*nxp+jm1*nxp+im1])*lon_scale )*R2D;
-	tp1 = n;
-	tm1 = n;
-	ip1 = i;
-	im1 = i;
-	jp1 = j+1;
-	jm1 = j-1;
+        n1 = n*nxp*nxp+j*nxp+i;
+        n2 = tp1*nxp*nxp+jp1*nxp+ip1;
+        n3 = tm1*nxp*nxp+jm1*nxp+im1;
+        angle_dx[n1] = atan2( y[n2]-y[n3], (x[n2]-x[n3])*lon_scale )*R2D;
+        tp1 = n;
+        tm1 = n;
+        ip1 = i;
+        im1 = i;
+        jp1 = j+1;
+        jm1 = j-1;
         if(jp1 >=nxp) {  /* find the neighbor tile. */
 	  if(n % 2 == 0) { /* tile 1, 3, 5 */
 	    tp1 = n+2;
@@ -1296,8 +1409,10 @@ void calc_rotation_angle2(int nxp, double *x, double *y, double *angle_dx, doubl
 	  }
 	}	
 
-	angle_dy[n*nxp*nxp+j*nxp+i] = atan2(y[tp1*nxp*nxp+jp1*nxp+ip1]-y[tm1*nxp*nxp+jm1*nxp+im1],
-					    (x[tp1*nxp*nxp+jp1*nxp+ip1]-x[tm1*nxp*nxp+jm1*nxp+im1])*lon_scale )*R2D;
+      n1 = n*nxp*nxp+j*nxp+i;
+      n2 = tp1*nxp*nxp+jp1*nxp+ip1;
+      n3 = tm1*nxp*nxp+jm1*nxp+im1;
+      angle_dy[n1] = atan2( y[n2]-y[n3], (x[n2]-x[n3])*lon_scale )*R2D;
       }
     }
   }
@@ -1579,17 +1694,15 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
       if( xc[j*npi+i] > two_pi ) xc[j*npi+i] -= two_pi;
       if( xc[j*npi+i] < 0. ) xc[j*npi+i] += two_pi;
 
-
-      if ((i==0) && (j==0)) {
-	printf("setup_aligned_nest xc[0]: %f yc[0]: %f\n", xc[0], yc[0]);
-	}
-      if ((i==1) && (j==0)) {
-	printf("setup_aligned_nest xc[1]: %f yc[1]: %f\n", xc[1], yc[1]);
-	}
-
+      if (verbose && (j==0)) {
+        if (i==0) {
+          printf("setup_aligned_nest xc[0]: %f yc[0]: %f\n", xc[0], yc[0]);
+        } else if (i==1) {
+          printf("setup_aligned_nest xc[1]: %f yc[1]: %f\n", xc[1], yc[1]);
+        }
+      }
 
     }
   }
 
 }
-
