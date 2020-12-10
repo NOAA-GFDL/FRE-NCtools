@@ -1,5 +1,4 @@
 #!/usr/bin/env bats
-set -x
 
 @test "Wrapper complete hydrology test" {
 
