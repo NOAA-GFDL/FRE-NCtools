@@ -111,7 +111,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   /* ntiles is a constant always equal to 6.  ntiles2 is variable, and includes the 6 global tiles plus any nests */
 
-  if (verbose) printf("[INFO] A.  Starting create_gnomonic_grid with num_nest_grids=%d\n", num_nest_grids);
+  if (verbose) fprintf(stderr, "[INFO] A.  Starting create_gnomonic_grid with num_nest_grids=%d\n", num_nest_grids);
 
   for(n=0; n<ntiles; n++) {
     if(nlon[n] != nlat[n] ) mpp_error("create_gnomonic_cubic_grid: the grid size in x and y-direction "
@@ -145,8 +145,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   ntiles2=ntiles;
   global_nest=0;
 
-  if (verbose) printf("[INFO] B\n");
-
+  if (verbose) fprintf(stderr, "[INFO] B\n");
 
   if(num_nest_grids && parent_tile[0]== 0)
     global_nest = 1;
@@ -168,11 +167,11 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       ny_nest[nn] = nj_nest[nn]*2;
     }
   }
-  if (verbose) printf("[INFO] C\n");
 
-
-
-  if (verbose) printf("[INFO] C1 ntiles: %d num_nest_grids: %d ntiles2: %d\n", ntiles, num_nest_grids, ntiles2);
+  if (verbose) {
+    fprintf(stderr, "[INFO] C\n");
+    fprintf(stderr, "[INFO] C1 ntiles: %d num_nest_grids: %d ntiles2: %d\n", ntiles, num_nest_grids, ntiles2);
+  }
 
   /*  Since many of the variables for the global and nest tiles are stored in 1D arrays, 
       we generate a set of indices that navigate to the start of each global and nest tile.
@@ -184,20 +183,17 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
    */
 
-    
-
   nxl = (int *)malloc(ntiles2*sizeof(int));
   nyl = (int *)malloc(ntiles2*sizeof(int));
   nil = (int *)malloc(ntiles2*sizeof(int));
   njl = (int *)malloc(ntiles2*sizeof(int));
 
-  
   nx_nest_arr = (int *)malloc(num_nest_grids*sizeof(int));
   ny_nest_arr = (int *)malloc(num_nest_grids*sizeof(int));
   ni_nest_arr = (int *)malloc(num_nest_grids*sizeof(int));
   nj_nest_arr = (int *)malloc(num_nest_grids*sizeof(int));
 
-for (nn=0; nn < num_nest_grids; nn++) {
+  for (nn=0; nn < num_nest_grids; nn++) {
     nx_nest_arr[nn] = nx_nest[nn];
     ny_nest_arr[nn] = ny_nest[nn];
     ni_nest_arr[nn] = ni_nest[nn];
@@ -224,16 +220,14 @@ for (nn=0; nn < num_nest_grids; nn++) {
     njl[nn+ntiles] = nj_nest_arr[nn];
   }
 
-
   if (verbose) {
-    printf("[INFO] INDEX ntiles: %d ntiles2: %d\n", ntiles, ntiles2);
+    fprintf(stderr, "[INFO] INDEX ntiles: %d ntiles2: %d\n", ntiles, ntiles2);
     for(n=0; n<ntiles2; n++) {
-      printf("[INFO] INDEX n: %d nxl[n]: %d nyl[n]: %d nil[n]: %d njl[n]: %d\n",n, nxl[n], nyl[n], nil[n], njl[n]);
+      fprintf(stderr, "[INFO] INDEX n: %d nxl[n]: %d nyl[n]: %d nil[n]: %d njl[n]: %d\n",
+              n, nxl[n], nyl[n], nil[n], njl[n]);
     }
+    fprintf(stderr,"[INFO] D\n");
   }
-  
-  if (verbose) printf("[INFO] D\n");
-
   /* for global nest grid, set ni to the coarse grid size */
   /* TODO -- can this code handle multiple different refinement ratios for global nests? */
   if(global_nest) {
@@ -248,7 +242,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
   lon = (double *)malloc(nip*nip*sizeof(double));
   lat = (double *)malloc(nip*nip*sizeof(double));
   
-  if (verbose) printf("[INFO] E\n");
+  if (verbose) fprintf(stderr,"[INFO] E\n");
   
   if(strcmp(grid_type, "gnomonic_ed")==0 )
     gnomonic_ed(  ni, lon, lat);
@@ -261,8 +255,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
 
   symm_ed(ni, lon, lat);
 
-  
-  if (verbose) printf("[INFO] F\n");
+  if (verbose) fprintf(stderr,"[INFO] F\n");
   
   // Cycle through all of the tiles; global and nests, adding enough points based on the dimensions
   // The 6 cubed-sphere tiles are square thus, nil=njl, but the nests can be rectangular
@@ -277,8 +270,11 @@ for (nn=0; nn < num_nest_grids; nn++) {
     tile_offset_supergrid_m[n] = npts_supergrid_m;
     tile_offset_area[n] = npts_area;
 
-    if (verbose) printf("[INFO] INDEX OFFSET n: %d tile_offset[n]: %d tile_offset_supergrid[n]: %d tile_offset_supergrid_m[n]: %d tile_offset_area[n]: %d \n",
-			n, tile_offset[n],  tile_offset_supergrid[n],  tile_offset_supergrid_m[n],  tile_offset_area[n]);
+    if (verbose) {
+      fprintf(stderr, "[INFO] INDEX OFFSET n: %d tile_offset[n]: %d tile_offset_supergrid[n]: %d \
+              tile_offset_supergrid_m[n]: %d tile_offset_area[n]: %d \n",
+			        n, tile_offset[n],  tile_offset_supergrid[n],  tile_offset_supergrid_m[n],  tile_offset_area[n]);
+    }
 
     npts += (nil[n] + 1) * (njl[n] + 1);
     npts_supergrid += (nxl[n] + 1) * (nyl[n] + 1);
@@ -286,7 +282,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
     npts_area += nxl[n] * nyl[n];    // needed for area
   }
   
-  if (verbose) printf("[INFO] INDEX OFFSET npts: %d\n", npts);
+  if (verbose) fprintf(stderr, "[INFO] INDEX OFFSET npts: %d\n", npts);
 
   xc = (double *)malloc(npts*sizeof(double));
   yc = (double *)malloc(npts*sizeof(double));
@@ -302,7 +298,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
      and greenwich meridian Lon[-pi,pi]  */
   mirror_grid(ni, ntiles, xc, yc);
 
-  if (verbose) printf("[INFO] G\n");
+  if (verbose) fprintf(stderr, "[INFO] G\n");
 
   // Operate only on the 6 parent tiles
   for(n=0; n<ntiles*nip*nip; n++) {
@@ -313,7 +309,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
     if(fabs(yc[n]) < EPSLN10) yc[n] = 0;
   }
 
-  if (verbose) printf("[INFO] H\n");
+  if (verbose) fprintf(stderr, "[INFO] H\n");
       
   /* ensure consistency on the boundary between tiles */
   for(j=0; j<nip; j++) {
@@ -351,23 +347,20 @@ for (nn=0; nn < num_nest_grids; nn++) {
     yc[5*nip*nip+j*nip] = yc[4*nip*nip+j*nip+ni];    /* 5E -> 6W */  
   }
 
-  if (verbose) printf("[INFO] I\n");
-
+  if (verbose) fprintf(stderr, "[INFO] I\n");
 
   /* Schmidt transformation */
   if ( do_schmidt ) {
     for(n=0; n<ntiles; n++) {
       
-      if (verbose) {
-	printf("[INFO] Calling direct_transform for tile %d\n", n);
-      }
+      if (verbose) fprintf(stderr, "[INFO] Calling direct_transform for tile %d\n", n);
 
       direct_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
 		       n, xc+n*nip*nip, yc+n*nip*nip);
     }
   }
 
-  if (verbose) printf("[INFO] J\n");
+  if (verbose) fprintf(stderr, "[INFO] J\n");
 
   
   /* get nest grid */
@@ -389,7 +382,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
     xc = (double *)malloc(npts*sizeof(double));
     yc = (double *)malloc(npts*sizeof(double));  
     for(n=0; n<ntiles; n++) {
-      printf("[INFO] calling setup_aligned_nest, n=%d\n",n);
+      fprintf(stderr,"[INFO] calling setup_aligned_nest, n=%d\n",n);
       /* zeroth index of refine_ratio array                  *
        * is assigned to all tiles if global_nest = 1 [Ahern] */
       setup_aligned_nest(ni2, ni2, xc2+ni2p*ni2p*n, yc2+ni2p*ni2p*n, 0, refine_ratio[0],
@@ -399,7 +392,9 @@ for (nn=0; nn < num_nest_grids; nn++) {
   else if( num_nest_grids > 0 ) {
     for (nn=0; nn < num_nest_grids; nn++) {
       if (verbose) {
-	printf("[INFO] Processing setup_aligned_nest for nest %d .  ntiles=%d parent_tile: %d\n", nn, ntiles, parent_tile);
+        fprintf(stderr,
+                "[INFO] Processing setup_aligned_nest for nest %d . ntiles=%d parent_tile: %d\n",
+                nn, ntiles, parent_tile);
       }
       
       /* Setup aligned nest -- final two arguments are memory locations for data to be returned */
@@ -412,18 +407,12 @@ for (nn=0; nn < num_nest_grids; nn++) {
 			 istart[nn], iend[nn], jstart[nn], jend[nn],
 			 xc+tile_offset[ntiles+nn], yc+tile_offset[ntiles+nn]);
     }
-    
-    
-    if (verbose) {
-      printf("[INFO] Completed processing setup_aligned_nest for nest(s)\n");
-    }
 
-
+    if (verbose) fprintf(stderr, "[INFO] Completed processing setup_aligned_nest for nest(s)\n");
   }
 
-  if (verbose) printf("[INFO] K\n");
+  if (verbose) fprintf(stderr, "[INFO] K\n");
 
-  
   /* calculate grid box center location */
 
   ni2 = 0;
@@ -437,7 +426,7 @@ for (nn=0; nn < num_nest_grids; nn++) {
   xtmp = (double *)malloc(ni2p*nj2p*sizeof(double));
   ytmp = (double *)malloc(ni2p*nj2p*sizeof(double));
 
-  if (verbose) printf("[INFO] L\n");
+  if (verbose) fprintf(stderr, "[INFO] L\n");
 
   /* Setting the x, y values for each tile */
   /* Not clear that data is handled correctly for nested tiles, though. */
@@ -456,20 +445,24 @@ for (nn=0; nn < num_nest_grids; nn++) {
     
 
     /* copy C-cell to supergrid */
-    if (verbose) printf("[INFO] INDEX fill x and y from C-cell.  n=%d n*nxp*nxp=%d tile_offset[n]: %d tile_offset_supergrid[n]: %d njl[n]: %d nil[n]: %d\n",n,  n*nxp*nxp, tile_offset[n], tile_offset_supergrid[n], njl[n], nil[n]);
-    if (verbose) printf("[INFO] START fill x and y from C-cell.  n=%d tile_offset_supergrid[n]: %d \n",n, tile_offset_supergrid[n]);
-
+    if (verbose) {
+      fprintf(stderr, "[INFO] INDEX fill x and y from C-cell. n=%d n*nxp*nxp=%d tile_offset[n]: %d \
+              tile_offset_supergrid[n]: %d njl[n]: %d nil[n]: %d\n",
+              n, n*nxp*nxp, tile_offset[n], tile_offset_supergrid[n], njl[n], nil[n]);
+      fprintf(stderr, "[INFO] START fill x and y from C-cell.  n=%d tile_offset_supergrid[n]: %d \n",
+              n, tile_offset_supergrid[n]);
+    }
     for(j=0; j<=njl[n]; j++) for(i=0; i<=nil[n]; i++) {
 	/* n1 = n*nxp*nxp+j*2*(2*nil[n]+1)+i*2; */
 	//n1 = n*nxp*nxp+j*2*(2*nil[n]+1)+i*2;
 	//n2 = n*nip*nip+j*(nil[n]+1)+i;
 	n1 = tile_offset_supergrid[n] + j*2*(2*nil[n]+1) + i*2;
 	n2 = tile_offset[n] + j*(nil[n]+1)+i;
-	//if (verbose) printf("[INFO] CCELL n: %d i: %d j: %d n1: %d npts_supergrid: %d n2: %d npts: %d\n", n, i, j, n1, npts_supergrid, n2, npts);
+
 	x[n1]=xc[n2];
 	y[n1]=yc[n2];
 
-	if (verbose){ 
+	if (verbose){
 	  if (n1 < min_n1 || min_n1 == -1) min_n1 = n1;
 	  if (n1 > max_n1) max_n1 = n1;
 	}
@@ -477,11 +470,11 @@ for (nn=0; nn < num_nest_grids; nn++) {
 
 
       }
-    
+
     /* cell center and copy to super grid */
     //cell_center(nil[n], njl[n], xc+n*nip*nip, yc+n*nip*nip, xtmp, ytmp);
     cell_center(nil[n], njl[n], xc + tile_offset[n], yc + tile_offset[n], xtmp, ytmp);
-    if (verbose) printf("[INFO] CENTER n: %d n*nip*nip: %d tile_offset[n]: %d\n", n, n*nip*nip, tile_offset[n]);
+    if (verbose) fprintf(stderr, "[INFO] CENTER n: %d n*nip*nip: %d tile_offset[n]: %d\n", n, n*nip*nip, tile_offset[n]);
     for(j=0; j<njl[n]; j++) for(i=0; i<nil[n]; i++) {
 	// Offset of 2 for i=0, j=0
 	//n1 = n*nxp*nxp+(j*2+1)*(2*nil[n]+1)+i*2+1;
@@ -535,20 +528,21 @@ for (nn=0; nn < num_nest_grids; nn++) {
 
       }
 
-    if (verbose) printf("[INFO] INDEX tile: %d min_n1: %d max_n1: %d max_n1 - min_n1: %d sqrt(max_n1 - min_n1 + 1): %f\n", n, min_n1, max_n1, max_n1 - min_n1, sqrt(max_n1 - min_n1 + 1));
-
-  } 
+    if (verbose) fprintf(stderr,
+                         "[INFO] INDEX tile: %d min_n1: %d max_n1: %d max_n1 - min_n1: %d sqrt(max_n1 - min_n1 + 1): %f\n",
+                         n, min_n1, max_n1, max_n1 - min_n1, sqrt(max_n1 - min_n1 + 1));
+  }
 
   free(xtmp);
   free(ytmp);
 
-  if (verbose) printf("[INFO] M\n");
+  if (verbose) fprintf(stderr, "[INFO] M\n");
   
   /* calculate grid cell length */
 
   /* Calculate dx */
   for(n=0; n<ntiles2; n++) {
-    if (verbose) printf("[INFO] M1 Calculating dx for tile n: %d ntiles2: %d\n", n, ntiles2);
+    if (verbose) fprintf(stderr, "[INFO] M1 Calculating dx for tile n: %d ntiles2: %d\n", n, ntiles2);
     
     for(j=0; j<=nyl[n]; j++) {
       for(i=0; i<nxl[n]; i++) {
@@ -566,11 +560,11 @@ for (nn=0; nn < num_nest_grids; nn++) {
 
   /* Calculate dy */
   for(n=0; n<ntiles2; n++) {
-    if (verbose) printf("[INFO] M2a Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+    if (verbose) fprintf(stderr, "[INFO] M2a Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
 
     //if( stretched_grid || n==ntiles ) { 
     if( stretched_grid || (n >= 6) ) { 
-      if (verbose) printf("[INFO] M2b Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+      if (verbose) fprintf(stderr, "[INFO] M2b Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
       for(j=0; j<nyl[n]; j++) {
 	for(i=0; i<=nxl[n]; i++) {
 	  p1[0] = x[tile_offset_supergrid[n] + j*(nxl[n]+1)+i];
@@ -583,14 +577,14 @@ for (nn=0; nn < num_nest_grids; nn++) {
       }
     }
     else {
-      if (verbose) printf("[INFO] M2c Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
+      if (verbose) fprintf(stderr, "[INFO] M2c Calculating dy for tile n: %d ntiles: %d ntiles2: %d\n", n, ntiles, ntiles2);
       for(j=0; j<nyp; j++) {
 	for(i=0; i<nx; i++) dy[tile_offset_supergrid_m[n] + i*nxp+j] = dx[tile_offset_supergrid_m[n] + j*nx+i];
       }
     }
   }
 
-  if (verbose) printf("[INFO] N\n");
+  if (verbose) fprintf(stderr, "[INFO] N\n");
 
   
   /* ensure consistency on the boundaries between tiles */
@@ -606,17 +600,16 @@ for (nn=0; nn < num_nest_grids; nn++) {
     dy[5*nxp*nx+j*nxp+nx] = dx[nx*nxp+(nx-j-1)];       /* 2S -> 6E */    
   }
 
-  if (verbose) printf("[INFO] O\n");
-
+  if (verbose) fprintf(stderr, "[INFO] O\n");
 
   if(do_schmidt) { /* calculate area for each tile */
     for(n=0; n<ntiles; n++) {
-      if (verbose) printf("[INFO] call calc_cell_area do_schmidt for tile n=%d\n", n);
+      if (verbose) fprintf(stderr, "[INFO] call calc_cell_area do_schmidt for tile n=%d\n", n);
       calc_cell_area(nx, ny, x + tile_offset_supergrid[n], y + tile_offset_supergrid[n], area + tile_offset_area[n]);
     }
   }
   else  {
-    if (verbose) printf("[INFO] call calc_cell_area for first tile.\n");
+    if (verbose) fprintf(stderr, "[INFO] call calc_cell_area for first tile.\n");
     calc_cell_area(nx, ny, x, y, area);
     for(j=0; j<nx; j++) {
       for(i=0; i<nx; i++) {
@@ -632,24 +625,23 @@ for (nn=0; nn < num_nest_grids; nn++) {
     }
   
   }
-  if (verbose) printf("[INFO] P\n");
-
+  if (verbose) fprintf(stderr, "[INFO] P\n");
 
   for (nn=0; nn < num_nest_grids; nn++) {
-    if (verbose) printf("[INFO] call calc_cell_area  for nest nn=%d tile n=%d\n", nn, ntiles+nn);
-    if (verbose) printf("[INFO] Q1\n");
+    if (verbose) {
+      fprintf(stderr, "[INFO] call calc_cell_area  for nest nn=%d tile n=%d\n", nn, ntiles+nn);
+      fprintf(stderr, "[INFO] Q1\n");
+    }
 
       calc_cell_area(nx_nest_arr[nn], ny_nest_arr[nn], x + tile_offset_supergrid[ntiles+nn], y + tile_offset_supergrid[ntiles+nn], area + tile_offset_area[ntiles+nn]);
   }
 
-  if (verbose) printf("[INFO] Q2\n");
+  if (verbose) fprintf(stderr, "[INFO] Q2\n");
 
-  
   /*calculate rotation angle, just some workaround, will modify this in the future. */
   calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
 
-  if (verbose) printf("[INFO] R\n");
-
+  if (verbose) fprintf(stderr, "[INFO] R\n");
 
   /* since angle is used in the model, set angle to 0 for nested region */
   for(nn=0; nn < num_nest_grids; nn++) {
@@ -658,19 +650,18 @@ for (nn=0; nn < num_nest_grids; nn++) {
       angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
     }
   }
-      
-    
+
   /* convert grid location from radians to degree */
-  if (verbose) printf("[INFO] Convert radians to degrees: npts = %d npts_supergrid: %d\n", npts, npts_supergrid);
+  if (verbose) fprintf(stderr, "[INFO] Convert radians to degrees: npts = %d npts_supergrid: %d\n", npts, npts_supergrid);
   for(i=0; i<npts_supergrid; i++) {
     x[i] = x[i]*R2D;
     y[i] = y[i]*R2D;
   }
 
   free(xc);
-  free(yc);  
-  
-  if (verbose) printf("[INFO] Z\n");
+  free(yc);
+
+  if (verbose) fprintf(stderr, "[INFO] Z\n");
 
   
 }; /* void create_gnomonic_cubic_grid */
@@ -1538,8 +1529,8 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
     mpp_error("create_gnomonic_cubic_grid(setup_aligned_nest): nested grid lies outside its parent");
 
   if (verbose) {
-    printf("[INFO] setup_aligned nest: parent_ni: %d parent_nj: %d refine_ratio: %d parent_xc: %p parent_yc: %p\n", 
-	   parent_ni, parent_nj, refine_ratio, parent_xc, parent_yc);
+    fprintf(stderr, "[INFO] setup_aligned nest: parent_ni: %d parent_nj: %d refine_ratio: %d parent_xc: %p parent_yc: %p\n", 
+            parent_ni, parent_nj, refine_ratio, parent_xc, parent_yc);
 
   }
 

@@ -373,12 +373,7 @@ int parse_comma_list(char *arg_list, int var_array[MAX_NESTS])
 
   while(ptr != NULL && i < MAX_NESTS)
     {
-      printf("string: %s\n", ptr);
-      
       var_array[i] = atoi(ptr);
-
-      printf("int: %d\n", var_array[i]);
-      
       ptr = strtok(NULL, ",");
       i++;
     }
@@ -657,27 +652,21 @@ int main(int argc, char* argv[])
       nest_grids = 1;
       break;
     case 'B':
-      //refine_ratio = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, refine_ratio);
       break;
     case 'C':
-      //parent_tile = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, parent_tile);
       break;
     case 'D':
-      //istart_nest = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, istart_nest);
       break;
     case 'E':
-      //iend_nest = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, iend_nest);
       break;
     case 'F':
-      //jstart_nest = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, jstart_nest);
       break;
     case 'G':
-      //jend_nest = atoi(optarg);
       num_nest_args =  parse_comma_list(optarg, jend_nest);
       break;
     case 'H':
@@ -691,7 +680,7 @@ int main(int argc, char* argv[])
       break;
     case 'K':
       out_halo = atoi(optarg);
-      break;      
+      break;
     case 'v':
       verbose = 1;
       break;
@@ -701,17 +690,17 @@ int main(int argc, char* argv[])
 
 
     case '?':
-      errflg++;      
-    }      
+      errflg++;
+    }
   }
-  
-  if (errflg ) {
+
+  if (errflg) {
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     exit(2);
-  }  
-  
-  if(mpp_pe() == mpp_root_pe() && verbose) printf("==>NOTE: the grid type is %s\n",grid_type);
+  }
+
+  if(mpp_pe() == mpp_root_pe() && verbose) fprintf(stderr, "==>NOTE: the grid type is %s\n",grid_type);
 
   if(strcmp(grid_type,"regular_lonlat_grid") ==0 )
     my_grid_type = REGULAR_LONLAT_GRID;
@@ -889,7 +878,7 @@ int main(int argc, char* argv[])
 
       if(refine_ratio[n] == 0) mpp_error("make_hgrid: --refine_ratio must be set when --nest_grids is set");
       if(parent_tile[n] == 0 && mpp_pe()==mpp_root_pe()) {
-	printf("NOTE from make_hgrid: parent_tile is 0, the output grid will have resolution refine_ration*nlon");
+	fprintf(stderr,"NOTE from make_hgrid: parent_tile is 0, the output grid will have resolution refine_ration*nlon");
       }
       else {
 	if(istart_nest[n] == 0) mpp_error("make_hgrid: --istart_nest must be set when --nest_grids is set");
@@ -898,15 +887,14 @@ int main(int argc, char* argv[])
 	if(jend_nest[n] == 0) mpp_error("make_hgrid: --jend_nest must be set when --nest_grids is set");
 	if(halo == 0 ) mpp_error("make_hgrid: --halo must be set when --nest_grids is set");
 	ntiles++;   /* one more tile for the nest region */
-	if (verbose) printf("Configuration for nest %d validated.\n", ntiles);
-	
+	if (verbose) fprintf(stderr, "Configuration for nest %d validated.\n", ntiles);
       }
     }
 
 
 
     if (verbose) {
-      printf("Updated number of tiles, including nests (ntiles): %d\n", ntiles);
+      fprintf(stderr,"Updated number of tiles, including nests (ntiles): %d\n", ntiles);
     }
 
     if(nxbnds2 != 1 ) mpp_error("make_hgrid: grid type is 'gnomonic_cubic_grid', number entry entered "
@@ -917,17 +905,17 @@ int main(int argc, char* argv[])
       mpp_error("make_hgrid: f_plane_latitude should be between -90 and 90.");
     if(f_plane_latitude > ybnds[nybnds-1] || f_plane_latitude < ybnds[0] ) {
       if(mpp_pe() == mpp_root_pe())
-	printf("Warning from make_hgrid: f_plane_latitude is not inside the latitude range of the grid\n");
+	fprintf(stderr,"Warning from make_hgrid: f_plane_latitude is not inside the latitude range of the grid\n");
     }
     if(mpp_pe() == mpp_root_pe())
-      printf("make_hgrid: setting geometric factor according to f-plane with f_plane_latitude = %g\n", f_plane_latitude );
+      fprintf(stderr,"make_hgrid: setting geometric factor according to f-plane with f_plane_latitude = %g\n", f_plane_latitude );
   }
 
 
 
   if (verbose) {
-    printf("[INFO] make_hgrid.c Number of tiles (ntiles): %d\n", ntiles); 
-    printf("[INFO] make_hgrid.c Number of global tiles (ntiles_global): %d\n", ntiles_global); 
+    fprintf(stderr,"[INFO] make_hgrid.c Number of tiles (ntiles): %d\n", ntiles); 
+    fprintf(stderr,"[INFO] make_hgrid.c Number of global tiles (ntiles_global): %d\n", ntiles_global); 
   }
 
   nxl = (int *)malloc(ntiles*sizeof(int));
@@ -988,9 +976,8 @@ int main(int argc, char* argv[])
     int n_nest;
 
     for (n_nest=0; n_nest < ntiles; n_nest++) {
-      printf("[INFO] tile: %d, nxl[%d], nyl[%d], ntiles: %d\n", n_nest, nxl[n_nest], nyl[n_nest], ntiles);
+      fprintf(stderr,"[INFO] tile: %d, nxl[%d], nyl[%d], ntiles: %d\n", n_nest, nxl[n_nest], nyl[n_nest], ntiles);
     }
-
 
     size1 = nxp     *  nyp    * ntiles_global;
     size2 = nxp     * (nyp+1) * ntiles_global;
@@ -999,7 +986,7 @@ int main(int argc, char* argv[])
   
     //    if( nest_grids) { /* nest grid is the last tile */
     for (n_nest = ntiles_global; n_nest < ntiles_global + nest_grids; n_nest++) { /* nest grid is the last tile */
-      if (verbose) printf("[INFO] Adding memory size for nest %d, nest_grids: %d\n", n_nest, nest_grids);
+      if (verbose) fprintf(stderr, "[INFO] Adding memory size for nest %d, nest_grids: %d\n", n_nest, nest_grids);
       size1 += (nxl[n_nest] +1)    *  (nyl[n_nest]+1);
       size2 += (nxl[n_nest] +1)    * (nyl[n_nest]+2);
       size3 += (nxl[n_nest]+2) *  (nyl[n_nest]+1);
@@ -1008,7 +995,7 @@ int main(int argc, char* argv[])
 
 
 
-    if (verbose) printf("[INFO] Allocating arrays of size %d for x, y based on nxp: %d nyp: %d ntiles: %d\n", size1, nxp, nyp, ntiles);
+    if (verbose) fprintf(stderr, "[INFO] Allocating arrays of size %d for x, y based on nxp: %d nyp: %d ntiles: %d\n", size1, nxp, nyp, ntiles);
     x        = (double *) malloc(size1*sizeof(double));
     y        = (double *) malloc(size1*sizeof(double));
     dx       = (double *) malloc(size2*sizeof(double));
@@ -1034,7 +1021,7 @@ int main(int argc, char* argv[])
 			 area, angle_dx, center, verbose, use_great_circle_algorithm);
   else if(my_grid_type==FROM_FILE) {
     for(n=0; n<ntiles; n++) {
-      int n1, n2, n3, n4;
+      long n1, n2, n3, n4;
       n1 = n * nxp * nyp;
       n2 = n * nx  * nyp;
       n3 = n * nxp * ny;
@@ -1081,15 +1068,13 @@ int main(int argc, char* argv[])
       else
 	sprintf(outfile, "%s.nc", gridname);
 
-      if (verbose) {
-	printf("Writing out %s.\n", outfile);
-      }
+      if (verbose) fprintf(stderr, "Writing out %s.\n", outfile);
 
       fid = mpp_open(outfile, MPP_WRITE);
       /* define dimenison */
       nx = nxl[n];
       ny = nyl[n];
-      if (verbose) printf("[INFO] Outputting arrays of size nx: %d and ny: %d for tile: %d\n", nx, ny, n);
+      if (verbose) fprintf(stderr, "[INFO] Outputting arrays of size nx: %d and ny: %d for tile: %d\n", nx, ny, n);
       nxp = nx+1;
       nyp = ny+1;
       dimlist[0] = mpp_def_dim(fid, "string", STRINGLEN);
@@ -1155,9 +1140,13 @@ int main(int argc, char* argv[])
       mpp_put_var_value_block(fid, id_tile, start, nwrite, tilename );
 
       if(out_halo ==0) {
-	if (verbose) printf("[INFO] START NC XARRAY write out_halo=0 tile number = n: %d offset = pos_c: %d\n", n, pos_c);
-	if (verbose) printf("[INFO] XARRAY: n: %d x[0]: %f x[1]: %f x[2]: %f x[3]: %f x[4]: %f x[5]: %f x[10]: %f\n", n, x[pos_c], x[pos_c+1], x[pos_c+2], x[pos_c+3], x[pos_c+4], x[pos_c+5], x[pos_c+10]);
-	if (verbose && n > 0) printf("[INFO] XARRAY: n: %d x[0]: %f x[-1]: %f x[-2]: %f x[-3]: %f x[-4]: %f x[-5]: %f x[-10]: %f\n", n, x[pos_c], x[pos_c-1], x[pos_c-2], x[pos_c-3], x[pos_c-4], x[pos_c-5], x[pos_c-10]);
+        if (verbose) {
+          fprintf(stderr, "[INFO] START NC XARRAY write out_halo=0 tile number = n: %d offset = pos_c: %d\n", n, pos_c);
+          fprintf(stderr, "[INFO] XARRAY: n: %d x[0]: %f x[1]: %f x[2]: %f x[3]: %f x[4]: %f x[5]: %f x[10]: %f\n",
+                           n, x[pos_c], x[pos_c+1], x[pos_c+2], x[pos_c+3], x[pos_c+4], x[pos_c+5], x[pos_c+10]);
+          if (n > 0) fprintf(stderr, "[INFO] XARRAY: n: %d x[0]: %f x[-1]: %f x[-2]: %f x[-3]: %f x[-4]: %f x[-5]: %f x[-10]: %f\n",
+                             n, x[pos_c], x[pos_c-1], x[pos_c-2], x[pos_c-3], x[pos_c-4], x[pos_c-5], x[pos_c-10]);
+        }
 
         mpp_put_var_value(fid, id_x, x+pos_c);
 	mpp_put_var_value(fid, id_y, y+pos_c);
@@ -1171,7 +1160,7 @@ int main(int argc, char* argv[])
 	double *tmp;
 
 	tmp = (double *)malloc((nxp+2*out_halo)*(nyp+2*out_halo)*sizeof(double));
-	if (verbose) printf("[INFO] INDEX NC write with halo tile number = n: %d \n", n);
+	if (verbose) fprintf(stderr, "[INFO] INDEX NC write with halo tile number = n: %d \n", n);
 
 	fill_cubic_grid_halo(nx,ny,out_halo,tmp,x,x,n,1,1);
 	mpp_put_var_value(fid, id_x, tmp);
@@ -1196,10 +1185,7 @@ int main(int argc, char* argv[])
       nwrite[0] = strlen(arcx);
       mpp_put_var_value_block(fid, id_arcx, start, nwrite, arcx );
       
-      if (verbose) {
-	printf("About to close %s\n", outfile);
-      }
-
+      if (verbose) fprintf(stderr, "About to close %s\n", outfile);
       mpp_close(fid);
 
       /* Advance the pointers to the next tile */
@@ -1210,9 +1196,9 @@ int main(int argc, char* argv[])
       nxp = nx + 1;
       nyp = ny + 1;
 
-      printf("[INFO] INDEX Before increment n: %d pos_c %d nxp %d nyp %d nxp*nyp %d\n", n, pos_c, nxp, nyp, nxp*nyp);
+      if (verbose) fprintf(stderr, "[INFO] INDEX Before increment n: %d pos_c %d nxp %d nyp %d nxp*nyp %d\n", n, pos_c, nxp, nyp, nxp*nyp);
       pos_c += nxp*nyp;
-      printf("[INFO] INDEX After increment n: %d pos_c %d.\n", n, pos_c);
+      if (verbose) fprintf(stderr, "[INFO] INDEX After increment n: %d pos_c %d.\n", n, pos_c);
       pos_e += nxp*ny;
       pos_n += nx*nyp;
       pos_t += nx*ny;
@@ -1228,7 +1214,7 @@ int main(int argc, char* argv[])
   free(area);
   free(angle_dx);
   if(strcmp(conformal, "true") != 0) free(angle_dy);
-  if(mpp_pe() == mpp_root_pe() && verbose) printf("generate_grid is run successfully. \n");
+  if(mpp_pe() == mpp_root_pe() && verbose) fprintf(stderr, "generate_grid is run successfully. \n");
 
   mpp_end();
 
