@@ -10,8 +10,8 @@ to be used in the
 [Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
 [Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE).
 
-![Build](https://github.com/NOAA-GFDL/FRE-NCToolsd/workflows/.github/workflows/main.yml/badge.svg)
-![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![Actions](https://github.com/NOAA-GFDL/FRE-NCtools/workflows/FRE-NCtools%20CI/badge.svg)](https://github.com/NOAA-GFDL/FRE-NCtools/actions) 
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 ## Tools
 
