@@ -80,10 +80,12 @@ if test "$with_netcdf" = "no"; then
   AC_MSG_ERROR([Unable to find NetCDF c library.])
 fi
 
+AC_LANG_PUSH([Fortran])
 AX_LIB_NETCDFF()
 if test "$with_netcdf_fortran" = "no"; then
   AC_MSG_ERROR([Unable to find NetCDF Fortran library.])
 fi
+AC_LANG_POP([Fortran])
 
 # Check for typedefs, structures, and compiler characteristics
 
