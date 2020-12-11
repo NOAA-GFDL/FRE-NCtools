@@ -6,8 +6,8 @@ test -z "$with_mpi" && with_mpi=yes
 test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc
 
 # Compilers
-test -z "$CC" && CC=icc
-test -z "$FC" && FC=ifort
+test -z "$CC" && CC=cc
+test -z "$FC" && FC=ftn
 
 # Compile/Link flags
 test -z "$CFLAGS" && CFLAGS="-msse2"

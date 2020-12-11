@@ -10,6 +10,9 @@ to be used in the
 [Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
 [Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE).
 
+[![Actions](https://github.com/NOAA-GFDL/FRE-NCtools/workflows/FRE-NCtools%20CI/badge.svg)](https://github.com/NOAA-GFDL/FRE-NCtools/actions) 
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+
 ## Tools
 
 The tools available in FRE-NCtools are:
@@ -86,17 +89,17 @@ export CONFIG_SITE=/path/to/package/site-configs/<site>/config.site
 source /path/to/package/site-configs/<site>/env.sh
 ```
 
-The above steps may need to be augmented depending upon your user evironment setup. 
-For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the 
-configure command in this directory. You may tell the bash shell, for example, 
+The above steps may need to be augmented depending upon your user evironment setup.
+For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the
+configure command in this directory. You may tell the bash shell, for example,
 the location of both by this command:
 
 ```
 export PATH=/home/MyUsername/FRE-NCtools:$PATH
 ```
 
-Additionally, installing into a non-default directory may be desired or neccesary. 
-For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools 
+Additionally, installing into a non-default directory may be desired or neccesary.
+For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools
 building is configured by:
 
 ```

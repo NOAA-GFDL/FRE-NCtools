@@ -9,20 +9,20 @@ jobs:
     strategy:
       matrix:
         with_mpi: ['','--with-mpi']
+        enable_quad_precision: ['', '--enable-quad-precision']
     env:
         MPI: ${{ matrix.with_mpi }}
+        QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Build container
-      run: |
-        if [[ "$MPI" != "" ]]; then sed -i 's/autoconf/autoconf libopenmpi-dev openmpi-bin/' Dockerfile; fi
-        docker build . -t fre-nctools$MPI
+      run: docker build . -t fre-nctools
     - name: Build and run tests
-      run: docker run -u root --entrypoint "/bin/sh" --env MPI fre-nctools$MPI /build.sh
+      run: docker run -u root --entrypoint "/bin/sh" --env MPI --env QUAD_P fre-nctools /build.sh
     - name: Save log file on failure
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2.2.1
       if: failure()
       with:
-          name: test-suite${{ matrix.with_mpi}}.log
+          name: test-suite.log
           path: t/test-suite.log
