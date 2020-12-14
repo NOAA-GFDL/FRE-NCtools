@@ -1,4 +1,0 @@
-memuse.o: ../../../../tools/simple_hydrog/lakes/memuse.c \
- /usr/include/stdc-predef.h
-
-/usr/include/stdc-predef.h:
