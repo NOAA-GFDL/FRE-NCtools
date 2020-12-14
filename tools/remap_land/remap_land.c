@@ -197,9 +197,9 @@ int main(int argc, char *argv[]) {
   int has_glac = 0, has_lake = 0;
   int src_has_tile = 0, cold_has_tile = 0;
   int src_has_cohort = 0, cold_has_cohort = 0;
-  int src_has_sc_cohort = 0, src_has_lc_cohort = 0;
-  int src_has_nspecies = 0;
-  int src_has_textlen = 0;
+  //int src_has_sc_cohort = 0, src_has_lc_cohort = 0;
+  //int src_has_nspecies = 0;
+  //int src_has_textlen = 0;
   int nz;
   double *z_axis_data = NULL;
   int print_memory = 0;
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
     read the source tile_index size and source grid
     ----------------------------------------------------------------------------*/
   {
-    int n, pos;
+			int n;
 
     fid_src = (int *)malloc(nface_src * sizeof(int));
     nidx_src = (int *)malloc(nface_src * sizeof(int));
@@ -495,7 +495,8 @@ int main(int argc, char *argv[]) {
   for (l = 0; l < nvar_src; l++) {
     char varname[64];
     char vdname[64];  // var dimname
-    int vid, m, klev;
+    int vid, m;
+				//int klev;
 
     mpp_get_varname(fid_src[0], l, varname);
     vid = mpp_get_varid(fid_src[0], varname);
@@ -612,12 +613,12 @@ int main(int argc, char *argv[]) {
     -----------------------------------------------------------------------------*/
   {
     n_sc_cohort = 0;
-    src_has_sc_cohort = 0;
+    //src_has_sc_cohort = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       int dimsize, vid;
 
       if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
-        src_has_sc_cohort = 1;
+							//src_has_sc_cohort = 1;
         n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
         printf("*RLE n_sc_cohort= %d\n", n_sc_cohort);
         sc_cohort_data = (double *)malloc(n_sc_cohort * sizeof(double));
@@ -647,12 +648,12 @@ int main(int argc, char *argv[]) {
 
   {
     n_lc_cohort = 0;
-    src_has_lc_cohort = 0;
+    //src_has_lc_cohort = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       int dimsize, vid;
 
       if (mpp_var_exist(fid_src[0], LC_COHORT_NAME)) {
-        src_has_lc_cohort = 1;
+ 							// src_has_lc_cohort = 1;
         n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
         printf("*RLE n_lc_cohort= %d\n", n_lc_cohort);
         lc_cohort_data = (double *)malloc(n_lc_cohort * sizeof(double));
@@ -681,12 +682,12 @@ int main(int argc, char *argv[]) {
   ------------------------------------------------------------------------*/
   {
     n_nspecies = 0;
-    src_has_nspecies = 0;
+    //src_has_nspecies = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       int dimsize, vid;
 
       if (mpp_var_exist(fid_src[0], NSPECIES_NAME)) {
-        src_has_nspecies = 1;
+ 							//src_has_nspecies = 1;
         n_nspecies = mpp_get_dimlen(fid_src[0], NSPECIES_NAME);
         nspecies_data = (double *)malloc(n_nspecies * sizeof(double));
         vid = mpp_get_varid(fid_src[0], NSPECIES_NAME);
@@ -718,7 +719,7 @@ int main(int argc, char *argv[]) {
   -------------------------------------------------------------------------------*/
   {
     n_textlen = 0;
-    src_has_textlen = 0;
+    //src_has_textlen = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       int dimsize, vid;
 
@@ -727,7 +728,7 @@ int main(int argc, char *argv[]) {
       // mpp_error("remap_land: dimension textlen should exist when file_type is vegn");
 
       if (mpp_var_exist(fid_src[0], TEXTLEN_NAME)) {
-        src_has_textlen = 1;
+							//src_has_textlen = 1;
         n_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
         textlen_data = (double *)malloc(n_textlen * sizeof(double));
         vid = mpp_get_varid(fid_src[0], TEXTLEN_NAME);
@@ -1031,7 +1032,7 @@ int main(int argc, char *argv[]) {
   {
     double *data_dst = NULL, *data_src = NULL;
     int *idata_dst = NULL, *idata_src = NULL;
-    char *cdata_dst = NULL, *cdata_src = NULL;
+    //char *cdata_dst = NULL, *cdata_src = NULL;
     int *start_pos = NULL;
     double *x_tmp = NULL, *y_tmp = NULL;
     double *lon_axis_dst = NULL, *lat_axis_dst = NULL;
@@ -1050,8 +1051,9 @@ int main(int argc, char *argv[]) {
     int *idx_map_land = NULL;
     double *land_frac_dst = NULL;
 
-    int isc_dst, iec_dst, jsc_dst, jec_dst, nxc_dst, nyc_dst;
-    int n, pos, has_int_var;
+    int isc_dst, iec_dst, jsc_dst, jec_dst, nxc_dst;
+				//int nyc_dst;
+    int n, pos;
     int layout[2];
     domain2D Dom_dst;
 
@@ -1061,17 +1063,9 @@ int main(int argc, char *argv[]) {
     y_tmp = (double *)malloc(nx_dst * ny_dst * sizeof(double));
     start_pos = (int *)malloc(nface_src * sizeof(int));
 
-    has_int_var = 0;
-    for (l = 0; l < nvar_src; l++) {
-      if (var_type[l] == MPP_INT) {
-        has_int_var = 1;
-        break;
-      }
-    }
-
     idata_src = (int *)malloc(nidx_tot_src * sizeof(int));
     data_src = (double *)malloc(nidx_tot_src * sizeof(double));
-    cdata_src = (char *)malloc(nidx_tot_src * sizeof(char));
+    //cdata_src = (char *)malloc(nidx_tot_src * sizeof(char));
 
     /* setup domain */
     layout[0] = npes;
@@ -1085,7 +1079,7 @@ int main(int argc, char *argv[]) {
           "to jec_dst");
     }
     nxc_dst = iec_dst - isc_dst + 1;
-    nyc_dst = 1;
+    //nyc_dst = 1;
 
     data_dst = (double *)malloc(ntile_dst * nxc_dst * sizeof(double));
     idata_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
@@ -1137,7 +1131,7 @@ int main(int argc, char *argv[]) {
 
       double *rdata_global = NULL;
       int *idata_global = NULL;
-      char *cdata_global = NULL;
+      //char *cdata_global = NULL;
 
       size_t start[4], nread[4], nwrite[4];
       char land_cold[512], file_dst[512], file_cold[512];
@@ -1269,7 +1263,8 @@ int main(int argc, char *argv[]) {
         mpp_sync();
         if (remap_file_exist) { /* read from remap file */
           size_t start[4], nread[4];
-          int fid, nidx, vid;
+          int fid, vid;
+										// int nidx
 
           if (mpp_pe() == mpp_root_pe()) printf("Read remap information from remap_file \n");
           for (l = 0; l < 4; l++) {
@@ -1326,10 +1321,11 @@ int main(int argc, char *argv[]) {
         if (write_remap_file) { /* write out restart file */
           int *gdata = NULL;
           int fid;
-          int dim_lon, dim_lat, dim_npts;
+          int dim_npts;
           int id_face_soil, id_index_soil;
           int id_face_glac, id_index_glac;
           int id_face_lake, id_index_lake;
+										int dim_lon, dim_lat;
 
           if (mpp_pe() == mpp_root_pe()) printf("write remap information to remap_file\n");
           fid = mpp_open(file, MPP_WRITE);
@@ -1474,11 +1470,12 @@ int main(int argc, char *argv[]) {
 
       /* define the metadata for dst_restart_file */
       {
-        int dim_time, dim_cohort_index, dim_lat, dim_lon;
+				int dim_time, dim_cohort_index, dim_lat, dim_lon;
         int dim_tile_index, dim_cohort, dim_tile, dim_z;
-        int dim_sc_cohort, dim_sc_cohort_index, dim_lc_cohort, dim_lc_cohort_index;
+        int dim_sc_cohort, dim_lc_cohort;
         int dim_nspecies;
         int dim_textlen;
+								// int dim_sc_cohort_index,  dim_lc_cohort_index;
 
         dim_lon = mpp_def_dim(fid_dst, LON_NAME, nx_dst);
         dim_lat = mpp_def_dim(fid_dst, LAT_NAME, ny_dst);
@@ -1488,12 +1485,14 @@ int main(int argc, char *argv[]) {
         if (filetype == VEGNTYPE) {
           dim_cohort = mpp_def_dim(fid_dst, COHORT_NAME, ncohort);
           dim_cohort_index = mpp_def_dim(fid_dst, COHORT_INDEX_NAME, max(nidx_dst_global, 1));
+
+										printf(" *** RL : dim_cohort_index_len=%d\n",  max(nidx_dst_global, 1));
         }
 
         // TODO New 2020
         if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
           if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
-            n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
+            n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
             dim_sc_cohort = mpp_def_dim(fid_dst, SC_COHORT_NAME, n_sc_cohort);
           }
           if (mpp_var_exist(fid_src[0], LC_COHORT_NAME)) {
@@ -1523,7 +1522,9 @@ int main(int argc, char *argv[]) {
           printf("RL not in soil_type or vegn_type\n");
         }
 
-        if (time_exist) dim_time = mpp_def_dim(fid_dst, timename, NC_UNLIMITED);
+        if (time_exist){
+									dim_time = mpp_def_dim(fid_dst, timename, NC_UNLIMITED);
+								}
 
         for (l = 0; l < nvar_src; l++) {
           char varname[64], dimname[64];
@@ -1606,7 +1607,7 @@ int main(int argc, char *argv[]) {
 
       rdata_global = (double *)malloc(nidx_dst_global * sizeof(double));
       idata_global = (int *)malloc(nidx_dst_global * sizeof(int));
-      cdata_global = (char *)malloc(nidx_dst_global * sizeof(char));
+      //cdata_global = (char *)malloc(nidx_dst_global * sizeof(char));
 
       /* loop through each time level */
       for (t = 0; t < ntime; t++) {
@@ -1677,7 +1678,7 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
           } else if (!strcmp(varname, SC_COHORT_INDEX_NAME) || !strcmp(varname, LC_COHORT_INDEX_NAME)) {
             mpp_error("land_remap : writing sc or lc _cohort INDEX ");
-	    //TODO : Verify this is not needed
+	          //TODO : Verify this is not needed
             // compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global,
             // land_count_dst, idx_dst, idata_global,use_all_tile);
             // mpp_put_var_value(fid_dst, vid_dst, idata_global);
@@ -1707,29 +1708,27 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
 
           } else if (!strcmp(varname, SPECIES_NAMES)) {
-            // TODO: Note sddumption that SPECIES_NAMES is the hee only character data.
-	    //       this will likely need to be removed in future versions
-
+            // TODO: Note assumption that SPECIES_NAMES is the only character data.
+											//  this will likely need to be removed in future versions
+											
             printf("\n*RL species_names field : varnameO=%s nface_src=%d nz_src[l]=%d\n", varname, nface_src,
                    nz_src[l]);
 
             // Data to be copied will be in  species_names[nspecies][textlen]
             int nd_nspecies = mpp_get_dimlen(fid_src[0], NSPECIES_NAME);
             int nd_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
-
-            printf("*RM species_names nd_nspecis=%d nd_textlen=%d \n", nd_nspecies, nd_textlen);
-
-            char *tcdata_src = (char *)malloc(nd_textlen * nd_nspecies * sizeof(char));
+            char *vdata_src = (char *)malloc(nd_textlen * nd_nspecies * sizeof(char));
             size_t cstart[2], cnread[2];
             cstart[0] = 0;
             cnread[0] = nd_nspecies;
             cstart[1] = 0;
             cnread[1] = nd_textlen;
-            mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, tcdata_src);
-            mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, tcdata_src);
-            free(tcdata_src);
+            mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, vdata_src);
+            mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, vdata_src);
+            free(vdata_src);
+												vdata_src = NULL;
           } else if (nz_src[l] >= 0 && ((ndim_src[l] == 2) || ((ndim_src[l] == 3) && has_taxis[l]))) {
-            /**
+											  /**
              * Read source data and do remapping for other fiels of original lm4.0 type.
              * This is the original lm4.0 code. The dimensions of the fields are either
              * [zfull, tile_index] of [time,zfull,tile_index]
@@ -1809,108 +1808,110 @@ int main(int argc, char *argv[]) {
                 }
                 compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, data_dst,
                                      rdata_global, use_all_tile);
+                printf("*RL C VBB varname=%s vid%d vartype=%d k=%d nz_src[l]=%d start=%lu, nread=%lu has_taxis=%d\n",
+                        varname, vid_src, var_type[l], k, nz_src[l], start[1], nread[1], has_taxis[l]);
                 mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
               } else {
                 mpp_error("remap_land : writing block for vartype other than INT or DOUBLE");
               }
             }  // k < nz_src[l]
           }    // end else other lm4.0 fields
-          else if (ndim_src[l] == 1){
+          else if (ndim_src[l] == 1) {
             vid_src = mpp_get_varid(fid_src[0], varname);
             mpp_get_var_dimname(fid_src[0], vid_src, 0, dimname);
             printf("LR 1D varname= %s dimname= %s\n", varname, dimname);
-	    if( !strcmp(dimname, TILE_INDEX_NAME)){
-		start_pos[0] = 0;
-		for (m = 1; m < nface_src; m++) {
-		  start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
-		}
-	    
-		for (m = 0; m < 4; m++) {
-		  start[m] = 0;   nread[m] = 1;	  nwrite[m] = 1;
-		}
+            if (!strcmp(dimname, TILE_INDEX_NAME)) {
+              start_pos[0] = 0;
+              for (m = 1; m < nface_src; m++) {
+                start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
+              }
 
-		// Collectr all the data
-		for (m = 0; m < nface_src; m++) {
-		  nread[0] = nidx_src[m];
+              for (m = 0; m < 4; m++) {
+                start[m] = 0;
+                nread[m] = 1;
+                nwrite[m] = 1;
+              }
 
-		  vid_src = mpp_get_varid(fid_src[m], varname);
-		  if (var_type[l] == MPP_INT) {
-		    mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
-		  } else if (var_type[l] == MPP_DOUBLE) {
-		    mpp_get_var_value_block(fid_src[m], vid_src, start, nread, data_src + pos);
-		  } else {
-		    mpp_error("remap_land : reading block for vartype other than INT or DOUBLE");
-		  }
-		  pos += nidx_src[m];
-		}  // m loop
+              // Collectr all the data
+              for (m = 0; m < nface_src; m++) {
+                nread[0] = nidx_src[m];
 
-		//Prepare for writing collected data
-		nwrite[0] = nidx_dst_global;
+                vid_src = mpp_get_varid(fid_src[m], varname);
+                if (var_type[l] == MPP_INT) {
+                  mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
+                } else if (var_type[l] == MPP_DOUBLE) {
+                  mpp_get_var_value_block(fid_src[m], vid_src, start, nread, data_src + pos);
+                } else {
+                  mpp_error("remap_land : reading block for vartype other than INT or DOUBLE");
+                }
+                pos += nidx_src[m];
+              }  // m loop
 
-		if (var_type[l] == MPP_INT) {
-		  for (m = 0; m < ntile_dst * nxc_dst; m++) {
-		    int face, lll;
-		    if (land_idx_map[m] < 0) {
-		      idata_dst[m] = MPP_FILL_INT;
-		      continue;
-		    }
-		    face = land_face_map[m];
-		    lll = start_pos[face] + land_idx_map[m];
-		    idata_dst[m] = idata_src[lll];
-		  }
-		  compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, idata_dst, idata_global,
-				    use_all_tile);
-		  mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, idata_global);
-		} else if (var_type[l] == MPP_DOUBLE) {
-		  for (m = 0; m < ntile_dst * nxc_dst; m++) {
-		    int face, lll;
-		    if (land_idx_map[m] < 0) {
-		      data_dst[m] = MPP_FILL_DOUBLE;
-		      continue;
-		    }
-		    face = land_face_map[m];
-		    lll = start_pos[face] + land_idx_map[m];
-		    data_dst[m] = data_src[lll];
-		  }
-		  compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, data_dst,
-				       rdata_global, use_all_tile);
-		  mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
-		}
-	      }
-	      else if (!strcmp(dimname, COHORT_INDEX_NAME)) {
-		/**
-		 * Field dimension should be [cohort_index]
-		 **/
-		//TODO:CODE should be even simpler than tile_index
-              continue;
-	      } else if (!strcmp(dimname, LEVEL_NAME )) {  // Field dimension should be [cohort_index]
-		 int n_levels = mpp_get_dimlen(fid_src[0], LEVEL_NAME);
-		 size_t cstart[1], cnread[1];
-		 cstart[0] = 0;
-		 cnread[0] = n_levels;
+              // Prepare for writing collected data
+              nwrite[0] = nidx_dst_global;
 
-		 //TODO: Verify that though missing tile_index, doesn't need to be written
-		 //      to all faces.
-		 
-		 vid_src = mpp_get_varid(fid_src[0], varname);
-		 vid_dst = mpp_get_varid(fid_dst, varname);
-		 int *tdata_src = (int *)malloc(n_levels * sizeof(int));
+              if (var_type[l] == MPP_INT) {
+                for (m = 0; m < ntile_dst * nxc_dst; m++) {
+                  int face, lll;
+                  if (land_idx_map[m] < 0) {
+                    idata_dst[m] = MPP_FILL_INT;
+                    continue;
+                  }
+                  face = land_face_map[m];
+                  lll = start_pos[face] + land_idx_map[m];
+                  idata_dst[m] = idata_src[lll];
+                }
+                compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, idata_dst,
+                                  idata_global, use_all_tile);
+                mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, idata_global);
+              } else if (var_type[l] == MPP_DOUBLE) {
+                for (m = 0; m < ntile_dst * nxc_dst; m++) {
+                  int face, lll;
+                  if (land_idx_map[m] < 0) {
+                    data_dst[m] = MPP_FILL_DOUBLE;
+                    continue;
+                  }
+                  face = land_face_map[m];
+                  lll = start_pos[face] + land_idx_map[m];
+                  data_dst[m] = data_src[lll];
+                }
+                compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, data_dst,
+                                     rdata_global, use_all_tile);
+                mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
+              }
+            } else if (!strcmp(dimname, COHORT_INDEX_NAME)) {
+              /**
+               * Field dimension should be [cohort_index]
+               **/
 
-		 if (var_type[l] == MPP_INT) {
-		   mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, tdata_src);
-		   mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, tdata_src);
-		 }else if (var_type[l] == MPP_DOUBLE) {
-		   mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, tdata_src);
-		   mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, tdata_src);
-		 }
-		 free(tdata_src);
-		 tdata_src = NULL;
-	      }else {
-		printf("**RLE 1D field with dim not tile_index or cohort_index. Field=%s dimname=%s\n",
-		       varname, dimname);
-		mpp_error("remap_land : 1D field with dim not tile_index or cohort_index :");
-	      }
-	  }else if ( ndim_src[l] == 2) {
+              int ci_len = mpp_get_dimlen(fid_src[0], COHORT_INDEX_NAME);
+              size_t cstart[4], cnread[4];
+														 for (m = 0; m < 4; m++) {
+                cstart[m] = 0;
+                cnread[m] = 1;
+              }
+              cstart[0] = 0;
+              cnread[0] = ci_len;
+
+              if (var_type[l] == MPP_INT) {
+                int *vdata_src = (int *)malloc(ci_len * sizeof(int));
+                mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, vdata_src);
+                mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, vdata_src);
+                free(vdata_src);
+                vdata_src = NULL;
+              } else if (var_type[l] == MPP_DOUBLE) {
+                double *vdata_src = (double *)malloc(ci_len * sizeof(double));
+                mpp_get_var_value_block(fid_src[0], vid_src, cstart, cnread, vdata_src);
+                mpp_put_var_value_block(fid_dst, vid_dst, cstart, cnread, vdata_src);
+                free(vdata_src);
+                vdata_src = NULL;
+              }
+
+            } else {
+              printf("**RLE 1D field with dim not tile_index or cohort_index. Field=%s dimname=%s\n", varname, dimname);
+              mpp_error("remap_land : 1D field with dim not tile_index or cohort_index :");
+            }
+          } else if (ndim_src[l] == 2) {
             /**
              * The fields dimension should be [lc_cohort, tile_index]
              */
@@ -1919,7 +1920,7 @@ int main(int argc, char *argv[]) {
             mpp_get_var_dimname(fid_src[0], lvid, 0, dimnameA);
             mpp_get_var_dimname(fid_src[0], lvid, 1, dimnameB);
 
-            printf("LR 2D varname dimA dimB %s %s %s\n", varname, dimnameA, dimnameB);  
+            printf("LR 2D varname dimA dimB %s %s %s\n", varname, dimnameA, dimnameB);
 
             if (strcmp(dimnameA, LC_COHORT_NAME) || strcmp(dimnameB, TILE_INDEX_NAME)) {
               mpp_error("remap_land : Expected 2D  field with dims [lc_cohort, tile_index] :");
@@ -1933,12 +1934,12 @@ int main(int argc, char *argv[]) {
             int ldimlen = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
             for (k = 0; k < ldimlen; k++) {
               pos = 0;
-              //int kid;
+              // int kid;
               /* read the source data */
               for (m = 0; m < nface_src; m++) {
-                //kid = 0;
-                start[0] = k;//TODO: verify 0 the lc_cohort i
-		nread[0] = 1;
+                // kid = 0;
+                start[0] = k;  // TODO: verify 0 the lc_cohort i
+                nread[0] = 1;
                 start[1] = 0;
                 nread[1] = nidx_src[m];
                 vid_src = mpp_get_varid(fid_src[m], varname);
@@ -1951,16 +1952,16 @@ int main(int argc, char *argv[]) {
                 }
                 pos += nidx_src[m];
               }  // m loop
-	      
-	      //And write the data 
+
+              // And write the data
               for (m = 0; m < 4; m++) {
                 start[m] = 0;
                 nwrite[m] = 1;
               }
-              //kid = 0;
-	      
+              // kid = 0;
+
               start[0] = k;
-	      nwrite[0] = 1;
+              nwrite[0] = 1;
               start[1] = 0;
               nwrite[1] = nidx_dst_global;
 
@@ -1997,65 +1998,140 @@ int main(int argc, char *argv[]) {
               }
             }  // k < nz_src[l]
 
-          } else if ( ndim_src[l] == 3) {
+          } else if (ndim_src[l] == 3) {
             /**
              *  The fileds dimensions should be [soilCCohort,zfull,tile_index]
              **/
-	    //TODO:CODE Like 2D just above, but requires an extra loop.
-	    //TODO:CODE Try to simplify by, if possible, combinng sections that use tile_index
-	    // as special cases of 3D ?
+            // TODO:Simplify Combine sections that use tile_index as special cases of 3D ?
+            printf("\n*RL 3D  varnameO=%s nface_src=%d nz_src[l]=%d\n", varname, nface_src, nz_src[l]);
             char dimnameA[64], dimnameB[64], dimnameC[64];
             int lvid = mpp_get_varid(fid_src[0], varname);
             mpp_get_var_dimname(fid_src[0], lvid, 0, dimnameA);
             mpp_get_var_dimname(fid_src[0], lvid, 1, dimnameB);
             mpp_get_var_dimname(fid_src[0], lvid, 2, dimnameC);
-            printf("LR 3D varname dimA dimB dimC %s %s %s %s\n", varname, dimnameA, dimnameB, dimnameC);  
+            printf("LR 3D varname dimA dimB dimC %s %s %s %s\n", varname, dimnameA, dimnameB, dimnameC);
 
-            if (strcmp(dimnameA, SC_COHORT_NAME) || strcmp(dimnameB, LEVEL_NAME) ||
-		strcmp(dimnameC, TILE_INDEX_NAME)) {     
-	      mpp_error("remap_land : Expected 3D  field with dims [soilCCohort,zfull,tile_index]");
+            if (strcmp(dimnameA, SC_COHORT_NAME) || strcmp(dimnameB, LEVEL_NAME) || strcmp(dimnameC, TILE_INDEX_NAME)) {
+              mpp_error("remap_land : Expected 3D  field with dims [soilCCohort,zfull,tile_index]");
             }
-          } else {
-	    printf("**RLE Unexpected combination of dimensions for field %s\n " , varname);
-            mpp_error("remap_land : Unexpected combination of dimensions for field ");
-          }
-        }// end loop (l = 0; l < nvar_src; l++)
+
+            int sc_dimlen = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
+            start_pos[0] = 0;
+
+            for (m = 1; m < nface_src; m++) {
+              start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
+            }
+
+            for (m = 0; m < 4; m++) {
+              start[m] = 0;
+              nread[m] = 1;
+              nwrite[m] = 1;
+            }
+
+            for (int is = 0; is < sc_dimlen; is++) {
+              for (k = 0; k < nz_src[l]; k++) {
+               // printf("*RL, is k : %d %d \n",is, k);
+                pos = 0;
+                for (m = 1; m < nface_src; m++) {//TODO: check start with 1 or 0 ?
+                  start[0] = is;
+                  start[1] = k;
+                  start[2] = 0;
+                  nread[2] = nidx_src[m];
+                  vid_src = mpp_get_varid(fid_src[m], varname);
+                  if (var_type[l] == MPP_INT) {
+                    mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
+                  } else if (var_type[l] == MPP_DOUBLE) {
+                    printf("*RL C VBB varname=%s vid%d vartype=%d k=%d nz_src[l]=%d start=%lu, nread=%lu has_taxis=%d\n",
+                        varname, vid_src, var_type[l], k, nz_src[l], start[2], nread[2], has_taxis[l]);
+                    mpp_get_var_value_block(fid_src[m], vid_src, start, nread, data_src + pos);
+                  } else {
+                    mpp_error("remap_land : reading block for vartype other than INT or DOUBLE");
+                  }
+                  pos += nidx_src[m];
+                }  // m loop
+
+                for (m = 0; m < 4; m++) {
+                  start[m] = 0;
+                  nwrite[m] = 1;
+                }
+
+                start[0] = is;
+                start[1] = k;
+                start[2] = 0;
+                nwrite[2] = nidx_dst_global;
+
+                if (var_type[l] == MPP_INT) {
+                  for (m = 0; m < ntile_dst * nxc_dst; m++) {
+                    int face, lll;
+                    if (land_idx_map[m] < 0) {
+                      idata_dst[m] = MPP_FILL_INT;
+                      continue;
+                    }
+                    face = land_face_map[m];
+                    lll = start_pos[face] + land_idx_map[m];
+                    idata_dst[m] = idata_src[lll];
+                  }
+                  compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, idata_dst,
+                                    idata_global, use_all_tile);
+                  mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, idata_global);
+                } else if (var_type[l] == MPP_DOUBLE) {
+                  for (m = 0; m < ntile_dst * nxc_dst; m++) {
+                    int face, lll;
+                    if (land_idx_map[m] < 0) {
+                      data_dst[m] = MPP_FILL_DOUBLE;
+                      continue;
+                    }
+                    face = land_face_map[m];
+                    lll = start_pos[face] + land_idx_map[m];
+                    data_dst[m] = data_src[lll];
+                  }
+                  compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, data_dst,
+                                       rdata_global, use_all_tile);
+                  printf("*RL P VBB varname=%s vid%d vartype=%d k=%d nz_src[l]=%d start=%lu, nwrite=%lu has_taxis=%d\n",
+                      varname, vid_src, var_type[l], k, nz_src[l], start[2], nwrite[2], has_taxis[l]); 
+                  mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
+                } else {
+                  mpp_error("remap_land : writing block for vartype other than INT or DOUBLE");
+                }
+              } // k < nz_src[l]
+            } // is < ls_dimlen
+          } // end  (ndim_src[l] == 3)
+        }  // end loop (l = 0; l < nvar_src; l++)
 
         if (t == 0 && src_has_tile == 0 && cold_has_tile == 1) {
-          int i;
-          int *tile_data = NULL;
-          tile_data = (int *)malloc(ntile_dst * sizeof(int));
-          for (i = 0; i < ntile_dst; i++) tile_data[i] = i + 1;
-          vid_dst = mpp_get_varid(fid_dst, TILE_NAME);
-          mpp_put_var_value(fid_dst, vid_dst, tile_data);
-          free(tile_data);
+									int i;
+									int *tile_data = NULL;
+									tile_data = (int *)malloc(ntile_dst * sizeof(int));
+									for (i = 0; i < ntile_dst; i++) tile_data[i] = i + 1;
+									vid_dst = mpp_get_varid(fid_dst, TILE_NAME);
+									mpp_put_var_value(fid_dst, vid_dst, tile_data);
+									free(tile_data);
         }
         if (t == 0 && src_has_cohort == 0 && cold_has_cohort == 1) {
-          int i;
-          int *cohort_data = NULL;
-          cohort_data = (int *)malloc(ncohort * sizeof(int));
-          for (i = 0; i < ncohort; i++) cohort_data[i] = i + 1;
-          vid_dst = mpp_get_varid(fid_dst, COHORT_NAME);
-          mpp_put_var_value(fid_dst, vid_dst, cohort_data);
-          free(cohort_data);
+									int i;
+									int *cohort_data = NULL;
+									cohort_data = (int *)malloc(ncohort * sizeof(int));
+									for (i = 0; i < ncohort; i++) cohort_data[i] = i + 1;
+									vid_dst = mpp_get_varid(fid_dst, COHORT_NAME);
+									mpp_put_var_value(fid_dst, vid_dst, cohort_data);
+									free(cohort_data);
         }
       }  // for ntime
 
-        mpp_close(fid_dst);
-        mpp_close(fid_cold);
+						mpp_close(fid_dst);
+						mpp_close(fid_cold);
 
-        free(frac_cold);
-        free(rdata_global);
-        free(idata_global);
+						free(frac_cold);
+						free(rdata_global);
+						free(idata_global);
 
-        if (mpp_pe() == mpp_root_pe()) printf("NOTE from remap_land: %s is created\n", file_dst);
-        if (print_memory) {
-          int n;
-          char mesg[128];
-          sprintf(mesg, "End of loop face_dst = %d\n", face_dst);
-          print_mem_usage(mesg);
-        }
-      }  // for (face_dst = 0; face_dst < nface_dst; face_dst++) {
+						if (mpp_pe() == mpp_root_pe()) printf("NOTE from remap_land: %s is created\n", file_dst);
+						if (print_memory) {
+							char mesg[128];
+							sprintf(mesg, "End of loop face_dst = %d\n", face_dst);
+							print_mem_usage(mesg);
+						}
+				}  // for (face_dst = 0; face_dst < nface_dst; face_dst++) {
 
     free(lon_axis_dst);
     free(lat_axis_dst);
