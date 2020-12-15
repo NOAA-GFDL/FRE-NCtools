@@ -312,7 +312,7 @@ char *usage[] = {
   "                                                                                 ",
   "   8. generating gnomonic cubic stretched grid with two nests on tile 6.         ",
   "      > make_hgrid --grid_type gnomonic_ed --nlon 192 --do_schmidt               ",
-  "                   --stretch_factor 3 --target_lat 310. --target_lon 20.         ",
+  "                   --stretch_factor 3 --target_lat 10. --target_lon 20.          ",
   "                   --nest_grids 2 --parent_tile 6,6 --refine_ratio 2,2           ",
   "                   --istart_nest 11,51 --jstart_nest 11,51                       ",
   "                   --iend_nest 42,82 --jend_nest 42,82 --halo 3                  ",
