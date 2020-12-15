@@ -10,19 +10,25 @@ jobs:
       matrix:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
-    env:
-        MPI: ${{ matrix.with_mpi }}
-        QUAD_P: ${{ matrix.enable_quad_precision }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Build container
-      run: docker build . -t fre-nctools
-    - name: Build and run tests
-      run: docker run -u root --entrypoint "/bin/sh" --env MPI --env QUAD_P fre-nctools /build.sh
-    - name: Save log file on failure
-      uses: actions/upload-artifact@v2.2.1
-      if: failure()
-      with:
-          name: test-suite.log
-          path: t/test-suite.log
+      container:
+        image: ryanmulhall/fre-nctools-base
+        env:
+          MPI: ${{ matrix.with_mpi }}
+          QUAD_P: ${{ matrix.enable_quad_precision }}
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure for building
+        run: | 
+          autoreconf -i configure.ac
+          ./configure $MPI $QUAD_P
+      - name: Compile and build tools
+        run: make
+      - name: Test
+        run: make -j distcheck
+      - name: Save log file on failure
+        uses: actions/upload-artifact@v2.2.1
+        if: always()
+        with:
+            name: test-suite.log
+            path: t/test-suite.log
