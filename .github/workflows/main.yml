@@ -17,14 +17,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Configure for building
+    - name: Configure
       run: | 
         autoreconf -i configure.ac
         ./configure $MPI $QUAD_P
-    - name: Compile and build tools
+    - name: Build tools
       run: make
-    - name: Test
-      run: make -j distcheck
+    - name: Run tests
+      run: make -j check
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1
       if: always()
