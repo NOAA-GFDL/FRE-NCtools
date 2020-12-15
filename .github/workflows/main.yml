@@ -1,7 +1,6 @@
 # Github actions CI file
 # Ryan Mulhall 2020
-# Builds and runs make check in two containers, one with mpi, one without
-name: FRE-NCtools CI
+# container @ https://hub.docker.com/repository/docker/ryanmulhall/fre-nctools-base
 on: [push, pull_request]
 jobs:
   build:
@@ -10,25 +9,25 @@ jobs:
       matrix:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
-      container:
-        image: ryanmulhall/fre-nctools-base
-        env:
-          MPI: ${{ matrix.with_mpi }}
-          QUAD_P: ${{ matrix.enable_quad_precision }}
-      steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure for building
-        run: | 
-          autoreconf -i configure.ac
-          ./configure $MPI $QUAD_P
-      - name: Compile and build tools
-        run: make
-      - name: Test
-        run: make -j distcheck
-      - name: Save log file on failure
-        uses: actions/upload-artifact@v2.2.1
-        if: always()
-        with:
-            name: test-suite.log
-            path: t/test-suite.log
+    container:
+      image: ryanmulhall/fre-nctools-base
+      env:
+        MPI: ${{ matrix.with_mpi }}
+        QUAD_P: ${{ matrix.enable_quad_precision }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure for building
+      run: | 
+        autoreconf -i configure.ac
+        ./configure $MPI $QUAD_P
+    - name: Compile and build tools
+      run: make
+    - name: Test
+      run: make -j distcheck
+    - name: Save log file on failure
+      uses: actions/upload-artifact@v2.2.1
+      if: always()
+      with:
+        name: test-suite.log
+        path: t/test-suite.log
