@@ -2,10 +2,10 @@
 # Ryan Mulhall 2020
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
 # container @ https://hub.docker.com/repository/docker/ryanmulhall/fre-nctools-base
-- name: FRE-NCtools CI
+name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
-  build:
+  CI:
     runs-on: ubuntu-latest
     strategy:
       matrix:
