@@ -26,7 +26,7 @@ jobs:
     - name: Build tools
       run: make
     - name: Run tests
-      run: make -j check
+      run: make -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1
       if: failure()
