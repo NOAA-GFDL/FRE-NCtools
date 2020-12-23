@@ -9,7 +9,7 @@ program rmv_parallel_rivers
 !       -- the grid cell pointed to is ocean or part-land, OR IF
 !       -- the grid cell pointed to by the cell pointed to is ocean or part-land
 !   River fields then are updated and iteration continues until fields (subA,
-!   travel, basin, celllength) no longer change.  
+!   travel, basin, celllength) no longer change.
 ! ===============================================================================
 
 implicit none
@@ -50,7 +50,7 @@ integer, dimension (ncrosij)           :: ipv, jpv
 real, dimension (ncrosij)              :: sba
 
 real, dimension (ni_cells,nj_cells)    :: out_flow
-       
+
 character(len=4) :: vname_cvr= "frac"
 
 character(len=100), dimension (ntilmx)  :: river_input_file
@@ -66,7 +66,7 @@ real, allocatable, dimension (:,:,:)    :: cell_a, tocell, land_fr, suba, &
 real, allocatable, dimension (:,:,:)    :: lat, latb, lon, lonb, arlat, &
      sin_lat, cos_lat, tocell_new
 
-!!Recall Fortran row-major order. Below, 8., 4., 2. occupy the 1st column. 
+!!Recall Fortran row-major order. Below, 8., 4., 2. occupy the 1st column.
 out_flow  = reshape((/ 8.,  4.,  2., 16.,  0., 1., 32., 64., 128. /),shape(out_flow))
 
 pi= 4.*atan(1.)
@@ -90,7 +90,7 @@ close (5)
 ! ---------------------------------------------------------------------------
 rcode= NF_OPEN (trim(river_input_file(1)), NF_NOWRITE, ncid)
 if (rcode /= 0) then
-    write (6,*) "ERROR: cannot open netcdf file"  
+    write (6,*) "ERROR: cannot open netcdf file"
     write (6,*) trim(river_input_file(1))
     stop 1
 endif
@@ -129,7 +129,7 @@ rcode= nf_inq_dimlen (ncid, dimids(1), id)
 allocate (lon_idx(id))
 start= 1 ;  count(1)= id
 rcode= nf_get_vara_double (ncid, lonid, start, count, lon_idx)
-  
+
 idp1= id + 1
 idp2= id + 2
 idp3= id + 3
@@ -158,7 +158,7 @@ do n= 1,ntiles
    endif
 
    start= 1 ; count= 1
-   
+
    if (ntiles == 1) then
 !     regular grid
        rcode= nf_inq_varid (ncid, 'lat', latid)         ! number of lats
@@ -179,7 +179,7 @@ do n= 1,ntiles
        do i= 4,idp2
           lat(i,:,:)= lat(3,:,:)
        enddo
-       
+
        rcode= nf_inq_varid (ncid, 'lon', lonid)         ! number of lons
        if (rcode /= 0) then
            rcode2 = nf_inq_varid (ncid, 'grid_x', lonid)
@@ -200,7 +200,7 @@ do n= 1,ntiles
        enddo
 
    else
-   
+
 !     cubic sphere -- assume no edge data
        rcode= nf_inq_varid (ncid, 'y', latid)         ! number of lats
        if (rcode /= 0) then
@@ -218,7 +218,7 @@ do n= 1,ntiles
 
        start= 1 ;  count(1)= id ;  count(2)= jd
        rcode= nf_get_vara_double (ncid, latid, start, count, lat(3:idp2,3:jdp2,n))
-       
+
        rcode= nf_inq_varid (ncid, 'x', lonid)         ! number of lons
        if (rcode /= 0) then
            write (6,*) "ERROR: cannot find lon variable (x)" ; stop 30
@@ -416,7 +416,7 @@ endif
           enddo
        enddo
     enddo
-    
+
 !    write (6,*) 'number of externally draining basins= ', ktr
 !    write (6,*) 'number of internally draining basins= ', ktr2
 
@@ -447,7 +447,7 @@ else
        if (its(n) == 0) its(n)= ntiles
        if (itn(n) == 0) itn(n)= ntiles
     enddo
-       
+
     call create_halo (ntiles, id, jd, itw, ite, its, itn, tocell)
     call create_halo (ntiles, id, jd, itw, ite, its, itn, land_fr)
     call create_halo (ntiles, id, jd, itw, ite, its, itn, cell_a)
@@ -477,25 +477,25 @@ tocell_new= mval_mdl
 do n= 1,ntiles
    do j= 3,jdp2
       do i= 3,idp2
-      
+
          if (tocell(i,j,n) == mval_mdl) go to 270
-         
+
 !         if (i == 151 .and. j == 3 .and. n == 4) then
 !            write (6,'("1.0",3i6,f7.0,f10.3,f7.0)') i, j, n, tocell(i,j,n), land_fr(i,j,n), basin_temp(i,j,n)
 !         endif
-         
+
          if (tocell(i,j,n) == 0.) then
              tocell_new(i,j,n)= 0.
              go to 270
          endif
-                   
+
          smax= -99999. ;  i1= -1 ;  j1= -1
          do jj= 1,nj_cells
             jp= j+jj-2
-                
+
             do ii= 1,ni_cells
                ip= i+ii-2
-                
+
 !               if (i == 151 .and. j == 3 .and. n == 4) then
 !                  write (6,'("2.0",5i6,2f7.0,f10.3,f12.1)') i, j, n, ii, jj, out_flow(ii,jj), &
 !                        tocell(ip,jp,n), land_fr(ip,jp,n), suba_temp(ip,jp,n)/1.e6
@@ -529,7 +529,7 @@ do n= 1,ntiles
 !                   endif
                endif
 269            continue
-                       
+
             enddo
          enddo
          if (i1 > 0 .and. j1 > 0) then
@@ -547,7 +547,7 @@ do n= 1,ntiles
 enddo
 
 tocell= tocell_new
-      
+
 ! find all the grid cells where tocell=0 and land_frac /= 1
     ktr= 0 ;  ; ktr2=  0
     do n= 1,ntiles
@@ -563,11 +563,11 @@ tocell= tocell_new
           enddo
        enddo
     enddo
-    
+
 !    write (6,*) 'number of externally draining basins= ', ktr
 !    write (6,*) 'number of internally draining basins= ', ktr2
 
-    
+
 ! ----------------------------------------------------------------------
 ! follow river downstream; get subA, travel, cell_length, and basin
 ! ----------------------------------------------------------------------
@@ -608,28 +608,28 @@ do n= 1,ntiles
 !                 write (6,'(a,8i6,f7.0,i7,f7.0)') '0 ', i1, j1, n1, ite(n1), i, j, n, ite(n), &
 !                       tocell(i1,j1,n1), ktr, travel(i,j,n)
 !             endif
-          
+
              if (cell_a(i,j,n) == mval_mdl) then
                  write (6,'(a,2i5,2f10.3,2f10.0)') 'cell_a is missing value, ', j, i, &
                      lat(j,j,n), lon(i,j,n), tocell(i,j,n), cell_a(i,j,n)
                  stop 120
              endif
-          
+
 120          continue
              do jj= 1,nj_cells
                 jp= j1+jj-2
-                
+
                 do ii= 1,ni_cells
                    ip=i1+ii-2
-                
+
 !                if (i == 17 .and. j == 50 .and. n == 1) then
 !                    write (6,'(a,8i6,3f7.0)') '1 ', i1, j1, n1, ite(n1), i, j, n, ite(n), &
 !                          tocell(i1,j1,n1), out_flow(ii,jj), travel(i1,j1,n1)
 !                endif
-                
+
                 if (tocell(i1,j1,n1) == out_flow(ii,jj)) then
                     ktr= ktr + 1
-                    
+
                     if (ktr == 1) then
                         if (ip /= i .or. jp /= j) then
                             dlat= (lat(i,j,n)-lat(ip,jp,n))*dtr
@@ -641,13 +641,13 @@ do n= 1,ntiles
                             cell_l(i,j,n)= 0.
                         endif
                     endif
-                    
+
                     if (scale_suba) then
                         suba(i1,j1,n1)= suba(i1,j1,n1) + cell_a(i,j,n)*land_fr(i,j,n)
                     else
                         suba(i1,j1,n1)= suba(i1,j1,n1) + cell_a(i,j,n)
                     endif
-                    
+
                     if (tocell(i1,j1,n1) == 0.) then
                         travel(i,j,n)= real(ktr-1)
                         ibas(i,j,n)= idx_to_grd(i1,j1,n1)
@@ -693,9 +693,9 @@ do n= 1,ntiles
                         endif
                         go to 120
                     endif
-                    
+
                 else if (tocell(i1,j1,n1) == mval_mdl) then
-                
+
           ! tocell undefined, set to zero, set other vars accordingly
                     write (10,'(a,3i5,2f10.3,3i5,2f10.3,f15.1,f7.0)') "WARNING: tocell has missing value, ", &
                        j, i, n, lat(i,j,n), lon(i,j,n), j1, i1, n1, lat(i1,j1,n1), lon(i1,j1,n1), &
@@ -715,7 +715,7 @@ do n= 1,ntiles
                            j1, i1, n1, lat(i1,j1,n1), lon(i1,j1,n1)
                         land_fr(i1,j1,n1)= 0.
                     endif
-                    
+
                     if (idx_to_grd(i1,j1,n1) == -1) then
                         nto= nto + 1
                         idx_to(nto)= nto
@@ -736,10 +736,10 @@ do n= 1,ntiles
                     travel(i,j,n)= real(ktr)  ! ktr has not been incremented, no need to subtract 1
                     go to 170
                 endif
-                
+
                 enddo
              enddo
-      
+
 170      continue
       enddo     ! end of i loop
    enddo        ! end of j loop
@@ -747,13 +747,13 @@ enddo           ! end of ntiles loop
 !write (6,'(a,i6)') 'number of grid cells accepting drainage= ', nto
 !write (6,'(a,i6)') 'number of grid cells where tocell has been changed from missing value to 0= ', kt0
 
-if (scale_suba) then 
+if (scale_suba) then
     where (tocell == 0. .and. land_fr == 0. .and. suba == cell_a*land_fr) tocell= mval_mdl
 else
     where (tocell == 0. .and. land_fr == 0. .and. suba == cell_a) tocell= mval_mdl
 endif
 
-where (tocell == mval_mdl) 
+where (tocell == mval_mdl)
    suba= mval_mdl
    travel= mval_mdl
    cell_l= mval_mdl
@@ -822,27 +822,27 @@ do j= 1, nto
           b1= bas_area(i)
           bas_area(i)= bas_area(i+1)
           bas_area(i+1)= b1
-          
+
           i1= idx_to(i)
           idx_to(i)= idx_to(i+1)
           idx_to(i+1)= i1
-          
+
           i2= ilo(i)
           ilo(i)= ilo(i+1)
           ilo(i+1)= i2
-          
+
           t1= lat_to(i)
           lat_to(i)= lat_to(i+1)
           lat_to(i+1)= t1
-          
+
           t2= lon_to(i)
           lon_to(i)= lon_to(i+1)
           lon_to(i+1)= t2
-          
+
           a1= avlat(i)
           avlat(i)= avlat(i+1)
           avlat(i+1)= a1
-          
+
           a2= avlon(i)
           avlon(i)= avlon(i+1)
           avlon(i+1)= a2
@@ -1103,7 +1103,7 @@ if (ncros > 0) then
           endif
        enddo
     enddo
-    
+
 endif
 
 ! ----------------------------------------------------------------------
@@ -1114,7 +1114,7 @@ do n= 1,ntiles
    write (fname, '(a,i1,a)') 'river_network.tile', n, '.nc'
    rcode= NF_CREATE (trim(fname), NF_CLOBBER, ncid)
    rcode= NF_PUT_ATT_TEXT (ncid, NF_GLOBAL, 'filename', len_trim(fname), trim(fname))
-   
+
 ! ----------------------------------------------------------------------
 !  create dimensions, coordinate variables, coordinate attributes for
 !    mean files
@@ -1125,8 +1125,8 @@ do n= 1,ntiles
    rcode= NF_DEF_DIM (ncid, 'grid_y',  jd,   latdim)
 
 !  create coordinate variables
-   rcode= NF_DEF_VAR (ncid, 'grid_x',  NF_DOUBLE, 1, londim,  lonid)
-   rcode= NF_DEF_VAR (ncid, 'grid_y',  NF_DOUBLE, 1, latdim,  latid)
+   rcode= NF_DEF_VAR (ncid, 'grid_x',  NF_DOUBLE, 1, (/ londim /),  lonid)
+   rcode= NF_DEF_VAR (ncid, 'grid_y',  NF_DOUBLE, 1, (/ latdim /),  latid)
 
 !  create attributes for coordinate variables
 !    longitude:
@@ -1145,63 +1145,63 @@ do n= 1,ntiles
    rcode= NF_PUT_ATT_TEXT (ncid, varid2, 'long_name', 13, 'subbasin area')
    rcode= NF_PUT_ATT_TEXT (ncid, varid2, 'units', 2, 'm2')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid2, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'tocell', NF_DOUBLE, 2, ndims, varid3)
    rcode= NF_PUT_ATT_TEXT (ncid, varid3, 'long_name', 28, 'direction to downstream cell')
    rcode= NF_PUT_ATT_TEXT (ncid, varid3, 'units', 4, 'none')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid3, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'travel', NF_DOUBLE, 2, ndims, varid4)
    rcode= NF_PUT_ATT_TEXT (ncid, varid4, 'long_name', 42, &
              'cells left to travel before reaching ocean')
    rcode= NF_PUT_ATT_TEXT (ncid, varid4, 'units', 4, 'none')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid4, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'basin', NF_DOUBLE, 2, ndims, varid7)
    rcode= NF_PUT_ATT_TEXT (ncid, varid7, 'long_name', 14, 'river basin id')
    rcode= NF_PUT_ATT_TEXT (ncid, varid7, 'units', 4, 'none')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid7, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'cellarea', NF_DOUBLE, 2, ndims, varid)
    rcode= NF_PUT_ATT_TEXT (ncid, varid, 'long_name', 9, 'cell area')
    rcode= NF_PUT_ATT_TEXT (ncid, varid, 'units', 2, 'm2')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'celllength', NF_DOUBLE, 2, ndims, varid5)
    rcode= NF_PUT_ATT_TEXT (ncid, varid5, 'long_name', 11, 'cell length')
    rcode= NF_PUT_ATT_TEXT (ncid, varid5, 'units', 1, 'm')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid5, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'land_frac', NF_DOUBLE, 2, ndims, varid6)
    rcode= NF_PUT_ATT_TEXT (ncid, varid6, 'long_name', 13, 'land fraction')
    rcode= NF_PUT_ATT_TEXT (ncid, varid6, 'units', 4, 'none')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid6, 'missing_value', NF_DOUBLE, 1, mval_mdl)
- 
+
    rcode= NF_DEF_VAR (ncid, 'internal', NF_DOUBLE, 2, ndims, varid8)
    rcode= NF_PUT_ATT_TEXT (ncid, varid8, 'long_name', 22, 'internal drainage flag')
    rcode= NF_PUT_ATT_TEXT (ncid, varid8, 'units', 4, 'none')
    rcode= NF_PUT_ATT_DOUBLE (ncid, varid8, 'missing_value', NF_DOUBLE, 1, mval_mdl)
-   
+
    rcode= NF_DEF_VAR (ncid, 'x', NF_DOUBLE, 2, ndims, longid)
    rcode= NF_PUT_ATT_TEXT (ncid, longid, 'long_name', 20, 'Geographic longitude')
    rcode= NF_PUT_ATT_TEXT (ncid, longid, 'units', 12, 'degrees_east')
- 
+
    rcode= NF_DEF_VAR (ncid, 'y', NF_DOUBLE, 2, ndims, latgid)
    rcode= NF_PUT_ATT_TEXT (ncid, latgid, 'long_name', 19, 'Geographic latitude')
    rcode= NF_PUT_ATT_TEXT (ncid, latgid, 'units', 13, 'degrees_north')
- 
+
 !  leave define mode
    rcode= NF_ENDDEF (ncid)
 
 !  write coordinate data
    start= 1 ;  count= 1
-      
+
    count(1)= id
    rcode= NF_PUT_VARA_DOUBLE (ncid, lonid, start, count, lon_idx)
 
    count(1)= jd
    rcode= NF_PUT_VARA_DOUBLE (ncid, latid, start, count, lat_idx)
-   
+
    start= 1 ;  count(1)= id ;  count(2)= jd
    rcode= NF_PUT_VARA_DOUBLE (ncid, longid, start, count, lon(3:idp2,3:jdp2,n))
 
@@ -1251,8 +1251,8 @@ deallocate (cell_a, tocell, land_fr, tocell_new)
 deallocate (suba, travel, cell_l, basin, ibas, bas_area)
 deallocate (suba_temp, travel_temp, celll_temp, basin_temp)
 deallocate (suba_wo_const)
-   
-   
+
+
 contains
 
 ! ----------------------------------------------------------------------
@@ -1287,13 +1287,13 @@ else
               field(1,j,n)=     field(ip1,j,itw(n))  ! western edge
               field(2,j,n)=     field(ip2,j,itw(n))  ! western edge
            enddo
-       
+
            do j= 3,jp2
               i= ip2-j+3
               field(ip3,j,n)=  field(i,3,ite(n))     ! eastern edge
               field(ip4,j,n)=  field(i,4,ite(n))     ! eastern edge
            enddo
-          
+
            do i= 3,ip2
               j= jp2-i+3
               field(i,1,n)=     field(ip1,j,its(n))  ! southern edge
@@ -1310,17 +1310,17 @@ else
               field(1,j,n)=     field(i,jp1,itw(n))  ! western edge
               field(2,j,n)=     field(i,jp2,itw(n))  ! western edge
            enddo
-       
+
            do j= 3,jp2
               field(ip3,j,n)=  field(3,j,ite(n))     ! eastern edge
               field(ip4,j,n)=  field(4,j,ite(n))     ! eastern edge
            enddo
-       
+
            do i= 3,ip2
               field(i,1,n)=     field(i,jp1,its(n))  ! southern edge
               field(i,2,n)=     field(i,jp2,its(n))  ! southern edge
            enddo
-       
+
            do i= 3,ip2
               j= jp2-i+3
               field(i,jp3,n)=  field(3,j,itn(n))     ! northern edge
@@ -1479,6 +1479,3 @@ ncr= ktr
 end subroutine find_crossing_rivers
 
 end
-
-
-

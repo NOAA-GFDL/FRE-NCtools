@@ -1,28 +1,35 @@
 # Github actions CI file
 # Ryan Mulhall 2020
-# Builds and runs make check in two containers, one with mpi, one without
+# CI testing for the FRE-NCtools repo, builds and runs unit tests
+# container @ https://hub.docker.com/repository/docker/ryanmulhall/fre-nctools-base
 name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
-  build:
+  CI:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         with_mpi: ['','--with-mpi']
-    env:
+        enable_quad_precision: ['', '--enable-quad-precision']
+    container:
+      image: ryanmulhall/fre-nctools-base
+      env:
         MPI: ${{ matrix.with_mpi }}
+        QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Build container
-      run: |
-        if [[ "$MPI" != "" ]]; then sed -i 's/autoconf/autoconf libopenmpi-dev openmpi-bin/' Dockerfile; fi
-        docker build . -t fre-nctools$MPI
-    - name: Build and run tests
-      run: docker run -u root --entrypoint "/bin/sh" --env MPI fre-nctools$MPI /build.sh
+    - name: Configure
+      run: | 
+        autoreconf -i configure.ac
+        ./configure $MPI $QUAD_P
+    - name: Build tools
+      run: make
+    - name: Run tests
+      run: make -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2.2.1
       if: failure()
       with:
-          name: test-suite${{ matrix.with_mpi}}.log
-          path: t/test-suite.log
+        name: test-suite.log
+        path: t/test-suite.log
