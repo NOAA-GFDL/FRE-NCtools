@@ -31,6 +31,7 @@
 #include <mpi.h>
 #endif
 
+#define R2D (180./M_PI)
 #define HPI (0.5*M_PI)
 #define TPI (2.0*M_PI)
 #define TOLORENCE (1.e-6)
@@ -308,6 +309,85 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
 
 }; /* poly_area */
 
+/*------------------------------------------------------------------------------
+  double poly_area(const x[], const y[], int n)
+  obtains area of input polygon by line integrating -sin(lat)d(lon)
+  Vertex coordinates must be in Radians.
+  Vertices must be listed counter-clockwise around polygon.
+  grid is in radians.
+
+  Derivation of line integrating -sin(lat)d(lon) formula:
+  Consider a vector function in spherical coordinates (r,lon,lat) 
+  with only a lon component :
+      A=(0, (1-sin(lat))/cos(lat)/r , 0)  
+  Then  
+      Curl(A)=(1/r**2 , 0, 0) .  
+  Now consider any loop C on the suface of the sphere enclosing an area S 
+  and apply the Stokes theorem: 
+      \integral_surface_S Curl(A).da = \integral_loop_C A.dl 
+  where da and dl are the vectorial suface and line elements on sphere:
+      da=(da, 0, 0) and dl=(0, R*d(lon), R*cos(lat)*d(lon)).
+  We get
+      \integral_surface_S Curl(A) = \integral_surface_S (da/r**2) = S/R**2
+  and
+      \integral_loop_C A.dl = \integral_loop_C (1-sin(lat))*d(lon) 
+
+  Hence per Stokes formula:
+      S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon). 
+  But 
+   \integral_loop_C d(lon)=0 as long as the loop does not go over the South Pole!
+   \integral_loop_C d(lon)=2*pi otherwise
+  Careful, is this true?
+
+  Now the approximation used for loop integral 
+    \integral_loop_C sin(lat)*d(lon)
+  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lon)
+  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
+
+  If d(lon)/d(lat) is assumed contant over a loop segment, given that the segments
+  used here are the sides of a grid cell, then we can take it outside the integral
+    sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
+   =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat) 
+   =sum_over_grid_sides (lon2-lon1)/(lat2-lat1) (-(cos(lat2)-cos(lat1)))
+
+  Finally:
+   S/R**2 = (lon2-lon1)/(lat2-lat1)*(cos(lat2)-cos(lat1))  + 0 or 2pi
+
+  Special cases:
+   As we saw this approximation is based on the assumtion that  d(lon)/d(lat) is
+   almost a constant over each segment of the path. This assumption breaks down 
+   if the path passes through a pole, e.g. along a longitude great circle where
+   lon abruptly changes by 2*pi as it goes through the pole. This actually happens
+   for some of the stretched ATM grids in the mix like this: 
+       x----x----x  
+       |    |    |
+       |   Pole  |
+       |    |    |
+       |    |    |
+       x----x----x  
+    x denotes grid points. In this situation we cannot use the above approximation
+    for the middle vertical path. 
+    To fix this we "assume" that the two loop integrals straddling the pole
+    are equal. Let's set
+      I = - \integral_loop_double_cell sin(lat)*d(lon), S =double_cell area /R**2
+      Il= - \integral_loop_left_cell sin(lat)*d(lon)  , Sl=left_cell area   /R**2
+      Ir= - \integral_loop_right_cell sin(lat)*d(lon) , Sr=right_cell area  /R**2
+    Then assume
+      I = Il+Ir 
+
+    According to Stoke's formula above
+      S =I + 2*pi 
+      Sl=Il
+      Sr=Ir
+      S=Sl+Sr => I+2*pi = (Il+Ir)=2*Ir (assuming Il=Ir if the grid cells are symmetric)
+    But 
+      I=Il_exclude+Ir_exclude =2*Ir_exclude 
+    where Ir_exclude is Ir excluding the common segment in the two grid cells. So:
+      Ir=Il=(2*Ir_exclude+2*pi)/2 =Ir_exclude+pi  
+    or put it another way
+      Ir_thru_pole = Il_thru_pole = pi  
+    where Ir_thru_pole is the integral over the segment passing through the pole.
+   ----------------------------------------------------------------------------*/
 double poly_area(const double x[], const double y[], int n)
 {
   double area = 0.0;
@@ -323,18 +403,26 @@ double poly_area(const double x[], const double y[], int n)
     lat2 = y[i];
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
     if(dx < -M_PI) dx = dx + 2.0*M_PI;
-    if (dx==0.0) continue;
-
+    //if (dx==0.0) continue;
+    /*When the path goes through a Pole the line integral cannot be
+      approximated by the fomula below. But we can show for these
+      special grid cells the contribution of such paths to the area is pi.*/
+    if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
+      area += M_PI;
+      continue; //next i
+    }
+    
     if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
       area -= dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
-   area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
+	area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
       }
       else {
-   dy = 0.5*(lat1-lat2);
-   dat = sin(dy)/dy;
-   area -= dx*sin(0.5*(lat1+lat2))*dat;
+	dy = 0.5*(lat1-lat2);
+	dat = sin(dy)/dy;
+	area -= dx*sin(0.5*(lat1+lat2))*dat; 
+	//This expression is a trig identity with the above reproduce_siena case
       }
     }
   }
@@ -398,7 +486,7 @@ void v_print(double x[], double y[], int n)
 {
   int i;
 
-  for (i=0;i<n;i++) printf(" %20g   %20g\n", x[i], y[i]);
+  for (i=0;i<n;i++) printf(" %20g   %20g\n", x[i]*R2D, y[i]*R2D);
 } /* v_print */
 
 int fix_lon(double x[], double y[], int n, double tlon)

@@ -2891,14 +2891,21 @@ int main(int argc, char* argv[])
 
       printf("\n*********************************************************\n");
       printf("\n     First input grid box longitude, latitude   \n \n");
-      for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
+      for(i=0; i<n1_in; i++) printf(" %g,", lon1_in[i]*R2D);
+      printf("\n");
+      for(i=0; i<n1_in; i++) printf(" %g,", lat1_in[i]*R2D);
+      printf("\n");
 
       printf("\n     Second input grid box longitude, latitude \n \n");
-      for(i=0; i<n2_in; i++) printf(" %g,  %g \n", lon2_in[i]*R2D, lat2_in[i]*R2D);
+      for(i=0; i<n2_in; i++) printf(" %g,", lon2_in[i]*R2D);
+      printf("\n");
+      for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
+      printf("\n");
 
       printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
-      printf("n_out=%d\n",n_out);
-      for(i=0; i<n_out; i++) printf(" %g,  %g \n", lon_out[i]*R2D, lat_out[i]*R2D);
+      for(i=0; i<n_out; i++) printf(" %g,", lon_out[i]*R2D);
+      printf("\n");
+      for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);
       printf("\n");
     }
     else {
@@ -2911,13 +2918,21 @@ int main(int argc, char* argv[])
 
       printf("\n*********************************************************\n");
       printf("\n     First input grid box longitude, latitude   \n \n");
-      for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
+      for(i=0; i<n1_in; i++) printf(" %g,", lon1_in[i]*R2D);
+      printf("\n");
+      for(i=0; i<n1_in; i++) printf(" %g,", lat1_in[i]*R2D);
+      printf("\n");
 
       printf("\n     Second input grid box longitude, latitude \n \n");
-      for(i=0; i<n2_in; i++) printf(" %g,  %g \n", lon2_in[i]*R2D, lat2_in[i]*R2D);
+      for(i=0; i<n2_in; i++) printf(" %g,", lon2_in[i]*R2D);
+      printf("\n");
+      for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
+      printf("\n");
 
       printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
-      for(i=0; i<n_out; i++) printf(" %g,  %g \n", lon_out[i]*R2D, lat_out[i]*R2D);
+      for(i=0; i<n_out; i++) printf(" %g,", lon_out[i]*R2D);
+      printf("\n");
+      for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);
       printf("\n");
     }
   }

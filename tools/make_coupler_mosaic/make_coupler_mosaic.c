@@ -1374,9 +1374,10 @@ int main (int argc, char *argv[])
 	  ya_max  = maxval_double(4, ya);
 
 	  na_in   = fix_lon(xa, ya, 4, M_PI);
-
-//	  ya_min  = minval_double(4, ya);
-//	  ya_max  = maxval_double(4, ya);
+          /*moving the block here changes answers
+	  ya_min  = minval_double(4, ya);
+	  ya_max  = maxval_double(4, ya);
+          */
 	  xa_min  = minval_double(na_in, xa);
 	  xa_max  = maxval_double(na_in, xa);
 	  xa_avg  = avgval_double(na_in, xa);
