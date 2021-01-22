@@ -1450,9 +1450,23 @@ int main (int argc, char *argv[])
 	      */
 
 	      if(xa_min >= xl_max || xa_max <= xl_min ) continue;
-	      n_out = clip_2dx2d( xa, ya, na_in, xl, yl, nl_in, x_out, y_out );
-	    }
-
+	      if(lnd_same_as_atm) {
+	        if(na==nl && ja==jl && ia==il) {
+		  if(na_in != nl_in) printf("Error: na_in,nl_in,n_out,%d,%d,%d",na_in, nl_in, n_out);
+		  n_out = nl_in;
+		  for(n=0; n<n_out; n++) {
+		    x_out[n] = xl[n];
+		    y_out[n] = yl[n];
+		  }
+		 }
+		 else
+		   n_out = 0;
+	      }
+              else {
+	        n_out = clip_2dx2d( xa, ya, na_in, xl, yl, nl_in, x_out, y_out );
+	      }
+	   }
+	 
 	    if (  n_out > 0 ) {
 	      if(clip_method == GREAT_CIRCLE_CLIP)
 		xarea=great_circle_area ( n_out, x_out, y_out, z_out);
