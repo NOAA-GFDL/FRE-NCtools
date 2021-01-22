@@ -12,9 +12,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; see the file COPYING.
+   along with this program.
    If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
 #ifndef STRLIST_H
@@ -38,14 +38,14 @@ int addstringtolist(char** list, char* string, int nitems);
 int appendstringtolist(char*** list, char* string, int *nitems);
 void printstrlist(char** list, int n, FILE* f);
 
-/* find string list union; "union" must already be allocated to 
+/* find string list union; "union" must already be allocated to
    accomodate size(set1) + size(set2)
    does not assume listunion is empty, therefore can use as a copy function
 */
 int strlistu(char** list1, char** list2, char** listunion, int n1, int n2, int nu);
-/* find string list simple difference; 
+/* find string list simple difference;
    list1 items are returned unless exist in list2
-   "diff" must already be allocated to 
+   "diff" must already be allocated to
    accomodate size(set1) + size(set2) worst case.
 */
 int strlistsd(char** list1, char** list2, char** listdiff, int n1, int n2, int nsd);

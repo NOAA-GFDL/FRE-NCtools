@@ -12,9 +12,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; see the file COPYING.
+   along with this program.
    If not, write to the Free Software Foundation,
-   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
 #ifndef XMALLOC_H
@@ -28,7 +28,7 @@
 #else
 #define BEGIN_C_DECLS
 #define END_C_DECLS
-#endif 
+#endif
 
 #define XCALLOC(type, num) \
 ((type*) xcalloc ((size_t)(num), (size_t)sizeof(type)))
