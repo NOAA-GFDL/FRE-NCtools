@@ -402,15 +402,20 @@ double poly_area(const double x[], const double y[], int n)
     lat1 = y[ip];
     lat2 = y[i];
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
-    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    if(dx <= -M_PI) dx = dx + 2.0*M_PI;
     //if (dx==0.0) continue;
     /*When the path goes through a Pole the line integral cannot be
       approximated by the fomula below. But we can show for these
-      special grid cells the contribution of such paths to the area is pi.*/
+      special grid cells the contribution of such paths to the area is pi.
     if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
       area += M_PI;
       continue; //next i
     }
+    This fix could instead be applied to fix_lon function by adding a couple
+    of twin poles to the polygon side that crosses the pole (diagnosed by dx=+/-pi).
+    Note in that situation we should extend the if(dx < -M_PI) to if(dx <= -M_PI)
+    so the resulting contribution to area is positive.
+    */
     
     if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
       area -= dx*sin(0.5*(lat1+lat2));
@@ -522,6 +527,21 @@ int fix_lon(double x[], double y[], int n, double tlon)
     if (y[ip]!=y[i]) x[i] = x[ip];
   }
 
+  /*If a polygon side passes through a Pole insert 2 vertices at Pole*/
+  for (i=0;i<nn;i++) {
+    int im=(i+nn-1)%nn, ip=(i+1)%nn;
+    double dx = x[i]-x[im];
+    if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
+      double x1=x[im];
+      double x2=x[i];
+      double ypole= HPI;
+      if(y[i]<0.0) ypole = -HPI ;
+      nn = insert_vtx(x, y, nn, i, x2, ypole);
+      nn = insert_vtx(x, y, nn, i, x1, ypole);
+      break;
+    }
+  }
+  
   if (nn) x_sum = x[0]; else return(0);
   for (i=1;i<nn;i++) {
     double dx = x[i]-x[i-1];
