@@ -484,6 +484,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
 	  char filewithpath[512];
 	
 	  sprintf(filewithpath, "%s/%s", dir, xgrid_file[m]);
+          printf("river_regrid: Reading file %s\n",filewithpath); 
 	  g_fid = mpp_open(filewithpath, MPP_READ);
 	  nxgrid = mpp_get_dimlen(g_fid, "ncells");
 	  mpp_close(g_fid);
@@ -507,10 +508,10 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
       }
     }
     else { /* read from land_mask.tile#.nc */
-      char land_mask_file[512];
       int nx2, ny2;
-      
+      char land_mask_file[512];
       sprintf(land_mask_file, "%s/land_mask_tile%d.nc", dir, n+1);
+      printf("river_regrid: Reading file %s\n",land_mask_file); 
       g_fid = mpp_open(land_mask_file, MPP_READ);
       nx2 = mpp_get_dimlen(g_fid, "nx");
       ny2 = mpp_get_dimlen(g_fid, "ny");
@@ -523,7 +524,10 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
 
     for(m=0; m<nx*ny; m++) {
       /* consider truncation error */
-      if(river_data[n].landfrac[m] > 1 + 1.e-3) mpp_error("river_regrid: land_frac > 1 + 1.e-3" ); 
+      if(river_data[n].landfrac[m] > 1 + 1.e-3) {
+	printf("river_regrid: index %d, %f\n", m, river_data[n].landfrac[m]);
+	mpp_error("river_regrid: land_frac > 1 + 1.e-3" ); 
+	}	
       if(river_data[n].landfrac[m] > 1 - land_thresh) river_data[n].landfrac[m] = 1;
       if(fabs(river_data[n].landfrac[m])   < min_frac) river_data[n].landfrac[m] = 0;
       if(river_data[n].landfrac[m] > 1 || river_data[n].landfrac[m] < 0)
