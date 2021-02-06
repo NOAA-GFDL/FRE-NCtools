@@ -1481,6 +1481,14 @@ int main (int argc, char *argv[])
 		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
                 printf("\n");
 	      }
+	      if(fabs(yl_min-0.5*M_PI) < 0.0093 && verbose) {
+		printf("Near North Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f \n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
+                printf("longitudes and latitudes of the %d corners are:\n", n_out);
+		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
+                printf("\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
+                printf("\n");
+	      }
 	      if( xarea/min_area > area_ratio_thresh ) {
 
                 if(print_grid) {
@@ -1582,9 +1590,6 @@ int main (int argc, char *argv[])
 	      /* xo should in the same range as xa after lon_fix, so no need to
 		 consider cyclic condition
 	      */
-              if(fabs(xa_min+0.5*M_PI) < 0.0093 && verbose) {
-		printf("Error: Open Ocean Near South pole, this should not happen!");
-              }
 	      if( clip_method == GREAT_CIRCLE_CLIP ) {
 		n_out = clip_2dx2d_great_circle(xa, ya, za, 4, xo, yo, zo, 4,
 						x_out, y_out, z_out);
@@ -1592,6 +1597,23 @@ int main (int argc, char *argv[])
 	      else {
 		if(xa_min >= xo_max || xa_max <= xo_min || yo_min >= ya_max || yo_max <= ya_min ) continue;
 		n_out = clip_2dx2d( xa, ya, na_in, xo, yo, no_in, x_out, y_out );
+	      }
+	      if(fabs(ya_max-0.5*M_PI) < 0.0003 && fabs(yo_max-0.5*M_PI) < 0.0003 && verbose) {
+		printf("Near North Pole ATMxLND grid cell\n");
+		for(n=0; n<na_in; n++) printf("%7.3f, ", xa[n]*R2D);
+                printf("\n");
+		for(n=0; n<na_in; n++) printf("%7.3f, ", ya[n]*R2D);
+                printf("\n");
+		printf("Near North Pole OCN grid cell\n");
+		for(n=0; n<no_in; n++) printf("%7.3f, ", xo[n]*R2D);
+                printf("\n");
+		for(n=0; n<no_in; n++) printf("%7.3f, ", yo[n]*R2D);
+                printf("\n");
+		printf("Near North Pole ATMxLNDxOCN grid cell\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
+                printf("\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
+                printf("\n");
 	      }
 	      if (  n_out > 0) {
 		if( clip_method == GREAT_CIRCLE_CLIP )
@@ -1660,6 +1682,8 @@ int main (int argc, char *argv[])
 	  min_area = min(area_lnd[nl][axl_j[l]*nxl[nl]+axl_i[l]], area_atm[na][la]);
 	  if(fabs(axl_ymin[l]+0.5*M_PI) < 0.0093 && verbose){
 	    printf("Near South Pole: ATMxLNDxOCN_area/ATM_area =%f \n",axl_area[l]/min_area);}
+	  if(fabs(axl_ymin[l]-0.5*M_PI) < 0.0093 && verbose){
+	    printf("Near North Pole: ATMxLNDxOCN_area/ATM_area =%f \n",axl_area[l]/min_area);}
 	  if(axl_area[l]/min_area > area_ratio_thresh) {
 	    atmxlnd_area[na][nl][naxl[na][nl]] = axl_area[l];
 	    atmxlnd_ia  [na][nl][naxl[na][nl]] = ia;
@@ -2048,7 +2072,7 @@ int main (int argc, char *argv[])
 	  a_a = (double *)malloc(nxl[nl]*nyl[nl]*sizeof(double));
 	  for(jl=0; jl<nyl[nl]; jl++) for(il=0; il<nxl[nl]; il++) {
 	    i = jl*nxl[nl]+il;
-	    mask[i] = l_area[nl][i]/area_lnd[nl][i];
+	    mask[i] = min(l_area[nl][i]/area_lnd[nl][i],1.0);
 	    l_a[i] = l_area[nl][i];
 	    a_l[i] = area_lnd[nl][i];
 	    a_a[i] = area_atm[nl][i];
