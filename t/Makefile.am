@@ -14,7 +14,7 @@
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with FRE-NCTools (LICENSE.md).  If not, see
+# License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\

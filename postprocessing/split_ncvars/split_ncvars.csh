@@ -1,5 +1,5 @@
 #!/bin/csh -f
-
+#
 #***********************************************************************
 #                   GNU Lesser General Public License
 #
@@ -16,10 +16,10 @@
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with FRE-NCTools (LICENSE.md).  If not, see
+# License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
+#
 # ------------------------------------------------------------------------------
 # Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2012
 # Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
