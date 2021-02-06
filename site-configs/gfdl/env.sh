@@ -4,6 +4,7 @@
 source /usr/local/Modules/default/init/sh
 module load intel_compilers/18.0.5 mpich2/1.2.1p1 netcdf/4.2 nco/4.5.4
 module load nccmp
+module load gcc/5.3.0
 
 # Need a newer autoconf/automake than what is curerntly on the system.
 # This is needed until there is a module for these.
