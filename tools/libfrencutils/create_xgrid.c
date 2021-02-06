@@ -12,6 +12,7 @@
 #define EPSLN10           (1.0e-10)
 #define R2D (180/M_PI)
 #define TPI (2.0*M_PI)
+#define HPI (0.5*M_PI)
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
 			  const double *x2, const double *y2, const double *z2, int n2);
@@ -1247,22 +1248,31 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
 	 double lon_out[], double lat_out[])
 {
   double lon_tmp[MV], lat_tmp[MV];
+  double lon2_tmp[MV], lat2_tmp[MV];
   double x1_0, y1_0, x1_1, y1_1, x2_0, y2_0, x2_1, y2_1;
   double dx1, dy1, dx2, dy2, determ, ds1, ds2;
   int i_out, n_out, inside_last, inside, i1, i2;
-
+  int Npole=0;
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
   n_out = n1_in;
   for(i1=0; i1<n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
     lat_tmp[i1] = lat1_in[i1];
+    if(lat_tmp[i1]>=HPI-EPSLN8) Npole = 1;
   }
-  x2_0 = lon2_in[n2_in-1];
-  y2_0 = lat2_in[n2_in-1];
   for(i2=0; i2<n2_in; i2++) {
-    x2_1 = lon2_in[i2];
-    y2_1 = lat2_in[i2];
+    lon2_tmp[i2] = lon2_in[i2];
+    lat2_tmp[i2] = lat2_in[i2];
+    if(lat2_tmp[i1]>=HPI-EPSLN8) Npole = 1;
+  }
+  if(Npole){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);}
+
+  x2_0 = lon2_tmp[n2_in-1];
+  y2_0 = lat2_tmp[n2_in-1];
+  for(i2=0; i2<n2_in; i2++) {
+    x2_1 = lon2_tmp[i2];
+    y2_1 = lat2_tmp[i2];
     x1_0 = lon_tmp[n_out-1];
     y1_0 = lat_tmp[n_out-1];
     inside_last = inside_edge( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
@@ -1309,6 +1319,13 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   return(n_out);
 }; /* clip */
 
+void pimod(double x[],int nn)
+{
+  for (int i=0;i<nn;i++) {
+    if      (x[i] < -M_PI) x[i] += TPI;
+    else if (x[i] >  M_PI) x[i] -= TPI;
+  }
+}
 /*#define debug_test_create_xgrid*/
 
 #ifndef __AIX
@@ -2286,7 +2303,7 @@ int main(int argc, char* argv[])
   int    n1_in, n2_in, n_out, i, j;
   int    nlon1=0, nlat1=0, nlon2=0, nlat2=0;
   int    n;
-  int    ntest = 18;
+  int    ntest = 19;
 
 
   for(n=11; n<=ntest; n++) {
@@ -2750,7 +2767,8 @@ int main(int argc, char* argv[])
                            the other cuts through the tripolar fold
                            This actually happens for some stretched grid
                            configurations  mosaic_c256r25tlat32.0_om4p25 
-        The test gives wrong answers!
+        The test gives wrong answers unless the input longitudes are 
+        between -pi and pi !
       ****************************************************************/
       n1_in = 6; n2_in = 5;
       lon1_in[0]=82.400;  lon1_in[1]=82.400; lon1_in[2]=262.400; lon1_in[3]=262.400; lon1_in[4]=326.498; lon1_in[5]=379.641;
@@ -2801,9 +2819,28 @@ int main(int argc, char* argv[])
       memcpy(lat2_in,lat2_18,sizeof(lat2_in));
       break;
 
-      //double lon1_18[] = {145.159, 198.302, 262.400, 262.400,  82.400,  82.400};
-      //double lat1_18[] = { 89.642,  89.648,  89.847,  90.000,  90.000,  89.835};
+    case 19:
+      /****************************************************************
+        test clip_2dx2d 2: two boxes that include the North Pole 
+                           one has vertices on the tripolar fold
+                           the other is totally outside the first
+                           This actually happens for some stretched grid
+                           configurations  mosaic_c256r25tlat32.0_om4p25 
+        The test gives wrong answers!
+      ****************************************************************/
+      n1_in = 6; n2_in = 5;
+      //double lon1_19[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
+      //double lat1_19[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
+      double lon1_19[] = {82.400,  82.400, 262.400-360., 262.400-360., 326.498-360., 379.641-360.};
+      double lat1_19[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
 
+      double lon2_19[] = {150.000, 177.748, 240.000, 240.000, 150.000};
+      double lat2_19[] = { 89.891,  89.876,  89.942,  90.000,  90.000};
+      memcpy(lon1_in,lon1_19,sizeof(lon1_in));
+      memcpy(lat1_in,lat1_19,sizeof(lat1_in));
+      memcpy(lon2_in,lon2_19,sizeof(lon2_in));
+      memcpy(lat2_in,lat2_19,sizeof(lat2_in));
+      break;
 
     default:
       error_handler("test_create_xgrid: incorrect case number");
@@ -2820,8 +2857,7 @@ int main(int argc, char* argv[])
 
 
     printf("\n*********************************************************\n");
-    printf("\n               Case %d                                    \n", n);
-    printf("\n*********************************************************\n");
+    printf("               Case %d                                    \n", n);
 
 
     if( n > 10 && n <= 14) {
@@ -2843,14 +2879,13 @@ int main(int argc, char* argv[])
       nxgrid = create_xgrid_great_circle(&nlon1, &nlat1, &nlon2, &nlat2, lon1_in, lat1_in,
 					 lon2_in, lat2_in, mask1, i1, j1, i2, j2,
 					 xarea, xclon, xclat);
-      printf("\n*********************************************************\n");
-      printf("\n     First input grid box longitude, latitude   \n \n");
+      printf("     First input grid box longitude, latitude   \n");
       for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
 
-      printf("\n     Second input grid box longitude, latitude \n \n");
+      printf("     Second input grid box longitude, latitude \n");
       for(i=0; i<n2_in; i++) printf(" %g,  %g \n", lon2_in[i]*R2D, lat2_in[i]*R2D);
 
-      printf("\n  Number of exchange grid is %d\n", nxgrid);
+      printf("  Number of exchange grid is %d\n", nxgrid);
       for(i=0; i<nxgrid; i++) {
 	printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
 	       i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
@@ -2889,20 +2924,20 @@ int main(int argc, char* argv[])
 
       n_out = clip_2dx2d(lon1_in, lat1_in, n1_in, lon2_in, lat2_in, n2_in, lon_out, lat_out);
 
-      printf("\n*********************************************************\n");
-      printf("\n     First input grid box longitude, latitude   \n \n");
+      printf("     First input grid box longitude, latitude   \n");
       for(i=0; i<n1_in; i++) printf(" %g,", lon1_in[i]*R2D);
       printf("\n");
       for(i=0; i<n1_in; i++) printf(" %g,", lat1_in[i]*R2D);
       printf("\n");
 
-      printf("\n     Second input grid box longitude, latitude \n \n");
+      printf("     Second input grid box longitude, latitude \n");
       for(i=0; i<n2_in; i++) printf(" %g,", lon2_in[i]*R2D);
       printf("\n");
       for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
       printf("\n");
 
-      printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
+      printf("     output clip grid box longitude, latitude for case %d \n ",n);
+      printf("n_out= %d \n",n_out);
       for(i=0; i<n_out; i++) printf(" %g,", lon_out[i]*R2D);
       printf("\n");
       for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);
@@ -2930,6 +2965,7 @@ int main(int argc, char* argv[])
       printf("\n");
 
       printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
+      printf("n_out= %d \n",n_out);
       for(i=0; i<n_out; i++) printf(" %g,", lon_out[i]*R2D);
       printf("\n");
       for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);

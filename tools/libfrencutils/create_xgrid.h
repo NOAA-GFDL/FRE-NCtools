@@ -18,6 +18,7 @@ void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double 
 void get_grid_area_no_adjust(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
 	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
+void pimod(double x[],int nn);
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in, 
 	       const double lon2_in[], const double lat2_in[], int n2_in, 
 	       double lon_out[], double lat_out[]);
