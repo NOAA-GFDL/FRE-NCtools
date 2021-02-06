@@ -19,8 +19,6 @@
  **********************************************************************/
 /*
   Copyright (C) 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
-  This program is distributed under the terms of the GNU General Public
-  License.
 
   This program generates various types of horizontal grids in netCDF file format
 

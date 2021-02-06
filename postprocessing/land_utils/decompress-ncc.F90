@@ -19,8 +19,6 @@
 !***********************************************************************
 !-----------------------------------------------------------------------
 ! Copyright (C) 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
-! This program is distributed under the terms of the GNU General Public
-! License.
 !
 ! This program reads several input netcdf files, presumably containing "compressed
 ! by gathering" data, and combines them into a single output file
