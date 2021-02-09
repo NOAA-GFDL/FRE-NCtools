@@ -19,6 +19,7 @@
 #define  SC_COHORT_NAME "soilCCohort"
 #define  LC_COHORT_NAME "litterCCohort"
 #define  SPECIES_NAMES "species_names"
+#define  MDF_DAY_NAME "mdf_day"
 #define  TILE_NAME "tile"
 #define  LON_NAME  "lon"
 #define  LAT_NAME  "lat"
@@ -147,6 +148,7 @@ const int LAKETYPE = 4;
 const int VEGNTYPE = 5;
 const int CANATYPE = 6;
 const int SNOWTYPE = 7;
+const int FIRETYPE = 8;
 
 int main(int argc, char *argv[]) {
   char *src_mosaic = NULL;
@@ -170,6 +172,9 @@ int main(int argc, char *argv[]) {
 
   double *sc_cohort_data = NULL, *lc_cohort_data = NULL;
   int n_sc_cohort, n_lc_cohort = 0;
+
+  double *mdf_day_data = NULL; //Forfire data
+  int n_mdf_day = 0;
 
   double *nspecies_data = NULL;
   int n_nspecies = 0;
@@ -309,7 +314,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  /* file type must be the land, cana, snow, soil, lake, glac, vegn */
+  /* file type must be the land, cana, snow, soil, lake, glac, vegn, fire */
   if (!strcmp(file_type, "land"))
     filetype = LANDTYPE;
   else if (!strcmp(file_type, "soil"))
@@ -324,6 +329,8 @@ int main(int argc, char *argv[]) {
     filetype = GLACTYPE;
   else if (!strcmp(file_type, "vegn"))
     filetype = VEGNTYPE;
+  else if (!strcmp(file_type, "fire"))
+    filetype = FIRETYPE;
   else
     mpp_error("remap_land: invalid option in --file_type");
 
@@ -707,6 +714,36 @@ int main(int argc, char *argv[]) {
     }
   }
 
+ /*------------------------------------------------------------------------------
+    get the mdf_dat data
+    -----------------------------------------------------------------------------*/
+
+  {
+    n_mdf_day = 0;
+    if (filetype == FIRETYPE) {
+      if (mpp_var_exist(fid_src[0], MDF_DAY_NAME)) {
+        n_mdf_day = mpp_get_dimlen(fid_src[0], MDF_DAY_NAME);
+        printf("*RLE n_mdf_day= %d\n", n_mdf_day);
+        mdf_day_data = (double *)malloc(n_mdf_day * sizeof(double));
+        int vid = mpp_get_varid(fid_src[0], MDF_DAY_NAME);
+        mpp_get_var_value(fid_src[0], vid, mdf_day_data);
+        for (int m = 1; m < nface_src; m++) {
+          int dimsize = mpp_get_dimlen(fid_src[m], MDF_DAY_NAME);
+          if (dimsize != n_mdf_day)
+            mpp_error("remap_land: the dimension size of mdf_day is different between faces");
+          double *tmp = (double *)malloc(n_mdf_day * sizeof(double));
+          vid = mpp_get_varid(fid_src[m], MDF_DAY_NAME);
+          mpp_get_var_value(fid_src[m], vid, tmp);
+          for (int i = 0; i < n_mdf_day; i++) {
+            if (mdf_day_data[i] != tmp[i]) {
+              mpp_error("remap_land: mdf_day value is different between faces");
+            }
+          }
+          free(tmp);
+        }
+      }
+    }
+  }
 
   /*-----------------------------------------------------------------------------
     Check if the cold_restart has lake or glac. soil is required to be existed
@@ -1401,11 +1438,12 @@ int main(int argc, char *argv[]) {
 
       /* define the metadata for dst_restart_file */
       {
-	int dim_time, dim_cohort_index, dim_lat, dim_lon;
+      	int dim_time, dim_cohort_index, dim_lat, dim_lon;
         int dim_tile_index, dim_cohort, dim_tile, dim_z;
         int dim_sc_cohort, dim_lc_cohort;
         int dim_nspecies;
         int dim_textlen;
+        int dim_mdf_day;
         // int dim_sc_cohort_index,  dim_lc_cohort_index;
 
         dim_lon = mpp_def_dim(fid_dst, LON_NAME, nx_dst);
@@ -1438,7 +1476,12 @@ int main(int argc, char *argv[]) {
             n_textlen = mpp_get_dimlen(fid_src[0], TEXTLEN_NAME);
             dim_textlen = mpp_def_dim(fid_dst, TEXTLEN_NAME, n_textlen);
           }
-
+        }
+        if (filetype == FIRETYPE) {
+          if (mpp_var_exist(fid_src[0], MDF_DAY_NAME)) {
+            n_mdf_day = mpp_get_dimlen(fid_src[0], MDF_DAY_NAME);
+            dim_mdf_day = mpp_def_dim(fid_dst, MDF_DAY_NAME, n_mdf_day);
+          }
         }
 
         if (time_exist){
@@ -1482,6 +1525,8 @@ int main(int argc, char *argv[]) {
               dims[m] = dim_sc_cohort;
             else if (!strcmp(dimname, LC_COHORT_NAME))
               dims[m] = dim_lc_cohort;
+            else if (!strcmp(dimname,  MDF_DAY_NAME))
+              dims[m] = dim_mdf_day;
             else {
               printf("REMAP_LAND: invalid dimension name %s ", dimname);
               mpp_error("REMAP_LAND: invalid dimension name ");
@@ -1580,6 +1625,8 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, sc_cohort_data);
           } else if (!strcmp(varname, LC_COHORT_NAME)) {
             mpp_put_var_value(fid_dst, vid_dst, lc_cohort_data);
+          } else if (!strcmp(varname, MDF_DAY_NAME)) {
+            mpp_put_var_value(fid_dst, vid_dst, mdf_day_data);
           } else if (!strcmp(varname, COHORT_NAME)) {
             mpp_put_var_value(fid_dst, vid_dst, cohort_data);
           } else if (!strcmp(varname, TILE_INDEX_NAME) || !strcmp(varname, COHORT_INDEX_NAME)) {
@@ -1782,15 +1829,15 @@ int main(int argc, char *argv[]) {
             }
           }else if (ndim_src[l] == 2) {
             /**
-             * The fields dimension should be [lc_cohort, tile_index]
+             * The fields dimension should be [lc_cohort, tile_index] or [mdf_day,tile_inde]
              */
             char dimnameA[64], dimnameB[64];
             int lvid = mpp_get_varid(fid_src[0], varname);
             mpp_get_var_dimname(fid_src[0], lvid, 0, dimnameA);
             mpp_get_var_dimname(fid_src[0], lvid, 1, dimnameB);
 
-            if (strcmp(dimnameA, LC_COHORT_NAME) || strcmp(dimnameB, TILE_INDEX_NAME)) {
-              mpp_error("remap_land : Expected 2D  field with dims [lc_cohort, tile_index] :");
+            if (strcmp(dimnameB, TILE_INDEX_NAME) || (strcmp(dimnameA, LC_COHORT_NAME) && strcmp(dimnameA, MDF_DAY_NAME)) ) {
+              mpp_error("remap_land : Expected 2D field with dims [lc_cohort,tile_index] or [mdf_name,tile_index] :");
             }
 
             start_pos[0] = 0;
@@ -1798,7 +1845,13 @@ int main(int argc, char *argv[]) {
               start_pos[m] = start_pos[m - 1] + nidx_src[m - 1];
             }
 
-            int ldimlen = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
+            int ldimlen = -1;
+             if(!strcmp(dimnameA, LC_COHORT_NAME)){
+               ldimlen = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
+             }else {
+               ldimlen = mpp_get_dimlen(fid_src[0], MDF_DAY_NAME);
+            }
+
             for (k = 0; k < ldimlen; k++) {
               pos = 0;
               // int kid;
@@ -2109,12 +2162,14 @@ void get_land_tile_info(int fid, const char *name1, const char *name2, int nidx,
   }
   pos = 0;
   for (l = 0; l < nidx; l++) {
+    /***
     int i_i = idx_in[l] % nx;//TODO :REMOVE
     int k_k = idx_in[l] / nx;
     int j_j = k_k % ny;
     if(i_i == 48 && j_j == 94){
       printf("In (48,94) l=%d idx_in[l]=%d tmp1[l]=%d frac_IN[L]=%f\n",l, idx_in[l], tmp1[l], frac_in[l]);
     }
+    ****/
     if (tmp1[l] != MPP_FILL_INT) {
       i = idx_in[l] % nx;
       k = idx_in[l] / nx;
