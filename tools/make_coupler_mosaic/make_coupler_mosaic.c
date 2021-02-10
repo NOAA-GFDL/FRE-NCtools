@@ -1188,6 +1188,7 @@ int main (int argc, char *argv[])
 
     time_start = time(NULL);
     for(na=0; na<ntile_atm; na++) {
+    //for(na=3; na<4; na++) {
 
       int      k,l, is, ie, js, je, la, ia, ja, il, jl, io, jo, layout[2];
       int      n0, n1, n2, n3, na_in, nl_in, no_in, n_out, n_out2;
@@ -1198,6 +1199,7 @@ int main (int argc, char *argv[])
       double   xl[MV], yl[MV], zl[MV];
       double   xo[MV], yo[MV], zo[MV];
       double   x_out[MV], y_out[MV], z_out[MV];
+      double   y_out_max, y_out_min;
       double   atmxlnd_x[MX][MV], atmxlnd_y[MX][MV], atmxlnd_z[MX][MV];
       int      atmxlnd_c[MX][MV]; 
       int      num_v[MX];
@@ -1473,7 +1475,9 @@ int main (int argc, char *argv[])
 	      else
 		xarea = poly_area(x_out, y_out, n_out);
 	      min_area = min(area_lnd[nl][jl*nxl[nl]+il], area_atm[na][la]);
-	      if(fabs(yl_min+0.5*M_PI) < 0.0093 && verbose) {
+	      y_out_min = minval_double(n_out, y_out);
+	      y_out_max = maxval_double(n_out, y_out);
+	      if(fabs(y_out_min+0.5*M_PI) < 0.00003 && verbose) {
 		printf("Near South Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f \n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
                 printf("longitudes and latitudes of the %d corners are:\n", n_out);
 		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
@@ -1481,8 +1485,8 @@ int main (int argc, char *argv[])
 		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
                 printf("\n");
 	      }
-	      if(fabs(yl_min-0.5*M_PI) < 0.0093 && verbose) {
-		printf("Near North Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f \n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
+	      if(fabs(y_out_max-0.5*M_PI) < 0.00003 && verbose) {
+		printf("Near North Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f\n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
                 printf("longitudes and latitudes of the %d corners are:\n", n_out);
 		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
                 printf("\n");
@@ -1598,7 +1602,7 @@ int main (int argc, char *argv[])
 		if(xa_min >= xo_max || xa_max <= xo_min || yo_min >= ya_max || yo_max <= ya_min ) continue;
 		n_out = clip_2dx2d( xa, ya, na_in, xo, yo, no_in, x_out, y_out );
 	      }
-	      if(fabs(ya_max-0.5*M_PI) < 0.0003 && fabs(yo_max-0.5*M_PI) < 0.0003 && verbose) {
+	      if(fabs(y_out_max-0.5*M_PI) < 0.00003 && fabs(yo_max-0.5*M_PI) < 0.00003 && verbose) {
 		printf("Near North Pole ATMxLND grid cell\n");
 		for(n=0; n<na_in; n++) printf("%7.3f, ", xa[n]*R2D);
                 printf("\n");
@@ -1623,6 +1627,8 @@ int main (int argc, char *argv[])
 
 		if(xarea<0) printf("error: xarea<0, %f",xarea);
 		min_area = min(area_ocn[no][jo*nxo[no]+io], area_atm[na][la]);
+	        if(fabs(y_out_max-0.5*M_PI) < 0.00003 && fabs(yo_max-0.5*M_PI) < 0.00003 && verbose) {
+	           printf("Near North Pole: ATMxLNDxOCN_area/ATM_area =%f \n",xarea/min_area);}
 		if(xarea/min_area > area_ratio_thresh) {
 		  atmxocn_area[na][no][naxo[na][no]] = xarea;
 		  atmxocn_io[na][no][naxo[na][no]]   = io;
@@ -1680,10 +1686,8 @@ int main (int argc, char *argv[])
 	for(l=0; l<count; l++) {
 	  nl = axl_t[l];
 	  min_area = min(area_lnd[nl][axl_j[l]*nxl[nl]+axl_i[l]], area_atm[na][la]);
-	  if(fabs(axl_ymin[l]+0.5*M_PI) < 0.0093 && verbose){
+	  if(fabs(axl_ymin[l]+0.5*M_PI) < 0.00003 && verbose){
 	    printf("Near South Pole: ATMxLNDxOCN_area/ATM_area =%f \n",axl_area[l]/min_area);}
-	  if(fabs(axl_ymin[l]-0.5*M_PI) < 0.0093 && verbose){
-	    printf("Near North Pole: ATMxLNDxOCN_area/ATM_area =%f \n",axl_area[l]/min_area);}
 	  if(axl_area[l]/min_area > area_ratio_thresh) {
 	    atmxlnd_area[na][nl][naxl[na][nl]] = axl_area[l];
 	    atmxlnd_ia  [na][nl][naxl[na][nl]] = ia;

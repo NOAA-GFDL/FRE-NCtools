@@ -416,9 +416,10 @@ double poly_area(const double x[], const double y[], int n)
     Note in that situation we should extend the if(dx < -M_PI) to if(dx <= -M_PI)
     so the resulting contribution to area is positive.
     */
-    
+    int sign=1;
+    if(lat1>HPI-SMALL_VALUE && dx>0) sign=-1;  
     if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
-      area -= dx*sin(0.5*(lat1+lat2));
+      area -= sign*dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
 	area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
