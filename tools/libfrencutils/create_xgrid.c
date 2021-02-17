@@ -1278,7 +1278,7 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   for(i1=0; i1<n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
     lat_tmp[i1] = lat1_in[i1];
-    if(lon_tmp[i1]>TPI) gttwopi = 1;
+    if(lon_tmp[i1]>TPI || lon_tmp[i1]<0.0) gttwopi = 1;
   }
   for(i2=0; i2<n2_in; i2++) {
     lon2_tmp[i2] = lon2_in[i2];
