@@ -530,7 +530,7 @@ int fix_lon(double x[], double y[], int n, double tlon)
   }
 
   /*If a polygon side passes through a Pole insert twin vertices at the Pole*/
-  /*A fix was directly applied to poly_area to handle this case
+  /*A fix is also directly applied to poly_area to handle this case.*/
   for (i=0;i<nn;i++) {
     int im=(i+nn-1)%nn, ip=(i+1)%nn;
     double dx = x[i]-x[im];
@@ -544,7 +544,6 @@ int fix_lon(double x[], double y[], int n, double tlon)
       break;
     }
   }
-  */
   if (nn) x_sum = x[0]; else return(0);
   for (i=1;i<nn;i++) {
     double dx = x[i]-x[i-1];
