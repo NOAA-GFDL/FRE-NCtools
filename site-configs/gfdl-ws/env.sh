@@ -8,7 +8,7 @@ module load netcdf-c/4.7.3
 module load netcdf-fortran/4.5.2
 module load mpich/3.3.2
 # gcc is needed for icc to use newer C11 constructs
-module load gcc/6.2.0
+module load gcc/9.2.0
 # nccmp and bats needed only for testing
 module load nccmp bats
 
