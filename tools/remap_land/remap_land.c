@@ -144,10 +144,9 @@ void compress_double_data(int ntile, int npts, int nidx, int nidx_global, const 
                           const double *data, double *data_global, int all_tile );
 void read_cohort_index(int fid, const char * field_name, int* coho_idx);
 int compute_dst_coho_idx(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int nface_dst,
-                         int *idx_map_soil, int *face_map_soil,  int* soil_count_cold, int* ncoho_idx_src, int *coho_idx_src,
-                         int *coho_idx_dst, int * coho_idx_d_to_s,  int *coho_idx_face_d_to_s);
-
-
+                         int *idx_map_soil, int *face_map_soil,  int* soil_count_cold, int* idx_soil_src,
+                         int* land_idx_map, int* ncoho_idx_src, int *coho_idx_src,
+                         int *coho_idx_dst, int * coho_idx_data_pos,  int *coho_idx_data_face);
 
 const int LANDTYPE = 1;
 const int SOILTYPE = 2;
@@ -1081,8 +1080,8 @@ int main(int argc, char *argv[]) {
     double *land_frac_dst = NULL;
     //Cohort index related data uses more space than above (unless gegenerate)
     int *coho_idx_dst = NULL; //The valid destination cohort indecies;
-    int *coho_idx_d_to_s = NULL; //Mapping of the dst coho index to the src coho index.
-    int *coho_idx_face_d_to_s = NULL; //face of the mapped src coho index.
+    int *coho_idx_data_pos = NULL; //Mapping of the dst coho index to the src coho index.
+    int *coho_idx_data_face = NULL; //face of the mapped src coho index.
     int *coho_idata_src = NULL;
     double *coho_rdata_src = NULL;
     int *coho_idata_dst = NULL;
@@ -1125,12 +1124,12 @@ int main(int argc, char *argv[]) {
     idx_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
 
     coho_idata_src = (int *)malloc(ncoho_idx_tot_src * sizeof(int));
-    coho_rdata_src = (double *)malloc(ncoho_idx_tot_src * sizeof(int));
+    coho_rdata_src = (double *)malloc(ncoho_idx_tot_src * sizeof(double));
     coho_idata_dst = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
     coho_rdata_dst = (double *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(double));
     coho_idx_dst = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
-    coho_idx_d_to_s = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
-    coho_idx_face_d_to_s  = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
+    coho_idx_data_pos = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
+    coho_idx_data_face  = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
 
     soil_tag_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
     vegn_tag_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
@@ -1507,8 +1506,9 @@ int main(int argc, char *argv[]) {
         printf("Before compute cohort index1\n");
         ncoho_idx_dst = compute_dst_coho_idx
           (nxc_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src, ncohort, nface_dst,
-           idx_map_soil, face_map_soil, soil_count_cold, ncoho_idx_src, coho_idx_src,
-           coho_idx_dst, coho_idx_d_to_s, coho_idx_face_d_to_s);
+           idx_map_soil, face_map_soil, soil_count_cold, idx_soil_src,
+           land_idx_map, ncoho_idx_src, coho_idx_src,
+           coho_idx_dst, coho_idx_data_pos, coho_idx_data_face);
         ncoho_idx_dst_global = ncoho_idx_dst;
         printf("After compute cohort index. pos=%d\n", pos);
       }
@@ -1897,8 +1897,8 @@ int main(int argc, char *argv[]) {
             //Copy-map the data for the destination face
             for (int k = 0; k < ncoho_idx_dst_global ; k++) {
               //int i_dst = coho_idx_dst[k]; // the value of kth valid coho index
-                int i_src = coho_idx_d_to_s [k]; // the corresponding source index
-                int face = coho_idx_face_d_to_s [k]; // corresponding face in  src;
+                int i_src = coho_idx_data_pos [k]; // the corresponding source index
+                int face = coho_idx_data_face [k]; // corresponding face in  src;
                 int ipf_src = start_pos[face] + i_src;
                 if (var_type[l] == MPP_INT) {
                   coho_idata_dst[k] = coho_idata_src[ipf_src];
@@ -2232,13 +2232,15 @@ int main(int argc, char *argv[]) {
     free(vegn_tag_src);
     free(idx_soil_src);
 
+    if(src_has_cohort){
     free(coho_idx_dst);
-    free(coho_idx_d_to_s);
-    free(coho_idx_face_d_to_s);
+    free(coho_idx_data_pos);
+    free(coho_idx_data_face);
     free(coho_idata_src);
     free(coho_rdata_src);
     free(coho_idata_dst);
     free(coho_rdata_dst);
+    }
 
     if (has_glac) {
       free(glac_tag_dst);
@@ -2568,15 +2570,6 @@ void swap_vals(int *xp, int *yp)  {
     *yp = temp;
 }
 
-void bubble_sort(int* v, int n)  {
-
-    for (int i = 0; i < n-1; i++){
-      for (int j = 0; j < n-i-1; j++)  {
-        if (v[j] > v[j+1]) { swap_vals(&v[j], &v[j+1]); }
-}
-}
-}
-
 int partition(int v[], int low, int high){
   int pivot = v[high];
   int i = (low - 1);
@@ -2673,6 +2666,108 @@ int make_sorted_set(int *v, int n) {
 }
 
 /***
+ * Compute the destination cohort index (coho_idx_dst) by looping through all possible (candidate) values and only
+ * storing/saving the valid ones. The candidaye indices are created in the order that they would appear in the
+ *  array of the cohort_index in general. (This avoids need to sort).
+ * Cohort index dimensions are [cohort][tile][lat][lon], and the [tile][lat][lon] dimensions are already
+ * mapped in idx_soil_src and face_map_soil. We call [lat][lon] together the space index (is), so we can also
+ * represent the cohort inde dimensions as as [cohort][tile][space]
+ *
+ * The calculated cohort index values are saved in coho_idx_d[].  But for fast reading of the src cohort data 
+ * that use the cohort index, we also save, per index value,  the id of the src face that has the data 
+ * (in coho_idx_data_face) and the *position* (relative to the start position( of the data in the face
+ * (in  coho_idx_data_pos).
+ * 
+ * Legend::
+ *  _s == source
+ *  _d == destination
+ *  nt_ ==  number f tiles, or tile dimension length
+ *  nc_ ==  number of cohorts, or cohort dimension length
+ *  ns_ ==  spatial dimension length. @D ns = nx ** ny
+ *  ic_ == cohort field index
+ *  it_ == tile index
+ *  is_ == space field "index"
+    Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
+    is only made for the current face being processed.
+   ***/
+
+  int compute_dst_coho_idx(int ns_d, int nt_d, int nc_d, int ns_s, int nt_s, int nc_s, int nface_s,
+                           int *idx_map_soil, int *face_map_soil,  int* soil_count_cold, int* idx_soil_s,
+                           int* land_idx_map, int* ncoho_idx_s, int *coho_idx_s,
+                           int *coho_idx_d, int * coho_idx_data_pos,  int *coho_idx_data_face) {
+    int ncoho_idx_d = 0;
+
+    for (int i = 0; i < nc_d * nt_d * ns_d; i++) {
+      coho_idx_d[i] = MPP_FILL_INT;
+      coho_idx_data_pos [i] = -1;
+      coho_idx_data_face [i] = -1;
+    }
+
+    //The starting point of the source coho and soil indecies, for each face
+    int** f_coho_idx_s = (int**)malloc(nface_s * sizeof(int*));
+    int** f_idx_soil_s = (int**)malloc(nface_s * sizeof(int*));
+    f_coho_idx_s[0] = coho_idx_s;
+    f_idx_soil_s[0] =  idx_soil_s;
+    for (int m = 1; m < nface_s; m++) {
+      f_coho_idx_s[m] = f_coho_idx_s[m - 1] + ncoho_idx_s[m - 1];
+      f_idx_soil_s[m] = idx_soil_s + m * nt_s * ns_s;
+    }
+
+    //With space index varying fastest - a NetCDF defined 4D index with row_major order  (C-like)
+    //Use the loop over three indecies (cohort, tile, space) to generate ALL possible dst cohort indecies.
+    //Its best to generate them in the order htey might appear in the NetCD file; with space varying first.
+    //  Otherwise sorting is requqired at the end of processing.
+    int count = 0;
+    for (int ic_d = 0; ic_d < nc_d; ic_d++) {
+      for (int it_d = 0; it_d < nt_d; it_d++) {
+        for (int is_d = 0; is_d < ns_d; is_d++) {  // loop over spatial index in dst
+
+          //Skip if spatial point is not in cold_restart.
+          if(soil_count_cold[is_d] > 0){    //TODO: Verify with SM
+            int is_s = idx_map_soil[is_d];   // index in the src
+            int if_s = face_map_soil[is_d];  //index of nearest face in the src.
+            int it_s = it_d;  //Tile index value src same as dst.
+            int ic_s = ic_d;  //Cohort index value src same as dst.
+
+            //Option to filter by land_idx_map (in dst) or by idx_soil_src (in src). TODO:
+            //Carefull with index order.
+            //if(f_idx_soil_s[if_s][ nt_s * is_s + it_s] != MPP_FILL_INT) {
+            if( land_idx_map[nt_d * is_d + it_d] > -1){
+              //--------------------------------
+              int i_d = ns_d * nt_d * ic_d + ns_d * it_d + is_d; //index colum-major order ?
+              int i_s = ns_s * nt_s * ic_s + ns_s * it_s + is_s;
+              
+              //If the src cohort_index value that corresponds to i_d exists, save i_d as
+              // the next dst cohort index.
+              int key_loc = binary_search(i_s, f_coho_idx_s [if_s], ncoho_idx_s[if_s]);
+              if (key_loc >= 0) {
+                coho_idx_d[count] = i_d; // the index value in dst
+                //if_s and key_loc are needed to access tha src field data that will have this index:
+                coho_idx_data_face[count] = if_s; ////the face with data for this i_d
+                coho_idx_data_pos[count] = key_loc;// the index *position* in the src file; if_s also for access
+                count++;
+              }
+            }
+          }
+        }
+      }
+    }
+    // Verify: If its possible to have duplicates,  then
+    // coho_idx_dst needs to be made a sorted set (sorted + no duplicates)
+    if(is_sorted(coho_idx_d, count) && !has_dupes_sorted(coho_idx_d, count)){
+      ncoho_idx_d = count;
+    }  else{
+      printf("*** coho_idx_d not sorted yet **** \n");
+      ncoho_idx_d = make_sorted_set(coho_idx_d, count);
+      if (ncoho_idx_d != count) {
+        printf("Indecies dropped? ncoho_idx_dst=%d count=%d\n", ncoho_idx_d, count);
+      }
+    }
+    printf("Number of dst cohort indecies: %d\n", ncoho_idx_d);
+    return ncoho_idx_d;
+  }
+
+/***
  * Compute the destination cohort index (coho_idx_dst) by mapping each src cohort index to a destination
  * cohort index (coho_idx_dst).
  * Cohort index dimensions are [cohort][tile][lat][lon], and the [tile][lat][lon] dimensions are already
@@ -2690,11 +2785,9 @@ int make_sorted_set(int *v, int n) {
     Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
     only
    ***/
-int compute_dst_coho_idx_V2(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int face_dst,
+int compute_dst_coho_idx_V2_old(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int face_dst,
                          int *idx_map_soil, int *face_map_soil,  int* ncoho_idx_src, int *coho_idx_src,
                          int *coho_idx_dst, int * coho_idx_d_to_s,  int *coho_idx_face_d_to_s) {
-
-
   int n_face_coho_idx_dst = ns_dst * nt_dst * nc_dst;
   //DODO: use an expapndable data structure to grow these or ...
   for (int i = 0; i < n_face_coho_idx_dst; i++) {
@@ -2748,73 +2841,6 @@ int compute_dst_coho_idx_V2(int ns_dst, int nt_dst, int nc_dst, int ns_src, int 
 
 }
 
-  int compute_dst_coho_idx(int ns_d, int nt_d, int nc_d, int ns_s, int nt_s, int nc_s, int nface_s,
-                           int *idx_map_soil, int *face_map_soil,  int* soil_count_cold, int* ncoho_idx_s, int *coho_idx_s,
-                           int *coho_idx_d, int * coho_idx_d_to_s,  int *coho_idx_face_d_to_s) {
-    int ncoho_idx_d = 0;
-
-    int n_face_coho_idx_d = nc_d * nt_d * nc_d;
-
-    for (int i = 0; i < n_face_coho_idx_d; i++) {
-      coho_idx_d[i] = MPP_FILL_INT;
-    }
-
-    //The strting point of the source indecies, for each face
-    int** f_coho_idx_s = (int**)malloc(nface_s * sizeof(int*));
-    f_coho_idx_s[0] = coho_idx_s;
-    for (int m = 1; m < nface_s; m++) {
-      f_coho_idx_s[m] = f_coho_idx_s[m - 1] + ncoho_idx_s[m - 1];
-    }
-
-    //With space index varying fastest - a NetCDF defined 4D index with row_major order  (C-like)
-    int count = 0;
-    for (int ic_d = 0; ic_d < nc_d; ic_d++) {
-      for (int it_d = 0; it_d < nt_d; it_d++) {
-        for (int is_d = 0; is_d < ns_d; is_d++) {  // loop over spatial index in dst
-          if(soil_count_cold[is_d] > 0){//valid spatial point in cold restart. Verify
-            int is_s = idx_map_soil[is_d];   // index in the src
-            int if_s = face_map_soil[is_d];  //index of nearest face in the src. TODO:
-            int it_s = it_d;  //tile field value source same as dest;
-            int ic_s = ic_d;  //cohort field value source same as dst
-            //int i_d = nc_d * nt_d * is + nc_d * it + ic; //this may be backwards
-            //int i_s = nc_s * nt_s * is_s + nc_s * it + ic;
-            //With space index varying fastest - a NetCDF defined 4D index with row_major order  (C-like)
-            int i_d = ns_d * nt_d * ic_d + ns_d * it_d + is_d; //this may be backwards
-            int i_s = ns_s * nt_s * ic_s + ns_s * it_s + is_s;
-            // If i_s is present as a cohort_index value, save the corresponding i_d as next cohort index.
-
-            //todo: Do binary search or hash instead.
-            int key_loc = binary_search(i_s, f_coho_idx_s [if_s], ncoho_idx_s[if_s]);
-            if (key_loc >= 0) {
-              coho_idx_d[count] = i_d; //what is saved when index is saved
-              coho_idx_face_d_to_s[count] = if_s;
-              coho_idx_d_to_s[count] = key_loc;// the index *position* in the src file; need if_s also for access
-              //printf(" i_d i_s face key_loc: %d %d %d %d\n", i_d, i_s, if_s, key_loc);
-              count++;
-            }else{
-              //Most is_s shold not be found
-            }
-          }
-        }
-      }
-    }
-    ncoho_idx_d = count;
-    return ncoho_idx_d;
-
-    // Verify: If its possible to have duplicates,  then
-    // coho_idx_dst needs to be made a sorted set (sorted + no duplicates)
-
-    if(is_sorted(coho_idx_d, count) && !has_dupes_sorted(coho_idx_d, count)){
-      ncoho_idx_d = count;
-    }  else{
-      printf("*** coho_idx_d not sorted yet **** \n");
-      ncoho_idx_d = make_sorted_set(coho_idx_d, count);
-      if (ncoho_idx_d != count) {
-        printf("Indecies dropped? ncoho_idx_dst=%d count=%d\n", ncoho_idx_d, count);
-      }
-    }
-    return ncoho_idx_d;
-  }
 
 /***
  *    *** This function is obsolete. ***
@@ -2837,12 +2863,12 @@ int compute_dst_coho_idx_V2(int ns_dst, int nt_dst, int nc_dst, int ns_src, int 
     Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
     only
    ***/
-int compute_dst_coho_idx_V1(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int *idx_map_soil,
+int compute_dst_coho_idx_V1_old(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int *idx_map_soil,
                             int *face_map_soil, int face_dst, int *coho_idx_src, int *coho_idx_dst) {
   int ncoho_idx_dst = -1;
 
-  int n_face_coho_idx_dst = nc_dst * nt_dst * nc_dst;
-  int n_face_coho_idx_src = ns_src * nt_src * nc_src;
+  int n_face_coho_idx_dst = nc_dst * nt_dst * ns_dst;
+  int n_face_coho_idx_src = ns_src * nt_src * ns_src;
 
   for (int i = 0; i < n_face_coho_idx_dst; i++) {
     coho_idx_dst[i] = MPP_FILL_INT;
