@@ -1162,9 +1162,9 @@ int main(int argc, char *argv[]) {
 
     if (print_memory) print_mem_usage("before the loop of face_dst");
     for (face_dst = 0; face_dst < nface_dst; face_dst++) {
-      int nlon, nlat, l, i, k, t; //p,j,ll
-      int fid_dst, vid_dst, vid_src, fid_cold;  //vid_cold
-      int nidx_dst, nidx_dst_global, ncoho_idx_dst, ncoho_idx_dst_global;
+      int nlon, nlat, l, i, k, t;
+      int fid_dst, vid_dst, vid_src, fid_cold;
+      int nidx_dst, nidx_dst_global;
       int nidx_cold, vid;
       int fid_land_cold;
       double *frac_cold = NULL;
@@ -1176,6 +1176,9 @@ int main(int argc, char *argv[]) {
 
       size_t start[4], nread[4], nwrite[4];
       char land_cold[512], file_dst[512], file_cold[512];
+
+      int ncoho_idx_dst = 0;
+      int ncoho_idx_dst_global = 0;
 
       get_actual_file_name(nface_dst, face_dst, dst_restart_file, file_dst);
       get_actual_file_name(nface_dst, face_dst, dst_cold_restart, file_cold);
@@ -2496,69 +2499,21 @@ void compress_int_data(int ntile, int npts, int nidx, int nidx_global, const int
   if (nidx > 0) free(data_local);
 }
 
-/*
-  Search for the key in the array, returning the location where it
-  was found, and -1 if it was not found.
-  Search starts at position key.
-  Search stops when negative values are encounterd.
- */
-int key_in_array_hints(int key, int* vec, int size, int hint){
-  int result = -1;
-  for (int i = hint; i  <size; i++){
-    if(vec[i] < 0){
-      break;
-    }
-    if(vec[i] == key){
-      result = i;
-      break;
+
+int binary_search_(int k, int v[], int l, int r) {
+  if (r >= l) {
+    int midp = l + (r - l) / 2;
+    
+    if (v[midp] == k)
+      return midp;
+    
+    if (v[midp] > k) {
+      return binary_search_(k, v, l, midp - 1);
+    }else{
+      return binary_search_(k, v, midp + 1, r);
     }
   }
-  if(result < 0){
-    for (int i = 0; i  < hint; i++){
-      if(vec[i] < 0){
-        break;
-      }
-
-      if(vec[i] == key){
-        result = i;
-        break;
-      }
-    }
-  }
-
-  return result;
-}
-/*
- Search for the key in the array, returning the location where it
-was found, and -1 if it was not found.
- */
-int key_in_array(int key, int* vec, int size){
-  int result = -1;
-  for (int i = 0; i  <size; i++){
-    if(vec[i] == key){
-      result = i;
-      break;
-    }
-  }
-  return result;
-}
-
-
-//Binary search
-  int binary_search_(int k, int v[], int l, int r) {
-    if (r >= l) {
-        int midp = l + (r - l) / 2;
-
-        if (v[midp] == k)
-            return midp;
-
-        if (v[midp] > k) {
-          return binary_search_(k, v, l, midp - 1);
-        }else{
-          return binary_search_(k, v, midp + 1, r);
-        }
-    }
-    return -1;
+  return -1;
 }
 int binary_search(int k, int v[], int s) {
   return binary_search_(k,v,0,s-1);
@@ -2594,16 +2549,16 @@ int partition_rp(int v[], int low, int high)
 
 
 //quick_sort with random pivots
-void quick_sort(int v[], int low, int high) {
+void quick_sort_(int v[], int low, int high) {
   if (low < high)  {
     int pivot = partition_rp(v, low, high);
-    quick_sort(v, low, pivot - 1);
-    quick_sort(v, pivot + 1, high);
+    quick_sort_(v, low, pivot - 1);
+    quick_sort_(v, pivot + 1, high);
   }
 }
 
-void quick_sorti(int v[], int n) {
-  quick_sort(v, 0, n-1);
+void quick_sort(int v[], int n) {
+  quick_sort_(v, 0, n-1);
 }
 
 bool is_sorted(int* v, int n){
@@ -2636,8 +2591,7 @@ bool has_dupes_sorted(int* v, int n){
 
 int make_sorted_set(int *v, int n) {
   printf("Etering make_sorted_set\n");
-  //bubble_sort(v, n);
-  quick_sorti(v , n);
+  quick_sort(v , n);
   int* cp = (int *)malloc(n * sizeof(int));
   int ndupes = 0;
   int j = 0;
@@ -2677,6 +2631,7 @@ int make_sorted_set(int *v, int n) {
  * that use the cohort index, we also save, per index value,  the id of the src face that has the data 
  * (in coho_idx_data_face) and the *position* (relative to the start position( of the data in the face
  * (in  coho_idx_data_pos).
+ *
  * 
  * Legend::
  *  _s == source
@@ -2687,8 +2642,12 @@ int make_sorted_set(int *v, int n) {
  *  ic_ == cohort field index
  *  it_ == tile index
  *  is_ == space field "index"
-    Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
+ *
+    Note: that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
     is only made for the current face being processed.
+ *  TODO: The acuall number of dat cohort indecies is determined in this subroutine, so in principle,
+    for smaller memory use, allocate  *coho_idx_d and the other associated array here (or use the STL
+    dynamic vectors).
    ***/
 
   int compute_dst_coho_idx(int ns_d, int nt_d, int nc_d, int ns_s, int nt_s, int nc_s, int nface_s,
@@ -2756,156 +2715,16 @@ int make_sorted_set(int *v, int n) {
     // coho_idx_dst needs to be made a sorted set (sorted + no duplicates)
     if(is_sorted(coho_idx_d, count) && !has_dupes_sorted(coho_idx_d, count)){
       ncoho_idx_d = count;
-    }  else{
+    } else{
+      // Note 1: It should not be possible to reach this part of the code
+      // is the indecies were generated in order.
+      //Note 2: In any case, if one array gets sorted, so must the other accompanying array.
       printf("*** coho_idx_d not sorted yet **** \n");
+      mpp_error("remap_land : coho_idx_d not sorted");
       ncoho_idx_d = make_sorted_set(coho_idx_d, count);
       if (ncoho_idx_d != count) {
         printf("Indecies dropped? ncoho_idx_dst=%d count=%d\n", ncoho_idx_d, count);
       }
     }
-    printf("Number of dst cohort indecies: %d\n", ncoho_idx_d);
     return ncoho_idx_d;
   }
-
-/***
- * Compute the destination cohort index (coho_idx_dst) by mapping each src cohort index to a destination
- * cohort index (coho_idx_dst).
- * Cohort index dimensions are [cohort][tile][lat][lon], and the [tile][lat][lon] dimensions are already
- * mapped in idx_soil_src and face_map_soil. We call [lat][lon] together the space index (is), so we can also represent
- * its dimension as [cohort][tile][space]
- * Legend::
- *  src - source
- *  dst - destination
- *  nt -  number f tiles, or tile dimension length
- *  nc -  number of cohorts, or cohort dimension length
- *  ns -  spatial dimension length.  ns = nx ** ny
-*   ic - cohort index
-    it - tile index
-    icts - cohort_tile_space index
-    Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
-    only
-   ***/
-int compute_dst_coho_idx_V2_old(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int face_dst,
-                         int *idx_map_soil, int *face_map_soil,  int* ncoho_idx_src, int *coho_idx_src,
-                         int *coho_idx_dst, int * coho_idx_d_to_s,  int *coho_idx_face_d_to_s) {
-  int n_face_coho_idx_dst = ns_dst * nt_dst * nc_dst;
-  //DODO: use an expapndable data structure to grow these or ...
-  for (int i = 0; i < n_face_coho_idx_dst; i++) {
-    coho_idx_dst[i] = MPP_FILL_INT;
-    coho_idx_d_to_s[i] = -1;
-    coho_idx_face_d_to_s[i] = -1;
-  }
-
-  int ncoho_idx_dst = 0;
-
-  //location of the src face indecies we need to map, assuming face_dst = face_src
-  int pos = 0;
-  int face_src = face_dst;
-  for (int i = 0; i<face_src -1; i++){
-    pos += ncoho_idx_src[i];
-  }
-  int *fcoho_idx_src = coho_idx_src + pos;
-
-  int count = 0;
-  for (int i = 0; i < ncoho_idx_src[face_src]; i++) {
-    if (fcoho_idx_src[i] == MPP_FILL_INT) break;  // no more data. Rest should be MPP_FILL_INT. TODO bette check?
-    int i_src = fcoho_idx_src[i];                 // value of ith index
-    //With space index varying fastest - a NetCDF defined 4D index with row_major order  (C-like)
-    int ic_src = i_src / (ns_src * nt_src);
-    int it_src = (i_src / ns_src) % nt_src;
-    int is_src = i_src % ns_src;
-    //printf("P: [%d %d] %d %d %d \n",i, i_src, ic_src, it_src, is_src);
-    // Now find the corresponing indecies in the destination cohort index:
-    int ic_dst = ic_src;  // Verify with SM
-    int it_dst = it_src;  // Are we sure tile id maps to same tile id ?
-    // idx_map_soil [id_dst] has the source index that correspond to a destiation index.
-    // We search the idx_map_soil to find the reverse.
-    //is_dst is the location in the array idx_map_soil;
-    int is_dst = key_in_array(is_src, idx_map_soil, ns_dst);
-    if (is_dst < 0) {
-     // printf(" is_dst < 0. Land/sea boundary point being missed ?");
-    }else{
-      coho_idx_face_d_to_s[count] = face_map_soil[is_src];
-      coho_idx_d_to_s[count] = is_dst;// the index position in the src file given
-      //The index value in the dst corresponding to src ith index (with value i_src):
-      int i_dst = ic_dst * ns_dst * nt_dst + it_dst * ns_dst + is_dst;//row-major order
-      coho_idx_dst[count] = i_dst;
-      //face_src =;
-      count++;
-    }
-    ///  missing stuff
-
-  }
-  ncoho_idx_dst = pos;
-  return ncoho_idx_dst;
-
-}
-
-
-/***
- *    *** This function is obsolete. ***
- * Compute the destination cohort index (coho_idx_dst) by looping through all possible values and only
-* storing/saving the valid ones. Loop though the indices in the order that they would appear in the
- *  array of the cohort_index. (Otherwise it would be necessary to do a search with dictionary data
- * struct or brute force).
- * Cohort index dimensions are [cohort][tile][lat][lon], and the [tile][lat][lon] dimensions are already
- * mapped in idx_soil_src and face_map_soil. We call [lat][lon] together the space index (is), so we can also represent
- * its dimesnion as [cohort][tile][space]
- * Legend::
- *  src - source
- *  dst - destination
- *  nt -  number f tiles, or tile dimension length
- *  nc -  number of cohorts, or cohort dimension length
- *  ns -  spatial dimension length. @D ns = nx ** ny
-*   ic - cohort index
-    it - tile index
-    icts - cohort_tile_space index
-    Note that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
-    only
-   ***/
-int compute_dst_coho_idx_V1_old(int ns_dst, int nt_dst, int nc_dst, int ns_src, int nt_src, int nc_src, int *idx_map_soil,
-                            int *face_map_soil, int face_dst, int *coho_idx_src, int *coho_idx_dst) {
-  int ncoho_idx_dst = -1;
-
-  int n_face_coho_idx_dst = nc_dst * nt_dst * ns_dst;
-  int n_face_coho_idx_src = ns_src * nt_src * ns_src;
-
-  for (int i = 0; i < n_face_coho_idx_dst; i++) {
-    coho_idx_dst[i] = MPP_FILL_INT;
-  }
-
-  int *fcoho_idx_src = coho_idx_src + face_dst * n_face_coho_idx_src;
-  int pos = 0;
-
-  for (int is = 0; is < ns_dst; is++) {
-    printf("is idx_map_soil[is] coho_idx_src[is] : %d  %d  %d\n", is, idx_map_soil[is], coho_idx_src[is]);
-  }
-  int kstart_hint = 0;
-  for (int is = 0; is < ns_dst; is++) {  // loop over spatial index in dst
-    int idx = idx_map_soil[is];          // index in the src
-    //  int n = face_map_soil[is];  //index of nearest face in the src
-    // int is_src = n * nx_src * ny_src + idx;  //spatial index in src; face considered
-    int is_src = idx;                             // spatial index in src; face considered
-    for (int it = 0; it < nt_dst; it++) {  // tile coord index in src
-      //  if( land_idx_map[ntile_dst * is + it] > -1){ // ????
-      for (int ic = 0; ic < nc_src; ic++) {  // cohort coord index in src
-        int icts = nc_dst * nt_dst * is + nc_dst * it + ic;
-        int icts_src = nc_src * nt_src * is_src + nc_src * it + ic;
-        // If icst_src is present as a cohort_index value, save the corresponding
-        // icst for the destination.
-        // TODO: Should check to see if dst_index  cold start cohort_index? Guess not.
-        // int next_index = coho_idx_src [pos];
-        int key_loc = key_in_array_hints(icts_src, fcoho_idx_src, n_face_coho_idx_src, kstart_hint);
-        if (key_loc >= 0) {
-          kstart_hint = key_loc;
-          coho_idx_dst[pos] = icts;
-          printf(" icst icts_src coho_idx .. is is_src : %d  %d  %d %d %d\n", icts, icts_src, coho_idx_src[pos], is,
-                 is_src);
-          pos++;
-        }
-      }
-    }
-  }
-  ncoho_idx_dst = pos;
-  return ncoho_idx_dst;
-}
