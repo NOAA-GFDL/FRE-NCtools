@@ -2,16 +2,29 @@
 # Setup and Load the Modules
 # **********************************************************************
 source /usr/local/Modules/default/init/sh
-module load intel_compilers/18.0.5 mpich2/1.2.1p1 netcdf/4.2 nco/4.5.4
+
+module load intel_compilers/19.0.5
+
+# gcc is needed for icc to use newer C11 constructs
+# we want the spack-installed gcc/4.8.5 but configure fails
+### checking whether /app/spack/v0.15/linux-rhel6-x86_64/gcc-4.4.7/gcc/4.8.5-uz2ynmmyxq4tsrf2tuyewx7dow4iszsx/bin/gfortran accepts -g... yes
+### checking whether /app/spack/v0.15/linux-rhel6-x86_64/gcc-4.4.7/gcc/4.8.5-uz2ynmmyxq4tsrf2tuyewx7dow4iszsx/bin/gfortran understands -c and -o together... no
+### checking for Fortran flag to compile .f90 files... unknown
+### configure: error: Fortran could not compile .f90 files
+#module load gcc/4.8.5
 module load gcc/5.3.0
-module load nccmp
 
 # Need a newer autoconf/automake than what is curerntly on the system.
-# This is needed until there is a module for these.
-PATH=/app/spack/linux-rhel6-x86_64/gcc-4.4.7/autoconf/2.69-oz56rghtag37aapzrgmh2tzhyjek7o6c/bin:/app/spack/linux-rhel6-x86_64/gcc-4.4.7/automake/1.16.1-shm646foq3qrojtsqhc6uat77auqexx7/bin:${PATH}
-# Add bats to PATH
-PATH=${PATH}:/home/sdu/opt/bats/bin
-export PATH
+module load autoconf automake
+
+# only needed for testing
+module load nccmp bats
+
+# use intel-compiled libraries
+module use /app/spack/v0.15/modulefiles-intel-19.0.5/linux-rhel6-x86_64
+module load netcdf-c/4.7.3
+module load netcdf-fortran/4.5.2
+module load mpich/3.3.2
 
 # **********************************************************************
 # Set environment variablesSetup and Load the Modules
