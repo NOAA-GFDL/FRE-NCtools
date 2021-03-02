@@ -16,5 +16,7 @@ export PATH
 # **********************************************************************
 # Set environment variablesSetup and Load the Modules
 # **********************************************************************
+# this simplifies the setup but only works if you source this from the repo root dir
+export CONFIG_SITE=`pwd`/site-configs/gfdl/config.site
 LD_RUN_PATH=$LD_LIBRARY_PATH
 export LD_RUN_PATH
