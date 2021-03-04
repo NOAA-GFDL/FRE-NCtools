@@ -1,30 +1,49 @@
 # **********************************************************************
 # Setup and Load the Modules
 # **********************************************************************
-ENV_VERSION=v0.15
-INTEL_VERSION=18.0.5
+modpath_prepend ()
+{
+  local myprepend=$1
+  if $( module is-used $myprepend )
+  then
+    module remove-path MODULEPATH $myprepend
+    module prepend-path MODULEPATH $myprepend
+  else
+    module use $myprepend
+  fi
+}
 
+env_version=v0.15
+intel_version=18.0.5
+
+# Ensure the module environment is initialized
 source /usr/local/Modules/default/init/sh
-module use /app/spack/${ENV_VERSION}/modulefiles/linux-rhel7-x86_64
+
+# Ensure the base spack modules are first in MODULEPATH
+modpath_prepend /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
 # GCC is needed for icc to use newer C11 constructs
 module load gcc/9.2.0
 # bats is needed for tests
 module load bats/0.4.0
 
-module load intel_compilers/${INTEL_VERSION}
-module use /app/spack/${ENV_VERSION}/modulefiles-intel-${INTEL_VERSION}/linux-rhel7-x86_64
+# Load the Intel compilers
+module load intel_compilers/${intel_version}
+
+# Ensure the Intel spack modules are first in MODULEPATH
+modpath_prepend /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
+# Load the Intel modules required for building
 module load netcdf-c/4.7.3
 module load netcdf-fortran/4.5.2
 module load mpich/3.3.2
 
 # **********************************************************************
-# Set environment variablesSetup and Load the Modules
+# Set environment variables
 # **********************************************************************
-# The GCC module sets CC and FC to gcc.  Since we want to use icc/ifort
-# we will change CC and FC (and a few others)
-FC=ifort
-CC=icc
-F77=ifort
-CXX=icpc
-export FC CC F77 CXX
+# None needed at this time
 
+# **********************************************************************
+# Clear temporary variables
+# **********************************************************************
+unset env_version
+unset intel_version
+unset -f modpath_prepend
