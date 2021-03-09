@@ -5,6 +5,7 @@ ENV_VERSION=v0.15
 INTEL_VERSION=19.0.5
 
 source /usr/local/Modules/default/init/sh
+module use /app/spack/default/modulefiles
 
 module load intel_compilers/${INTEL_VERSION}
 
