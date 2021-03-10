@@ -854,12 +854,6 @@ int main (int argc, char *argv[])
 	if(!is_uniform && mpp_pe()==mpp_root_pe()) printf("\nNOTE from make_coupler_mosaic: ocean grid latitude is not uniform along j = 1\n");
 
 	/* calculate the minimum of latitude of atmosphere grid */
-	//min_atm_lat = 9999; /* dummy large value */
-	//for(na=0; na<ntile_atm; na++) {
-	//  min_lat = minval_double((nxa[na]+1)*(nya[na]+1), yatm[na]);
-	//  if(min_atm_lat > min_lat) min_atm_lat = min_lat;
-	//}
-  	/*The above block is not needed because of the next line!*/ 
 	min_atm_lat = -90.*D2R;
 	if(tmpy[0]*D2R > min_atm_lat + TINY_VALUE) { /* extend one point in south direction*/
 	  ocn_south_ext = 1;
@@ -1101,6 +1095,7 @@ int main (int argc, char *argv[])
   nfile_axo = 0;
   nfile_axl = 0;
   nfile_lxo = 0;
+  int nbad=0;
   {
     int no, nl, na, n;
     size_t  **naxl, **naxo;
@@ -1469,7 +1464,10 @@ int main (int argc, char *argv[])
 	      if(xa_min >= xl_max || xa_max <= xl_min ) continue;
 	      if(lnd_same_as_atm) {
 	        if(na==nl && ja==jl && ia==il) {
-		  if(na_in != nl_in) printf("Error: na_in,nl_in,n_out,%d,%d,%d",na_in, nl_in, n_out);
+		  if(na_in != nl_in){
+                     printf("Error: LND and AM grids are the same but na_in != nl_in, n_out,%d,%d,%d",na_in, nl_in, n_out);
+                     mpp_error("make_coupler_mosaic: inconsistent number of grid box coreners");
+                  }
 		  n_out = nl_in;
 		  for(n=0; n<n_out; n++) {
 		    x_out[n] = xl[n];
@@ -2029,9 +2027,8 @@ int main (int argc, char *argv[])
 	char ocn_mask_file[STRING];
 	double *mask;
 	double *areao,*areax;
-	int ny, nbad;
+	int ny;
 
-        nbad = 0;
 	for(no=0; no<ntile_ocn; no++) {
 	  ny = nyo[no]-ocn_south_ext;
 	  mask = (double *)malloc(nxo[no]*ny*sizeof(double));
@@ -2077,7 +2074,6 @@ int main (int argc, char *argv[])
 	}
         if(nbad>0) {
           printf("make_coupler_mosaic: number of points with omask != ofrac is %d\n", nbad);
-          //mpp_error("make_coupler_mosaic: omask is not equal ocn_frac");
         }
       }
 
@@ -3807,8 +3803,13 @@ int main (int argc, char *argv[])
     mpp_close(fid);
   }
 
-  if(mpp_pe()== mpp_root_pe() && verbose)printf("\n***** Congratulation! You have successfully run make_coupler_mosaic\n");
-
+  if(mpp_pe()== mpp_root_pe() && verbose){
+     if(nbad == 0){
+       printf("\n***** Congratulation! You have successfully run make_coupler_mosaic\n");}
+     else{
+       printf("\n***** You have run make_coupler_mosaic, but there were at least %d grid cells with issues.\n",nbad);
+       mpp_error("make_coupler_mosaic: omask is not equal ocn_frac");}
+  } 
   mpp_end();
 
   return 0;
