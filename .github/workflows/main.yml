@@ -1,7 +1,7 @@
 # Github actions CI file
 # Ryan Mulhall 2020
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
-# container @ https://hub.docker.com/repository/docker/ryanmulhall/fre-nctools-base
+# github.com/noaa-gfdl/fre-nctools-container 
 name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
@@ -12,7 +12,7 @@ jobs:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
-      image: ryanmulhall/fre-nctools-base
+      image: noaagfdl/fre-nctools-base:focal
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
