@@ -1936,8 +1936,14 @@ int main(int argc, char *argv[]) {
                 int ipf_src = start_pos[face] + i_src;
                 if (var_type[l] == MPP_INT) {
                   coho_idata_dst[k] = coho_idata_src[ipf_src];
+                  if(coho_idata_dst[k] == MPP_FILL_INT){
+                    mpp_error("remap_land : error copying MPP_FILL_INT data");
+                  }
                }else{
                   coho_rdata_dst[k] = coho_rdata_src[ipf_src];
+                  if(coho_idata_dst[k] == MPP_FILL_DOUBLE){
+                    mpp_error("remap_land : error copying MPP_FILL_DOUBLE data");
+                  }
                 }
             }
 
@@ -2744,7 +2750,7 @@ int make_sorted_set(int *v, int n) {
 
           //Skip if spatial point is not in cold_restart.
           if(soil_count_cold[is_d] > 0){    //TODO: Verify with SM
-            // int is_s_g = idx_map_soil[is_d];   // index in the src when gathering the data for copy
+            int is_s_g = idx_map_soil[is_d];   // index in the src when gathering the data for copy
             int if_s_g = face_map_soil[is_d];  //index of nearest face in the src.
             //space index in the source should be in the same face.
             int is_s  = idx_map_soil_sf[is_d];
@@ -2762,24 +2768,19 @@ int make_sorted_set(int *v, int n) {
             //if(land_idx_map[ nt_d * is_d + it_d] > -1){
             //if(f_idx_soil_s[if_s][ nt_s * is_s + it_s] != MPP_FILL_INT) {
             if(idx_map_soil[is_d] > 0){
-              //int key_loc = binary_search(i_s, f_coho_idx_s[iface_d], ncoho_idx_s[iface_d]);
-              int key_loc = binary_search(i_s, f_coho_idx_s[if_s_g], ncoho_idx_s[if_s_g]);
+              int key_loc = binary_search(i_s, f_coho_idx_s[iface_d], ncoho_idx_s[iface_d]);
               if (key_loc >= 0) {
                 coho_idx_d[count] = i_d; // the index value in dst
-                // if(if_s_g == iface_d){ //when data shoudlbe copied from face with same number
+                if(if_s_g == iface_d){ //TODO: //when data shoudlbe copied from face with same number
                   //if_s and key_loc are needed to access tha src field data that will have this index:
                   coho_idx_data_face[count] = iface_d; ////the face in src with data for this i_d
                   coho_idx_data_pos[count] = key_loc;// the index *position* in the src file; if_s also for access
                   count++;
-                  /*   } else{ //nned to find the location of the data on the "other" face
-                  int key_loc_f = binary_search(i_s, f_coho_idx_s[if_s_g], ncoho_idx_s[if_s_g]);
-                  if(key_loc_f < 0){
-                    mpp_error("remap_land key of data not found in face. key_loc_f < 0");
-                  }
+                } else{
                   coho_idx_data_face[count] = if_s_g; ////the face in src with data for this i_d
-                  coho_idx_data_pos[count] = key_loc_f;// the index *position* in the src file; if_s also for access
+                  coho_idx_data_pos[count]  = is_s_g;// the index *position* in the src file; if_s also for access
                   count++;
-                  }*/
+                }
               }
             }
           }
