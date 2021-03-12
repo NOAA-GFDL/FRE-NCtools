@@ -43,8 +43,9 @@ mpi_version=3.3.2
 modpath_prepend /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
 # GCC is needed for icc to use newer C11 constructs
 module load gcc/$gcc_version
-# bats is needed for tests
+# bats and nccmp are needed for tests
 module load bats/0.4.0
+module load nccmp/1.8.2.0
 
 # Load the Intel compilers
 module load intel_compilers/${intel_version}
