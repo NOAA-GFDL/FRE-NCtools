@@ -40,7 +40,9 @@ ncf_version=4.5.2
 mpi_version=3.3.2
 
 # Ensure the base spack modules are first in MODULEPATH
-modpath_prepend /app/spack/${env_version}/modulefiles/linux-rhel6-x86_64
+module remove-path /app/spack/${env_version}/modulefiles/linux-rhel6-x86_64
+module prepend-path /app/spack/${env_version}/modulefiles/linux-rhel6-x86_64
+
 # GCC is needed for icc to use newer C11 constructs
 module load gcc/$gcc_version
 # bats and nccmp are needed for tests
@@ -54,11 +56,13 @@ module load automake/1.16.2
 module load intel_compilers/${intel_version}
 
 # Ensure the Intel spack modules are first in MODULEPATH
-modpath_prepend /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel6-x86_64
+module remove-path /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel6-x86_64
+module prepend-path /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel6-x86_64
+
 # Load the Intel modules required for building
 module load netcdf-c/$ncc_version
 module load netcdf-fortran/$ncf_version
 module load mpich/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
-setenv CONFIG_SITE=$( dirname $(readlink -f $0) )/config.site
+setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
