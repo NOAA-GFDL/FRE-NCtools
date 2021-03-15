@@ -41,14 +41,6 @@ echo_info ()
   echo_stderr "INFO: $*"
 }
 
-# modpath_prepend uses the `module remote-path` and `module prepend-path`
-# to ensure the module directory passed in is the first listed in MODULEPATH
-modpath_prepend ()
-{
-  module remove-path MODULEPATH $1
-  module prepend-path MODULEPATH $1
-}
-
 # get_sh returns the parent shell (the shell used to call the script).
 get_sh ()
 {
