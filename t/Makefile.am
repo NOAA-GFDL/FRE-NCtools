@@ -30,6 +30,12 @@ TESTS = Test01-check_programs_exist.sh \
         Test22-reference_combine-ncc.sh \
         Test23-reference_decompress-ncc.sh \
         Test24-reference_fregrid.sh \
+        Test32-fregrid_stretched.sh \
+        Test33-fregrid_stretched.sh \
+        Test34-fregrid_stretched.sh \
+        Test35-fregrid_no_stretched.sh \
+        Test36-fregrid_no_stretched.sh \
+        Test37-fregrid_no_stretched.sh \
 	01-make_hgrid.sh \
         01-make_vgrid.sh
 
@@ -47,6 +53,8 @@ EXTRA_DIST = $(TESTS) \
              Test17-input \
              Test18-input \
              Test20-input \
+             Test26-input \
+             Test32-input \
              Test17-reference \
              Test18-reference \
              Test20-reference 
