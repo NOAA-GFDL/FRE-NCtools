@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -18,7 +37,7 @@ double normalize_great_circle_distance(const double *v1, const double *v2);
 double dist2side(const double *v1, const double *v2, const double *point);
 void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, double *varcrs,
 	    int nxcrs, int nycrs, int nz, int has_missing, double missvalue);
-void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon, int nlat, int nz,    
+void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon, int nlat, int nz,
 			  double *var_latlon_crs, int finer_steps, int has_missing, double missvalue);
 void do_c2l_interp(const Interp_config *interp, int nx_in, int ny_in, int nz, const Field_config *field_in,
 		   int nx_out, int ny_out, double *data_out, int has_missing, double missing, int fill_missing );
@@ -50,9 +69,9 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
     ! elat_latlon     lat unit vector for latlon grid                  !
     !------------------------------------------------------------------!
 *******************************************************************************/
-void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles_out, const Grid_config *grid_out, 
+void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles_out, const Grid_config *grid_out,
 			   Interp_config *interp, unsigned int opcode, double dlon_in, double dlat_in,
-                           double lonbegin, double latbegin) 
+                           double lonbegin, double latbegin)
 {
   const int max_iter = 10;
   double abs_center, dcub, dlon, dlat, coslat, distance;
@@ -64,16 +83,16 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   double v0[3], v1[3], v2[3], v3[3], v4[3];
   int    all_done;
   int    *found, *index;
-  
+
   /* ntiles_in must be six and ntiles_out must be one */
   if(ntiles_in != 6) mpp_error("Error from bilinear_interp: source mosaic should be cubic mosaic "
 			       "and have six tiles when using bilinear option");
   if(ntiles_out != 1) mpp_error("Error from bilinear_interp: destination mosaic should be "
-				"one tile lat-lon grid when using bilinear option"); 
+				"one tile lat-lon grid when using bilinear option");
   /*-----------------------------------------------------------------!
     ! cubed sphere: cartesian coordinates of cell corners,             !
     !               cell lenghts between corners,                      !
-    !               cartesian and spherical coordinates of cell centers! 
+    !               cartesian and spherical coordinates of cell centers!
     !               calculate latlon unit vector                       !
     !-----------------------------------------------------------------*/
 
@@ -105,15 +124,15 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     mpp_close(fid);
     return;
   }
-  
+
   /*------------------------------------------------------------------
-    find lower left corner on cubed sphere for given latlon location 
+    find lower left corner on cubed sphere for given latlon location
     ------------------------------------------------------------------*/
   found    = (int *)malloc(nx_out*ny_out*sizeof(int));
   index    = (int *)malloc(ntiles_in*3*sizeof(int));
   shortest = (double *)malloc(ntiles_in*sizeof(double));
   for(i=0; i<nx_out*ny_out; i++) found[i] = 0;
-  
+
   dlon = dlon_in/nx_out;
   dlat = dlat_in/(ny_out-1);
 
@@ -121,7 +140,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     for(l=0; l<ntiles_in; l++) {
       for(jc=1; jc<=ny_in; jc++) for(ic=1; ic<=nx_in; ic++) {
 	/*------------------------------------------------------
-	  guess latlon indexes for given cubed sphere cell     
+	  guess latlon indexes for given cubed sphere cell
 	  ------------------------------------------------------*/
 	n1 = jc*nxd+ic;
 	n2 = (jc+1)*nxd+ic+1;
@@ -145,7 +164,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	for(j=j_min-1; j<j_max; j++) for(i=i_min-1; i<i_max; i++) {
 	  n0 = j*nx_out + i;
 	  /*--------------------------------------------------------------------
-            for latlon cell find nearest cubed sphere cell 
+            for latlon cell find nearest cubed sphere cell
             ------------------------------------------------------------------*/
 	  if (!found[n0]) {
 	    shortest[l]=M_PI+M_PI;
@@ -157,7 +176,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	      v1[2] = grid_in[l].zt[n1];
 	      v2[0] = grid_out->xt[n2];
 	      v2[1] = grid_out->yt[n2];
-	      v2[2] = grid_out->zt[n2];	      
+	      v2[2] = grid_out->zt[n2];
 	      distance=normalize_great_circle_distance(v1, v2);
 	      if (distance < shortest[l]) {
 		shortest[l]=distance;
@@ -167,7 +186,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	      }
 	    }
 	    /*------------------------------------------------
-              determine lower left corner                    
+              determine lower left corner
               ------------------------------------------------*/
 	    found[n0] = get_closest_index(&(grid_in[l]), grid_out, &(interp->index[3*(j*nx_out+i)]), index[3*l],
 			      index[3*l+1], index[3*l+2], i, j);
@@ -186,10 +205,10 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       if (all_done) break;
     }
   }
-  
+
   /*------------------------------------------------------------------
-    double check if lower left corner was found                      
-    calculate weights for interpolation                              
+    double check if lower left corner was found
+    calculate weights for interpolation
     ------------------------------------------------------------------*/
   for(j=0; j<ny_out; j++) for(i=0; i<nx_out; i++) {
     n0 = j*nx_out + i;
@@ -201,9 +220,9 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       printf("will perform expensive global sweep\n");
       printf("**************************************************************\n");
       /*---------------------------------------------------------
-	for latlon cell find nearby cubed sphere cell           
+	for latlon cell find nearby cubed sphere cell
 	---------------------------------------------------------*/
-      for(l=0; l<3*ntiles_in; l++) index[l] = 0;	
+      for(l=0; l<3*ntiles_in; l++) index[l] = 0;
       for(l=0; l<ntiles_in; l++) shortest[l] = M_PI + M_PI;
       for(l=0; l<ntiles_in; l++) {
 	for(jc=0; jc<ny_in; j++) for(ic=0; ic<nx_in; ic++) {
@@ -213,7 +232,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	  v1[2] = grid_in[l].zt[n1];
 	  v0[0] = grid_out[l].xt[n0];
 	  v0[1] = grid_out[l].yt[n0];
-	  v0[2] = grid_out[l].zt[n0];	    
+	  v0[2] = grid_out[l].zt[n0];
 	  distance=normalize_great_circle_distance(v1, v2);
 	  if (distance<shortest[l]) {
 	    shortest[l]=distance;
@@ -225,7 +244,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       }
 
       /*---------------------------------------------------------
-	determine lower left corner                             
+	determine lower left corner
 	---------------------------------------------------------*/
       sort_index(ntiles_in, index, shortest);
       found[n0]=0;
@@ -239,16 +258,16 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       if (! found[n0] ) mpp_error("error from bilinear_interp: couldn't find lower left corner");
     }
     /*------------------------------------------------------------
-      calculate shortest distance to each side of rectangle      
-      formed by cubed sphere cell centers                        
-      special corner treatment                                   
+      calculate shortest distance to each side of rectangle
+      formed by cubed sphere cell centers
+      special corner treatment
       ------------------------------------------------------------*/
     ic=interp->index[m0];
     jc=interp->index[m0+1];
     l =interp->index[m0+2];
     if (ic==nx_in && jc==ny_in) {
       /*------------------------------------------------------------
-	calculate weights for bilinear interpolation near corner   
+	calculate weights for bilinear interpolation near corner
 	------------------------------------------------------------*/
       n1 = jc*nxd+ic;
       n2 = jc*nxd+ic+1;
@@ -264,7 +283,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       v3[2] = grid_in[l].zt[n3];
       v0[0] = grid_out->xt[n0];
       v0[1] = grid_out->yt[n0];
-      v0[2] = grid_out->zt[n0];	  
+      v0[2] = grid_out->zt[n0];
       dist1=dist2side(v2, v3, v0);
       dist2=dist2side(v2, v1, v0);
       dist3=dist2side(v1, v3, v0);
@@ -272,7 +291,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       interp->weight[m1+1]=dist2;      /* ic,   jc+1  weight */
       interp->weight[m1+2]=0.;         /* ic+1, jc+1  weight */
       interp->weight[m1+3]=dist3;      /* ic+1, jc    weight */
-             
+
       sum=interp->weight[m1]+interp->weight[m1+1]+interp->weight[m1+3];
       interp->weight[m1]  /=sum;
       interp->weight[m1+1]/=sum;
@@ -280,9 +299,9 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     }
     else if (ic==0 && jc==ny_in) {
       /*------------------------------------------------------------
-	calculate weights for bilinear interpolation near corner   
+	calculate weights for bilinear interpolation near corner
 	------------------------------------------------------------*/
-	
+
       n1 = jc*nxd+ic;
       n2 = jc*nxd+ic+1;
       n3 = (jc+1)*nxd+ic+1;
@@ -297,15 +316,15 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       v3[2] = grid_in[l].zt[n3];
       v0[0] = grid_out->xt[n0];
       v0[1] = grid_out->yt[n0];
-      v0[2] = grid_out->zt[n0];	  
+      v0[2] = grid_out->zt[n0];
       dist1=dist2side(v3, v2, v0);
       dist2=dist2side(v2, v1, v0);
-      dist3=dist2side(v3, v1, v0);             
+      dist3=dist2side(v3, v1, v0);
       interp->weight[m1]  =dist1;      /* ic,   jc    weight */
       interp->weight[m1+1]=0.;         /* ic,   jc+1  weight */
       interp->weight[m1+2]=dist2;      /* ic+1, jc+1  weight */
       interp->weight[m1+3]=dist3;      /* ic+1, jc    weight */
-             
+
       sum=interp->weight[m1]+interp->weight[m1+2]+interp->weight[m1+3];
       interp->weight[m1]  /=sum;
       interp->weight[m1+2]/=sum;
@@ -313,7 +332,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     }
     else if (jc==0 && ic==nx_in) {
       /*------------------------------------------------------------
-	calculate weights for bilinear interpolation near corner   
+	calculate weights for bilinear interpolation near corner
 	------------------------------------------------------------*/
       n1 = jc*nxd+ic;
       n2 = (jc+1)*nxd+ic;
@@ -329,16 +348,16 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       v3[2] = grid_in[l].zt[n3];
       v0[0] = grid_out->xt[n0];
       v0[1] = grid_out->yt[n0];
-      v0[2] = grid_out->zt[n0];	  
+      v0[2] = grid_out->zt[n0];
       dist1=dist2side(v2, v3, v0);
       dist2=dist2side(v1, v3, v0);
-      dist3=dist2side(v1, v2, v0);             	     
-             
+      dist3=dist2side(v1, v2, v0);
+
       interp->weight[m1]  =dist1;      /* ic,   jc    weight */
       interp->weight[m1+1]=dist2;      /* ic,   jc+1  weight */
       interp->weight[m1+2]=dist3;      /* ic+1, jc+1  weight */
       interp->weight[m1+3]=0.;         /* ic+1, jc    weight */
-             
+
       sum=interp->weight[m1]+interp->weight[m1+1]+interp->weight[m1+2];
       interp->weight[m1]  /=sum;
       interp->weight[m1+1]/=sum;
@@ -346,7 +365,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     }
     else {
       /*------------------------------------------------------------
-	calculate weights for bilinear interpolation if no corner  
+	calculate weights for bilinear interpolation if no corner
 	------------------------------------------------------------*/
       n1 = jc*nxd+ic;
       n2 = jc*nxd+ic+1;
@@ -363,20 +382,20 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       v3[2] = grid_in[l].zt[n3];
       v4[0] = grid_in[l].xt[n4];
       v4[1] = grid_in[l].yt[n4];
-      v4[2] = grid_in[l].zt[n4];	
+      v4[2] = grid_in[l].zt[n4];
       v0[0] = grid_out->xt[n0];
       v0[1] = grid_out->yt[n0];
-      v0[2] = grid_out->zt[n0];	  
+      v0[2] = grid_out->zt[n0];
       dist1=dist2side(v1, v3, v0);
       dist2=dist2side(v3, v4, v0);
       dist3=dist2side(v4, v2, v0);
       dist4=dist2side(v2, v1, v0);
-	
+
       interp->weight[m1]  =dist2*dist3;      /* ic,   jc    weight */
       interp->weight[m1+1]=dist3*dist4;      /* ic,   jc+1  weight */
       interp->weight[m1+2]=dist4*dist1;      /* ic+1, jc+1  weight */
       interp->weight[m1+3]=dist1*dist2;      /* ic+1, jc    weight */
-             
+
       sum=interp->weight[m1]+interp->weight[m1+1]+interp->weight[m1+2]+interp->weight[m1+3];
       interp->weight[m1]  /=sum;
       interp->weight[m1+1]/=sum;
@@ -389,13 +408,13 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   if( opcode & WRITE ) {
     int fid, dim_three, dim_four, dim_nlon, dim_nlat, dims[3];
     int fld_index, fld_weight;
-    
+
     fid = mpp_open( interp->remap_file, MPP_WRITE);
     dim_nlon = mpp_def_dim(fid, "nlon", nx_out);
     dim_nlat = mpp_def_dim(fid, "nlat", ny_out);
     dim_three = mpp_def_dim(fid, "three", 3);
     dim_four  = mpp_def_dim(fid, "four", 4);
-    
+
     dims[0] = dim_three; dims[1] = dim_nlat; dims[2] = dim_nlon;
     fld_index = mpp_def_var(fid, "index", NC_INT, 3, dims, 0);
     dims[0] = dim_four; dims[1] = dim_nlat; dims[2] = dim_nlon;
@@ -410,7 +429,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   free(found);
   free(shortest);
   free(index);
-  
+
   printf("\n done calculating interp_index and interp_weight\n");
 }; /* setup_bilinear_interp */
 
@@ -426,35 +445,35 @@ void do_scalar_bilinear_interp(const Interp_config *interp, int vid, int ntiles_
   int    has_missing;
   double missing;
   double *data_fine;
-  
+
   /*------------------------------------------------------------------
-    determine target grid resolution                                 
+    determine target grid resolution
     ------------------------------------------------------------------*/
   nx_out     = grid_out->nx_fine;
   ny_out     = grid_out->ny_fine;
   nx_in       = grid_in->nx;
   ny_in       = grid_in->ny;
   /* currently we are regridding one vertical level for each call to reduce the memory usage */
-  nz = 1;  
+  nz = 1;
   missing     = field_in[0].var[vid].missing;
   has_missing = field_in[0].var[vid].has_missing;
 
   data_fine = (double *)malloc(nx_out*ny_out*nz*sizeof(double));
-  
+
   do_c2l_interp(interp, nx_in, ny_in, nz, field_in, nx_out, ny_out, data_fine, has_missing, missing, fill_missing);
   do_latlon_coarsening(data_fine, grid_out->latt1D_fine, nx_out, ny_out, nz, field_out->data,
 		       finer_step, has_missing, missing);
   free(data_fine);
-  
+
 }; /* do_c2l_scalar_interp */
 
 
-   
+
 /*----------------------------------------------------------------------------
    void do_vector_bilinear_interp()
    interpolate vector data to latlon,                               !
    --------------------------------------------------------------------------*/
-void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, const Grid_config *grid_in, int ntiles_out, 
+void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,
 			  const Grid_config *grid_out, const Field_config *u_in,  const Field_config *v_in,
 			  Field_config *u_out, Field_config *v_out, int finer_step, int fill_missing)
 {
@@ -463,7 +482,7 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
   int          i, j, k, n, n1, n2, ts, tn, tw, te;
   double       missing;
   double       *x_latlon, *y_latlon, *z_latlon, *var_latlon;
-  
+
   nx_out      = grid_out->nx_fine;
   ny_out      = grid_out->ny_fine;
   nx_in       = grid_in->nx;
@@ -471,11 +490,11 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
   nxd         = nx_in + 2;
   nyd         = ny_in + 2;
   /* currently we are regridding one vertical level for each call to reduce the memory usage */
-  nz = 1;  
+  nz = 1;
   missing     = u_in[0].var[vid].missing;
   has_missing = u_in[0].var[vid].has_missing;
 
-  
+
   x_latlon   = (double *)malloc(nx_out*ny_out*nz*sizeof(double));
   y_latlon   = (double *)malloc(nx_out*ny_out*nz*sizeof(double));
   z_latlon   = (double *)malloc(nx_out*ny_out*nz*sizeof(double));
@@ -491,7 +510,7 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
     }
   }
 
-  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, x_latlon, has_missing, missing, fill_missing);  
+  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, x_latlon, has_missing, missing, fill_missing);
 
   for(n=0; n<ntiles_in; n++) {
     for(k=0; k<nz; k++) for(j=0; j<nyd; j++) for(i=0; i<nxd; i++) {
@@ -500,8 +519,8 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
       var_cubsph[n].data[n1] = u_in[n].data[n1]*grid_in[n].vlon_t[3*n2+1]+v_in[n].data[n1]*grid_in[n].vlat_t[3*n2+1];
     }
   }
-  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, y_latlon, has_missing, missing, fill_missing);  
-  
+  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, y_latlon, has_missing, missing, fill_missing);
+
   for(n=0; n<ntiles_in; n++) {
     for(k=0; k<nz; k++) for(j=0; j<nyd; j++) for(i=0; i<nxd; i++) {
       n1 = k*nxd*nyd + j*nxd + i;
@@ -510,12 +529,12 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
     }
   }
 
-  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, z_latlon, has_missing, missing, fill_missing);  
+  do_c2l_interp(interp, nx_in, ny_in, nz, var_cubsph, nx_out, ny_out, z_latlon, has_missing, missing, fill_missing);
 
   for(n=0; n<ntiles_in; n++) free(var_cubsph[n].data);
   free(var_cubsph);
 
-  
+
   for(k=0; k<nz; k++) for(j=0; j<ny_out; j++) for(i=0; i<nx_out; i++) {
     n1 = k*nx_out*ny_out + j*nx_out + i;
     n2 = j*nx_out + i;
@@ -536,7 +555,7 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
   free(x_latlon);
   free(y_latlon);
   free(z_latlon);
-    
+
 }; /* do_vector_bilinear_interp */
 
 
@@ -545,10 +564,10 @@ void do_c2l_interp(const Interp_config *interp, int nx_in, int ny_in, int nz, co
 {
   int i, j, k, nxd, nyd, ic, jc, ind, n1, tile;
   double d_in[4];
-  
+
   nxd = nx_in + 2;
   nyd = ny_in + 2;
-  
+
   if (has_missing) {
     for(k=0; k<nz; k++) for(j=0; j<ny_out; j++) for(i=0; i<nx_out; i++) {
       n1      = j*nx_out+i;
@@ -588,13 +607,13 @@ void do_c2l_interp(const Interp_config *interp, int nx_in, int ny_in, int nz, co
 	+ d_in[2]*interp->weight[4*n1+2] + d_in[3]*interp->weight[4*n1+3];
     }
   }
-  
+
 }; /* do_c2l_interp */
 
-   
+
 /*------------------------------------------------------------------
   void sort_index()
-  sort index by shortest                                         
+  sort index by shortest
   ----------------------------------------------------------------*/
 void sort_index(int ntiles, int *index, double *shortest)
 {
@@ -604,7 +623,7 @@ void sort_index(int ntiles, int *index, double *shortest)
 
   shortest_sort = (double *)malloc(3*ntiles*sizeof(double));
   index_sort    = (int    *)malloc(  ntiles*sizeof(int   ));
-  
+
   for(l=0; l<3*ntiles; l++)index_sort[l] = 0;
   for(l=0; l<ntiles; l++)shortest_sort[l] = M_PI+M_PI;
   for(l=0; l<ntiles; l++) {
@@ -626,13 +645,13 @@ void sort_index(int ntiles, int *index, double *shortest)
 
   free(shortest_sort);
   free(index_sort);
-  
+
 }; /* sort_index */
 
 
 /*------------------------------------------------------------------
   void get_index(ig, jg, lg)
-  determine lower left corner                                    
+  determine lower left corner
   ----------------------------------------------------------------*/
 int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *index,
 	       int i_in, int j_in, int l_in, int i_out, int j_out)
@@ -642,7 +661,7 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
   double v0[3], v1[3], v2[3], v3[3], v4[3], v5[3];
   double angle_1, angle_1a, angle_1b, angle_2, angle_2a, angle_2b;
   double angle_3, angle_3a, angle_3b, angle_4, angle_4a, angle_4b;
-  
+
   ok=1;
   nx_in  = grid_in->nx_fine;
   ny_in  = grid_in->nx_fine;
@@ -665,9 +684,9 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
   v3[1] = grid_in->yt[n3];
   v3[2] = grid_in->zt[n3];
   angle_1 = spherical_angle(v1, v2, v3);
-  angle_1a= spherical_angle(v1, v2, v0); 
+  angle_1a= spherical_angle(v1, v2, v0);
   angle_1b= spherical_angle(v1, v3, v0);
-  
+
   if (max(angle_1a,angle_1b)<angle_1) {
     index[0]=i_in;
     index[1]=j_in;
@@ -690,7 +709,7 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
       n5 = (j_in-1)*nx_in + i_in;
       v5[0] = grid_in->xt[n5];
       v5[1] = grid_in->yt[n5];
-      v5[2] = grid_in->zt[n5];      
+      v5[2] = grid_in->zt[n5];
       angle_3 =spherical_angle(v1, v4, v5);
       angle_3a=angle_2b;
       angle_3b=spherical_angle(v1, v5, v0);
@@ -715,7 +734,7 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
     }
   }
   return ok;
-  
+
 }; /* get_index */
 
 
@@ -734,7 +753,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
   double angle_1,  angle_1a,  angle_1b;
   double angle_2,  angle_2a,  angle_2b;
   double angle_3,  angle_3a,  angle_3b;
-  double angle_4,  angle_4a,  angle_4b;  
+  double angle_4,  angle_4a,  angle_4b;
   int    n0, n1, n2, n3, n4, n5, n6, n7, n8;
   int    nx_in, ny_in, nx_out, ny_out, nxd;
   double v0[3], v1[3], v2[3], v3[3], v4[3], v5[3], v6[3], v7[3], v8[3];
@@ -790,7 +809,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
     n4 = j_in*nxd+i_in-1;
     v4[0]  = grid_in->xt[n4];
     v4[1]  = grid_in->yt[n4];
-    v4[2]  = grid_in->zt[n4]; 
+    v4[2]  = grid_in->zt[n4];
     angle_2 =spherical_angle(v1,v3,v4);
     angle_2a=angle_1b;
     angle_2b=spherical_angle(v1,v4,v0);
@@ -828,7 +847,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
       v5[2]  = grid_in->zt[n5];
       v6[0]  = grid_in->xt[n6];
       v6[1]  = grid_in->yt[n6];
-      v6[2]  = grid_in->zt[n6];	  
+      v6[2]  = grid_in->zt[n6];
       angle_3 =spherical_angle(v1, v5, v6);
       angle_3a=angle_2b;
       angle_3b=spherical_angle(v1, v6, v0);
@@ -836,7 +855,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
 	n7 = (j_in-1)*nxd+i_in-1;
 	v7[0]  = grid_in->xt[n7];
 	v7[1]  = grid_in->yt[n7];
-	v7[2]  = grid_in->zt[n7];    
+	v7[2]  = grid_in->zt[n7];
 	angle_33 =spherical_angle(v7, v6, v5);
 	angle_33a=spherical_angle(v7, v5, v0);
 	angle_33b=spherical_angle(v7, v6, v0);
@@ -861,7 +880,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
 	    n8 = (j_in-1)*nxd+i_in+1;
 	    v8[0]  = grid_in->xt[n8];
 	    v8[1]  = grid_in->yt[n8];
-	    v8[2]  = grid_in->zt[n8];   
+	    v8[2]  = grid_in->zt[n8];
 	    angle_44 =spherical_angle(v8, v2, v6);
 	    angle_44a=spherical_angle(v8, v6, v0);
 	    angle_44b=spherical_angle(v8, v2, v0);
@@ -877,14 +896,14 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
     }
   }
   return found;
-  
+
 }; /* get_closest_index */
-	      
+
 
 
 /*--------------------------------------------------------------------------
 
-calculate normalized great circle distance between v1 and v2 
+calculate normalized great circle distance between v1 and v2
 double normalize_great_circle_distance(v1, v2)
 ---------------------------------------------------------------------------*/
 double normalize_great_circle_distance(const double *v1, const double *v2)
@@ -892,34 +911,34 @@ double normalize_great_circle_distance(const double *v1, const double *v2)
   double dist;
 
   dist=(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
-    /sqrt((v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2])                 
+    /sqrt((v1[0]*v1[0]+v1[1]*v1[1]+v1[2]*v1[2])
 	  *(v2[0]*v2[0]+v2[1]*v2[1]+v2[2]*v2[2]));
   dist = sign(min(1.,fabs(dist)),dist);
   dist = acos(dist);
   return dist;
-  
+
 }; /* normalize_great_circle_distance */
 
 /*------------------------------------------------------------------
   double spherical_angle(v1, v2, v3)
 
-  calculate spherical angle of a triangle formed by v1, v2 and v3 at v1                                                            
+  calculate spherical angle of a triangle formed by v1, v2 and v3 at v1
   ------------------------------------------------------------------*/
 /* double spherical_angle(double *v1, double *v2, double *v3) */
 /* { */
 /*   double angle; */
 /*   double px, py, pz, qx, qy, qz, abs_p, abs_q; */
 
-/*   /* vector product between v1 and v2 */
+/* vector product between v1 and v2 */
 /*   px = v1[1]*v2[2] - v1[2]*v2[1]; */
 /*   py = v1[2]*v2[0] - v1[0]*v2[2]; */
 /*   pz = v1[0]*v2[1] - v1[1]*v2[0]; */
-/*   /* vector product between v1 and v3  */
+/* vector product between v1 and v3  */
 /*   qx = v1[1]*v3[2] - v1[2]*v3[1]; */
 /*   qy = v1[2]*v3[0] - v1[0]*v3[2]; */
 /*   qz = v1[0]*v3[1] - v1[1]*v3[0]; */
-    
-/*   /* angle between p and q */ 
+
+/* angle between p and q */
 /*   abs_p=px*px+py*py+pz*pz; */
 /*   abs_q=qx*qx+qy*qy+qz*qz; */
 /*   if (abs_p*abs_q==0.) */
@@ -931,12 +950,12 @@ double normalize_great_circle_distance(const double *v1, const double *v2)
 /*   } */
 
 /*   return angle; */
-/* }; /* spherical_angle */
+/* }; */ /* spherical_angle */
 
 /*---------------------------------------------------------------------
   double dist2side(v1, v2, point)
-  calculate shortest normalized distance on sphere                 
-  from point to straight line defined by v1 and v2                 
+  calculate shortest normalized distance on sphere
+  from point to straight line defined by v1 and v2
   ------------------------------------------------------------------*/
 double dist2side(const double *v1, const double *v2, const double *point)
 {
@@ -949,7 +968,7 @@ double dist2side(const double *v1, const double *v2, const double *point)
 
 };/* dist2side */
 
-  
+
 int max_weight_index( double *var, int nvar)
 {
 
@@ -965,14 +984,14 @@ int max_weight_index( double *var, int nvar)
 }
 
 /*------------------------------------------------------------------------------
-  void do_latlon_coarsening(var_latlon, ylat, nlon, nlat, nz,     
-                            var_latlon_crs, nlon_crs, nlat_crs,   
+  void do_latlon_coarsening(var_latlon, ylat, nlon, nlat, nz,
+                            var_latlon_crs, nlon_crs, nlat_crs,
                             finer_steps, misval, varmisval)
 
-  calculate variable on coarser latlon grid                        
-  by doubling spatial resolution and preserving volume means       
+  calculate variable on coarser latlon grid
+  by doubling spatial resolution and preserving volume means
   ---------------------------------------------------------------------------*/
-void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon, int nlat, int nz,    
+void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon, int nlat, int nz,
 			  double *var_latlon_crs, int finer_steps, int has_missing, double missvalue)
 {
 
@@ -980,7 +999,7 @@ void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon
   double  dlat;
   int     nlon_old, nlat_old, nlon_new, nlat_new, steps, i, j;
   int     nlon_crs, nlat_crs;
-  
+
   nlon_crs=nlon/pow(2,finer_steps);
   nlat_crs=(nlat-1)/pow(2,finer_steps)+1;
   switch (finer_steps) {
@@ -1000,7 +1019,7 @@ void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon
       var_latlon_old = (double *)malloc(nlon_old*nlat_old*nz*sizeof(double));
       ylat_old       = (double *)malloc(nlat_old*sizeof(double));
       if (steps==1) {
-	for(i=0; i<nlat; i++) ylat_old[i] = ylat[i]; 
+	for(i=0; i<nlat; i++) ylat_old[i] = ylat[i];
 	for(i=0; i<nlon_old*nlat_old*nz; i++) var_latlon_old[i] = var_latlon[i];
       }
       else {
@@ -1011,7 +1030,7 @@ void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon
 	for(i=0; i<nlon_old*nlat_old*nz; i++) var_latlon_old[i] = var_latlon_new[i];
 	free(var_latlon_new);
       }
-          
+
       nlon_new=nlon_new/2;
       nlat_new=(nlat_new-1)/2+1;
       var_latlon_new = (double *)malloc(nlon_new*nlat_new*nz*sizeof(double));
@@ -1026,9 +1045,9 @@ void do_latlon_coarsening(const double *var_latlon, const double *ylat, int nlon
 
 /*------------------------------------------------------------------------------
   void redu2x(varfin, yfin, nxfin, nyfin, varcrs, nxcrs, nycrs)
-  this routine is for reducing fvccm data by a factor of 2       
-  volume averaging for all data except at the poles              
-  original developer: S.-J. Lin                                  
+  this routine is for reducing fvccm data by a factor of 2
+  volume averaging for all data except at the poles
+  original developer: S.-J. Lin
   ----------------------------------------------------------------------------*/
 void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, double *varcrs,
 	    int nxcrs, int nycrs, int nz, int has_missing, double missvalue)
@@ -1037,8 +1056,8 @@ void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, doub
   int     i, j, k, i2, j2, n1, n2;
 
   /*------------------------------------------------------------------
-    calculate cosine of latitude                                   
-    trick in cosp needed to maintain a constant field              
+    calculate cosine of latitude
+    trick in cosp needed to maintain a constant field
     ----------------------------------------------------------------*/
   cosp  = (double *)malloc(nyfin*sizeof(double));
   acosp = (double *)malloc(nyfin*sizeof(double));
@@ -1049,7 +1068,7 @@ void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, doub
   for(j=1; j<nyfin-1; j++) acosp[j] = 1./(cosp[j]+0.5*(cosp[j-1]+cosp[j+1]));
 
   /*----------------------------------------------------------------
-    x-sweep                                                        
+    x-sweep
     ----------------------------------------------------------------*/
   if(has_missing) {
     for(k=0; k<nz; k++) for(j=1; j<nyfin-1; j++) {
@@ -1061,7 +1080,7 @@ void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, doub
 	vartmp[n2] = 0.25*(varfin[n1+nxfin-1]+2.*varfin[n1]+varfin[n1+1]);
       for(i=2; i<nxfin-1; i+=2) {
 	i2 = i/2;
-	if (varfin[n1+i-1] == missvalue || varfin[n1+i] == missvalue || varfin[n1+i+1] == missvalue) 
+	if (varfin[n1+i-1] == missvalue || varfin[n1+i] == missvalue || varfin[n1+i+1] == missvalue)
 	  vartmp[n2+i2] = missvalue;
         else
 	  vartmp[n2+i2] = 0.25*(varfin[n1+i-1]+2.*varfin[n1+i]+varfin[n1+i+1]);
@@ -1080,21 +1099,21 @@ void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, doub
     }
   }
   /*---------------------------------------------------------------------
-    poles:                                                         
-    this code segment works for both the scalar and vector fields. 
+    poles:
+    this code segment works for both the scalar and vector fields.
     Winds at poles are wave-1; the follwoing is quick & dirty yet the correct way
-    The skipping method. A more rigorous way is to                 
-    recompute the wave-1 components for the coarser grid.          
+    The skipping method. A more rigorous way is to
+    recompute the wave-1 components for the coarser grid.
     --------------------------------------------------------------------*/
   for(k=0; k<nz; k++) for(i=0; i<nxcrs; i++) {
     i2 = i*2;
     n1 = k*nxcrs*nycrs;
-    n2 = k*nxfin*nyfin; 
+    n2 = k*nxfin*nyfin;
     varcrs[n1+i] = varfin[n2+i2];
     varcrs[n1+(nycrs-1)*nxcrs+i] = varfin[n1+(nyfin-1)*nxfin+i2];
   }
   /*----------------------------------------------------------------
-    y-sweep                                                        
+    y-sweep
     ----------------------------------------------------------------*/
   if (has_missing) {
     for(k=0; k<nz; k++) for(j=1; j<nyfin-1; j++) for(i=0; i<nxcrs; i++) {
@@ -1132,7 +1151,5 @@ void redu2x(const double *varfin, const double *yfin, int nxfin, int nyfin, doub
   free(cosp);
   free(acosp);
   free(vartmp);
-  
+
 }; /*redu2x*/
-
-

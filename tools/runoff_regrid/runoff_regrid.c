@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 /*
   This program remaps runoff data from a spherical grid onto any grid
   (spherical or tripolar) using conservative scheme.
@@ -261,7 +280,7 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   grid->xc1d = (double *)malloc(nxp*sizeof(double));
   grid->yc1d = (double *)malloc(nyp*sizeof(double));
   grid->xc   = (double *)malloc(nxp*nyp*sizeof(double));
-  grid->yc   = (double *)malloc(nxp*nyp*sizeof(double));
+  grid->yc   = (double *)malloc(nyp*nxp*sizeof(double));
   grid->mask = (double *)malloc(nx*ny*sizeof(double));
   grid->area = (double *)malloc(nx*ny*sizeof(double));
   

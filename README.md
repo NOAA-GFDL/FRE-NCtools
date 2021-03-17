@@ -10,6 +10,9 @@ to be used in the
 [Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
 [Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE).
 
+[![Actions](https://github.com/NOAA-GFDL/FRE-NCtools/workflows/FRE-NCtools%20CI/badge.svg)](https://github.com/NOAA-GFDL/FRE-NCtools/actions) 
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+
 ## Tools
 
 The tools available in FRE-NCtools are:
@@ -33,6 +36,7 @@ The tools available in FRE-NCtools are:
 * split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
 * timavg -- Create a time average netCDF file
 * ncexists -- Checks for variables and attributes in a netCDF file
+* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
 
 ### Grid Tools
 * check_mask -- Configure the processors which contains all land points to be masked out for ocean model
@@ -85,24 +89,30 @@ export CONFIG_SITE=/path/to/package/site-configs/<site>/config.site
 source /path/to/package/site-configs/<site>/env.sh
 ```
 
-The above steps may need to be augmented depending upon your user evironment setup. 
-For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the 
-configure command in this directory. You may tell the bash shell, for example, 
+The above steps may need to be augmented depending upon your user evironment setup.
+For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the
+configure command in this directory. You may tell the bash shell, for example,
 the location of both by this command:
 
+```
 export PATH=/home/MyUsername/FRE-NCtools:$PATH
+```
 
-Additionally, installing into a non-default directory may be desired or neccesary. 
-For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools 
+Additionally, installing into a non-default directory may be desired or neccesary.
+For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools
 building is configured by:
 
+```
 autoreconf -i
 ./configure --prefix=/home/MyUsername/bin
+```
 
 Finally compile and install the tools as usual:
 
+```
 make
 make install
+```
 
 Some FRE-NCtools applications can be run in parallel using MPI.  If the
 `--with-mpi` option is given to `configure`, the MPI version of those

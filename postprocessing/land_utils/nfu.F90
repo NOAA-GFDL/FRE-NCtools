@@ -1,7 +1,24 @@
+!***********************************************************************
+!*                   GNU Lesser General Public License
+!*
+!* This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+!*
+!* FRE-NCTools is free software: you can redistribute it and/or modify it under
+!* the terms of the GNU Lesser General Public License as published by
+!* the Free Software Foundation, either version 3 of the License, or (at
+!* your option) any later version.
+!*
+!* FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+!* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+!* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+!* for more details.
+!*
+!* You should have received a copy of the GNU Lesser General Public
+!* License along with FRE-NCTools..  If not, see
+!* <http://www.gnu.org/licenses/>.
+!***********************************************************************
 !-----------------------------------------------------------------------
-! Copyright 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
-! This program is distributed under the terms of the GNU General Public
-! License. See the file COPYING contained in this directory
+! Copyright (C) 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
 !
 !-----------------------------------------------------------------------
 #define __NF_TRY__(err_code,iret,LABEL) iret=err_code;\
@@ -1048,7 +1065,7 @@ function put_att_int_1(ncid,name,att,data) result(iret)
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
-  iret = nf_put_att_int(ncid,varid,att,NF_INT,1,data)
+  iret = nf_put_att_int(ncid,varid,att,NF_INT,1,(/ data /))
 
 7 return
 end function
@@ -1064,7 +1081,7 @@ function put_att_r4_1(ncid,name,att,data) result(iret)
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
-  iret = nf_put_att_real(ncid,varid,att,NF_REAL,1,data)
+  iret = nf_put_att_real(ncid,varid,att,NF_REAL,1,(/ data /))
 
 7 return
 end function
@@ -1080,7 +1097,7 @@ function put_att_r8_1(ncid,name,att,data) result(iret)
   integer :: varid
 
   __NF_TRY__(nf_inq_varid(ncid,name,varid),iret,7)
-  iret = nf_put_att_double(ncid,varid,att,NF_DOUBLE,1,data)
+  iret = nf_put_att_double(ncid,varid,att,NF_DOUBLE,1,(/ data /))
 
 7 return
 end function
@@ -1155,7 +1172,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
 
   integer :: iret
 
-  integer :: var_T, valid_T, scale_T, T ! types variable and of attributes
+  integer :: var_T, valid_T, scale_T, T, nc_att_size ! types variable and of attributes
   real(kind=8) :: scale, offset, fill, r(2)
 
   ! find the type of the variable
@@ -1199,7 +1216,7 @@ function nfu_get_valid_range(ncid, name, v) result (iret)
      ! as a last resort, define range based on _FillValue
      ! get fill value and its type: from var, from file, or default
      if(nfu_get_att(ncid,name,'_FillValue',fill)/=NF_NOERR) then
-        if(nf_get_att_double(ncid,NF_GLOBAL,'_FillValue',fill)/=NF_NOERR) then
+        if(nf_inq_att(ncid,NF_GLOBAL,'_FillValue',NF_DOUBLE,nc_att_size)/=NF_NOERR) then
            select case(var_T)
            case(NF_CHAR)
               fill = NF_FILL_CHAR

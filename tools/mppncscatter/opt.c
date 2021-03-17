@@ -1,9 +1,29 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #include "opt.h"
+#include "strlist.h"
 
 /*-------------------------------------------------------------------*/
 void initmnsopts(mnsopts* popts)
 {
-	if (popts == NULL) 
+	if (popts == NULL)
 		return;
 
 	popts->dryrun = 0;
@@ -63,18 +83,18 @@ void printversion()
 \n\
 This program comes with NO WARRANTY, to the extent permitted by law.\n\
 You may redistribute copies of this program\n\
-under the terms of the GNU General Public License.\n"); 
+under the terms of the GNU General Public License.\n");
 }
 /*-------------------------------------------------------------------*/
 int getmnsopts(int argc, char** argv, mnsopts* popts)
 {
-	int c;       
+	int c;
 	char *token, *cp;
   const char delimiters[] = ",";
   int len = 0;
-  
+
 	if (popts == NULL) return -1;
-  
+
 	if (newstringlist(&popts->xdims, &c, NC_MAX_DIMS)) {
 		printf("ERROR: Failed to allocate memory for X dimension list.\n");
 		exit(1);
@@ -84,7 +104,7 @@ int getmnsopts(int argc, char** argv, mnsopts* popts)
 		printf("ERROR: Failed to allocate memory for Y dimension list.\n");
 		exit(1);
 	}
-	
+
 	while ( (c = getopt_long(argc, argv, "hi:j:np:s:vVw:x:y:X:Y:", long_options, 0))
 					!= -1
 					)
@@ -97,16 +117,16 @@ int getmnsopts(int argc, char** argv, mnsopts* popts)
 			case 'j':
 				popts->nyio = atoi(optarg);
 				break;
-        
+
 		  case 'n':
 		    popts->dryrun = 1;
 		    break;
-		    
+
       case 'p':
         len = strlen(optarg);
         popts->prefix = (char*)malloc(len+1);
         strcpy(popts->prefix, optarg);
-        
+
 			case 's':
 				popts->start = atoi(optarg);
 				break;
@@ -130,17 +150,17 @@ int getmnsopts(int argc, char** argv, mnsopts* popts)
 			case 'w':
 				popts->width = atoi(optarg);
 				break;
-        
+
 			case ':':
-				fprintf(stderr, "Error, -%c without argument.\n\n", optopt); 
+				fprintf(stderr, "Error, -%c without argument.\n\n", optopt);
 				popts->help = 1;
 				break;
-        
+
 			case '?':
 				fprintf(stderr, "Error, Unknown argument %c.\n\n", optopt);
 				popts->help = 1;
 				break;
-        
+
 			case 'h':
 				popts->help = 1;
 				break;
@@ -157,7 +177,7 @@ int getmnsopts(int argc, char** argv, mnsopts* popts)
 	if (popts->help)		{
 		printusage();
 		return -1;
-	}       
+	}
 	if (popts->version)		{
 		printversion();
 		return -1;
@@ -166,9 +186,9 @@ int getmnsopts(int argc, char** argv, mnsopts* popts)
 		fprintf(stderr, "Error, missing operand after `%s'.\n\n", argv[argc - 1]);
 		printusage();
 		return -1;
-	} 
+	}
 
-	/* get filename argument */   
+	/* get filename argument */
 	argc -= optind;
 	argv += optind;
 	if ((argc < 1) || (argv[0] == NULL))        {

@@ -1,5 +1,25 @@
 #!/usr/bin/env bats
 
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
 @test "Check make_hgrid exists and is executable" {
   run command -v make_hgrid
   [ "$status" -eq 0 ]
@@ -122,3 +142,19 @@
   run command -v decompress-ncc
   [ "$status" -eq 0 ]
 }
+
+@test "Check cr_lake_files exists and is executable" {
+     run command -v cr_lake_files
+     [ "$status" -eq 0 ]
+}
+
+@test "Check cp_river_vars exists and is executable" {
+     run command -v cp_river_vars
+     [ "$status" -eq 0 ]
+}
+
+@test "Check rmv_parallel_rivers exists and is executable" {
+     run command -v rmv_parallel_rivers
+     [ "$status" -eq 0 ]
+}
+

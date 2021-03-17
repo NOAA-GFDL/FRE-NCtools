@@ -1,21 +1,23 @@
 /***********************************************************************
  *                   GNU Lesser General Public License
  *
- * This file is part of the GFDL Flexible Modeling System (FMS).
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
  *
- * FMS is free software: you can redistribute it and/or modify it under
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * FMS is distributed in the hope that it will be useful, but WITHOUT
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+
 #define _GNU_SOURCE
 
 #include <stdio.h>
@@ -27,11 +29,15 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include "config.h"
+
+#ifndef HAVE_GETTID
 #ifndef __APPLE__
 static pid_t gettid(void)
 {
   return syscall(__NR_gettid);
 }
+#endif
 #endif
 
 /*
