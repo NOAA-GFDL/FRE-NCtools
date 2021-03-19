@@ -22,8 +22,8 @@
 # Copyright (c) 2021 - Seth Underwood (@underwoo)
 #
 # This script configures the environment using Environment modules
-# for building FRE-NCtools.  This script can be run with the `eval` 
-# command to modify the environment.  Syntax is similar to the 
+# for building FRE-NCtools.  This script can be run with the `eval`
+# command to modify the environment.  Syntax is similar to the
 # syntax used in modulefiles.
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -40,7 +40,8 @@ ncf_version=4.5.2
 mpi_version=3.3.2
 
 # Ensure the base spack modules are first in MODULEPATH
-modpath_prepend /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
+module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
+module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
 # GCC is needed for icc to use newer C11 constructs
 module load gcc/$gcc_version
 # bats and nccmp are needed for tests
@@ -51,13 +52,13 @@ module load nccmp/1.8.2.0
 module load intel_compilers/${intel_version}
 
 # Ensure the Intel spack modules are first in MODULEPATH
-modpath_prepend /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
+module remove-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
+module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
+
 # Load the Intel modules required for building
 module load netcdf-c/$ncc_version
 module load netcdf-fortran/$ncf_version
 module load mpich/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
-setenv CONFIG_SITE=$( dirname $(readlink -f $0) )/config.site
-
-
+setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
