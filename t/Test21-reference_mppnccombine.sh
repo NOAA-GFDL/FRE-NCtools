@@ -20,22 +20,33 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
+# Test that mppnccombine reproduces a reference copy of a combined file.
+# The reference file is currently from a Bronx-16 (GFDL system) mppnccombine.
 
-@test " refernce mppnccombine combines comparison to bronx-16 stored copy" {
-  if [ ! -d "Test21" ] 
-  then
-  mkdir Test21
-  fi
-
-  cd Test21
-
-  #Generate the netcdf files from the .ncl 
-  for f in $top_srcdir/t/Test02-input/*.ncl.????
+prepare_data ()
+{
+  # Generate netCDF files for mppnccombine
+  for f in $top_srcdir/t/Test02-input/mppnccombine.ncl.????
   do
     ncgen -o mppnccombine.nc.${f##*.} $f
-    [ -e mppnccombine.nc.${f##*.} ]
   done
+}
 
+setup ()
+{
+  BASE_TEST_DIR=$( pwd )
+  mkdir $( basename $BATS_TEST_FILENAME .sh )
+  cd  $( basename $BATS_TEST_FILENAME .sh )
+  # Generate the data
+  prepare_data
+}
+
+teardown () {
+  cd $BASE_TEST_DIR
+  rm -rf  $( basename $BATS_TEST_FILENAME .sh )
+}
+
+@test " refernce mppnccombine combines comparison to bronx-16 stored copy" {
   #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \
@@ -52,8 +63,4 @@
 
   run nccmp -d mppnccombine_output.nc  $top_srcdir/t/Test02-reference/mppnccombine_output.nc
   [ "$status" -eq 0 ]
-
-  #Clean up 
-  cd ..
-  rm -rf Test21
 }
