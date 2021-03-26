@@ -1,20 +1,21 @@
 /***********************************************************************
  *                   GNU Lesser General Public License
  *
- * This file is part of the GFDL FRE NetCDF tools package (FRE NCtools).
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
  *
- * FRE NCtools is free software: you can redistribute it and/or modify it under
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * FRE NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
 /*******************************************************************************
@@ -29,7 +30,8 @@
   12/07/2020  -- Global refinement bug fix. Kyle Ahern, AOML/HRD
   12/10/2020  -- Make multiple nest functionality consistent with latest
                  NOAA-GFDL source. Kyle Ahern, AOML/HRD
-
+  03/05/2020  -- Enable many level Telescoping nests
+                 (Nests within nests). Joseph Mouallem FV3/GFDL
 *******************************************************************************/
 
 /**
@@ -106,6 +108,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   int nx_nest[MAX_NESTS], ny_nest[MAX_NESTS];
   int ni_nest[MAX_NESTS], nj_nest[MAX_NESTS];
+  int ni_parent[MAX_NESTS], nj_parent[MAX_NESTS];
   int istart[MAX_NESTS], iend[MAX_NESTS], jstart[MAX_NESTS], jend[MAX_NESTS];
 
   int *nx_nest_arr=NULL;
@@ -164,6 +167,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   for (nn=0; nn < MAX_NESTS; nn++) {
     ni_nest[nn] = 0;
     nj_nest[nn] = 0;  
+    ni_parent[nn] = 0;
+    nj_parent[nn] = 0;  
   }
 
   ntiles2=ntiles;
@@ -187,6 +192,16 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       
       nx_nest[nn] = ni_nest[nn]*2;
       ny_nest[nn] = nj_nest[nn]*2;
+      
+      /* Setup parent ni */
+      if (parent_tile[nn] <= ntiles) {
+        ni_parent[nn] = ni;
+        nj_parent[nn] = nj;
+      }
+      else {
+        ni_parent[nn] = ni_nest[parent_tile[nn]-ntiles-1];
+        nj_parent[nn] = nj_nest[parent_tile[nn]-ntiles-1];
+      }
     }
   }
 
@@ -415,7 +430,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       /* The pointer arithmetic is complicated */
       /* ni = number of points on supergrid */
       /* nip = ni + 1 */
-      setup_aligned_nest(ni, ni, xc+tile_offset[parent_tile[nn]-1],
+      setup_aligned_nest(ni_parent[nn], nj_parent[nn], xc+tile_offset[parent_tile[nn]-1],
 			 yc+tile_offset[parent_tile[nn]-1], halo, refine_ratio[nn],
 			 istart[nn], iend[nn], jstart[nn], jend[nn],
 			 xc+tile_offset[ntiles+nn], yc+tile_offset[ntiles+nn]);

@@ -1,5 +1,29 @@
 #!/bin/tcsh -f
 #
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+#
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2010
+# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
+#
+# ------------------------------------------------------------------------------
 # $Id: timavg.csh,v 20.0.2.1 2014/09/29 19:19:03 eem Exp $
 # ------------------------------------------------------------------------------
 # FMS/FRE Project: Script to Call Time-Averaging Executables
@@ -8,12 +32,8 @@
 # afy    Ver   2.00  Don't source the 'init.csh' script             June 10
 # afy    Ver   2.01  Use 'which' to locate executables              June 10
 # ------------------------------------------------------------------------------
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2010
-# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
 #
 
-#-----------------------------------------------------------------------
-#
 #  This script takes multiple netcdf files that all contain the same
 #  dimensions and variables but may have a different number of time
 #  records and writes a new netcdf file that has a time record 

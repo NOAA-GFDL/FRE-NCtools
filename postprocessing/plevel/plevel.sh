@@ -1,5 +1,28 @@
 #!/bin/sh
 #
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+#
+# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2010
+# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
+#
 # $Id: plevel.sh,v 20.0 2013/12/14 00:29:52 fms Exp $
 # ------------------------------------------------------------------------------
 # FMS/FRE Project: Script to Call Converters to Pressure Levels
@@ -8,9 +31,6 @@
 # afy    Ver   1.00  Don't source the 'init.sh' script              June 10
 # afy    Ver   1.01  Use 'which' to locate executables              June 10
 # ------------------------------------------------------------------------------
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2010
-# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
-#
 
 fields=
 more_output=1

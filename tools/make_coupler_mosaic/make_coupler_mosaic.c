@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 /*
  * Modify land grid to match ocean grid at coast and calculate atmos/land,
  * atmos/ocean, and land/ocean overlaps using the Sutherland-Hodgeman polygon
@@ -7,7 +26,18 @@
  *  even to avoid tiling error. I will come back to solve this issue in the future.
  *
  */
-
+/* Notes on the Algorithm
+	Read in ATM grid tiles xatm,yatm
+	Calculate ATM grid cell area area_atm (either GCA or LEGACY)
+	Read in LND grid if different from ATM grid
+	Calculate LND grid cell area area_lnd, =area_atm if the same grid
+	Read in OCN (super) grid xocn,yocn (I added read grid cell area)
+	Calculate OCN grid cell area area_ocn
+	Extend OCN grid south if it does not cover the southern cap 			
+	*** Extending area_ocn[j=0,:]=area_ocn[j=1,:] is inaccurate if it's used
+	Read OCN depth and set ocean mask omask=1 where wet
+	 
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -581,10 +611,11 @@ int main (int argc, char *argv[])
     }
     else {
       for(n=0; n<ntile_atm; n++) {
-	int i, j;
+	int i, j;   
+        //Calculate the ATM grid cell area (not read from grid files)
 	get_grid_global_area(nxa[n], nya[n], xatm[n], yatm[n], area_atm[n]);
 	for(j=0; j<nya[n]; j++) for(i=0; i<nxa[n]; i++) {
-	  if(area_atm[n][j*nxa[n]+i] <= 0 ) printf("n=%d, i=%d, j=%d, area=%f\n",n,i,j,area_atm[n][j*nxa[n]+i]);
+	  if(area_atm[n][j*nxa[n]+i] <= 0 ||area_atm[n][j*nxa[n]+i] >1.0e14  ) printf("Possible error in the calculated area_atm in tile %d, i=%d, j=%d, area=%f\n",n+1,i,j,area_atm[n][j*nxa[n]+i]);
 	}
       }
     }
@@ -730,7 +761,11 @@ int main (int argc, char *argv[])
     ltile_name = atile_name;
     lnd_great_circle_algorithm = atm_great_circle_algorithm;
   }
-
+  int n;
+  for(n=0; n<ntile_lnd; n++) {      
+    if(mpp_pe()==mpp_root_pe() && verbose) printf("Number of ATM and LND cells for tile %d are %d, %d.\n",n+1,nxa[n]*nya[n],nxl[n]*nyl[n]);
+    if(nxa[n]*nya[n] != nxl[n]*nyl[n]) printf("Warning: Number of ATM and LND cells for tile %d are not equal %d, %d.\n",n+1,nxa[n]*nya[n],nxl[n]*nyl[n]); 
+  } 
   if(print_memory)print_mem_usage("after read land grid");
 
   if (strcmp(omosaic, amosaic) == 0 ) ocn_same_as_atm = 1;
@@ -800,9 +835,9 @@ int main (int argc, char *argv[])
       tmpy    = (double *)malloc((nxo[n]+1)*(nyo[n]+1)*sizeof(double));
       get_global_grid(file, nxo[n], nyo[n], x_refine, y_refine, tmpx, tmpy);
 
-      /* sometimes the ocean is only covered part of atmosphere, especially not cover
+      /* sometimes the ocean grid only covers part of the globe, especially may not cover
 	 the south pole region. In order to get all the exchange grid between atmosXland,
-	 we need to extend one point to cover the whole atmosphere. This need the
+	 we need to extend one point to cover the whole atmosphere. This needs the
 	 assumption of one-tile ocean. Also we assume the latitude is the along j=0
       */
       if(ntile_ocn == 1) {
@@ -819,15 +854,10 @@ int main (int argc, char *argv[])
 	if(!is_uniform && mpp_pe()==mpp_root_pe()) printf("\nNOTE from make_coupler_mosaic: ocean grid latitude is not uniform along j = 1\n");
 
 	/* calculate the minimum of latitude of atmosphere grid */
-	min_atm_lat = 9999; /* dummy large value */
-	for(na=0; na<ntile_atm; na++) {
-	  min_lat = minval_double((nxa[na]+1)*(nya[na]+1), yatm[na]);
-	  if(min_atm_lat > min_lat) min_atm_lat = min_lat;
-	}
 	min_atm_lat = -90.*D2R;
 	if(tmpy[0]*D2R > min_atm_lat + TINY_VALUE) { /* extend one point in south direction*/
 	  ocn_south_ext = 1;
-	  if(mpp_pe()==mpp_root_pe())printf("make_coupler_mosaic: one row is add to the south end to cover the globe\n");
+	  if(mpp_pe()==mpp_root_pe())printf("make_coupler_mosaic: one row is added to the south end to cover the globe\n");
 	}
       }
       nyo_old = nyo[n];
@@ -863,6 +893,7 @@ int main (int argc, char *argv[])
       }
     }
     else {
+      if(mpp_pe()==mpp_root_pe())printf("make_coupler_mosaic: Calculating area_ocn based on lat-lon segments between adjacent grid points.\n");
       for(n=0; n<ntile_ocn; n++) {
         get_grid_global_area(nxo[n], nyo[n], xocn[n], yocn[n], area_ocn[n]);
       }
@@ -1064,6 +1095,7 @@ int main (int argc, char *argv[])
   nfile_axo = 0;
   nfile_axl = 0;
   nfile_lxo = 0;
+  int nbad=0;
   {
     int no, nl, na, n;
     size_t  **naxl, **naxo;
@@ -1171,7 +1203,7 @@ int main (int argc, char *argv[])
     time_start = time(NULL);
     for(na=0; na<ntile_atm; na++) {
 
-      int      l, is, ie, js, je, la, ia, ja, il, jl, io, jo, layout[2];
+      int      k,l, is, ie, js, je, la, ia, ja, il, jl, io, jo, layout[2];
       int      n0, n1, n2, n3, na_in, nl_in, no_in, n_out, n_out2;
       double   xa_min, ya_min, xo_min, yo_min, xl_min, yl_min, xa_avg;
       double   xa_max, ya_max, xo_max, yo_max, xl_max, yl_max;
@@ -1180,12 +1212,15 @@ int main (int argc, char *argv[])
       double   xl[MV], yl[MV], zl[MV];
       double   xo[MV], yo[MV], zo[MV];
       double   x_out[MV], y_out[MV], z_out[MV];
+      double   y_out_max, y_out_min;
       double   atmxlnd_x[MX][MV], atmxlnd_y[MX][MV], atmxlnd_z[MX][MV];
+      int      atmxlnd_c[MX][MV]; 
       int      num_v[MX];
       int      axl_i[MX], axl_j[MX], axl_t[MX];
       double   axl_xmin[MX], axl_xmax[MX], axl_ymin[MX], axl_ymax[MX];
       double   axl_area[MX], axl_clon[MX], axl_clat[MX];
       size_t   count;
+      int one, intc,atmxlnd_count;
       domain2D Dom;
       double   yy;
       int      *js_lnd, *je_lnd;
@@ -1309,6 +1344,7 @@ int main (int argc, char *argv[])
       }
 
      if(mpp_pe()==mpp_root_pe() && verbose)printf("na = %d, la = %d, is=%d, ie = %d\n", na, la, is, ie);
+      atmxlnd_count=0;
       for(la=is;la<=ie;la++) {
 	ia = la%nxa[na];
 	ja = la/nxa[na];
@@ -1426,15 +1462,50 @@ int main (int argc, char *argv[])
 	      */
 
 	      if(xa_min >= xl_max || xa_max <= xl_min ) continue;
-	      n_out = clip_2dx2d( xa, ya, na_in, xl, yl, nl_in, x_out, y_out );
-	    }
-
+	      if(lnd_same_as_atm) {
+	        if(na==nl && ja==jl && ia==il) {
+		  if(na_in != nl_in){
+                     printf("Error: LND and AM grids are the same but na_in != nl_in, n_out,%d,%d,%d",na_in, nl_in, n_out);
+                     mpp_error("make_coupler_mosaic: inconsistent number of grid box coreners");
+                  }
+		  n_out = nl_in;
+		  for(n=0; n<n_out; n++) {
+		    x_out[n] = xl[n];
+		    y_out[n] = yl[n];
+		  }
+		 }
+		 else
+		   n_out = 0;
+	      }
+              else {
+	        n_out = clip_2dx2d( xa, ya, na_in, xl, yl, nl_in, x_out, y_out );
+	      }
+	   }
+	 
 	    if (  n_out > 0 ) {
 	      if(clip_method == GREAT_CIRCLE_CLIP)
 		xarea=great_circle_area ( n_out, x_out, y_out, z_out);
 	      else
 		xarea = poly_area(x_out, y_out, n_out);
 	      min_area = min(area_lnd[nl][jl*nxl[nl]+il], area_atm[na][la]);
+	      y_out_min = minval_double(n_out, y_out);
+	      y_out_max = maxval_double(n_out, y_out);
+	      if(fabs(y_out_min+0.5*M_PI) < 0.00003 && verbose) {
+		printf("Near South Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f \n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
+                printf("longitudes and latitudes of the %d corners are:\n", n_out);
+		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
+                printf("\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
+                printf("\n");
+	      }
+	      if(fabs(y_out_max-0.5*M_PI) < 0.00003 && verbose) {
+		printf("Near North Pole ATMxLND grid cell,  ATMxLND_area/ATM_area =%f, ATM_area=%f, LND_area=%f\n", xarea/area_atm[na][la], area_atm[na][la], area_lnd[nl][jl*nxl[nl]+il]);
+                printf("longitudes and latitudes of the %d corners are:\n", n_out);
+		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
+                printf("\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
+                printf("\n");
+	      }
 	      if( xarea/min_area > area_ratio_thresh ) {
 
                 if(print_grid) {
@@ -1476,10 +1547,11 @@ int main (int argc, char *argv[])
 
 		++count;
 		if(count>MX) mpp_error("make_coupler_mosaic: count is greater than MX, increase MX");
-      	      }
-	    }
-	  }
-	}
+      	      }/*if( xarea/min_area > area_ratio_thresh )*/
+	    }/*if(nout>0)*/
+	  }/*ni,nj loop*/
+	}/*nl loop*/
+        atmxlnd_count=atmxlnd_count+count;
 	/* calculate atmos/ocean x-cells */
 	for(no=0; no<ntile_ocn; no++) {
 	  for(jo = js_ocn[no]; jo <= je_ocn[no]; jo++) for(io = is_ocn[no]; io <= ie_ocn[no]; io++) {
@@ -1544,6 +1616,23 @@ int main (int argc, char *argv[])
 		if(xa_min >= xo_max || xa_max <= xo_min || yo_min >= ya_max || yo_max <= ya_min ) continue;
 		n_out = clip_2dx2d( xa, ya, na_in, xo, yo, no_in, x_out, y_out );
 	      }
+	      if(fabs(y_out_max-0.5*M_PI) < 0.00003 && fabs(yo_max-0.5*M_PI) < 0.00003 && verbose) {
+		printf("Near North Pole ATMxLND grid cell\n");
+		for(n=0; n<na_in; n++) printf("%7.3f, ", xa[n]*R2D);
+                printf("\n");
+		for(n=0; n<na_in; n++) printf("%7.3f, ", ya[n]*R2D);
+                printf("\n");
+		printf("Near North Pole OCN grid cell\n");
+		for(n=0; n<no_in; n++) printf("%7.3f, ", xo[n]*R2D);
+                printf("\n");
+		for(n=0; n<no_in; n++) printf("%7.3f, ", yo[n]*R2D);
+                printf("\n");
+		printf("Near North Pole ATMxLNDxOCN grid cell\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", x_out[n]*R2D);
+                printf("\n");
+		for(n=0; n<n_out; n++) printf("%7.3f, ", y_out[n]*R2D);
+                printf("\n");
+	      }
 	      if (  n_out > 0) {
 
 
@@ -1552,7 +1641,10 @@ int main (int argc, char *argv[])
 		else
 		  xarea = poly_area(x_out, y_out, n_out )*ocn_frac;
 
+		if(xarea<0) printf("error: xarea<0, %f",xarea);
 		min_area = min(area_ocn[no][jo*nxo[no]+io], area_atm[na][la]);
+	        if(fabs(y_out_max-0.5*M_PI) < 0.00003 && fabs(yo_max-0.5*M_PI) < 0.00003 && verbose) {
+	           printf("Near North Pole: ATMxLNDxOCN_area/ATM_area =%f \n",xarea/min_area);}
 		if(xarea/min_area > area_ratio_thresh) {
 
 		  atmxocn_area[na][no][naxo[na][no]] = xarea;
@@ -1603,14 +1695,16 @@ int main (int argc, char *argv[])
 		    }
 		  }
 		}
-	      }
-	    }
-	  }
-	}
+	      }//for(l=0; l<count; l++)
+	    }//if(lnd_frac > MIN_AREA_FRAC)
+	  }//for(jo = js_ocn[no]; jo <= je_ocn[no]; jo++) for(io = is_ocn[no]; io <= ie_ocn[no]; io++)
+	}//for(no=0; no<ntile_ocn; no++)
 	/* get the exchange grid between land and atmos. */
 	for(l=0; l<count; l++) {
 	  nl = axl_t[l];
 	  min_area = min(area_lnd[nl][axl_j[l]*nxl[nl]+axl_i[l]], area_atm[na][la]);
+	  if(fabs(axl_ymin[l]+0.5*M_PI) < 0.00003 && verbose){
+	    printf("Near South Pole: ATMxLNDxOCN_area/ATM_area =%f \n",axl_area[l]/min_area);}
 	  if(axl_area[l]/min_area > area_ratio_thresh) {
 	    atmxlnd_area[na][nl][naxl[na][nl]] = axl_area[l];
 	    atmxlnd_ia  [na][nl][naxl[na][nl]] = ia;
@@ -1627,6 +1721,8 @@ int main (int argc, char *argv[])
 	}
 
       }/* end of la loop */
+      mpp_sum_int(1, &atmxlnd_count);
+      if(mpp_pe()==mpp_root_pe() && verbose)printf("Number of atmxlnd cells for ATM tile %d is %i .\n",na+1,atmxlnd_count);
 
       mpp_delete_domain2d(&Dom);
       free(is_lnd);
@@ -1927,14 +2023,17 @@ int main (int argc, char *argv[])
 	int    io, jo;
 	double ocn_frac;
 	int    id_mask, fid, dims[2];
+	int    id_areao, id_areax;
 	char ocn_mask_file[STRING];
 	double *mask;
-	int ny, nbad;
+	double *areao,*areax;
+	int ny;
 
-        nbad = 0;
 	for(no=0; no<ntile_ocn; no++) {
 	  ny = nyo[no]-ocn_south_ext;
 	  mask = (double *)malloc(nxo[no]*ny*sizeof(double));
+	  areao = (double *)malloc(nxo[no]*ny*sizeof(double));
+	  areax = (double *)malloc(nxo[no]*ny*sizeof(double));
 	  for(jo=0; jo<ny; jo++) for(io=0; io<nxo[no]; io++) {
 	    i = (jo+ocn_south_ext)*nxo[no]+io;
 	    ocn_frac = o_area[no][i]/area_ocn[no][i];
@@ -1944,6 +2043,8 @@ int main (int argc, char *argv[])
 		     io, jo, omask[no][i], ocn_frac, omask[no][i] - ocn_frac);
 	    }
 	    mask[jo*nxo[no]+io] = ocn_frac;
+	    areao[jo*nxo[no]+io] = area_ocn[no][i];
+	    areax[jo*nxo[no]+io] = o_area[no][i];
 	  }
 	  if(ntile_ocn > 1)
 	    sprintf(ocn_mask_file, "ocean_mask_tile%d.nc", no+1);
@@ -1960,29 +2061,42 @@ int main (int argc, char *argv[])
 	  dims[0] = mpp_def_dim(fid, "ny", ny);
 	  id_mask = mpp_def_var(fid, "mask", MPP_DOUBLE, 2, dims,  2, "standard_name",
 				"ocean fraction at T-cell centers", "units", "none");
+	  id_areao = mpp_def_var(fid, "areaO", MPP_DOUBLE, 2, dims,  2, "standard_name",
+				"ocean grid area", "units", "none");
+	  id_areax = mpp_def_var(fid, "areaX", MPP_DOUBLE, 2, dims,  2, "standard_name",
+				"ocean exchange grid area", "units", "none");
 	  mpp_end_def(fid);
 	  mpp_put_var_value(fid, id_mask, mask);
+	  mpp_put_var_value(fid, id_areao, areao);
+	  mpp_put_var_value(fid, id_areax, areax);
 	  mpp_close(fid);
 	  free(mask);
 	}
         if(nbad>0) {
           printf("make_coupler_mosaic: number of points with omask != ofrac is %d\n", nbad);
-          mpp_error("make_coupler_mosaic: omask is not equal ocn_frac");
         }
       }
 
       /* calculate land_frac and  write out land_frac */
       {
 	int    il, jl;
-	int    id_mask, fid, dims[2];
+	int    id_mask,id_a_l,id_l_a,id_a_a, fid, dims[2];
 	char lnd_mask_file[STRING];
-	double *mask;
+	double *mask,*l_a,*a_l,*a_a;
 
 	for(nl=0; nl<ntile_lnd; nl++) {
 	  mask = (double *)malloc(nxl[nl]*nyl[nl]*sizeof(double));
+	  l_a = (double *)malloc(nxl[nl]*nyl[nl]*sizeof(double));
+	  a_l = (double *)malloc(nxl[nl]*nyl[nl]*sizeof(double));
+	  a_a = (double *)malloc(nxl[nl]*nyl[nl]*sizeof(double));
 	  for(jl=0; jl<nyl[nl]; jl++) for(il=0; il<nxl[nl]; il++) {
 	    i = jl*nxl[nl]+il;
-	    mask[i] = l_area[nl][i]/area_lnd[nl][i];
+            mask[i] = l_area[nl][i]/area_lnd[nl][i];
+            //Land mask being greater than 1 is meaningless and causes trouble
+	    //mask[i] = min(l_area[nl][i]/area_lnd[nl][i],1.0);
+	    l_a[i] = l_area[nl][i];
+	    a_l[i] = area_lnd[nl][i];
+	    a_a[i] = area_atm[nl][i];
 	  }
 	  if(ntile_lnd > 1)
 	    sprintf(lnd_mask_file, "land_mask_tile%d.nc", nl+1);
@@ -1997,9 +2111,18 @@ int main (int argc, char *argv[])
 	  dims[0] = mpp_def_dim(fid, "ny", nyl[nl]);
 	  id_mask = mpp_def_var(fid, "mask", MPP_DOUBLE, 2, dims,  2, "standard_name",
 				"land fraction at T-cell centers", "units", "none");
+	  id_a_a = mpp_def_var(fid, "area_atm", MPP_DOUBLE, 2, dims,  2, "standard_name",
+				"area atm ", "units", "none");
+	  id_a_l = mpp_def_var(fid, "area_lnd", MPP_DOUBLE, 2, dims,  2, "standard_name",
+				"area land ", "units", "none");
+	  id_l_a = mpp_def_var(fid, "l_area", MPP_DOUBLE, 2, dims,  2, "standard_name",
+				"land x area", "units", "none");
 	  mpp_end_def(fid);
 	  mpp_put_var_value(fid, id_mask, mask);
-          free(mask);
+	  mpp_put_var_value(fid, id_a_l, a_l);
+	  mpp_put_var_value(fid, id_a_a, a_a);
+	  mpp_put_var_value(fid, id_l_a, l_a);
+	  free(mask);
 	  mpp_close(fid);
 	}
       }
@@ -2442,6 +2565,8 @@ int main (int argc, char *argv[])
 	}
       }
       else {
+	yl_min = 9999;
+	yl_max = -9999;
 	for(ll=is;ll<=ie;ll++) {
 
 	  il = ll%nxl[nl];
@@ -3503,8 +3628,8 @@ int main (int argc, char *argv[])
 	for(i=0; i<nxa[n]*nya[n]; i++) {
 	  cur_ratio = fabs(atm_xarea[n][i] - area_atm[n][i])/area_atm[n][i];
 	  if(cur_ratio > 1.e-5) {
-	    printf("at tile =%d, i=%d, j=%d, ratio=%g, area1=%g, area2=%g\n",
-		   n, i%nxa[n], i/nxa[n], cur_ratio,  area_atm[n][i], atm_xarea[n][i] );
+	    printf("at tile =%d, i=%d, j=%d, ratio=%g, area1=%g, area2=%g\n", 
+		   n+1, i%nxa[n], i/nxa[n], cur_ratio,  area_atm[n][i], atm_xarea[n][i] );
 	  }
 	  if(cur_ratio > max_ratio) {
 	    max_ratio = cur_ratio;
@@ -3515,8 +3640,8 @@ int main (int argc, char *argv[])
 	}
       }
 
-      printf("The maximum area is at tile=%d, i=%d, j=%d, ratio=%g, area1=%g, area2=%g\n",
-	     max_ta, max_ia, max_ja, max_ratio, area_atm[max_ta][max_ja*nxa[max_ta]+max_ia],
+      printf("The maximum area mismatch is at tile=%d, i=%d, j=%d, ratio=%g, area_atm_grid=%g, area_atm_xgrid=%g\n",
+	     max_ta+1, max_ia, max_ja, max_ratio, area_atm[max_ta][max_ja*nxa[max_ta]+max_ia],
 	     atm_xarea[max_ta][max_ja*nxa[max_ta]+max_ia]);
       /* for cubic grid, when number of model points is odd, some grid cell area will be negative,
 	 need to think about how to solve this issue in the future */
@@ -3678,8 +3803,13 @@ int main (int argc, char *argv[])
     mpp_close(fid);
   }
 
-  if(mpp_pe()== mpp_root_pe() && verbose)printf("\n***** Congratulation! You have successfully run make_coupler_mosaic\n");
-
+  if(mpp_pe()== mpp_root_pe() && verbose){
+     if(nbad == 0){
+       printf("\n***** Congratulation! You have successfully run make_coupler_mosaic\n");}
+     else{
+       printf("\n***** You have run make_coupler_mosaic, but there were at least %d grid cells with issues.\n",nbad);
+       mpp_error("make_coupler_mosaic: omask is not equal ocn_frac");}
+  } 
   mpp_end();
 
   return 0;
