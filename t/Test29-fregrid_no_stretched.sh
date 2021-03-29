@@ -12,7 +12,11 @@
   cp $top_srcdir/t/Test28-input/ocean_hgrid.nc . 
   cp $top_srcdir/t/Test28-input/ocean_mosaic.nc .
   cp $top_srcdir/t/Test28-input/topog.nc .
-  cp $top_srcdir/t/Test28-input/fv_tracer.res.tile*.nc .
+
+  for i in {1..6}
+  do
+    $top_srcdir/t/01-ncgenerator.py fv_tracer.res.tile"$i".nc
+  done
 
 #Make no stretched grid 
   run command make_hgrid \
@@ -59,7 +63,7 @@
   [ "$status" -eq 0 ]
 
 # no stretched grid lats 32.0 34.0 35.4
-  result_32.0="$(mpirun -np 16 fregrid \
+  result_32_0="$(fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
                 --input_file fv_tracer.res \
                 --scalar_field o3 \
@@ -70,13 +74,10 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_32.0.nc \
-                --output_file out_32.0.nc \
-                --check_conserve)"
-  declare -f conserve_ratio_32.0 = echo $result_32.0 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_32.0.nc --check_conserve)"
+  declare -f conserve_ratio_32_0 = echo $result_32_0 | head -n 5 | rev | cut -c39-49 | rev
 
-  [[ ${conserve_ratio_32.0} < 1. ]]
-
-  result_34.0="$(mpirun -np 16 fregrid \
+  result_34_0="$(fregrid \
                 --input_mosaic C384_mosaic_34.0.nc \
                 --input_file fv_tracer.res \
                 --scalar_field o3 \
@@ -87,13 +88,10 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_34.0.nc \
-                --output_file out_34.0.nc \
-                --check_conserve)"
-  declare -f conserve_ratio_34.0 = echo $result_34.0 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_34.0.nc --check_conserve)"
+  declare -f conserve_ratio_34_0 = echo $result_34_0 | head -n 5 | rev | cut -c39-49 | rev
 
-  [[ ${conserve_ratio_34.0} < 1. ]]
-
-  result_35.4="$(mpirun -np 16 fregrid \
+  result_35_4="$(fregrid \
                 --input_mosaic C384_mosaic_35.4.nc \
                 --input_file fv_tracer.res \
                 --scalar_field o3 \
@@ -104,11 +102,12 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_35.4.nc \
-                --output_file out_35.4.nc \
-                --check_conserve)"
-  declare -f conserve_ratio_35.0 = echo $result_35.4 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_35.4.nc --check_conserve)"
+  declare -f conserve_ratio_35_4 = echo $result_35_4 | head -n 5 | rev | cut -c39-49 | rev
 
-  [[ ${conserve_ratio_35.4} < 1. ]]
+  [[ ${conserve_ratio_32_0} < 1. ]]
+  [[ ${conserve_ratio_34_0} < 1. ]]
+  [[ ${conserve_ratio_35_4} < 1. ]]
 
   cd ..
   rm -rf Test29
