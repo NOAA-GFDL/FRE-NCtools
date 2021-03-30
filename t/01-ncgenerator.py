@@ -1,13 +1,13 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import argparse
 
-import netCDF4
+import netCDF
 import numpy as np
 
 def get_tiles_nc(fname):
-    nc = netCDF4.Dataset(fname, 'w')
+    nc = netCDF.Dataset(fname, 'w')
 
     Time = nc.createDimension('Time', None)
     var_Time = nc.createVariable('Time', 'double', 'Time')
