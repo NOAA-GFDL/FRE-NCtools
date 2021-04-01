@@ -12,11 +12,7 @@
   cp $top_srcdir/t/Test28-input/ocean_hgrid.nc . 
   cp $top_srcdir/t/Test28-input/ocean_mosaic.nc .
   cp $top_srcdir/t/Test28-input/topog.nc .
-
-  for i in {1..6}
-  do
-    $top_srcdir/t/01-ncgenerator.py fv_tracer.res.tile"$i".nc
-  done
+  cp $top_srcdir/t/Test28-input/1.tile* .
 
 #Make no stretched grid 
   run command make_hgrid \
@@ -65,7 +61,7 @@
 # no stretched grid lats 32.0 34.0 35.4
   result_32_0="$(fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
-                --input_file fv_tracer.res \
+                --input_file 1 \
                 --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
@@ -79,7 +75,7 @@
 
   result_34_0="$(fregrid \
                 --input_mosaic C384_mosaic_34.0.nc \
-                --input_file fv_tracer.res \
+                --input_file 1 \
                 --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
@@ -93,7 +89,7 @@
 
   result_35_4="$(fregrid \
                 --input_mosaic C384_mosaic_35.4.nc \
-                --input_file fv_tracer.res \
+                --input_file 1 \
                 --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
