@@ -65,7 +65,7 @@
 # no stretched grid lats 32.0 34.0 35.4
   result_32_0="$(fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
-                --input_file 1 \
+                --input_file out \
                 --scalar_field out \
                 --nlon 640 \
                 --nlat 400 \
