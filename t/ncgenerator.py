@@ -2,7 +2,7 @@
 
 import os
 import argparse
-
+import random
 import netCDF4
 import numpy as np
 
@@ -39,10 +39,10 @@ def get_tiles_nc(fname):
     var_o3.checksum = 'A32650720153EC98'
     var_o3.interp_method = 'conserve_order1'
 
-    nc.variables['zaxis_1'][:] = 1
-    nc.variables['yaxis_1'][:] = 1
-    nc.variables['xaxis_1'][:] = 1
-    nc.variables['o3'][:] = 1
+    nc.variables['zaxis_1'][:] = random.random()
+    nc.variables['yaxis_1'][:] = random.random()
+    nc.variables['xaxis_1'][:] = random.random()
+    nc.variables['o3'][:] = random.randint(1,70)
 
     return nc
 
