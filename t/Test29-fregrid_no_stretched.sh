@@ -66,7 +66,7 @@
   result_32_0="$(fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
                 --input_file out \
-                --scalar_field out \
+                --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
                 --latBegin 15.0 \
