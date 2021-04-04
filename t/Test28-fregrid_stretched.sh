@@ -68,7 +68,7 @@
   [ "$status" -eq 0 ]
 
 # stretched grid lats 32.0 34.0 35.4
-  result_32_0="$(fregrid \
+  run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
                 --input_file out \
                 --scalar_field o3 \
@@ -79,10 +79,13 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_32.0.nc \
-                --output_file out_32.0.nc --check_conserve)"
-  declare -f conserve_ratio_32_0 = echo $result_32_0 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_32.0.nc --check_conserve \
+                | awk 'NR==14' | rev | cut -c39-49 | rev'
+  var_32_0=$output | awk '{ print sprintf("%.9f", $1); }'
+  echo $output
+  [[ ${var_32_0} < 1. ]]
 
-  result_34_0="$(fregrid \
+  run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_34.0.nc \
                 --input_file out \
                 --scalar_field o3 \
@@ -93,10 +96,13 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_34.0.nc \
-                --output_file out_34.0.nc --check_conserve)"
-  declare -f conserve_ratio_34_0 = echo $result_34_0 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_34.0.nc --check_conserve \
+                | awk 'NR==14' | rev | cut -c39-49 | rev'
+  var_34_0=$output | awk '{ print sprintf("%.9f", $1); }'
+  echo $output
+  [[ ${var_34_0} < 1. ]]
 
-  result_35_4="$(fregrid \
+  run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_35.4.nc \
                 --input_file out \
                 --scalar_field o3 \
@@ -107,12 +113,12 @@
                 --lonBegin 230.0 \
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_35.4.nc \
-                --output_file out_35.4.nc --check_conserve)"
-  declare -f conserve_ratio_35_4 = echo $result_35_4 | head -n 5 | rev | cut -c39-49 | rev
+                --output_file out_35.4.nc --check_conserve \
+                | awk 'NR==14' | rev | cut -c39-49 | rev'
+  var_35_4=$output | awk '{ print sprintf("%.9f", $1); }'
+  echo $output
+  [[ ${var_35_4} < 1. ]]
  
-  [[ ${conserve_ratio_32_0} < 1. ]]
-  [[ ${conserve_ratio_34_0} < 1. ]]
-  [[ ${conserve_ratio_35_4} < 1. ]]
   cd ..
   rm -rf Test28
 }
