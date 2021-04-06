@@ -19,21 +19,13 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+# load default setup/teardown
+export SETUP_FNCT="generate_from_ncl mppnccombine"
+load input_util
 
 @test "mppnccombine combines" {
-  if [ ! -d "Test02" ] 
-  then
-  mkdir Test02
-  fi
 
-  cd Test02
-
-  #Generate the netcdf files from the .ncl 
-  for f in $top_srcdir/t/Test02-input/*.ncl.????
-  do
-    ncgen -o mppnccombine.nc.${f##*.} $f
-  done
-
+  ls
   #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \
@@ -43,7 +35,4 @@
   run ncdump -h mppnccombine_output.nc
   [ "$status" -eq 0 ]
 
-  #Clean up 
-  cd ..
-  rm -rf Test02
 }

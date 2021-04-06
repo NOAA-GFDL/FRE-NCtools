@@ -80,4 +80,4 @@ EXTRA_DIST = $(TESTS) \
             $(test25_data)
 
 clean-local:
-	$(RM) *.nc
+	$(RM) *.nc Test*/*
