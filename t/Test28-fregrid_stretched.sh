@@ -13,12 +13,6 @@
    cp $top_srcdir/t/Test28-input/ocean_mosaic.nc .
    cp $top_srcdir/t/Test28-input/topog.nc .
 
-  for i in {1..6}
-  do
-    $top_srcdir/t/ncgenerator.py out.tile"$i".nc
-  done
-
-
 #Make streetched grid 
   run command make_hgrid \
                --grid_type gnomonic_ed --do_schmidt \
@@ -70,8 +64,6 @@
 # stretched grid lats 32.0 34.0 35.4
   run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_32.0.nc \
-                --input_file out \
-                --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
                 --latBegin 15.0 \
@@ -80,15 +72,13 @@
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_32.0.nc \
                 --output_file out_32.0.nc --check_conserve \
-                | awk 'NR==14' | rev | cut -c39-49 | rev'
+                | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_32_0=$output | awk '{ print sprintf("%.9f", $1); }'
   echo $output
-  [[ ${var_32_0} < 1. ]]
+  [[ ${var_32_0} < 0.0 ]]
 
   run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_34.0.nc \
-                --input_file out \
-                --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
                 --latBegin 15.0 \
@@ -97,15 +87,13 @@
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_34.0.nc \
                 --output_file out_34.0.nc --check_conserve \
-                | awk 'NR==14' | rev | cut -c39-49 | rev'
+                | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_34_0=$output | awk '{ print sprintf("%.9f", $1); }'
   echo $output
-  [[ ${var_34_0} < 1. ]]
+  [[ ${var_34_0} < 0.0 ]]
 
   run bash -c 'fregrid \
                 --input_mosaic C384_mosaic_35.4.nc \
-                --input_file out \
-                --scalar_field o3 \
                 --nlon 640 \
                 --nlat 400 \
                 --latBegin 15.0 \
@@ -114,10 +102,10 @@
                 --lonEnd 310.0 \
                 --remap_file fregrid_remap_file_640_by_400_35.4.nc \
                 --output_file out_35.4.nc --check_conserve \
-                | awk 'NR==14' | rev | cut -c39-49 | rev'
+                | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_35_4=$output | awk '{ print sprintf("%.9f", $1); }'
   echo $output
-  [[ ${var_35_4} < 1. ]]
+  [[ ${var_35_4} < 0.0 ]]
  
   cd ..
   rm -rf Test28
