@@ -135,7 +135,6 @@ AC_DEFINE([GIT_REVISION], "git_revision",
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 postprocessing/combine_blobs/Makefile
                  postprocessing/combine_restarts/Makefile
                  postprocessing/iceberg_comb/Makefile
                  postprocessing/land_utils/Makefile

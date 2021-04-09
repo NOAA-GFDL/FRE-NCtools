@@ -19,8 +19,7 @@
 #***********************************************************************
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = postprocessing/combine_blobs \
-          postprocessing/combine_restarts \
+SUBDIRS = postprocessing/combine_restarts \
           postprocessing/iceberg_comb \
           postprocessing/land_utils \
           postprocessing/list_ncvars \
