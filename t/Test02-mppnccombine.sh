@@ -19,13 +19,12 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-# load default setup/teardown
-export SETUP_FNCT="generate_from_ncl mppnccombine"
+# load default setup/teardown and create numbered input from ncls with given filename
+export SETUP_FNCT="generate_all_from_ncl_num mppnccombine"
 load input_util
 
 @test "mppnccombine combines" {
 
-  ls
   #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \

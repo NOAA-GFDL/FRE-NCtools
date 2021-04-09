@@ -21,22 +21,11 @@
 #***********************************************************************
 
 # Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
+# set setup to generate ncls from test's input directory
+export SETUP_FNCT="generate_all_from_ncl"
+load input_util
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
-
-  if [ ! -d "Test03" ] 
-  then
-  		mkdir Test03
-  fi
-
-  cd Test03
-  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
-  ncgen -o C48_grid.tile1.nc $top_srcdir/t/Test03-input/C48_grid.tile1.ncl
-  ncgen -o C48_grid.tile2.nc $top_srcdir/t/Test03-input/C48_grid.tile2.ncl
-  ncgen -o C48_grid.tile3.nc $top_srcdir/t/Test03-input/C48_grid.tile3.ncl
-  ncgen -o C48_grid.tile4.nc $top_srcdir/t/Test03-input/C48_grid.tile4.ncl
-  ncgen -o C48_grid.tile5.nc $top_srcdir/t/Test03-input/C48_grid.tile5.ncl
-  ncgen -o C48_grid.tile6.nc $top_srcdir/t/Test03-input/C48_grid.tile6.ncl
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
@@ -57,7 +46,7 @@
 		--bnds 0.,220.,5500. \
 		--dbnds 10.,10.,367.14286 \
 		--center c_cell \
-		--grid_name ocean_vgrid 
+		--grid_name ocean_vgrid
   [ "$status" -eq 0 ]
 
 #Make_solo_mosaic: create ocean solo mosaic
@@ -77,10 +66,10 @@
 		--topog_field TOPO \
 		--scale_factor -1 \
 		--vgrid ocean_vgrid.nc \
-		--output topog.nc 
+		--output topog.nc
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails 
+#TO DO: Skipping this for now because it fails
 #  run command mpirun -n 2 make_topog_parallel \
 #		--mosaic ocean_mosaic.nc \
 #		--topog_type realistic \
@@ -118,7 +107,7 @@
 		--area_ratio_thresh 1.e-10 \
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails 
+#TO DO: Skipping this for now because it fails
 #  run command cd parallel
 
 #  run command aprun -n 2 make_coupler_mosaic_parallel \
@@ -129,7 +118,4 @@
 #		--area_ratio_thresh 1.e-10
 #  [ "$status" -eq 0 ]
 
-#Remove the workdir 
-  cd ..
-  rm -rf Test03
 }
