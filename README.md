@@ -88,6 +88,10 @@ located in the [site-configs](site-configs) directory:
 
 ```
 autoreconf -i
+# Note: env.sh builds a set of commands to configure the environment.
+# The backquotes (not single quotes!) do command substitution, using the
+# standard output of env.sh as input to "eval". eval then executes the
+# set of environment-setting shell commands.
 eval `site-configs/<site>/env.sh`
 ./configure
 make
