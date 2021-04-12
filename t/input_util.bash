@@ -9,41 +9,56 @@ testDir="$( basename $BATS_TEST_FILENAME .sh )"
 testDir="`expr substr $testDir 1 6`"
 
 setup(){
-  echo $testDir
   BASE_TEST_DIR=$( pwd )
-  mkdir $testDir
+  TEST_NUM="`expr substr $(basename $BATS_TEST_FILENAME .sh) 5 2`"
+  if [ ! -d $testDir ]; then
+    mkdir $testDir
+  fi
   cd $testDir
   # run the tests setup function, if set
-  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "SETUP_FNCT not set, skipping input generation"
+  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "Warning: SETUP_FNCT not set, skipping input generation"
 }
 
 teardown(){
   cd $BASE_TEST_DIR
+  ls $testDir
   rm -rf $testDir
 }
 
+#generates numbered nc files with a given name
 generate_all_from_ncl_num(){
-  test_no="`expr substr $(basename $BATS_TEST_FILENAME .sh) 5 2`"
-  echo "Test no: $test_no"
   filename=$1
-  #Generate the netcdf files from the .ncl
-  for f in $top_srcdir/t/Test${test_no}-input/*.ncl.????
+  for f in $top_srcdir/t/Test${TEST_NUM}-input/*.ncl.????
   do
     [[ -z $filename ]] && filename=$(basename $f .ncl)
     ncgen -o $filename.nc.${f##*.} $f
   done
 }
-
+#generates nc files from any ncl files in input directory
+#takes a two digit test number, defaults to current test
 generate_all_from_ncl(){
   if [[ -z $1 ]]; then 
-    test_no="`expr substr $(basename $BATS_TEST_FILENAME .sh) 5 2`"
+    test_no=$TEST_NUM
   else
     test_no="$1"
   fi
-  #Generate the netcdf files from the .ncl
   for f in $top_srcdir/t/Test${test_no}-input/*.ncl
   do
     filename=$(basename $f .ncl)
     ncgen -o $filename.nc $f
   done
+}
+
+#generates from a list of names, TODO might delete
+generate_from_ncl(){
+  if [[ $# == 0 || $1 != *.ncl ]]; then
+    echo "Error: no/invalid filenames provided"
+    exit
+  else
+    filename=$(basename $1 .ncl)
+    ncgen -o $filename.nc $top_srcdir/t/$1
+    [[ $# -eq 1 ]] && return 0
+    shift
+    generate_from_ncl $@
+  fi
 }

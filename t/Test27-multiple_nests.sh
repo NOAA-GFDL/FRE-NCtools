@@ -21,15 +21,9 @@
 #***********************************************************************
 
 # Test grid for multiple same level and telescoping nests 
+load input_util
 
 @test "Test grid for multiple same level and telescoping nests" {
-
-  if [ ! -d "Test27" ] 
-  then
-  		mkdir Test27
-  fi
-
-  cd Test27
 
 #Make_hgrid: create three same level -level1- nests in tiles 2,5,6"
   run command make_hgrid \
@@ -75,9 +69,4 @@
         --verbose 1
   [ "$status" -eq 0 ]
 
-
-
-#Remove the workdir 
-  cd ..
-  rm -rf Test27
 }

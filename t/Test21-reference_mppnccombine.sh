@@ -23,6 +23,9 @@
 # Test that mppnccombine reproduces a reference copy of a combined file.
 # The reference file is currently from a Bronx-16 (GFDL system) mppnccombine.
 
+load input_util
+SETUP_FNCT="prepare_data"
+
 prepare_data ()
 {
   # Generate netCDF files for mppnccombine
@@ -30,20 +33,6 @@ prepare_data ()
   do
     ncgen -o mppnccombine.nc.${f##*.} $f
   done
-}
-
-setup ()
-{
-  BASE_TEST_DIR=$( pwd )
-  mkdir $( basename $BATS_TEST_FILENAME .sh )
-  cd  $( basename $BATS_TEST_FILENAME .sh )
-  # Generate the data
-  prepare_data
-}
-
-teardown () {
-  cd $BASE_TEST_DIR
-  rm -rf  $( basename $BATS_TEST_FILENAME .sh )
 }
 
 @test " refernce mppnccombine combines comparison to bronx-16 stored copy" {

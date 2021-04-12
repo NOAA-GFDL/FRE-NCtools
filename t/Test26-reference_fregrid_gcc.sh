@@ -22,17 +22,11 @@
 
 # test regrid ocean restart file 
 # same as Test24 except checks result with float tolerance, added in for compatibility with gcc
+
+load input_util
+SETUP_FNCT="cp $top_srcdir/t/Test20-input/*.nc ."
+
 @test "Test fregrid ocean data" {
-
-  if [ ! -d "Test26" ] 
-  then
-  		mkdir Test26
-  fi
-
-  cd Test26
-  cp $top_srcdir/t/Test20-input/CM2.1_mosaic.nc .
-  cp $top_srcdir/t/Test20-input/CM2.1_grid.nc .
-  cp $top_srcdir/t/Test20-input/ocean_temp_salt.res.nc .
 
 #Create regular lat-lon grid (100:160, -15:15, size is 360x180)
   run command make_hgrid  \
@@ -79,6 +73,4 @@
    run nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
    [ "$status" -eq 0 ]
 
-  cd ..
-  rm -rf Test26
 }

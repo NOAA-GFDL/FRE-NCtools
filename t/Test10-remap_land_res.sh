@@ -26,6 +26,10 @@
 # files for a given test.  prepare_input_data expects a single argument <dir_name>
 # which is the directory name in $top_srcdir/t/Test10-input/<dir_name>
 # that contains the input data
+
+load input_util
+SETUP_FNCT="prepare_input_data"
+
 prepare_input_data ()
 {
   local inputdir=$top_srcdir/t/Test10-input
@@ -41,19 +45,6 @@ prepare_input_data ()
       ncgen -o $dir/$( basename ${file} .ncl ).nc  ${file}
     done
   done
-}
-
-setup ()
-{
-  BASE_TEST_DIR=$( pwd )
-  mkdir $( basename $BATS_TEST_FILENAME .sh )
-  cd  $( basename $BATS_TEST_FILENAME .sh )
-}
-
-teardown ()
-{
-  cd $BASE_TEST_DIR
-  rm -rf  $( basename $BATS_TEST_FILENAME .sh )
 }
 
 @test "Test remap_land can remap land restart files" {

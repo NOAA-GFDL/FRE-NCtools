@@ -19,16 +19,10 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+load input_util
+SETUP_FNCT="cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy ."
 
 @test "decompress input netcdf files" {
-  if [ ! -d "Test18" ] 
-  then
-  mkdir Test18
-  fi
-
-  cd Test18
-
-  cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy .
 
   #Decompress compressed netcdf file(s) into 1
   run command decompress-ncc \
@@ -39,7 +33,4 @@
   run ncdump -h decompress-ncc_output.nc
   [ "$status" -eq 0 ]
 
-  #Clean up 
-  cd ..
-  rm -rf Test18
 }
