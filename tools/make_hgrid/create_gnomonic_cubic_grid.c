@@ -32,6 +32,8 @@
                  NOAA-GFDL source. Kyle Ahern, AOML/HRD
   03/05/2020  -- Enable many level Telescoping nests
                  (Nests within nests). Joseph Mouallem FV3/GFDL
+  04/12/2021  -- Fixed overwritting unspecified memory locations through
+                 out-of-bounds resetting of array agle_dx and angle_dy. MZuniga
 *******************************************************************************/
 
 /**
@@ -669,7 +671,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
     /* since angle is used in the model, set angle to 0 for nested region */
     for(nn=0; nn < num_nest_grids; nn++) {
-      for(i=0; i<=(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
+      for(i=0; i<(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
         angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
         angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
       }

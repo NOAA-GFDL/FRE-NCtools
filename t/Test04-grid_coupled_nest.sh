@@ -85,7 +85,7 @@ run command make_hgrid  \
 		--halo 3  \
 		--stretch_factor 3 \
 		--great_circle_algorithm  \
-		--nest_grid  \
+		--nest_grids 1  \
 		--refine_ratio 3  \
 		--parent_tile 4 \
 		--istart_nest 21  \
@@ -112,10 +112,14 @@ run command make_hgrid  \
 		--target_lon -100.15  \
 		--halo 3  \
 		--stretch_factor 3  \
+    --refine_ratio 3  \
 		--great_circle_algorithm  \
-		--nest_grid  \
-		--refine_ratio 3  \
-		--parent_tile 0
+		--nest_grids 1  \
+    --parent_tile 1  \
+    --istart_nest 41  \
+    --iend_nest 200  \
+    --jstart_nest 21  \
+    --jend_nest 200
   [ "$status" -eq 0 ]
 
 #create C144 solo mosaic for land
