@@ -143,11 +143,11 @@ void compress_int_data(int ntile, int npts, int nidx, int nidx_global, const int
                        const int *data, int *data_global, int all_tile );
 void compress_double_data(int ntile, int npts, int nidx, int nidx_global, const int *land_count,
                           const double *data, double *data_global, int all_tile );
-void read_cohort_index(int fid, const char * field_name, int* coho_idx);
 int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const int ns_s, const int nt_s, const int nface_s,
                           const int iface_d, const int *idx_map_soil, const int *idx_map_soi_sf, const int *face_map_soil,
-                         const int* land_idx_map, int * idx_soil_src_otn, const int* land_count_d,  const int* soil_count_cold, const int* ncoho_idx_s, int *coho_idx_s,
-                          int *coho_idx_d, int * coho_idx_data_pos,  int *coho_idx_data_face) ;
+                         const int* land_idx_map, int * idx_soil_src_otn, const int* land_count_d,  const int* soil_count_cold,
+                         const int* ncoho_idx_s, int *coho_idx_s,
+                          int **coho_idx_d, int ** coho_idx_data_pos,  int **coho_idx_data_face, int init_size_guess) ;
 void search_nearest_sface(const int npts_src, const double *lon_src, const double *lat_src,
                           const int *mask_src, int npts_dst, const double *lon_dst, const double *lat_dst,
                           const int *mask_dst, const int *idx_map, const int *face_map, const int iface_dst, int *idx_map_sf);
@@ -192,7 +192,6 @@ int main(int argc, char *argv[]) {
   int n_nspecies = 0;
   double *textlen_data = NULL;
   int n_textlen = 0;
-  int *spc_idx_src = NULL;  // TODO: put such indecies in structure.
 
   int *idx_soil_src = NULL, *idx_glac_src = NULL, *idx_lake_src = NULL;
   int *soil_count_src = NULL, *glac_count_src = NULL, *lake_count_src = NULL;
@@ -210,16 +209,11 @@ int main(int argc, char *argv[]) {
   int time_exist, zaxis_exist, ntime;
   int *has_taxis = NULL, *var_type = NULL, *ndim_src = NULL, *nz_src = NULL;
   int *zld_pos_src = NULL;
-  int *tiled_pos_src = NULL;
-  int *tileidx_pos_src = NULL;
   double *time_data = NULL;
   int* has_coho_idx = NULL;
   int has_glac = 0, has_lake = 0;
   int src_has_tile = 0, cold_has_tile = 0;
   int src_has_cohort = 0, cold_has_cohort = 0;
-  //int src_has_sc_cohort = 0, src_has_lc_cohort = 0;
-  //int src_has_nspecies = 0;
-  //int src_has_textlen = 0;
   int nz;
   double *z_axis_data = NULL;
   int print_memory = 0;
@@ -421,12 +415,10 @@ int main(int argc, char *argv[]) {
       nlon = mpp_get_dimlen(fid_src[n], LON_NAME);
       nlat = mpp_get_dimlen(fid_src[n], LAT_NAME);
       if (nx_src != nlon)
-        mpp_error(
-                  "remap_land: mismatch on the longitude dimension size "
+        mpp_error( "remap_land: mismatch on the longitude dimension size "
                   "between source mosaic grid file and src_restart");
       if (ny_src != nlat)
-        mpp_error(
-                  "remap_land: mismatch on the latitude dimension size "
+        mpp_error( "remap_land: mismatch on the latitude dimension size "
                   "between source mosaic grid file and src_restart");
       nidx_src[n] = mpp_get_dimlen(fid_src[n], TILE_INDEX_NAME);
 
@@ -495,20 +487,14 @@ int main(int argc, char *argv[]) {
   ndim_src = (int *)malloc(nvar_src * sizeof(int));
   nz_src = (int *)malloc(nvar_src * sizeof(int));
   zld_pos_src = (int *)malloc(nvar_src * sizeof(int));  //zlevel dimension position (-1 if none) //ML
-  tiled_pos_src = (int *)malloc(nvar_src * sizeof(int)); //tile dimesion position (-1 if no tile)
-  tileidx_pos_src = (int *)malloc(nvar_src * sizeof(int)); //tile index position (-i if none)
   var_type = (int *)malloc(nvar_src * sizeof(int));
-  spc_idx_src = (int *)malloc(nvar_src * sizeof(int));
   has_coho_idx = (int *)malloc(nvar_src * sizeof(int));
 
-
-  printf("**RL starting determination of dim of each var, nvar_scr=%d\n", nvar_src);
 
   for (int l = 0; l < nvar_src; l++) {
     char varname[64];
     char vdname[64];  // var dimname
     int vid;
-    //int klev;
 
     mpp_get_varname(fid_src[0], l, varname);
     vid = mpp_get_varid(fid_src[0], varname);
@@ -519,8 +505,6 @@ int main(int argc, char *argv[]) {
     has_taxis[l] = 0;
     nz_src[l] = -1;
     zld_pos_src[l] = -1;
-    tiled_pos_src[l] = -1;
-    tileidx_pos_src[l] = -1;
     has_coho_idx[l] = 0;
 
     if (ndim_src[l] > 3) {
@@ -536,18 +520,12 @@ int main(int argc, char *argv[]) {
         } else if (!strcmp(vdname, LEVEL_NAME)) {
           zld_pos_src[l] = m;
           nz_src[l] = mpp_get_dimlen(fid_src[0], vdname);
-        } else if (!strcmp(vdname, TILE_INDEX_NAME)) {
-          tileidx_pos_src[l] = m;
-        } else if (!strcmp(vdname, TILE_NAME)) {
-          tiled_pos_src[l] = m;
         } else if (!strcmp(vdname, COHORT_INDEX_NAME)) {
           has_coho_idx[l] = 1;
         }
         printf("vname=%s  dname=%s vtype=%d ndim=%d\n", varname, vdname, var_type[l], ndim_src[l]);
       }
 
-      //TODO: Finalize removal of these checks originally from lm4.0
-      //  (nz_src[l] == -1)  (ndim_src[l] == 3 && !has_taxis[l]) {
       // TODO: What is the consequence of not having a time dimension.
     } else if (var_type[l] == MPP_CHAR) {
       for (int m = 0; m < ndim_src[l]; m++) {
@@ -557,21 +535,14 @@ int main(int argc, char *argv[]) {
         } else if (!strcmp(vdname, LEVEL_NAME)) {
           zld_pos_src[l] = m;
           nz_src[l] = mpp_get_dimlen(fid_src[0], vdname);
-        }else if (!strcmp(vdname, TILE_INDEX_NAME)) {
-          tileidx_pos_src[l] = m;
-        } else if (!strcmp(vdname, TILE_NAME)) {
-          tiled_pos_src[l] = m;
-        } else if (!strcmp(vdname, NSPECIES_NAME)) {
-          spc_idx_src[l] = m;
         }
         printf("vname=%s  dname=%s vtype=%d ndim=%d\n", varname, vdname, var_type[l], ndim_src[l]);
       }
     } else {
       mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE or MPP_CHAR");
     }
-    printf("vname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d zld =%d nz=%d tiled_pos=%d tidx_pos=%d\n",
-           varname, l, vid, var_type[l], ndim_src[l], has_taxis[l], zld_pos_src[l], nz_src[l],
-           tiled_pos_src[l], tileidx_pos_src[l]);
+    printf("vname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d zld =%d nz=%d \n",
+           varname, l, vid, var_type[l], ndim_src[l], has_taxis[l], zld_pos_src[l], nz_src[l]);
   }
 
   /*------------------------------------------------------------------------------
@@ -616,7 +587,6 @@ int main(int argc, char *argv[]) {
     n_sc_cohort = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
-        //src_has_sc_cohort = 1;
         n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
         sc_cohort_data = (double *)malloc(n_sc_cohort * sizeof(double));
         int vid = mpp_get_varid(fid_src[0], SC_COHORT_NAME);
@@ -645,11 +615,9 @@ int main(int argc, char *argv[]) {
 
   {
     n_lc_cohort = 0;
-    //src_has_lc_cohort = 0;
     if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
       if (mpp_var_exist(fid_src[0], LC_COHORT_NAME)) {
         n_lc_cohort = mpp_get_dimlen(fid_src[0], LC_COHORT_NAME);
-        printf("*RLE n_lc_cohort= %d\n", n_lc_cohort);
         lc_cohort_data = (double *)malloc(n_lc_cohort * sizeof(double));
         int vid = mpp_get_varid(fid_src[0], LC_COHORT_NAME);
         mpp_get_var_value(fid_src[0], vid, lc_cohort_data);
@@ -745,7 +713,6 @@ int main(int argc, char *argv[]) {
     if (filetype == FIRETYPE) {
       if (mpp_var_exist(fid_src[0], MDF_DAY_NAME)) {
         n_mdf_day = mpp_get_dimlen(fid_src[0], MDF_DAY_NAME);
-        printf("*RLE n_mdf_day= %d\n", n_mdf_day);
         mdf_day_data = (double *)malloc(n_mdf_day * sizeof(double));
         int vid = mpp_get_varid(fid_src[0], MDF_DAY_NAME);
         mpp_get_var_value(fid_src[0], vid, mdf_day_data);
@@ -770,8 +737,6 @@ int main(int argc, char *argv[]) {
 /*-------------------------------
   read the cohort index. Unlike cohort field, the index does not have to have the same elements in all faces.
  -------------------------------------------*/
-  //mem allocated *
-   printf("Calling read_cohort_index for filetype=%d\n", filetype);
 
   if (filetype == VEGNTYPE) {
     ncoho_idx_src = (int *)malloc(nface_src * sizeof(int));
@@ -888,9 +853,9 @@ int main(int argc, char *argv[]) {
   /*-----------------------------------------------------------------------------
     get the tile data
     ----------------------------------------------------------------------------*/
-  printf("remap_land : getting tile data\n");
-
-  if (!mpp_dim_exist(fid_src[0], TILE_NAME)) mpp_error("remap_land: dimension tile should exist");
+  if (!mpp_dim_exist(fid_src[0], TILE_NAME)){
+    mpp_error("remap_land: dimension tile should exist");
+  }
 
   ntile_src = mpp_get_dimlen(fid_src[0], TILE_NAME);
   ntile_dst = ntile_src;
@@ -929,7 +894,7 @@ int main(int argc, char *argv[]) {
     vegn_tag_src = (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
     idx_soil_src = (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
     idx_soil_src_otn =  (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
-    
+
     if (has_glac) {
       glac_count_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));//ML and 4 below
       glac_frac_src = (double *)malloc(nface_src * nx_src * ny_src * sizeof(double)); /* at most one tile for glac */
@@ -985,11 +950,7 @@ int main(int argc, char *argv[]) {
             int kt = idx_land_src[lt] / nx_src;
             int jt = kt % ny_src;
             int pt = jt * nx_src + it;
-            if(pt == 3560){
-              printf(" 3560 lt=%d idx_las_src[lt]=%d\n", lt, idx_land_src[lt]);
-            }
-          }
-
+        }
 
         /* soil, vegn */
         get_land_tile_info(fid, SOIL_NAME, VEGN_NAME, nidx_land_src[n], idx_land_src, frac_land_src, nx_src, ny_src,
@@ -1145,11 +1106,7 @@ int main(int argc, char *argv[]) {
 
     coho_idata_src = (int *)malloc(ncoho_idx_tot_src * sizeof(int));
     coho_rdata_src = (double *)malloc(ncoho_idx_tot_src * sizeof(double));
-    coho_idata_dst = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
-    coho_rdata_dst = (double *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(double));
-    coho_idx_dst = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
-    coho_idx_data_pos = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
-    coho_idx_data_face  = (int *)malloc(ncohort * ntile_dst * nxc_dst * sizeof(int));
+
 
     soil_tag_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
     vegn_tag_dst = (int *)malloc(ntile_dst * nxc_dst * sizeof(int));
@@ -1193,7 +1150,6 @@ int main(int argc, char *argv[]) {
 
       double *rdata_global = NULL;
       int *idata_global = NULL;
-      int *coho_idata_global = NULL;
 
       size_t start[4], nread[4], nwrite[4];
       char land_cold[512], file_dst[512], file_cold[512];
@@ -1454,7 +1410,6 @@ int main(int argc, char *argv[]) {
 
             n = face_map_soil[i];
             if (n < 0) {
-              printf("soil_count_cold=%d, face_map_soil=%d, pe=%d, i=%d\n", soil_count_cold[i], n, mpp_pe(), i);
               mpp_error("remap_land: soil_count_cold >0 but face_map_soil<0");
             }
             idx = idx_map_soil[i];
@@ -1526,27 +1481,33 @@ int main(int argc, char *argv[]) {
       for (i = 0; i < ntile_dst * nxc_dst; i++){
         idx_dst[i] = MPP_FILL_INT;
       }
+
+      int idx_dst_size_est = 0;
       for (n = 0; n < ntile_dst; n++) {
         for (i = 0; i < nxc_dst; i++) {
           if (land_idx_map[ntile_dst * i + n] > -1) {
             idx_dst[ntile_dst * i + n] = n * nx_dst * ny_dst + i + isc_dst;
+            idx_dst_size_est++;
           }
         }
       }
 
 
       if (filetype == VEGNTYPE) {
-        printf("Before compute cohort index1\n");
-        
-        ncoho_idx_dst = compute_dst_coho_idx
-          (nxc_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src, nface_dst,
-           face_dst, idx_map_soil, idx_map_soil_sf, face_map_soil, 
-           land_idx_map, idx_soil_src_otn, land_count_dst,  soil_count_cold, ncoho_idx_src, coho_idx_src,
-           coho_idx_dst, coho_idx_data_pos, coho_idx_data_face);
-        ncoho_idx_dst_global = ncoho_idx_dst;
-        printf("After compute cohort index. pos=%d\n", pos);
-      }
 
+        //Initial dst coho size GUESS = k * cohort dim size * dst tile index size; with k < 1
+        int init_size_guess = 0.2 *  ncohort * idx_dst_size_est;
+        ncoho_idx_dst = compute_dst_coho_idx(nxc_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src, nface_dst,
+                                             face_dst, idx_map_soil, idx_map_soil_sf, face_map_soil, land_idx_map,
+                                             idx_soil_src_otn, land_count_dst, soil_count_cold, ncoho_idx_src,
+                                             coho_idx_src, &coho_idx_dst, &coho_idx_data_pos, &coho_idx_data_face, init_size_guess);
+        ncoho_idx_dst_global = ncoho_idx_dst;  // Technically - there is no global (multi-core)
+
+        // For minimum memory model, we initialize these to be of size "ncoho_idx_dst_global"
+        // instead of the much larger  ncohort * ntile_dst * nxc_dst
+        coho_idata_dst = (int *)malloc(ncoho_idx_dst * sizeof(int));
+        coho_rdata_dst = (double *)malloc(ncoho_idx_dst * sizeof(double));
+      }
 
       /* define the metadata for dst_restart_file */
       {
@@ -1675,7 +1636,6 @@ int main(int argc, char *argv[]) {
 
       rdata_global = (double *)malloc(nidx_dst_global * sizeof(double));
       idata_global = (int *)malloc(nidx_dst_global * sizeof(int));
-      coho_idata_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
 
       /* loop through each time level */
       for (t = 0; t < ntime; t++) {
@@ -1746,13 +1706,8 @@ int main(int argc, char *argv[]) {
                               use_all_tile);
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
           } else if (!strcmp(varname, COHORT_INDEX_NAME)) {
-            printf("Before compressing cohort index\n");
-            // compress_int_data(ncohort * ntile_dst, nxc_dst, ncoho_idx_dst, ncoho_idx_dst_global, land_count_dst,
-            //coho_idx_dst,  coho_idata_global, use_all_tile);
-            printf("Before saving cohort index\n");
+            //Note cohort_index is "pre-compressed
             mpp_put_var_value(fid_dst, vid_dst, coho_idx_dst);
-            // mpp_put_var_value(fid_dst, vid_dst, coho_idata_global);
-            printf("After saving cohort index\n");
           } else if (!strcmp(varname, FRAC_NAME)) {
             compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, land_frac_dst,
                                  rdata_global, use_all_tile);
@@ -1823,8 +1778,6 @@ int main(int argc, char *argv[]) {
                 start[ndim_src[l] - 1] = 0;
                 nread[ndim_src[l] - 1] = nidx_src[m];
                 vid_src = mpp_get_varid(fid_src[m], varname);
-                // printf("*RL C VBB varname=%s vid%d vartype=%d k=%d nz_src[l]=%d start=%lu, nread=%lu has_taxis=%d\n",
-                //      varname, vid_src, var_type[l], k, nz_src[l], start[0], nread[ndim_src[l] - 1], has_taxis[l]);
                 if (var_type[l] == MPP_INT) {
                   mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
                 } else if (var_type[l] == MPP_DOUBLE) {
@@ -1919,11 +1872,11 @@ int main(int argc, char *argv[]) {
 
             //Init the entire dst array
             if (var_type[l] == MPP_INT) {
-              for (int k = 0; k < ncohort * ntile_dst * nxc_dst ; k++) {
+              for (int k = 0; k < ncoho_idx_dst ; k++) {
                 coho_idata_dst[k] = MPP_FILL_INT;
               }
             }else{
-              for (int k = 0; k < ncohort * ntile_dst * nxc_dst  ; k++) {
+              for (int k = 0; k < ncoho_idx_dst  ; k++) {
                 coho_rdata_dst[k] = MPP_FILL_DOUBLE;
               }
             }
@@ -1941,7 +1894,7 @@ int main(int argc, char *argv[]) {
                   }
                }else{
                   coho_rdata_dst[k] = coho_rdata_src[ipf_src];
-                  if(coho_idata_dst[k] == MPP_FILL_DOUBLE){
+                  if(coho_rdata_dst[k] == MPP_FILL_DOUBLE){
                     mpp_error("remap_land : error copying MPP_FILL_DOUBLE data");
                   }
                 }
@@ -1949,7 +1902,7 @@ int main(int argc, char *argv[]) {
 
             //Write the data
             if (var_type[l] == MPP_INT) {
-              //TODO: verifiy its "compressed"
+              //Note: already "compressed"
               mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_idata_dst);
             }else{
               mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_rdata_dst);
@@ -2229,7 +2182,7 @@ int main(int argc, char *argv[]) {
       free(frac_cold);
       free(rdata_global);
       free(idata_global);
-      free(coho_idata_global);
+
 
       if (mpp_pe() == mpp_root_pe()) printf("NOTE from remap_land: %s is created\n", file_dst);
       if (print_memory) {
@@ -2393,7 +2346,7 @@ void get_land_tile_info(int fid, const char *name1, const char *name2, int nidx,
       if(idx_otn){
         idx_otn[ ntile * p + count[p] ] =  it;
       }
-        
+
       pos++;
       count[p]++;
     }//if not MPP_FILL_INT
@@ -2407,15 +2360,17 @@ void get_land_tile_info(int fid, const char *name1, const char *name2, int nidx,
 /********************************************************************
  void full_search_nearest
  search the nearest point from the first of source grid to the last.
-MZ: For each destination grid point, find the nearest non-masked point of the
+
+For each destination grid point, find the nearest non-masked point of the
 source grid , on any face of the source grid. The resultant idx_map[] and
 face_map[] have the space index and the face index of the nearest.
+Note the computational complexity is O(npts_dst * npts_src * nface_src).
 ********************************************************************/
 void full_search_nearest(int nface_src, int npts_src, const double *lon_src, const double *lat_src, const int *mask_src,
                          int npts_dst, const double *lon_dst, const double *lat_dst, const int *mask_dst, int *idx_map,
                          int *face_map) {
   int i_dst, i_src, l, face_cur;
-  int m, ind_cur; //pos
+  int m, ind_cur;
   double d_cur, d;
   double p1[2], p2[2];
 
@@ -2426,7 +2381,6 @@ void full_search_nearest(int nface_src, int npts_src, const double *lon_src, con
       continue;
     }
     d_cur = -1;
-    //pos = 0;
     p1[0] = lon_dst[i_dst];
     p1[1] = lat_dst[i_dst];
 
@@ -2539,8 +2493,9 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
   /*-------------------------------------------------------------------------
     void compress_int_data ()
     get global compressed data
-  //MZ copy into data_global[] all values in data[] that are not MPP_FILL_
-  //TODO: Note initialization of data_local and data_global varies from version of double data.
+
+      Copy into data_global[] all values in data[] that are not MPP_FILL_
+    Notes: Initialization of data_local and data_global varies from version of double data.
    ------------------------------------------------------------------------*/
   void compress_int_data(int ntile, int npts, int nidx, int nidx_global, const int *land_count, const int *data,
                          int *data_global, int all_tile) {
@@ -2573,6 +2528,7 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
     if (nidx > 0) free(data_local);
   }
 
+
   int binary_search_(int k, int v[], int l, int r) {
     if (r >= l) {
       int midp = l + (r - l) / 2;
@@ -2595,41 +2551,6 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
     *yp = temp;
 }
 
-int partition(int v[], int low, int high){
-  int pivot = v[high];
-  int i = (low - 1);
-  for (int j = low; j <= high - 1; j++) {
-    if (v[j] <= pivot) {
-      i++;
-      swap_vals(&(v[i]), &(v[j]));
-    }
-  }
-  swap_vals(&(v[i + 1]), &(v[high]));
-  return (i + 1);
-}
-
-//random pivot partition
-int partition_rp(int v[], int low, int high)
-{
-  srand(time(NULL));
-  int random = low + rand() % (high - low);
-  swap_vals(&(v[random]), &(v[high]));
-  return partition(v, low, high);
-}
-
-
-//quick_sort with random pivots
-void quick_sort_(int v[], int low, int high) {
-  if (low < high)  {
-    int pivot = partition_rp(v, low, high);
-    quick_sort_(v, low, pivot - 1);
-    quick_sort_(v, pivot + 1, high);
-  }
-}
-
-void quick_sort(int v[], int n) {
-  quick_sort_(v, 0, n-1);
-}
 
 bool is_sorted(int* v, int n){
   bool result = true;
@@ -2658,37 +2579,6 @@ bool has_dupes_sorted(int* v, int n){
 }
 
 
-
-int make_sorted_set(int *v, int n) {
-  printf("Etering make_sorted_set\n");
-  quick_sort(v , n);
-  int* cp = (int *)malloc(n * sizeof(int));
-  int ndupes = 0;
-  int j = 0;
-  int i = 1;
-  cp[0] = v[0];
-  while (i < n) {
-    //If the next in V[] is not equal to the last one copied, do copy it:
-    if (cp[j] != v[i]) {
-      j++;
-      cp[j] = v[i];
-      i++;
-    } else {
-      ndupes++;
-      i++;
-    }
-  }
-
-  // copy back into v the resorted data, and without duplicates into original vec.
-  for (i = 0; i < (n - ndupes); i++) {
-    v[i] = cp[i];
-  }
-  for (i = n - ndupes; i < n; i++) {
-    v[i] = MPP_FILL_INT;
-  }
-  return (n - ndupes);
-}
-
 /***
  * Compute the destination cohort index (coho_idx_dst) by looping through all possible (candidate) values and only
  * storing/saving the valid ones. The candidaye indices are created in the order that they would appear in the
@@ -2716,9 +2606,9 @@ int make_sorted_set(int *v, int n) {
  *
     Note: that array coho_idx_src has the indices for all the src faces; while coho_idx_dst
     is only made for the current face being processed.
-    Assumption: Remmaped tile numbers (as per the values of full tile-spsce index in idx_soil_src, are in 
+    Assumption: Remmaped tile numbers (as per the values of full tile-spsce index in idx_soil_src, are in
        increasing order as the index is increasing (first tile fiest, next tile 2nd, etc)
- *  TODO: The acuall number of cohort indecies is determined in this subroutine, so in principle,
+ *  TODO: The acutal number of cohort indecies is determined in this subroutine, so in principle,
     for smaller memory use, allocate  *coho_idx_d and the other associated array here (or use the STL
     dynamic vectors).
    ***/
@@ -2727,14 +2617,12 @@ int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const i
                          const int iface_d, const int *idx_map_soil, const int *idx_map_soil_sf, const int *face_map_soil,
                          const int* land_idx_map, int* idx_soil_src_otn, const int* land_count_d, const int* soil_count_cold,
                          const int* ncoho_idx_s,  int *coho_idx_s,
-                         int *coho_idx_d, int * coho_idx_data_pos,  int *coho_idx_data_face) {
+                         int **coho_idx_d_p, int ** coho_idx_data_pos_p,  int **coho_idx_data_face_p, int init_size_guess) {
   int ncoho_idx_d = 0;
 
-  for (int i = 0; i < nc_d * nt_d * ns_d; i++) {
-    coho_idx_d[i] = MPP_FILL_INT;
-    coho_idx_data_pos [i] = -1;
-    coho_idx_data_face [i] = -1;
-  }
+  // for (int i = 0; i < nc_d * nt_d * ns_d; i++) {
+  //  coho_idx_d[i] = MPP_FILL_INT; coho_idx_data_pos [i] = -1;
+  //coho_idx_data_face [i] = -1;  }
 
   //The starting point of the source coho and soil indecies, for each face
   int** f_idx_soil_src_otn = (int**)malloc(nface_s * sizeof(int*));
@@ -2746,6 +2634,15 @@ int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const i
     f_idx_soil_src_otn[m] = f_idx_soil_src_otn[m - 1] + nt_s * ns_s;
   }
 
+
+  int array_size = init_size_guess;
+  int* coho_idx_d       = (int *)malloc( array_size * sizeof(int));
+  int* coho_idx_data_pos  = (int *)malloc( array_size * sizeof(int));
+  int* coho_idx_data_face = (int *)malloc( array_size * sizeof(int));
+  if( coho_idx_d == NULL || coho_idx_data_pos == NULL ||  coho_idx_data_face == NULL){
+    mpp_error( " remap_land  Error allocating cohort index arrays ");
+   }
+
   //With space index varying fastest - a NetCDF defined 4D index with row_major order  (C-like)
   //Use the loop over three indecies (cohort, tile, space) to generate ALL possible dst cohort indecies.
   //Its best to generate them in the order they might appear in the NetCD file; with space varying first.
@@ -2754,30 +2651,36 @@ int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const i
   for (int ic_d = 0; ic_d < nc_d; ic_d++) {
     for (int it_d = 0; it_d < nt_d; it_d++) {
       for (int is_d = 0; is_d < ns_d; is_d++) {  // loop over spatial index in dst
+        if(count == array_size){
+            //Need more memory
+            array_size  = max(4, (int)(array_size * 1.2));
+            coho_idx_d        = (int *)realloc(coho_idx_d, array_size * sizeof(int));
+            coho_idx_data_pos = (int *)realloc( coho_idx_data_pos, array_size * sizeof(int));
+            coho_idx_data_face = (int *)realloc(coho_idx_data_face, array_size * sizeof(int));
+            if( coho_idx_d == NULL || coho_idx_data_pos == NULL ||  coho_idx_data_face == NULL){
+              mpp_error( "remap_land  Error re-allocating up cohort index array.");
+            }
+        }
         int its_d = nt_d * is_d + it_d;
         if( land_idx_map[ its_d ] > -1 ) { //land_idx_map already filtered by soil_count_cold.
           int ic_s = ic_d;  //The cohort number is same in src as dst.
           // The tile number was "remapped" when calculating the 3D land_idx_map.
           // The 3D tile_index remapping forces the numbers to be contigous(i.e. no gaps)
-          int it_s = it_d; //if without any remapping
-          //int it_s_o = idx_soil_src_otn [its_d]; // the original tile number - for search purposes.
           int it_s_o = f_idx_soil_src_otn[iface_d] [its_d]; // the original tile number - for search purposes.
           if(it_s_o == MPP_FILL_INT){
             continue;
           }
-            
+
           int is_s_g = idx_map_soil[ is_d ];   // index in the src when gathering the data for copy
           int if_s_g = face_map_soil[ is_d ];  //index of nearest face in the src.
-            
+
           //For search purposes, the space index in the source should be in the same face.
           int is_s  = idx_map_soil_sf[ is_d ];
 
-          int i_d  = ns_d * nt_d * ic_d + ns_d * it_d + is_d; //Cohort index in dst; tile index is remapped.
-          int i_s  = ns_s * nt_s * ic_s + ns_s * it_s + is_s; //Cohort index in src after any mappings.
-          int i_s_o= ns_s * nt_s * ic_s + ns_s * it_s_o + is_s; //Cohort index in src before any mappings.
+          int i_d   = ns_d * nt_d * ic_d + ns_d * it_d + is_d; //Cohort index in dst; tile index is remapped.
+          int i_s_o = ns_s * nt_s * ic_s + ns_s * it_s_o + is_s; //Cohort index in src before any mappings.
 
           //Save i_d as the next dst cohort index iff the src cohort_index value that corresponds to i_d exists.
-          // 
           int key_loc = binary_search(i_s_o, f_coho_idx_s[if_s_g], ncoho_idx_s[if_s_g]);
           if (key_loc >= 0) {
             coho_idx_d[count] = i_d; // the index value in dst
@@ -2796,20 +2699,25 @@ int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const i
       } //for (is_d == 0
     }// for(it_d = 0
   }// for(int ic_d
-  // Verify: If its possible to have duplicates,  then
-  // coho_idx_dst needs to be made a sorted set (sorted + no duplicates)
   if(is_sorted(coho_idx_d, count) && !has_dupes_sorted(coho_idx_d, count)){
     ncoho_idx_d = count;
   } else{
-    // Note 1: It should not be possible to reach this part of the code
-    // is the indecies were generated in order.
-    //Note 2: In any case, if one array gets sorted, so must the other accompanying array.
-    printf("*** coho_idx_d not sorted yet **** \n");
-    //mpp_error("remap_land : coho_idx_d not sorted");
-    ncoho_idx_d = make_sorted_set(coho_idx_d, count);
-    if (ncoho_idx_d != count) {
-      printf("Indecies dropped? ncoho_idx_dst=%d count=%d\n", ncoho_idx_d, count);
+    // This block should not be reachable if the indecies were generated in order.
+    mpp_error("remap_land : coho_idx_d not sorted or is not a set");
+  }
+  //Realocate memory size down if really needed.
+  int allowed_wasted_space = 10000; //heuristic
+  if(count + allowed_wasted_space < array_size){
+    printf("remap_land calling realloc -  down by %d", array_size - count);
+    coho_idx_d = (int *)realloc(coho_idx_d, count * sizeof(int));
+    coho_idx_data_pos = (int *)realloc( coho_idx_data_pos, count * sizeof(int));
+    coho_idx_data_face= (int *)realloc(coho_idx_data_face, count * sizeof(int));
+    if( coho_idx_d == NULL || coho_idx_data_pos == NULL ||  coho_idx_data_face == NULL){
+      mpp_error( " remap_land  Error re-allocating down a cohort index array.");
     }
   }
+  *coho_idx_d_p = coho_idx_d;
+  *coho_idx_data_pos_p = coho_idx_data_pos;
+  *coho_idx_data_face_p = coho_idx_data_face;
   return ncoho_idx_d;
 }
