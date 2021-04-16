@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #ifndef CREATE_XGRID_H_
 #define CREATE_XGRID_H_
 #ifndef MAXXGRID
@@ -18,6 +37,7 @@ void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double 
 void get_grid_area_no_adjust(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
 	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
+void pimod(double x[],int nn);
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in, 
 	       const double lon2_in[], const double lat2_in[], int n2_in, 
 	       double lon_out[], double lat_out[]);
