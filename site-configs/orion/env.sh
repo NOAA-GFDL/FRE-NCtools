@@ -36,3 +36,5 @@ module load netcdf
 module load hdf5
 module load nccmp
 
+# Set CONFIG_SITE to the correct config.site file for the system
+setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
