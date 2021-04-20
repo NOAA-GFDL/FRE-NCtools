@@ -53,6 +53,8 @@
 #define  NMN_ACM_NAME "nmn_acm"
 #define  D2R (M_PI/180.)
 #define  R2D (180./M_PI)
+#define  FNAME_MAXSIZE 512
+#define  VNAME_MAXSIZE 64
 
 char *usage[] = {
   "",
@@ -427,7 +429,7 @@ int main(int argc, char *argv[]) {
     nidx_tot_src = 0;
     for (int n = 0; n < nface_src; n++) {
       int nlon, nlat;
-      char file[512];
+      char file[FNAME_MAXSIZE];
 
       get_actual_file_name(nface_src, n, src_restart_file, file);
       fid_src[n] = mpp_open(file, MPP_READ);
@@ -475,7 +477,6 @@ int main(int argc, char *argv[]) {
   ntime = 1;
   if (time_exist) {
     int vid;
-
     ntime = mpp_get_dimlen(fid_src[0], timename);
     time_data = (double *)malloc(ntime * sizeof(double));
     vid = mpp_get_varid(fid_src[0], timename);
@@ -490,7 +491,6 @@ int main(int argc, char *argv[]) {
   nz = 1;
   if (zaxis_exist) {
     int vid;
-
     nz = mpp_get_dimlen(fid_src[0], LEVEL_NAME);
     z_axis_data = (double *)malloc(nz * sizeof(double));
     vid = mpp_get_varid(fid_src[0], LEVEL_NAME);
@@ -505,14 +505,14 @@ int main(int argc, char *argv[]) {
   has_taxis = (int *)malloc(nvar_src * sizeof(int));
   ndim_src = (int *)malloc(nvar_src * sizeof(int));
   nz_src = (int *)malloc(nvar_src * sizeof(int));
-  zld_pos_src = (int *)malloc(nvar_src * sizeof(int));  //zlevel dimension position (-1 if none) //ML
+  zld_pos_src = (int *)malloc(nvar_src * sizeof(int));  //zlevel dimension position (-1 if none)
   var_type = (int *)malloc(nvar_src * sizeof(int));
   has_coho_idx = (int *)malloc(nvar_src * sizeof(int));
 
 
   for (int l = 0; l < nvar_src; l++) {
-    char varname[64];
-    char vdname[64];  // var dimname
+    char varname[VNAME_MAXSIZE];
+    char vdname[VNAME_MAXSIZE];  // var dimname
     int vid;
 
     mpp_get_varname(fid_src[0], l, varname);
@@ -531,7 +531,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (var_type[l] == MPP_INT || var_type[l] == MPP_DOUBLE) {
-
       for (int m = 0; m < ndim_src[l]; m++) {
         mpp_get_var_dimname(fid_src[0], vid, m, vdname);
         if (!strcmp(vdname, timename)) {
@@ -544,8 +543,6 @@ int main(int argc, char *argv[]) {
         }
         printf("vname=%s  dname=%s vtype=%d ndim=%d\n", varname, vdname, var_type[l], ndim_src[l]);
       }
-
-      // TODO: What is the consequence of not having a time dimension.
     } else if (var_type[l] == MPP_CHAR) {
       for (int m = 0; m < ndim_src[l]; m++) {
         mpp_get_var_dimname(fid_src[0], vid, m, vdname);
@@ -565,7 +562,7 @@ int main(int argc, char *argv[]) {
   }
 
   /*------------------------------------------------------------------------------
-    get the cohort data, currently it only contains in vegn data
+    get the cohort data, currently its only  vegn files
     -----------------------------------------------------------------------------*/
   {
     ncohort = 0;
@@ -584,7 +581,9 @@ int main(int argc, char *argv[]) {
         mpp_get_var_value(fid_src[0], vid, cohort_data);
         for (int m = 1; m < nface_src; m++) {
           int dimsize = mpp_get_dimlen(fid_src[m], COHORT_NAME);
-          if (dimsize != ncohort) mpp_error("remap_land: the dimension size of cohort is different between faces");
+          if (dimsize != ncohort){
+            mpp_error("remap_land: the dimension size of cohort is different between faces");
+          }
           int * tmp = (int *)malloc(ncohort * sizeof(int));
           vid = mpp_get_varid(fid_src[m], COHORT_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
@@ -600,7 +599,7 @@ int main(int argc, char *argv[]) {
   }
 
   /*------------------------------------------------------------------------------
-    get the sc_cohort data, currently it only contains in vegn data
+    get the sc_cohort data, currently its only in vegn files
     -----------------------------------------------------------------------------*/
   {
     n_sc_cohort = 0;
@@ -612,8 +611,9 @@ int main(int argc, char *argv[]) {
         mpp_get_var_value(fid_src[0], vid, sc_cohort_data);
         for (int m = 1; m < nface_src; m++) {
           int dimsize = mpp_get_dimlen(fid_src[m], SC_COHORT_NAME);
-          if (dimsize != n_sc_cohort)
+          if (dimsize != n_sc_cohort){
             mpp_error("remap_land: the dimension size of sc_cohort is different between faces");
+          }
           double *tmp = (double *)malloc(n_sc_cohort * sizeof(double));
           vid = mpp_get_varid(fid_src[m], SC_COHORT_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
@@ -629,7 +629,7 @@ int main(int argc, char *argv[]) {
   }
 
   /*------------------------------------------------------------------------------
-    get the lc_cohort data, currently it only contains in vegn data
+    get the lc_cohort data, currently its only in vegn files
     -----------------------------------------------------------------------------*/
 
   {
@@ -642,8 +642,9 @@ int main(int argc, char *argv[]) {
         mpp_get_var_value(fid_src[0], vid, lc_cohort_data);
         for (int m = 1; m < nface_src; m++) {
           int dimsize = mpp_get_dimlen(fid_src[m], LC_COHORT_NAME);
-          if (dimsize != n_lc_cohort)
+          if (dimsize != n_lc_cohort){
             mpp_error("remap_land: the dimension size of lc_cohort is different between faces");
+          }
           double *tmp = (double *)malloc(n_lc_cohort * sizeof(double));
           vid = mpp_get_varid(fid_src[m], LC_COHORT_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
@@ -737,8 +738,9 @@ int main(int argc, char *argv[]) {
         mpp_get_var_value(fid_src[0], vid, mdf_day_data);
         for (int m = 1; m < nface_src; m++) {
           int dimsize = mpp_get_dimlen(fid_src[m], MDF_DAY_NAME);
-          if (dimsize != n_mdf_day)
+          if (dimsize != n_mdf_day){
             mpp_error("remap_land: the dimension size of mdf_day is different between faces");
+          }
           double *tmp = (double *)malloc(n_mdf_day * sizeof(double));
           vid = mpp_get_varid(fid_src[m], MDF_DAY_NAME);
           mpp_get_var_value(fid_src[m], vid, tmp);
@@ -770,7 +772,9 @@ int main(int argc, char *argv[]) {
       ncoho_idx_tot_src += ncoho_idx_src[n];
     }
 
-    //Get the values of all the src cohort indices in all (usually six) faces:
+    //Get the values of all the src cohort indices in all (usually six) faces.
+    //Note that the SRC cohort index size is the compressed size, and for future
+    //use it needs to be kept in memory till the end of the run.
     coho_idx_src = (int *)malloc(ncoho_idx_tot_src * sizeof(int));
     int pos_coho = 0;
     for (int n = 0; n < nface_src; n++) {
@@ -787,7 +791,7 @@ int main(int argc, char *argv[]) {
   {
     int max_nidx, vid;
     int *fid = NULL;
-    char file[512];
+    char file[FNAME_MAXSIZE];
     int *nidx = NULL;
     int *tmp = NULL;
 
@@ -933,7 +937,7 @@ int main(int argc, char *argv[]) {
       double *frac_land_src = NULL;
       int *idx_src = NULL;
       int *idx_land_src = NULL;
-      char file[512];
+      char file[FNAME_MAXSIZE];
 
       int max_nidx, pos1, pos2;
       max_nidx = 0;
@@ -1026,10 +1030,13 @@ int main(int argc, char *argv[]) {
                 k = k / ny_src;
                 p2 = n * nx_src * ny_src + j * nx_src + i;
                 if (p != p2) mpp_error("remap_land: mismatch of tile_index for src soil check");
-                if (soil_tag_src[ntile_src * p + k] == MPP_FILL_INT) {
-                  // TODO: Investigate
-                  // mpp_error("remap_land: soil_tag_src is not defined for src soil check");
-                }
+                /****
+                     Note: soil_tag_src does not seem to be in any lm4p dataset. Comunity
+                     is not aware of it. M Zuniga
+                 if (soil_tag_src[ntile_src * p + k] == MPP_FILL_INT) {
+                   mpp_error("remap_land: soil_tag_src is not defined for src soil check");
+                 }
+                ****/
               }
             }
           }
@@ -1170,8 +1177,10 @@ int main(int argc, char *argv[]) {
       double *rdata_global = NULL;
       int *idata_global = NULL;
 
+      // start[], nread[], and nwrite[] are two 4D rectangles that are used to specify the
+      //  first index val and the number of data read/written by certain funcions.
       size_t start[4], nread[4], nwrite[4];
-      char land_cold[512], file_dst[512], file_cold[512];
+      char land_cold[FNAME_MAXSIZE], file_dst[FNAME_MAXSIZE], file_cold[FNAME_MAXSIZE];
 
       int ncoho_idx_dst = 0;
       int ncoho_idx_dst_global = 0;
@@ -1284,7 +1293,7 @@ int main(int argc, char *argv[]) {
       {
         int remap_file_exist;
         int write_remap_file;
-        char file[512];
+        char file[FNAME_MAXSIZE];
         remap_file_exist = 0;
         write_remap_file = 0;
         if (remap_file) {
@@ -1581,7 +1590,7 @@ int main(int argc, char *argv[]) {
         }
 
         for (l = 0; l < nvar_src; l++) {
-          char varname[64], dimname[64];
+          char varname[VNAME_MAXSIZE], dimname[VNAME_MAXSIZE];
           int vid1, vid2, ndim, m, dims[4];
 
           mpp_get_varname(fid_src[0], l, varname);
@@ -1659,7 +1668,7 @@ int main(int argc, char *argv[]) {
       /* loop through each time level */
       for (t = 0; t < ntime; t++) {
         for (l = 0; l < nvar_src; l++) {
-          char varname[64], dimname[64];
+          char varname[VNAME_MAXSIZE], dimname[VNAME_MAXSIZE];
           int m;
 
           if (!has_taxis[l] && t > 0) continue;
@@ -1772,8 +1781,8 @@ int main(int argc, char *argv[]) {
           } else if (nz_src[l] >= 0 && ((ndim_src[l] == 2) || ((ndim_src[l] == 3) && has_taxis[l]))) {
             /**
              * Read source data and do remapping for other fiels of original lm4.0 type.
-             * This is the original lm4.0 code. The dimensions of the fields are either
-             * [zfull, tile_index] of [time,zfull,tile_index]
+             * This is the original lm4.0 code. The dimensions of the fields are
+             * [<time>,zfull,tile_index] where time is optional(<>).
              **/
             printf("\n*RL Other field lm4.0 varnameO=%s nface_src=%d nz_src[l]=%d\n", varname, nface_src, nz_src[l]);
 
@@ -1804,9 +1813,9 @@ int main(int argc, char *argv[]) {
                 } else {
                   mpp_error("remap_land : reading block for vartype other than INT or DOUBLE");
                 }
-
                 pos += nidx_src[m];
               }  // m loop
+
               for (m = 0; m < 4; m++) {
                 start[m] = 0;
                 nwrite[m] = 1;
@@ -1820,7 +1829,6 @@ int main(int argc, char *argv[]) {
               start[kid] = k;
               start[ndim_src[l] - 1] = 0;
               nwrite[ndim_src[l] - 1] = nidx_dst_global;
-
               if (var_type[l] == MPP_INT) {
                 for (m = 0; m < ntile_dst * nxc_dst; m++) {
                   int face, lll;
@@ -1854,13 +1862,15 @@ int main(int argc, char *argv[]) {
               }
             }  // k < nz_src[l]
           }    // end else other lm4.0 fields
-          else if (ndim_src[l] == 1 && has_coho_idx[l] == 1) {  //COHO_IDX
+          else if (has_coho_idx[l] && ((ndim_src[l] - has_taxis[l]) == 1)){
+            //For field dimensions  [<time>, coho_idx], with time optional.
             vid_src = mpp_get_varid(fid_src[0], varname);
-            mpp_get_var_dimname(fid_src[0], vid_src, 0, dimname);
+            mpp_get_var_dimname(fid_src[0], vid_src, has_taxis[l], dimname);
             if( strcmp(dimname, COHORT_INDEX_NAME)) {
-              mpp_error("remap_land : 1D field but bot expected cohort_index :");
+              mpp_error("remap_land : 1D field but expecteg cohort_index :");
             }
 
+            // Read all the data on all faces of current field.
             start_pos[0] = 0;
             for (m = 1; m < nface_src; m++) {
               start_pos[m] = start_pos[m - 1] + ncoho_idx_src[m - 1];
@@ -1869,12 +1879,11 @@ int main(int argc, char *argv[]) {
             for (m = 0; m < 4; m++) {
               start[m] = 0; nread[m] = 1;  nwrite[m] = 1;
             }
+            start[0] = has_taxis[l] * t;
 
-            // Read all the data on all faces of current field.
             pos = 0;
             for (m = 0; m < nface_src; m++) {//for each face ?
-              nread[0] = ncoho_idx_src[m]; //size of coho_index dim
-
+              nread[0 + has_taxis[l]] = ncoho_idx_src[m]; //size of coho_index dim
               vid_src = mpp_get_varid(fid_src[m], varname);
               if (var_type[l] == MPP_INT) {
                 mpp_get_var_value_block(fid_src[m], vid_src, start, nread, coho_idata_src + pos);
@@ -1887,7 +1896,11 @@ int main(int argc, char *argv[]) {
             }  // m loop
 
             // Prepare for writing collected data
-            nwrite[0] = ncoho_idx_dst_global;
+            for(m=0; m<4; m++) {
+              start[m]=0; nwrite[m] = 1;
+            }
+            start[0] = has_taxis[l] * t;
+            nwrite[ 0 + has_taxis[l] ] = ncoho_idx_dst_global;
 
             //Init the entire dst array
             if (var_type[l] == MPP_INT) {
@@ -1902,7 +1915,6 @@ int main(int argc, char *argv[]) {
 
             //Copy-map the data for the destination face
             for (int k = 0; k < ncoho_idx_dst_global ; k++) {
-              //int i_dst = coho_idx_dst[k]; // the value of kth valid coho index
                 int i_src = coho_idx_data_pos [k]; // the corresponding source index
                 int face = coho_idx_data_face [k]; // corresponding face in  src;
                 int ipf_src = start_pos[face] + i_src;
@@ -1927,9 +1939,10 @@ int main(int argc, char *argv[]) {
               mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_rdata_dst);
             }
           }
-          else if (ndim_src[l] == 1) {
+          else if ((ndim_src[l] - has_taxis[l]) == 1){
+            //For field dimensions [<time>, tile_idx], with time optional.
             vid_src = mpp_get_varid(fid_src[0], varname);
-            mpp_get_var_dimname(fid_src[0], vid_src, 0, dimname);
+            mpp_get_var_dimname(fid_src[0], vid_src, 0 + has_taxis[l] , dimname);
             if (strcmp(dimname, TILE_INDEX_NAME)) {
               mpp_error("remap_land : 1D field but not tile_index");
             }
@@ -1944,11 +1957,12 @@ int main(int argc, char *argv[]) {
               nread[m] = 1;
               nwrite[m] = 1;
             }
+            start[0] = has_taxis[l] * t;
 
             // Collect all the data
             pos = 0;
             for (m = 0; m < nface_src; m++) {
-              nread[0] = nidx_src[m];
+              nread[0 + has_taxis[l]] = nidx_src[m];
 
               vid_src = mpp_get_varid(fid_src[m], varname);
               if (var_type[l] == MPP_INT) {
@@ -1962,7 +1976,10 @@ int main(int argc, char *argv[]) {
             }  // m loop
 
             // Prepare for writing collected data
-            nwrite[0] = nidx_dst_global;
+            start[0] = has_taxis[l] * t;
+            nwrite[0 + has_taxis[l] ] = ncoho_idx_dst_global;
+
+            nwrite[0 + has_taxis[l]] = nidx_dst_global;
 
             if (var_type[l] == MPP_INT) {
               for (m = 0; m < ntile_dst * nxc_dst; m++) {
@@ -1993,17 +2010,15 @@ int main(int argc, char *argv[]) {
                                    rdata_global, use_all_tile);
               mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
             }
-          }else if (ndim_src[l] == 2) {
-            /**
-             * The fields dimension should be [lc_cohort, tile_index] or [mdf_day,tile_inde]
-             */
-            char dimnameA[64], dimnameB[64];
+          }else if ((ndim_src[l] - has_taxis[l] ) == 2){ 
+            //For field dimensions [<time>,lc_cohort, tile_index] or [<time>, mdf_day,tile_inde]
+            char dimnameA[VNAME_MAXSIZE], dimnameB[VNAME_MAXSIZE];
             int lvid = mpp_get_varid(fid_src[0], varname);
-            mpp_get_var_dimname(fid_src[0], lvid, 0, dimnameA);
-            mpp_get_var_dimname(fid_src[0], lvid, 1, dimnameB);
+            mpp_get_var_dimname(fid_src[0], lvid, 0 + has_taxis[l], dimnameA);
+            mpp_get_var_dimname(fid_src[0], lvid, 1 + has_taxis[l], dimnameB);
 
             if (strcmp(dimnameB, TILE_INDEX_NAME) || (strcmp(dimnameA, LC_COHORT_NAME) && strcmp(dimnameA, MDF_DAY_NAME)) ) {
-              mpp_error("remap_land : Expected 2D field with dims [lc_cohort,tile_index] or [mdf_name,tile_index] :");
+              mpp_error("remap_land : Expected 2D field with dims [<time>,lc_cohort,tile_index] or [<time>,mdf_name,tile_index] :");
             }
 
             start_pos[0] = 0;
@@ -2020,14 +2035,13 @@ int main(int argc, char *argv[]) {
 
             for (k = 0; k < ldimlen; k++) {
               pos = 0;
-              // int kid;
               /* read the source data */
               for (m = 0; m < nface_src; m++) {
-                // kid = 0;
-                start[0] = k;
-                nread[0] = 1;
-                start[1] = 0;
-                nread[1] = nidx_src[m];
+                start[0] = has_taxis[l] * t;
+                start[0 + has_taxis[l] ] = k;
+                nread[0 + has_taxis[l] ] = 1;
+                start[1 + has_taxis[l] ] = 0;
+                nread[1 + has_taxis[l] ] = nidx_src[m];
                 vid_src = mpp_get_varid(fid_src[m], varname);
                 if (var_type[l] == MPP_INT) {
                   mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
@@ -2041,14 +2055,14 @@ int main(int argc, char *argv[]) {
 
               // And write the data
               for (m = 0; m < 4; m++) {
-                start[m] = 0;
-                nwrite[m] = 1;
+                start[m] = 0;    nwrite[m] = 1;
               }
 
-              start[0] = k;
-              nwrite[0] = 1;
-              start[1] = 0;
-              nwrite[1] = nidx_dst_global;
+              start[0] = has_taxis[l] * t;
+              start[0 + has_taxis[l]] = k;
+              nwrite[0 + has_taxis[l]] = 1;
+              start[1 + has_taxis[l]] = 0;
+              nwrite[1 + has_taxis[l]] = nidx_dst_global;
 
               if (var_type[l] == MPP_INT) {
                 for (m = 0; m < ntile_dst * nxc_dst; m++) {
@@ -2083,20 +2097,18 @@ int main(int argc, char *argv[]) {
               }
             }  // k < nz_src[l]
 
-          } else if (ndim_src[l] == 3) {
-            /**
-             *  The fileds dimensions should be [soilCCohort,zfull,tile_index]
-             **/
+          } else if ((ndim_src[l] - has_taxis[l]) == 3){
+            //For field dimensions [<time>,soilCCohort,zfull,tile_index]
             // TODO:Simplify Combine sections that use tile_index as special cases of 3D ?
-            char dimnameA[64], dimnameB[64], dimnameC[64];
+            char dimnameA[VNAME_MAXSIZE], dimnameB[VNAME_MAXSIZE], dimnameC[VNAME_MAXSIZE];
             int lvid = mpp_get_varid(fid_src[0], varname);
-            mpp_get_var_dimname(fid_src[0], lvid, 0, dimnameA);
-            mpp_get_var_dimname(fid_src[0], lvid, 1, dimnameB);
-            mpp_get_var_dimname(fid_src[0], lvid, 2, dimnameC);
+            mpp_get_var_dimname(fid_src[0], lvid, 0 + has_taxis[l], dimnameA);
+            mpp_get_var_dimname(fid_src[0], lvid, 1 + has_taxis[l], dimnameB);
+            mpp_get_var_dimname(fid_src[0], lvid, 2 + has_taxis[l], dimnameC);
             printf("LR 3D varname dimA dimB dimC %s %s %s %s\n", varname, dimnameA, dimnameB, dimnameC);
 
             if (strcmp(dimnameA, SC_COHORT_NAME) || strcmp(dimnameB, LEVEL_NAME) || strcmp(dimnameC, TILE_INDEX_NAME)) {
-              mpp_error("remap_land : Expected 3D  field with dims [soilCCohort,zfull,tile_index]");
+              mpp_error("remap_land : Expected 3D  field with dims [<time>,soilCCohort,zfull,tile_index]");
             }
 
             int sc_dimlen = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
@@ -2107,19 +2119,18 @@ int main(int argc, char *argv[]) {
             }
 
             for (m = 0; m < 4; m++) {
-              start[m] = 0;
-              nread[m] = 1;
-              nwrite[m] = 1;
+              start[m] = 0;  nread[m] = 1;  nwrite[m] = 1;
             }
 
             for (int is = 0; is < sc_dimlen; is++) {
               for (k = 0; k < nz_src[l]; k++) {
                 pos = 0;
-                for (m = 0; m < nface_src; m++) {//TODO: check start with 1 or 0 ?
-                  start[0] = is;
-                  start[1] = k;
-                  start[2] = 0;
-                  nread[2] = nidx_src[m];
+                for (m = 0; m < nface_src; m++) {
+                  start[0] = has_taxis[l] * t;
+                  start[0 + has_taxis[l] ] = is;
+                  start[1 + has_taxis[l] ] = k;
+                  start[2 + has_taxis[l] ] = 0;
+                  nread[2 + has_taxis[l] ] = nidx_src[m];
                   vid_src = mpp_get_varid(fid_src[m], varname);
                   if (var_type[l] == MPP_INT) {
                     mpp_get_var_value_block(fid_src[m], vid_src, start, nread, idata_src + pos);
@@ -2132,14 +2143,13 @@ int main(int argc, char *argv[]) {
                 }  // m loop
 
                 for (m = 0; m < 4; m++) {
-                  start[m] = 0;
-                  nwrite[m] = 1;
+                  start[m] = 0;  nwrite[m] = 1;
                 }
-
-                start[0] = is;
-                start[1] = k;
-                start[2] = 0;
-                nwrite[2] = nidx_dst_global;
+                start[0] = has_taxis[l] * t;
+                start[0  + has_taxis[l]] = is;
+                start[1  + has_taxis[l]] = k;
+                start[2  + has_taxis[l]] = 0;
+                nwrite[2 + has_taxis[l]] = nidx_dst_global;
 
                 if (var_type[l] == MPP_INT) {
                   for (m = 0; m < ntile_dst * nxc_dst; m++) {
