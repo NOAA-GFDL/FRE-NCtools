@@ -919,13 +919,13 @@ int main(int argc, char *argv[]) {
     idx_soil_src_otn =  (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
 
     if (has_glac) {
-      glac_count_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));//ML and 4 below
+      glac_count_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));
       glac_frac_src = (double *)malloc(nface_src * nx_src * ny_src * sizeof(double)); /* at most one tile for glac */
       glac_tag_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));        /* at most one tile for glac */
       idx_glac_src = (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
     }
     if (has_lake) {
-      lake_count_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));//ML and 4 below
+      lake_count_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));
       lake_frac_src = (double *)malloc(nface_src * nx_src * ny_src * sizeof(double)); /* at most one tile for glac */
       lake_tag_src = (int *)malloc(nface_src * nx_src * ny_src * sizeof(int));        /* at most one tile for glac */
       idx_lake_src = (int *)malloc(nface_src * nx_src * ny_src * ntile_src * sizeof(int));
@@ -935,7 +935,7 @@ int main(int argc, char *argv[]) {
 
     {
       double *frac_land_src = NULL;
-      int *idx_src = NULL;
+      //int *idx_src = NULL;
       int *idx_land_src = NULL;
       char file[FNAME_MAXSIZE];
 
@@ -967,13 +967,13 @@ int main(int argc, char *argv[]) {
         vid = mpp_get_varid(fid, TILE_INDEX_NAME);
         mpp_get_var_value(fid, vid, idx_land_src);
 
-
+        /**************
         for (int lt = 0; lt < max_nidx; lt++){
-            int it = idx_land_src[lt] % nx_src;
+          int it = idx_land_src[lt] % nx_src; //allocekd in L949
             int kt = idx_land_src[lt] / nx_src;
             int jt = kt % ny_src;
             int pt = jt * nx_src + it;
-        }
+        }***************/
 
         /* soil, vegn */
         get_land_tile_info(fid, SOIL_NAME, VEGN_NAME, nidx_land_src[n], idx_land_src, frac_land_src, nx_src, ny_src,
@@ -1006,7 +1006,7 @@ int main(int argc, char *argv[]) {
               mpp_error("remap_land: size of tile_index mismatch between "
                         "src_restart_file and land_src_restart for 'soil', 'vegn', 'glac' or 'lake'");
           }
-          idx_src = (int *)malloc(max_nidx * sizeof(int));
+          int * idx_src = (int *)malloc(max_nidx * sizeof(int));
           vid = mpp_get_varid(fid_src[n], TILE_INDEX_NAME);
           mpp_get_var_value(fid_src[n], vid, idx_src);
           if (filetype == CANATYPE || filetype == SNOWTYPE) {
@@ -1033,18 +1033,20 @@ int main(int argc, char *argv[]) {
                 /****
                      Note: soil_tag_src does not seem to be in any lm4p dataset. Comunity
                      is not aware of it. M Zuniga
-                 if (soil_tag_src[ntile_src * p + k] == MPP_FILL_INT) {
-                   mpp_error("remap_land: soil_tag_src is not defined for src soil check");
-                 }
+                     if (soil_tag_src[ntile_src * p + k] == MPP_FILL_INT) {
+                     mpp_error("remap_land: soil_tag_src is not defined for src soil check");
+                     }
                 ****/
               }
             }
           }
+          free(idx_src);
+          idx_src = NULL;
         }
       }
       free(frac_land_src);
       free(idx_land_src);
-      if (filetype != LANDTYPE) free(idx_src);
+      //if (filetype != LANDTYPE){ free(idx_src); idx_src = NULL;}
     }
   }
 
@@ -1198,7 +1200,7 @@ int main(int argc, char *argv[]) {
         nidx_cold = mpp_get_dimlen(fid_land_cold, TILE_INDEX_NAME);
       }
 
-      idx_cold = (int *)malloc(nidx_cold * sizeof(int));//ML
+      idx_cold = (int *)malloc(nidx_cold * sizeof(int));
       vid = mpp_get_varid(fid_land_cold, TILE_INDEX_NAME);
       mpp_get_var_value(fid_land_cold, vid, idx_cold);
 
@@ -1977,8 +1979,6 @@ int main(int argc, char *argv[]) {
 
             // Prepare for writing collected data
             start[0] = has_taxis[l] * t;
-            nwrite[0 + has_taxis[l] ] = ncoho_idx_dst_global;
-
             nwrite[0 + has_taxis[l]] = nidx_dst_global;
 
             if (var_type[l] == MPP_INT) {
@@ -2010,7 +2010,7 @@ int main(int argc, char *argv[]) {
                                    rdata_global, use_all_tile);
               mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, rdata_global);
             }
-          }else if ((ndim_src[l] - has_taxis[l] ) == 2){ 
+          }else if ((ndim_src[l] - has_taxis[l] ) == 2){
             //For field dimensions [<time>,lc_cohort, tile_index] or [<time>, mdf_day,tile_inde]
             char dimnameA[VNAME_MAXSIZE], dimnameB[VNAME_MAXSIZE];
             int lvid = mpp_get_varid(fid_src[0], varname);
@@ -2209,9 +2209,31 @@ int main(int argc, char *argv[]) {
       mpp_close(fid_cold);
 
       free(frac_cold);
-      free(rdata_global);
-      free(idata_global);
+      frac_cold = NULL;
 
+      free(idx_cold);
+      idx_cold = NULL;
+
+      free(rdata_global);
+      rdata_global = NULL;
+
+      free(idata_global);
+      idata_global = NULL;
+
+      free(coho_idata_dst);
+      coho_idata_dst = NULL;
+
+      free(coho_rdata_dst);
+      coho_rdata_dst  = NULL;
+
+      free(coho_idx_dst);
+      coho_idx_dst = NULL;
+
+      free(coho_idx_data_pos);
+      coho_idx_data_pos = NULL;
+
+      free(coho_idx_data_face);
+      coho_idx_data_face = NULL;
 
       if (mpp_pe() == mpp_root_pe()) printf("NOTE from remap_land: %s is created\n", file_dst);
       if (print_memory) {
@@ -2254,15 +2276,27 @@ int main(int argc, char *argv[]) {
     free(vegn_tag_src);
     free(idx_soil_src);
 
-    if(src_has_cohort){
-    free(coho_idx_dst);
-    free(coho_idx_data_pos);
-    free(coho_idx_data_face);
-    free(coho_idata_src);
-    free(coho_rdata_src);
-    free(coho_idata_dst);
-    free(coho_rdata_dst);
-    }
+    free(idx_map_soil_sf);
+
+
+    free(nspecies_data);
+    free(textlen_data);
+    free(lc_cohort_data);
+    free(sc_cohort_data);
+    free(cohort_data);
+    free(coho_idx_src);
+    free(ncoho_idx_src);
+
+    free(idx_soil_src_otn);
+    free(has_coho_idx);
+    free(zld_pos_src);
+
+    //reallocs
+
+    //if(src_has_cohort){
+      free(coho_idata_src);
+      free(coho_rdata_src);
+      //}
 
     if (has_glac) {
       free(glac_tag_dst);
@@ -2271,15 +2305,29 @@ int main(int argc, char *argv[]) {
       free(glac_tag_cold);
       free(idx_map_glac);
       free(face_map_glac);
+
+      free(glac_count_src);
+      free(glac_frac_src);
+      free(glac_tag_src);
+      free(idx_glac_src);
     }
-    if (has_lake) {
+
+   if (has_lake) {
       free(lake_tag_dst);
       free(lake_count_cold);
       free(lake_frac_cold);
       free(lake_tag_cold);
       free(idx_map_lake);
       free(face_map_lake);
+
+      free(lake_count_src);
+      free(lake_frac_src);
+      free(lake_tag_src);
+      free(idx_lake_src);
     }
+
+
+
 
     mpp_delete_domain2d(&Dom_dst);
   }  // block of pre-loop though each face
@@ -2748,5 +2796,9 @@ int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const i
   *coho_idx_d_p = coho_idx_d;
   *coho_idx_data_pos_p = coho_idx_data_pos;
   *coho_idx_data_face_p = coho_idx_data_face;
+
+  free(f_idx_soil_src_otn);
+  free(f_coho_idx_s);
+
   return ncoho_idx_d;
 }
