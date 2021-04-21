@@ -10,9 +10,9 @@
 
   cd Test30
   
-  cp $top_srcdir/FRE-NCtools/t/Test30-input/ocean_hgrid.nc . 
-  cp $top_srcdir/FRE-NCtools/t/Test30-input/ocean_mosaic.nc .
-  cp $top_srcdir/FRE-NCtools/t/Test30-input/ocean_topog.nc .
+  cp $top_srcdir/t/Test30-input/ocean_hgrid.nc . 
+  cp $top_srcdir/t/Test30-input/ocean_mosaic.nc .
+  cp $top_srcdir/t/Test30-input/ocean_topog.nc .
 
 #Make no streetched grid 
   run command make_hgrid --grid_type gnomonic_ed \
