@@ -166,12 +166,15 @@ void compress_double_data(int ntile, int npts, int nidx, int nidx_global, const 
                           const double *data, double *data_global, int all_tile );
 int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const int ns_s, const int nt_s, const int nface_s,
                           const int iface_d, const int *idx_map_soil, const int *idx_map_soi_sf, const int *face_map_soil,
-                         const int* land_idx_map, int * idx_soil_src_otn, const int* land_count_d,  const int* soil_count_cold,
-                         const int* ncoho_idx_s, int *coho_idx_s,
+                         const int* land_idx_map, int * idx_soil_src_otn, const int* ncoho_idx_s, int *coho_idx_s,
                           int **coho_idx_d, int ** coho_idx_data_pos,  int **coho_idx_data_face, int init_size_guess) ;
 void search_nearest_sface(const int npts_src, const double *lon_src, const double *lat_src,
                           const int *mask_src, int npts_dst, const double *lon_dst, const double *lat_dst,
                           const int *mask_dst, const int *idx_map, const int *face_map, const int iface_dst, int *idx_map_sf);
+
+void gather_compressed_double_data(int npts, const double *data, double *data_global);
+void gather_compressed_int_data(int npts, const int *data, int *data_global);
+
 
 
 const int LANDTYPE = 1;
@@ -935,7 +938,6 @@ int main(int argc, char *argv[]) {
 
     {
       double *frac_land_src = NULL;
-      //int *idx_src = NULL;
       int *idx_land_src = NULL;
       char file[FNAME_MAXSIZE];
 
@@ -967,14 +969,6 @@ int main(int argc, char *argv[]) {
         vid = mpp_get_varid(fid, TILE_INDEX_NAME);
         mpp_get_var_value(fid, vid, idx_land_src);
 
-        /**************
-        for (int lt = 0; lt < max_nidx; lt++){
-          int it = idx_land_src[lt] % nx_src; //allocekd in L949
-            int kt = idx_land_src[lt] / nx_src;
-            int jt = kt % ny_src;
-            int pt = jt * nx_src + it;
-        }***************/
-
         /* soil, vegn */
         get_land_tile_info(fid, SOIL_NAME, VEGN_NAME, nidx_land_src[n], idx_land_src, frac_land_src, nx_src, ny_src,
                            ntile_src, 0, nx_src * ny_src - 1, soil_count_src + pos1, soil_frac_src + pos2,
@@ -994,8 +988,7 @@ int main(int argc, char *argv[]) {
 
         if (filetype != LANDTYPE) mpp_close(fid);
 
-        /* make sure the tile_index consistency between src_restart_file and
-         * land_src_restart */
+        /* verify tile_index consistency between src_restart_file and land_src_restart */
         if (filetype != LANDTYPE) {
           if (filetype == CANATYPE || filetype == SNOWTYPE) {
             if (nidx_land_src[n] != nidx_src[n])
@@ -1045,8 +1038,9 @@ int main(int argc, char *argv[]) {
         }
       }
       free(frac_land_src);
+      frac_land_src = NULL;
       free(idx_land_src);
-      //if (filetype != LANDTYPE){ free(idx_src); idx_src = NULL;}
+      idx_land_src = NULL;
     }
   }
 
@@ -1095,6 +1089,8 @@ int main(int argc, char *argv[]) {
     double *coho_rdata_src = NULL;
     int *coho_idata_dst = NULL;
     double *coho_rdata_dst = NULL;
+    int *coho_idata_dst_global = NULL;
+    double *coho_rdata_dst_global = NULL;
 
     int isc_dst, iec_dst, jsc_dst, jec_dst, nxc_dst;
     int n, pos;
@@ -1179,8 +1175,8 @@ int main(int argc, char *argv[]) {
       double *rdata_global = NULL;
       int *idata_global = NULL;
 
-      // start[], nread[], and nwrite[] are two 4D rectangles that are used to specify the
-      //  first index val and the number of data read/written by certain funcions.
+      // start[], nread[], and nwrite[] are used to define two 4D rectangles that specify the "volume"
+      // (first index and the number in each dimension) of data read/written by certain funcions.
       size_t start[4], nread[4], nwrite[4];
       char land_cold[FNAME_MAXSIZE], file_dst[FNAME_MAXSIZE], file_cold[FNAME_MAXSIZE];
 
@@ -1528,15 +1524,21 @@ int main(int argc, char *argv[]) {
         //Initial dst coho size GUESS = k * cohort dim size * dst tile index size; with k < 1
         int init_size_guess = 0.2 *  ncohort * idx_dst_size_est;
         ncoho_idx_dst = compute_dst_coho_idx(nxc_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src, nface_dst,
-                                             face_dst, idx_map_soil, idx_map_soil_sf, face_map_soil, land_idx_map,
-                                             idx_soil_src_otn, land_count_dst, soil_count_cold, ncoho_idx_src,
-                                             coho_idx_src, &coho_idx_dst, &coho_idx_data_pos, &coho_idx_data_face, init_size_guess);
-        ncoho_idx_dst_global = ncoho_idx_dst;  // Technically - there is no global (multi-core)
+                                             face_dst, idx_map_soil, idx_map_soil_sf, face_map_soil,
+                                             land_idx_map, idx_soil_src_otn, ncoho_idx_src, coho_idx_src,
+                                             &coho_idx_dst, &coho_idx_data_pos, &coho_idx_data_face, init_size_guess);
+        ncoho_idx_dst_global = ncoho_idx_dst;
+        mpp_sum_int(1, &ncoho_idx_dst_global); //TODO: Is a synch needed? Why the 1 in 1st arg.
+
 
         // For minimum memory model, we initialize these to be of size "ncoho_idx_dst_global"
         // instead of the much larger  ncohort * ntile_dst * nxc_dst
+        //TODO: Technically, global space below only needed by root PE. Also, note that
+        // if npes ==1, then using 2X more space than bare minimum.
         coho_idata_dst = (int *)malloc(ncoho_idx_dst * sizeof(int));
         coho_rdata_dst = (double *)malloc(ncoho_idx_dst * sizeof(double));
+        coho_idata_dst_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
+        coho_rdata_dst_global = (double *)malloc(ncoho_idx_dst_global * sizeof(double));
       }
 
       /* define the metadata for dst_restart_file */
@@ -1547,7 +1549,6 @@ int main(int argc, char *argv[]) {
         int dim_nspecies;
         int dim_textlen;
         int dim_mdf_day;
-        // int dim_sc_cohort_index,  dim_lc_cohort_index;
 
         dim_lon = mpp_def_dim(fid_dst, LON_NAME, nx_dst);
         dim_lat = mpp_def_dim(fid_dst, LAT_NAME, ny_dst);
@@ -1559,7 +1560,6 @@ int main(int argc, char *argv[]) {
           dim_cohort_index = mpp_def_dim(fid_dst, COHORT_INDEX_NAME, max(ncoho_idx_dst_global, 1));
         }
 
-        // TODO New 2020
         if ((filetype == VEGNTYPE) || (filetype == SOILTYPE)) {
           if (mpp_var_exist(fid_src[0], SC_COHORT_NAME)) {
             n_sc_cohort = mpp_get_dimlen(fid_src[0], SC_COHORT_NAME);
@@ -1737,7 +1737,9 @@ int main(int argc, char *argv[]) {
             mpp_put_var_value(fid_dst, vid_dst, idata_global);
           } else if (!strcmp(varname, COHORT_INDEX_NAME)) {
             //Note cohort_index is "pre-compressed
-            mpp_put_var_value(fid_dst, vid_dst, coho_idx_dst);
+           // mpp_put_var_value(fid_dst, vid_dst, coho_idx_dst);
+           gather_compressed_int_data(ncoho_idx_dst, coho_idx_dst, coho_idata_dst_global);
+            mpp_put_var_value(fid_dst, vid_dst, coho_idata_dst_global);
           } else if (!strcmp(varname, FRAC_NAME)) {
             compress_double_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, land_frac_dst,
                                  rdata_global, use_all_tile);
@@ -1916,12 +1918,14 @@ int main(int argc, char *argv[]) {
             }
 
             //Copy-map the data for the destination face
-            for (int k = 0; k < ncoho_idx_dst_global ; k++) {
+            for (int k = 0; k < ncoho_idx_dst; k++) {
                 int i_src = coho_idx_data_pos [k]; // the corresponding source index
                 int face = coho_idx_data_face [k]; // corresponding face in  src;
                 int ipf_src = start_pos[face] + i_src;
+
                 if (var_type[l] == MPP_INT) {
                   coho_idata_dst[k] = coho_idata_src[ipf_src];
+                 // compress_int_data(ntile_dst, nxc_dst, nidx_dst, nidx_dst_global, land_count_dst, idata_dst, idata_global, use_all_tile);
                   if(coho_idata_dst[k] == MPP_FILL_INT){
                     mpp_error("remap_land : error copying MPP_FILL_INT data");
                   }
@@ -1933,12 +1937,19 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            //Write the data
+            //Gather data onto root PE
+            if (var_type[l] == MPP_INT) {
+              gather_compressed_int_data(ncoho_idx_dst, coho_idata_dst, coho_idata_dst_global);
+            } else {
+              gather_compressed_double_data(ncoho_idx_dst, coho_rdata_dst, coho_rdata_dst_global);
+            }
+
+            //Write the data (Note only root PE writes)
             if (var_type[l] == MPP_INT) {
               //Note: already "compressed"
-              mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_idata_dst);
+              mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_idata_dst_global);
             }else{
-              mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_rdata_dst);
+              mpp_put_var_value_block(fid_dst, vid_dst, start, nwrite, coho_rdata_dst_global);
             }
           }
           else if ((ndim_src[l] - has_taxis[l]) == 1){
@@ -2225,6 +2236,12 @@ int main(int argc, char *argv[]) {
 
       free(coho_rdata_dst);
       coho_rdata_dst  = NULL;
+
+      free(coho_idata_dst_global);
+      coho_idata_dst_global = NULL;
+
+      free(coho_rdata_dst_global);
+      coho_rdata_dst_global = NULL;
 
       free(coho_idx_dst);
       coho_idx_dst = NULL;
@@ -2605,6 +2622,22 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
     if (nidx > 0) free(data_local);
   }
 
+  /*-------------------------------------------------------------------------
+    void gather_compressed_data ()
+    NOTE: simple function that seems superflous but used in debugging
+    ------------------------------------------------------------------------*/
+  void gather_compressed_double_data(int npts, const double *data, double *data_global) {
+      mpp_gather_field_double_root(npts, data, data_global);
+  }
+
+  /*-------------------------------------------------------------------------
+    void gather_compressed_int_data ()
+   ------------------------------------------------------------------------*/
+  void gather_compressed_int_data(int npts, const int *data, int *data_global) {
+      mpp_gather_field_int_root(npts, data, data_global );
+  }
+
+
 
   int binary_search_(int k, int v[], int l, int r) {
     if (r >= l) {
@@ -2692,8 +2725,7 @@ bool has_dupes_sorted(int* v, int n){
 
 int compute_dst_coho_idx(const int ns_d, const int nt_d, const int nc_d, const int ns_s, const int nt_s, const int nface_s,
                          const int iface_d, const int *idx_map_soil, const int *idx_map_soil_sf, const int *face_map_soil,
-                         const int* land_idx_map, int* idx_soil_src_otn, const int* land_count_d, const int* soil_count_cold,
-                         const int* ncoho_idx_s,  int *coho_idx_s,
+                         const int* land_idx_map, int* idx_soil_src_otn, const int* ncoho_idx_s,  int *coho_idx_s,
                          int **coho_idx_d_p, int ** coho_idx_data_pos_p,  int **coho_idx_data_face_p, int init_size_guess) {
   int ncoho_idx_d = 0;
 
