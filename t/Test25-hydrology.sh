@@ -19,7 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-load input_util
+load test_utils
 
 @test "Wrapper complete hydrology test" {
 

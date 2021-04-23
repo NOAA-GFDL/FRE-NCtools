@@ -21,7 +21,7 @@
 #***********************************************************************
 
 # Test regrid land data with cell_measures and cell_methods attribute
-load input_util
+load test_utils
 SETUP_FNCT="generate_all_from_ncl"
 
 @test "Test regrid land data" {

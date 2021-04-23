@@ -21,7 +21,7 @@
 #***********************************************************************
 
 # Test grid for multiple same level and telescoping nests 
-load input_util
+load test_utils
 
 @test "Test grid for multiple same level and telescoping nests" {
 

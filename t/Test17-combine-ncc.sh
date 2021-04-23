@@ -19,7 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-load input_util
+load test_utils
 SETUP_FNCT="cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy ."
 
 @test "combine-ncc combines compressed netcdf files" {

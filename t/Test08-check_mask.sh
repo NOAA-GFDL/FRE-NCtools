@@ -22,7 +22,7 @@
 
 # Test check_mask: create mask_table to mask out some all-land domain
 # to save processor usage for a sea-ice model, baltic1 experiment
-load input_util
+load test_utils
 SETUP_FNCT="generate_all_from_ncl"
 
 @test "Test check_ mask for baltic1 experiment" {

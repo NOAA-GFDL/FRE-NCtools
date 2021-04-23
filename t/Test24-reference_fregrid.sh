@@ -21,7 +21,7 @@
 #***********************************************************************
 
 # test regrid ocean restart file 
-load input_util
+load test_utils
 SETUP_FNCT="cp $top_srcdir/t/Test20-input/*.nc ."
 
 @test "Test fregrid ocean data" {

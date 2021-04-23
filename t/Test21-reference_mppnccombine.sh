@@ -23,7 +23,7 @@
 # Test that mppnccombine reproduces a reference copy of a combined file.
 # The reference file is currently from a Bronx-16 (GFDL system) mppnccombine.
 
-load input_util
+load test_utils
 SETUP_FNCT="prepare_data"
 
 prepare_data ()

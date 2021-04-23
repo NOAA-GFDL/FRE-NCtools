@@ -23,7 +23,7 @@
 # test regrid ocean restart file 
 # same as Test24 except checks result with float tolerance, added in for compatibility with gcc
 
-load input_util
+load test_utils
 SETUP_FNCT="cp $top_srcdir/t/Test20-input/*.nc ."
 
 @test "Test fregrid ocean data" {

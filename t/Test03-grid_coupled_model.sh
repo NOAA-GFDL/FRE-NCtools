@@ -23,7 +23,7 @@
 # Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
 # set setup to generate ncls from test's input directory
 export SETUP_FNCT="generate_all_from_ncl"
-load input_util
+load test_utils
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
 

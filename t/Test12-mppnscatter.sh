@@ -26,7 +26,7 @@
 
 # The mppnccombine and mppncscatter commands should probably be tested in
 # the same file, since here we assume mppnccombine is running correctly.
-load input_util
+load test_utils
 SETUP_FNCT="prepare_input_data"
 
 prepare_input_data ()

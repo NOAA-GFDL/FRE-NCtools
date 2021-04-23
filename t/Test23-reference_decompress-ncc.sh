@@ -19,7 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-load input_util
+load test_utils
 SETUP_FNCT="cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy ."
 
 @test "decompress input netcdf files" {

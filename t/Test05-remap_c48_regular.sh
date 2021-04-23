@@ -21,7 +21,7 @@
 #***********************************************************************
 
 export SETUP_FNCT="generate_all_from_ncl 03"
-load input_util
+load test_utils
 
 @test "remap data from C48 to regular lat-lon grid" {
 

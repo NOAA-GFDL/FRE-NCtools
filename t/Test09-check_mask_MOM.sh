@@ -21,7 +21,7 @@
 #***********************************************************************
 
 # Test check_mask for MOM6 grid 
-load input_util
+load test_utils
 SETUP_FNCT="ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl"
 
 @test "Test check_mask for MOM6 grid " {

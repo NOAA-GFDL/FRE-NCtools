@@ -22,7 +22,7 @@
 
 # Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation
 SETUP_FNCT="generate_all_from_ncl"
-load input_util
+load test_utils
 
 @test "Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation" {
 

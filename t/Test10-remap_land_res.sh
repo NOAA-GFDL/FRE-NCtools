@@ -27,7 +27,7 @@
 # which is the directory name in $top_srcdir/t/Test10-input/<dir_name>
 # that contains the input data
 
-load input_util
+load test_utils
 SETUP_FNCT="prepare_input_data"
 
 prepare_input_data ()
@@ -48,7 +48,6 @@ prepare_input_data ()
 }
 
 @test "Test remap_land can remap land restart files" {
-  prepare_input_data
 
   run command remap_land \
 		--file_type land  \

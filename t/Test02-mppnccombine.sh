@@ -21,7 +21,7 @@
 #***********************************************************************
 # load default setup/teardown and create numbered input from ncls with given filename
 export SETUP_FNCT="generate_all_from_ncl_num mppnccombine"
-load input_util
+load test_utils
 
 @test "mppnccombine combines" {
 

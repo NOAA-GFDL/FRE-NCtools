@@ -21,7 +21,7 @@
 #***********************************************************************
 
 # Test remap runoff data from regular lat-lon grid onto cm2m grid
-load input_util
+load test_utils
 SETUP_FNCT="generate_all_from_ncl 06 && generate_all_from_ncl 03 && generate_all_from_ncl 07"
 
 @test "Test  remap runoff data from regular lat-lon grid onto cm2m grid" {
