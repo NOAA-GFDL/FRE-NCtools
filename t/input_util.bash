@@ -11,10 +11,15 @@ testDir="`expr substr $testDir 1 6`"
 setup(){
   BASE_TEST_DIR=$( pwd )
   TEST_NUM="`expr substr $(basename $BATS_TEST_FILENAME .sh) 5 2`"
+
+  # check if test is to be skipped first
+  [[ ! -z $SKIP_TESTS ]] && skip_test $SKIP_TESTS
+
   if [ ! -d $testDir ]; then
     mkdir $testDir
   fi
   cd $testDir
+
   # run the tests setup function, if set
   [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "Warning: SETUP_FNCT not set, skipping input generation"
 }
@@ -23,6 +28,17 @@ teardown(){
   cd $BASE_TEST_DIR
   ls $testDir
   rm -rf $testDir
+}
+
+skip_test(){
+  if [[ $1 == $TEST_NUM || "0$1" == $TEST_NUM ]]; then
+    skip "Set to skip in SKIP_TESTS"
+  else
+    if [[ ! $# == 1 ]]; then
+      shift
+      skip_test $@
+    fi
+  fi
 }
 
 #generates numbered nc files with a given name
