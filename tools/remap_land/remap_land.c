@@ -566,8 +566,8 @@ int main(int argc, char *argv[]) {
     } else {
       mpp_error("remap_land: field type must be MPP_INT or MPP_DOUBLE or MPP_CHAR");
     }
-    printf("vname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d zld =%d nz=%d \n",
-           varname, l, vid, var_type[l], ndim_src[l], has_taxis[l], zld_pos_src[l], nz_src[l]);
+    //printf("vname=%s l=%d vid=%d vtype=%d ndim=%d taxis=%d zld =%d nz=%d \n",
+    //       varname, l, vid, var_type[l], ndim_src[l], has_taxis[l], zld_pos_src[l], nz_src[l]);
   }
 
   /*------------------------------------------------------------------------------
@@ -1529,29 +1529,17 @@ int main(int argc, char *argv[]) {
       }
 
 
-      int max_ncoho_idx_dst = 0;
+      //int max_ncoho_idx_dst = 0;
       if (filetype == VEGNTYPE) {
-
-        //printf("*** calling compute_d_c_i_size pe isc_dst nx_d*ny_d: %d %d %d\n",
-        //       mpp_pe(), isc_dst, nx_dst * ny_dst);
 
         ncoho_idx_dst = compute_dst_coho_idx_size(isc_dst, iec_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src,
                                                   nface_dst,face_dst, idx_map_soil_sf, face_map_soil,
                                                   land_idx_map, idx_soil_src_otn, ncoho_idx_src, coho_idx_src);
-
-        mpp_sync(); //TODO: Really neded ?
-        max_ncoho_idx_dst = ncoho_idx_dst;
-        mpp_max_int(1, &max_ncoho_idx_dst);
         ncoho_idx_dst_global = ncoho_idx_dst;
         mpp_sum_int(1, &ncoho_idx_dst_global); //TODO: Is a synch needed? Why the 1 in 1st arg.
-        mpp_sync();
 
-        //printf("*** pe ncoho_idx_d ncoho_idx_d_g max_g isc_dst: %d %d %d %d %d \n",
+        //printf("*** pe ncoho_idx_d ncoho_idx_d_g  isc_dst: %d %d %d  %d \n",
                //mpp_pe(), ncoho_idx_dst, ncoho_idx_dst_global, max_ncoho_idx_dst, isc_dst);
-
-        // coho_idx_dst      =  (int *)malloc( max_ncoho_idx_dst * sizeof(int));
-        //coho_idx_data_pos =  (int *)malloc( max_ncoho_idx_dst * sizeof(int));
-        //coho_idx_data_face = (int *)malloc( max_ncoho_idx_dst * sizeof(int));
 
         coho_idx_dst      =  (int *)malloc( ncoho_idx_dst * sizeof(int));
         coho_idx_data_pos =  (int *)malloc( ncoho_idx_dst * sizeof(int));
@@ -1563,35 +1551,28 @@ int main(int argc, char *argv[]) {
           coho_idx_data_face[i] = MPP_INT;
         }
 
+        int ncoho_idx_dst_temp = compute_dst_coho_idx(
+            isc_dst, iec_dst, nx_dst * ny_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src, nface_dst, face_dst,
+            idx_map_soil, idx_map_soil_sf, face_map_soil, land_idx_map, idx_soil_src_otn, ncoho_idx_src, coho_idx_src,
+            coho_idx_dst, coho_idx_data_pos, coho_idx_data_face);
 
-        //Initial dst coho size GUESS = k * cohort dim size * dst tile index size; with k < 1
-        ncoho_idx_dst = compute_dst_coho_idx(isc_dst, iec_dst, nx_dst * ny_dst, ntile_src, ncohort, nx_src * ny_src, ntile_src,
-                                            nface_dst,face_dst, idx_map_soil, idx_map_soil_sf, face_map_soil,
-                                             land_idx_map, idx_soil_src_otn, ncoho_idx_src, coho_idx_src,
-                                             coho_idx_dst, coho_idx_data_pos, coho_idx_data_face);
-
-        mpp_sync();//TODO: Really needed
-
-        int ncoho_idx_dst_globalB = ncoho_idx_dst;
-        mpp_sum_int(1, &ncoho_idx_dst_globalB); //TODO: Is a synch needed? Why the 1 in 1st arg.
-        if (ncoho_idx_dst_globalB != ncoho_idx_dst_global ){
+        if (ncoho_idx_dst_temp != ncoho_idx_dst) {
           mpp_error("remap_land: discrepancy between counts of sum of cohort indecies");
         }
 
+        mpp_sync();//TODO: Really needed?
 
-        // For minimum memory model, we initialize these to be of size "ncoho_idx_dst_"
-        // instead of the much larger  ncohort * ntile_dst * nxc_dst
-        //TODO: Technically, global space below only needed by root PE. Also, note that
-        // if npes ==1, then using 2X more space than bare minimum.
+        //TODO: Note that if non-paralle then using more than 2X more space than bare minimum.
         coho_idata_dst = (int *)malloc(ncoho_idx_dst * sizeof(int));
         coho_rdata_dst = (double *)malloc(ncoho_idx_dst * sizeof(double));
         //These should be all the data of size ncoho_idx_dst_global:
-        //TODO: is root the only pe that needs these:
-        coho_idx_orig_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
-        coho_idata_dst_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
-        coho_rdata_dst_global = (double *)malloc(ncoho_idx_dst_global * sizeof(double));
-        coho_idata_dst_global_tmp = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
-        coho_rdata_dst_global_tmp = (double *)malloc(ncoho_idx_dst_global * sizeof(double));
+        if (mpp_pe() == mpp_root_pe()) {
+          coho_idx_orig_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
+          coho_idata_dst_global = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
+          coho_rdata_dst_global = (double *)malloc(ncoho_idx_dst_global * sizeof(double));
+          coho_idata_dst_global_tmp = (int *)malloc(ncoho_idx_dst_global * sizeof(int));
+          coho_rdata_dst_global_tmp = (double *)malloc(ncoho_idx_dst_global * sizeof(double));
+        }
       }
 
       /* define the metadata for dst_restart_file */
@@ -2176,7 +2157,6 @@ int main(int argc, char *argv[]) {
             mpp_get_var_dimname(fid_src[0], lvid, 0 + has_taxis[l], dimnameA);
             mpp_get_var_dimname(fid_src[0], lvid, 1 + has_taxis[l], dimnameB);
             mpp_get_var_dimname(fid_src[0], lvid, 2 + has_taxis[l], dimnameC);
-            printf("LR 3D varname dimA dimB dimC %s %s %s %s\n", varname, dimnameA, dimnameB, dimnameC);
 
             if (strcmp(dimnameA, SC_COHORT_NAME) || strcmp(dimnameB, LEVEL_NAME) || strcmp(dimnameC, TILE_INDEX_NAME)) {
               mpp_error("remap_land : Expected 3D  field with dims [<time>,soilCCohort,zfull,tile_index]");
