@@ -24,7 +24,7 @@
 load test_utils
 SETUP_FNCT="generate_all_from_ncl 06 && generate_all_from_ncl 03 && generate_all_from_ncl 07"
 
-@test "Test  remap runoff data from regular lat-lon grid onto cm2m grid" {
+@test "Test remap runoff data from regular lat-lon grid onto cm2m grid" {
 
   run command runoff_regrid \
 		--input_file runoff.daitren.iaf.nc \

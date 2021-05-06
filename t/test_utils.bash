@@ -22,8 +22,10 @@
 # Ryan Mulhall 2021
 # Utility functions for FRE-NCtools bats test scripts
 # setup and teardown run implicitly at beg and end of tests
-# SETUP_FNCT must set to a function(or cmd) that creates the tests input files
-# such as generate_from_ncl, otherwise no input will be created
+
+# SETUP_FNCT is set to a function name or command in test files to specify how to create input
+
+# SKIP_TESTS is to be set to a space separated list of one or two digit test numbers to be skipped
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
 testDir="`expr substr $testDir 1 6`"
@@ -41,20 +43,19 @@ setup(){
   cd $testDir
 
   # run the tests setup function, if set
-  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "Warning: SETUP_FNCT not set, skipping input generation"
+  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "SETUP_FNCT not set, no input will be created"
 }
 
 teardown(){
   cd $BASE_TEST_DIR
-  ls $testDir
   rm -rf $testDir
 }
 
 skip_test(){
-  if [[ $1 == $TEST_NUM || "0$1" == $TEST_NUM ]]; then
+  if [[ "$1" == "$TEST_NUM" || "0$1" == $TEST_NUM ]]; then
     skip "Set to skip in SKIP_TESTS"
   else
-    if [[ $# >= 1 ]]; then
+    if [[ $# -gt 1 ]]; then
       shift
       skip_test $@
     fi

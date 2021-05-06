@@ -19,6 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+load test_utils
 
 @test "Check make_hgrid exists and is executable" {
   run command -v make_hgrid
@@ -47,9 +48,9 @@
   run make_topog -h
   [ "$status" -eq 1 ]
 }
-
+# only run with mpi
 @test "Check make_topog_parallel exists and is executable" {
-  ##skip "TO DO: The test fails on travis"
+  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
   run command -v make_topog_parallel
   [ "$status" -eq 0 ]
 }
@@ -61,8 +62,9 @@
   [ "$status" -eq 2 ]
 }
 
+# only run with mpi
 @test "Check coupler_mosaic_parallel exists and is executable" {
-  ##skip "TO DO: The test fails on travis"
+  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
   run command -v make_coupler_mosaic_parallel
   [ "$status" -eq 0 ]
 }
@@ -74,8 +76,9 @@
   [ "$status" -eq 2 ]
 }
 
+# only run with mpi
 @test "Check fregrid_parallel exists and is executable" {
-  ##skip "TO DO: The test fails on travis"
+  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
   run command -v fregrid_parallel
   [ "$status" -eq 0 ]
 }
@@ -108,8 +111,9 @@
   [ "$status" -eq 1 ]
 }
 
+# only run with mpi
 @test "Check remap_land_parallel exists and is executable" {
-  ##skip "TO DO: The test fails on travis"
+  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
   run command -v remap_land_parallel
   [ "$status" -eq 0 ]
 }
