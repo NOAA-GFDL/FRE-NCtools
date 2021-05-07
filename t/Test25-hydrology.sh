@@ -29,6 +29,11 @@ load test_utils
   # TODO: Get a way to download Test25-input if missing
   test ! -e $top_srcdir/t/Test25-input/grid_spec.nc && skip 'Input directory does not exist on this system'
 
+  # skip test if needed input dataset is empty
+  if ! ncdump -h $top_srcdir/tools/simple_hydrog/share/river_network_mrg_0.5deg_ad3nov_fill_coast_auto1_0.125.nc; then
+      skip 'Input dataset is not available'
+  fi
+
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh
   [ "$status" -eq 1 ]
 

@@ -51,3 +51,6 @@ setenv MPICH_PTL_UNEX_EVENTS 160k
 setenv KMP_STACKSIZE 2g
 setenv F_UFMTENDIAN big
 setenv NC_BLKSZ 64K
+
+# Set CONFIG_SITE to the correct config.site file for the system
+setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site

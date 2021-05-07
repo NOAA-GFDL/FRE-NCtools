@@ -112,9 +112,10 @@ load test_utils
 
 #TO DO: Skipping this for now because it fails
   if [ -z "$skip_mpi" ]; then
-      run command cd parallel
+      [ ! -d parallel ] && mkdir parallel
+      cd parallel
 
-      run command aprun -n 2 make_coupler_mosaic_parallel \
+      run command mpirun -n 2 make_coupler_mosaic_parallel \
 		--atmos_mosaic ../C48_mosaic.nc \
 		--ocean_mosaic ../ocean_mosaic.nc \
 		--ocean_topog  ../topog.nc \
