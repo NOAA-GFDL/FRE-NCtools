@@ -20,10 +20,11 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 # load default setup/teardown and create numbered input from ncls with given filename
-export SETUP_FNCT="generate_all_from_ncl_num mppnccombine"
 load test_utils
 
 @test "mppnccombine combines" {
+
+  generate_all_from_ncl_num mppnccombine Test02-input
 
   #Combine the files into 1
   run command mppnccombine \

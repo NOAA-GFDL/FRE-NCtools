@@ -19,13 +19,13 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
 # Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
 # set setup to generate ncls from test's input directory
-export SETUP_FNCT="generate_all_from_ncl"
 load test_utils
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
+
+  generate_all_from_ncl
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
@@ -70,7 +70,7 @@ load test_utils
   [ "$status" -eq 0 ]
 
 # MPI only tests
-  if [ ! -z "$skip_mpi" ]; then
+  if [ -z "$skip_mpi" ]; then
       run command mpirun -n 2 make_topog_parallel \
 		--mosaic ocean_mosaic.nc \
 		--topog_type realistic \
@@ -111,7 +111,7 @@ load test_utils
   [ "$status" -eq 0 ]
 
 #TO DO: Skipping this for now because it fails
-  if [ ! -z "$skip_mpi" ]; then
+  if [ -z "$skip_mpi" ]; then
       run command cd parallel
 
       run command aprun -n 2 make_coupler_mosaic_parallel \

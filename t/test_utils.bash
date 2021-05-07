@@ -23,8 +23,6 @@
 # Utility functions for FRE-NCtools bats test scripts
 # setup and teardown run implicitly at beg and end of tests
 
-# SETUP_FNCT is set to a function name or command in test files to specify how to create input
-
 # SKIP_TESTS is to be set to a space separated list of one or two digit test numbers to be skipped
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
@@ -41,9 +39,6 @@ setup(){
     mkdir $testDir
   fi
   cd $testDir
-
-  # run the tests setup function, if set
-  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "SETUP_FNCT error/not set"
 }
 
 teardown(){
@@ -63,9 +58,10 @@ skip_test(){
 }
 
 #generates numbered nc files with a given name
+# $1 = filename to generate, $2 = input dir to generate from
 generate_all_from_ncl_num(){
   filename=$1
-  for f in $top_srcdir/t/Test${TEST_NUM}-input/*.ncl.????
+  for f in $top_srcdir/t/$2/*.ncl.????
   do
     [[ -z $filename ]] && filename=$(basename $f .ncl)
     ncgen -o $filename.nc.${f##*.} $f

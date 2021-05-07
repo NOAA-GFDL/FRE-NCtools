@@ -24,10 +24,11 @@
 
 #First create an ocean_mosaic and ocean_topog.nc
 #Make_hgrid: create ocean_hgrid"
-SETUP_FNCT="ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl"
 load test_utils
 
 @test "Test make_quick_mosaic" {
+
+  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
 
   run command make_hgrid \
 		--grid_type tripolar_grid \

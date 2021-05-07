@@ -20,9 +20,10 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 load test_utils
-SETUP_FNCT="cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy ."
 
 @test "combine-ncc combines compressed netcdf files" {
+
+  cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy .
 
   #Combine netcdf copy file 
   run command combine-ncc \

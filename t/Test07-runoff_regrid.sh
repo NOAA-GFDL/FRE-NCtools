@@ -22,9 +22,10 @@
 
 # Test remap runoff data from regular lat-lon grid onto cm2m grid
 load test_utils
-SETUP_FNCT="runoff_regrid_input"
 
 @test "Test remap runoff data from regular lat-lon grid onto cm2m grid" {
+
+  runoff_regrid_input
 
   run command runoff_regrid \
 		--input_file runoff.daitren.iaf.nc \

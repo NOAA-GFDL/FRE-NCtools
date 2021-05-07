@@ -24,18 +24,11 @@
 # The reference file is currently from a Bronx-16 (GFDL system) mppnccombine.
 
 load test_utils
-SETUP_FNCT="prepare_data"
-
-prepare_data ()
-{
-  # Generate netCDF files for mppnccombine
-  for f in $top_srcdir/t/Test02-input/mppnccombine.ncl.????
-  do
-    ncgen -o mppnccombine.nc.${f##*.} $f
-  done
-}
 
 @test "reference mppnccombine combines comparison to bronx-16 stored copy" {
+
+  generate_all_from_ncl_num mppnccombine Test02-input
+
   #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \

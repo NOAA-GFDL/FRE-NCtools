@@ -22,9 +22,10 @@
 
 # Test regrid land data with cell_measures and cell_methods attribute
 load test_utils
-SETUP_FNCT="generate_all_from_ncl"
 
 @test "Test regrid land data" {
+
+  generate_all_from_ncl
 
   run command fregrid \
 		--input_mosaic C180_mosaic.nc \

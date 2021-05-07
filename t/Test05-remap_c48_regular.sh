@@ -20,10 +20,11 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-export SETUP_FNCT="generate_all_from_ncl 03"
 load test_utils
 
 @test "remap data from C48 to regular lat-lon grid" {
+
+  generate_all_from_ncl 03
 
   mkdir output
 
@@ -39,5 +40,4 @@ load test_utils
 		--check_conserve \
 		--remap_file C48_to_N45_remap.nc 
   [ "$status" -eq 0 ]
-
 }

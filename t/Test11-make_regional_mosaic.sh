@@ -23,15 +23,12 @@
 # Test make_regional_mosaic: create mosaic file for regional output and do remapping
 #             for regional output
 
+load test_utils
+
 @test "Test make_regional_mosaic" {
+
   skip "TO DO: Files are too large" 
 
-  if [ ! -d "Test11" ] 
-  then
-  		mkdir Test11
-  fi
-
-  cd Test11
   cp $top_srcdir/t/Test11-input/* . 
 
   ncgen -o rregionatmos_4xdaily_eq_avg.tile2.nc rregionatmos_4xdaily_eq_avg.tile2.cdl
@@ -96,8 +93,5 @@
 		--scalar_field ps  \
 		--check_conserve
   [ "$status" -eq 0 ] 
-
-  cd ..
-  rm -rf Test11
 
 }

@@ -22,11 +22,12 @@
 
 # test regrid ocean restart file 
 load test_utils
-SETUP_FNCT="cp $top_srcdir/t/Test20-input/*.nc ."
 
 @test "Test fregrid ocean data" {
 
   if [ "$CC" != "icc" ]; then skip "Test fails reference check without icc"; fi
+
+  cp $top_srcdir/t/Test20-input/*.nc .
 
 #Create regular lat-lon grid (100:160, -15:15, size is 360x180)
   run command make_hgrid  \

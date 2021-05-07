@@ -22,10 +22,11 @@
 
 #Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region
 
-export SETUP_FNCT="ncgen -o OCCAM_p5degree.nc $BATS_TEST_DIRNAME/Test03-input/OCCAM_p5degree.ncl"
 load test_utils
 
 @test "Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region" {
+
+ncgen -o OCCAM_p5degree.nc $BATS_TEST_DIRNAME/Test03-input/OCCAM_p5degree.ncl
 
 #create ocean_hgrid 
 run command make_hgrid \
@@ -122,7 +123,7 @@ run command make_solo_mosaic  \
   [ "$status" -eq 0 ]
 
 # MPI only
-  if [ ! -z "$skip_mpi" ]; then
+  if [ -z "$skip_mpi" ]; then
       #make the coupler_mosaic
       run command aprun -n $npes2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc --land_mosaic land_mosaic.nc \
           --ocean_mosaic ocean_mosaic.nc --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check

@@ -22,9 +22,10 @@
 
 # Test river_regrid: remap data from lat-lon onto C48 grid
 load test_utils
-SETUP_FNCT="generate_all_from_ncl"
 
 @test "Test  remap runoff data from regular lat-lon grid onto cm2m grid" {
+
+  generate_all_from_ncl
 
   run command river_regrid \
 		--mosaic grid_spec.nc \

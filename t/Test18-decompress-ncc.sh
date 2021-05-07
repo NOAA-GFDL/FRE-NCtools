@@ -20,9 +20,10 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 load test_utils
-SETUP_FNCT="cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy ."
 
 @test "decompress input netcdf files" {
+
+  cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy .
 
   #Decompress compressed netcdf file(s) into 1
   run command decompress-ncc \

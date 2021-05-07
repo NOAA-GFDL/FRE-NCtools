@@ -21,9 +21,10 @@
 #***********************************************************************
 load test_utils
 #ncks atmos daily *.nc file
-SETUP_FNCT="cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy ."
 
 @test "reference combine-ncc combines comparison to bronx-16 stored copy" {
+
+  cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy .
 
   #Combine netcdf copy file 
   run command combine-ncc \

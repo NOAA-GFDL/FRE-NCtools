@@ -20,25 +20,12 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-setup () {
-  for f in $top_srcdir/t/mppnccombine/*.ncl.????
-  do
-    ncgen -o mppnccombine.nc.${f##*.} $f
-  done
-}
-
-teardown () {
-  rm -f mppnccombine_output.nc mppnccombine.nc.????
-}
-
-@test "mppnccombine exists and is executable" {
-  run command -v mppnccombine
-  [ "$status" -eq 0 ]
-  run mppnccombine -h
-  [ "$status" -eq 1 ]
-}
+load test_utils
 
 @test "mppnccombine combines" {
+
+  generate_all_from_ncl_num mppnccombine mppnccombine
+
   run command mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????

@@ -27,7 +27,6 @@
 # The mppnccombine and mppncscatter commands should probably be tested in
 # the same file, since here we assume mppnccombine is running correctly.
 load test_utils
-SETUP_FNCT="prepare_input_data"
 
 prepare_input_data ()
 {
@@ -39,6 +38,8 @@ prepare_input_data ()
 }
   
 @test "Test mppncscatter" {
+
+  prepare_input_data
 
   # Scatter the file
   run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/$test_file

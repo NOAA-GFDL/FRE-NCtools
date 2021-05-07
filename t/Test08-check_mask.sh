@@ -23,9 +23,10 @@
 # Test check_mask: create mask_table to mask out some all-land domain
 # to save processor usage for a sea-ice model, baltic1 experiment
 load test_utils
-SETUP_FNCT="generate_all_from_ncl"
 
 @test "Test check_ mask for baltic1 experiment" {
+
+  generate_all_from_ncl
 
   run command check_mask \
 		--grid_file baltic1_grid_spec.nc \
