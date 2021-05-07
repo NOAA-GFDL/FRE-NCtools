@@ -50,7 +50,7 @@ load test_utils
 }
 # only run with mpi
 @test "Check make_topog_parallel exists and is executable" {
-  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
+  [ ! -z $skip_mpi ] && skip "not built with MPI"
   run command -v make_topog_parallel
   [ "$status" -eq 0 ]
 }
@@ -64,7 +64,7 @@ load test_utils
 
 # only run with mpi
 @test "Check coupler_mosaic_parallel exists and is executable" {
-  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
+  [ ! -z $skip_mpi ] && skip "not built with MPI"
   run command -v make_coupler_mosaic_parallel
   [ "$status" -eq 0 ]
 }
@@ -78,7 +78,7 @@ load test_utils
 
 # only run with mpi
 @test "Check fregrid_parallel exists and is executable" {
-  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
+  [ ! -z $skip_mpi ] && skip "not built with MPI"
   run command -v fregrid_parallel
   [ "$status" -eq 0 ]
 }
@@ -113,7 +113,7 @@ load test_utils
 
 # only run with mpi
 @test "Check remap_land_parallel exists and is executable" {
-  [ ! -z $skip_mpi ] && $skip_mpi "not built with MPI"
+  [ ! -z $skip_mpi ] && skip "not built with MPI"
   run command -v remap_land_parallel
   [ "$status" -eq 0 ]
 }

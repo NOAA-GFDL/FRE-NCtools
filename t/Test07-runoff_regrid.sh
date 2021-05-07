@@ -22,7 +22,7 @@
 
 # Test remap runoff data from regular lat-lon grid onto cm2m grid
 load test_utils
-SETUP_FNCT="generate_all_from_ncl 06 && generate_all_from_ncl 03 && generate_all_from_ncl 07"
+SETUP_FNCT="runoff_regrid_input"
 
 @test "Test remap runoff data from regular lat-lon grid onto cm2m grid" {
 
@@ -34,4 +34,10 @@ SETUP_FNCT="generate_all_from_ncl 06 && generate_all_from_ncl 03 && generate_all
 		--output_file runoff.cm2m.nc
   [ "$status" -eq 0 ]
 
+}
+
+runoff_regrid_input() {
+    generate_all_from_ncl 06
+    generate_all_from_ncl 03
+    generate_all_from_ncl 07
 }

@@ -35,7 +35,7 @@ prepare_data ()
   done
 }
 
-@test " refernce mppnccombine combines comparison to bronx-16 stored copy" {
+@test "reference mppnccombine combines comparison to bronx-16 stored copy" {
   #Combine the files into 1
   run command mppnccombine \
       mppnccombine_output.nc \

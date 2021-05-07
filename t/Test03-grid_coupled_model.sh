@@ -69,19 +69,22 @@ load test_utils
 		--output topog.nc
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails
-#  run command mpirun -n 2 make_topog_parallel \
-#		--mosaic ocean_mosaic.nc \
-#		--topog_type realistic \
-#		--topog_file OCCAM_p5degree.nc \
-#		--topog_field TOPO \
-#		--scale_factor -1 \
-#		--vgrid ocean_vgrid.nc \
-#		--output topog_parallel.nc
-#  [ "$status" -eq 0 ]
+# MPI only tests
+  if [ ! -z "$skip_mpi" ]; then
+      run command mpirun -n 2 make_topog_parallel \
+		--mosaic ocean_mosaic.nc \
+		--topog_type realistic \
+		--topog_file OCCAM_p5degree.nc \
+		--topog_field TOPO \
+		--scale_factor -1 \
+		--vgrid ocean_vgrid.nc \
+		--output topog_parallel.nc
+      [ "$status" -eq 0 ]
 
-#  run command nccmp -md topog.nc topog_parallel.nc
-#  [ "$status" -eq 0 ]
+      run command nccmp -md topog.nc topog_parallel.nc
+      [ "$status" -eq 0 ]
+  fi
+
 
 #Make_hgrid: create C48 grid for atmos/land
   run command make_hgrid \
@@ -108,14 +111,15 @@ load test_utils
   [ "$status" -eq 0 ]
 
 #TO DO: Skipping this for now because it fails
-#  run command cd parallel
+  if [ ! -z "$skip_mpi" ]; then
+      run command cd parallel
 
-#  run command aprun -n 2 make_coupler_mosaic_parallel \
-#		--atmos_mosaic ../C48_mosaic.nc \
-#		--ocean_mosaic ../ocean_mosaic.nc \
-#		--ocean_topog  ../topog.nc \
-#		--mosaic_name grid_spec  \
-#		--area_ratio_thresh 1.e-10
-#  [ "$status" -eq 0 ]
-
+      run command aprun -n 2 make_coupler_mosaic_parallel \
+		--atmos_mosaic ../C48_mosaic.nc \
+		--ocean_mosaic ../ocean_mosaic.nc \
+		--ocean_topog  ../topog.nc \
+		--mosaic_name grid_spec  \
+		--area_ratio_thresh 1.e-10
+      [ "$status" -eq 0 ]
+  fi
 }

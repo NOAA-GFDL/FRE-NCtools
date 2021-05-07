@@ -43,7 +43,7 @@ setup(){
   cd $testDir
 
   # run the tests setup function, if set
-  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "SETUP_FNCT not set, no input will be created"
+  [[ ! -z $SETUP_FNCT ]] && $SETUP_FNCT || echo "SETUP_FNCT error/not set"
 }
 
 teardown(){
@@ -84,18 +84,4 @@ generate_all_from_ncl(){
     filename=$(basename $f .ncl)
     ncgen -o $filename.nc $f
   done
-}
-
-#generates from a list of names, TODO might delete
-generate_from_ncl(){
-  if [[ $# == 0 || $1 != *.ncl ]]; then
-    echo "Error: no/invalid filenames provided"
-    exit
-  else
-    filename=$(basename $1 .ncl)
-    ncgen -o $filename.nc $top_srcdir/t/$1
-    [[ $# -eq 1 ]] && return 0
-    shift
-    generate_from_ncl $@
-  fi
 }
