@@ -24,7 +24,7 @@
 
 @test "Test fregrid ocean data" {
 
-  if [ "$CC" != "icc" ]; then skip "Test fails reference check without icc"; fi
+  if ! type icc; then skip "Test fails reference check without icc"; fi
   if [ ! -d "Test24" ] 
   then
   		mkdir Test24
