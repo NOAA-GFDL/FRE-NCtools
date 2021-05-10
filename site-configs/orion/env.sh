@@ -31,9 +31,26 @@
 . $( dirname $( dirname $(readlink -f $0) ) )/env_functions.sh
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-module load intel/2019.5
-module load netcdf
-module load hdf5
+intel_version=2019.5
+ncc_version=4.7.4
+hdf_version=1.10.6
+
+# GCC is needed for icc to use newer C11 constructs.  However, on systems
+# that use lmod, we cannot load two compiler family modules concurrently.
+# This should add the GNU path information to the *PATH variables
+module prepend-path PATH /apps/gcc-8/gcc-8.3.0//bin
+module prepend-path LD_LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/gmp-6.1.2/lib
+module prepend-path LD_LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/mpc-1.1.0/lib
+module prepend-path LD_LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/mpfr-4.0.2/lib
+module prepend-path LD_LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/lib
+module prepend-path LD_LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/lib64
+module prepend-path LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/lib
+module prepend-path LIBRARY_PATH /apps/gcc-8/gcc-8.3.0/lib64
+module prepend-path CPATH /apps/gcc-8/gcc-8.3.0/include
+
+module load intel/${intel_version}
+module load netcdf/${ncc_version}
+module load hdf5/${hdf_version}
 module load nccmp
 
 # Set CONFIG_SITE to the correct config.site file for the system
