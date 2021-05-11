@@ -55,3 +55,6 @@ module load nccmp
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
+
+# Include the netcdf-c/netcdf-fortran library paths during linking
+setenv LD_RUN_PATH \$LD_LIBRARY_PATH
