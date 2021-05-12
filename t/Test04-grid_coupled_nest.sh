@@ -125,16 +125,17 @@ run command make_solo_mosaic  \
 # MPI only
   if [ -z "$skip_mpi" ]; then
       #make the coupler_mosaic
-      run command mpirun -n 3 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
+      run command mpirun -n 4 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
                          --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc \
                          --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check
 
       #check reproducing ability between processor count for make_coupler_mosaic
       [ ! -d parallel ] && mkdir parallel
       cd parallel
-      run command mpirun -n 2 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
+      run command mpirun -n 6 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
                         --land_mosaic ../land_mosaic.nc --ocean_mosaic ../ocean_mosaic.nc \
                         --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
-      nccmp -md grid_spec.nc ../grid_spec.nc
+      ls
+      ##nccmp -md grid_spec.nc ../grid_spec.nc
   fi
 }

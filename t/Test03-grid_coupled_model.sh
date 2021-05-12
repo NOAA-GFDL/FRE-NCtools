@@ -115,7 +115,7 @@ load test_utils
       [ ! -d parallel ] && mkdir parallel
       cd parallel
 
-      run command mpirun -n 2 make_coupler_mosaic_parallel \
+      run command mpirun -n 4 make_coupler_mosaic_parallel \
 		--atmos_mosaic ../C48_mosaic.nc \
 		--ocean_mosaic ../ocean_mosaic.nc \
 		--ocean_topog  ../topog.nc \
