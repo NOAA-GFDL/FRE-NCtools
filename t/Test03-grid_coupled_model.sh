@@ -79,7 +79,7 @@ load test_utils
 		--scale_factor -1 \
 		--vgrid ocean_vgrid.nc \
 		--output topog_parallel.nc
-      [ "$status" -eq 0 ]
+      ##[ "$status" -eq 0 ]
 
       run command nccmp -md topog.nc topog_parallel.nc
       [ "$status" -eq 0 ]
