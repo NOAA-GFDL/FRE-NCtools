@@ -25,9 +25,9 @@ jobs:
         autoreconf -i ../configure.ac
         ../configure $MPI $QUAD_P
     - name: Build tools
-      run: make
+      run: make -C build
     - name: Run tests
-      run: make -j check LOG_DRIVER_FLAGS=--comments
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1
       if: failure()
