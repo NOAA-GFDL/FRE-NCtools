@@ -135,7 +135,10 @@ run command make_solo_mosaic  \
       run command mpirun -n 6 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
                         --land_mosaic ../land_mosaic.nc --ocean_mosaic ../ocean_mosaic.nc \
                         --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
-      ls
-      ##nccmp -md grid_spec.nc ../grid_spec.nc
+      # just check all the files in this dir
+      for f in ./*.nc
+      do
+        nccmp -md $f ../$f
+      done
   fi
 }

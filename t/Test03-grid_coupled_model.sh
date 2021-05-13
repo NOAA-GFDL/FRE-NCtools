@@ -70,7 +70,8 @@ load test_utils
   [ "$status" -eq 0 ]
 
 # MPI only tests
-  if [ -z "$skip_mpi" ]; then
+# This test only fails within the CI
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
       run command mpirun -n 2 make_topog_parallel \
 		--mosaic ocean_mosaic.nc \
 		--topog_type realistic \
@@ -79,7 +80,7 @@ load test_utils
 		--scale_factor -1 \
 		--vgrid ocean_vgrid.nc \
 		--output topog_parallel.nc
-      ##[ "$status" -eq 0 ]
+      [ "$status" -eq 0 ]
 
       run command nccmp -md topog.nc topog_parallel.nc
       [ "$status" -eq 0 ]
@@ -110,7 +111,7 @@ load test_utils
 		--area_ratio_thresh 1.e-10 \
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails
+#Make coupler mosaic with parallel
   if [ -z "$skip_mpi" ]; then
       [ ! -d parallel ] && mkdir parallel
       cd parallel
@@ -122,5 +123,10 @@ load test_utils
 		--mosaic_name grid_spec  \
 		--area_ratio_thresh 1.e-10
       [ "$status" -eq 0 ]
+      # compare any created files to non-parallel
+      for f in ./*.nc
+      do
+        nccmp -md $f ../$f
+      done
   fi
 }
