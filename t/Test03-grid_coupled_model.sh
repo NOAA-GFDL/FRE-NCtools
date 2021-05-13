@@ -112,7 +112,7 @@ load test_utils
   [ "$status" -eq 0 ]
 
 #Make coupler mosaic with parallel
-  if [ -z "$skip_mpi" ]; then
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
       [ ! -d parallel ] && mkdir parallel
       cd parallel
 
@@ -124,9 +124,9 @@ load test_utils
 		--area_ratio_thresh 1.e-10
       [ "$status" -eq 0 ]
       # compare any created files to non-parallel
-      for f in ./*.nc
+      for f in *.nc
       do
-        nccmp -md $f ../$f
+      	nccmp -md $f ../$f
       done
   fi
 }
