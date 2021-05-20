@@ -932,7 +932,7 @@ int main(int argc, char* argv[])
       if(refine_ratio[n] == 0) mpp_error("make_hgrid: --refine_ratio must be set when --nest_grids is set");
       if(parent_tile[n] == 0 && mpp_pe()==mpp_root_pe()) {
         fprintf(stderr,"NOTE from make_hgrid: parent_tile is 0, the output grid will have resolution refine_ration*nlon\n");
-        ntiles++;//Only the six faces may be needed for output, but this is to prevent invalid mem access
+        //ntiles++;//Only the six faces may be needed for output, but this is to prevent invalid mem access //MZ2
       }
       else {
         if(istart_nest[n] == 0) mpp_error("make_hgrid: --istart_nest must be set when --nest_grids is set");
@@ -1040,10 +1040,10 @@ int main(int argc, char* argv[])
     size3 = (unsigned long) (nxp+1) * nyp     * ntiles_global;
     size4 = (unsigned long) nxp     * nyp     * ntiles_global;
 
-    //    if( nest_grids) { /* nest grid is the last tile */
+    //    if( nest_grids) {//MZ3 /* nest grid is the last tile */
     for (n_nest = ntiles_global; n_nest < ntiles_global + nest_grids; n_nest++) { /* nest grid is the last tile */
       if (verbose) fprintf(stderr, "[INFO] Adding memory size for nest %d, nest_grids: %d\n", n_nest, nest_grids);
-      size1 += (nxl[n_nest]+1) * (nyl[n_nest]+1);
+      size1 += (nxl[n_nest]+1) * (nyl[n_nest]+1);//MZ3
       size2 += (nxl[n_nest]+1) * (nyl[n_nest]+2);
       size3 += (nxl[n_nest]+2) * (nyl[n_nest]+1);
       size4 += (nxl[n_nest]+1) * (nyl[n_nest]+1);

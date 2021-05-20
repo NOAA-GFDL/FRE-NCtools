@@ -95,12 +95,12 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
   create nomomic cubic grid. All six tiles grid will be generated.
 *******************************************************************************/
 void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *x, double *y,
-				 double *dx, double *dy, double *area, double *angle_dx,
-				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
-				 double target_lon, double target_lat, int num_nest_grids,
-				 int parent_tile[MAX_NESTS], int refine_ratio[MAX_NESTS], int istart_nest[MAX_NESTS],
-				 int iend_nest[MAX_NESTS], int jstart_nest[MAX_NESTS], int jend_nest[MAX_NESTS],
-				 int halo, int output_length_angle)
+                                 double *dx, double *dy, double *area, double *angle_dx,
+                                 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
+                                 double target_lon, double target_lat, int num_nest_grids,
+                                 int parent_tile[MAX_NESTS], int refine_ratio[MAX_NESTS], int istart_nest[MAX_NESTS],
+                                 int iend_nest[MAX_NESTS], int jstart_nest[MAX_NESTS], int jend_nest[MAX_NESTS],
+                                 int halo, int output_length_angle)
 {
   const int ntiles = 6;
   int verbose = 1;
@@ -178,7 +178,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   if(num_nest_grids && parent_tile[0]== 0){
     global_nest = 1;
-    //ntiles2 = ntiles + 1;//TODO
+    //TODO: IMA related. Nncrease ntiles2 by 1 and will decrease some IMA below, but will also change to
+    //  0 two angle_dx and angle_dy values from GR pre multi-nest on tile1.nc
   }
   else {
     for (nn=0; nn < num_nest_grids; nn++) {
@@ -239,6 +240,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     nj_nest_arr[nn] = nj_nest[nn];
   }
 
+  //TODO: IMA: (IMA mean Invalid Memory access - usually do to array out of bounds access)
+  // These tile_offets are not big enough (by 1) for GR and and results in several IMAs below.
   tile_offset = (int *)malloc(ntiles2*sizeof(int));
   tile_offset_supergrid = (int *)malloc(ntiles2*sizeof(int));
   tile_offset_supergrid_m = (int *)malloc(ntiles2*sizeof(int));
@@ -252,13 +255,13 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   }
 
   /* Use of these arrays permits different sized nests */
-  if (global_nest != 1) {
-    for (nn = 0; nn < num_nest_grids; nn++) {
-      nxl[nn + ntiles] = nx_nest_arr[nn];
-      nyl[nn + ntiles] = ny_nest_arr[nn];
-      nil[nn + ntiles] = ni_nest_arr[nn];
-      njl[nn + ntiles] = nj_nest_arr[nn];
-    }
+  if (global_nest != 1) {//DONE: For removing IMA and a core dump with GR.
+  for (nn = 0; nn < num_nest_grids; nn++) {
+    nxl[nn + ntiles] = nx_nest_arr[nn];
+    nyl[nn + ntiles] = ny_nest_arr[nn];
+    nil[nn + ntiles] = ni_nest_arr[nn];
+    njl[nn + ntiles] = nj_nest_arr[nn];
+  }
   }
 
   if (verbose) {
@@ -307,10 +310,10 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     tile_offset_area[n] = npts_area;
 
     if (verbose) {
-      fprintf(stderr, "[INFO] INDEX OFFSET n: %d tile_offset[n]: %ld tile_offset_supergrid[n]: %ld \
+      fprintf(stderr, "[INFO] INDEX OFFSET n: %ld tile_offset[n]: %d tile_offset_supergrid[n]: %d \
               tile_offset_supergrid_m[n]: %d tile_offset_area[n]: %d \n",
 			        n, tile_offset[n],  tile_offset_supergrid[n],  tile_offset_supergrid_m[n],  tile_offset_area[n]);
-    }
+      }
 
     npts += (nil[n] + 1) * (njl[n] + 1);
     npts_supergrid += (nxl[n] + 1) * (nyl[n] + 1);
@@ -429,8 +432,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     for (nn=0; nn < num_nest_grids; nn++) {
       if (verbose) {
         fprintf(stderr,
-                "[INFO] Processing setup_aligned_nest for nest %ld . ntiles=%d parent_tile: %ld\n",
-                nn, ntiles, parent_tile);
+                "[INFO] Processing setup_aligned_nest for nest %ld . ntiles=%d parent_tile[nn]: %d\n",
+                nn, ntiles, parent_tile[nn]);
       }
       /* Setup aligned nest -- final two arguments are memory locations for data to be returned */
       /* The pointer arithmetic is complicated */
@@ -475,31 +478,34 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
     /* copy C-cell to supergrid */
     if (verbose) {
-      fprintf(stderr, "[INFO] INDEX fill x and y from C-cell. n=%d n*nxp*nxp=%ld tile_offset[n]: %ld \
+      fprintf(stderr, "[INFO] INDEX fill x and y from C-cell. n=%ld n*nxp*nxp=%ld tile_offset[n]: %d \
               tile_offset_supergrid[n]: %d njl[n]: %d nil[n]: %d\n",
               n, n*nxp*nxp, tile_offset[n], tile_offset_supergrid[n], njl[n], nil[n]);
       fprintf(stderr, "[INFO] START fill x and y from C-cell.  n=%ld tile_offset_supergrid[n]: %d \n",
               n, tile_offset_supergrid[n]);
     }
 
-    for(j=0; j<=njl[n]; j++) for(i=0; i<=nil[n]; i++) {
+    for(j=0; j<=njl[n]; j++){
+      for(i=0; i<=nil[n]; i++) {
 
         n1 = tile_offset_supergrid[n] + j*2*(2*nil[n]+1) + i*2;
         n2 = tile_offset[n] + j*(nil[n]+1)+i;
 
-						x[n1]=xc[n2];
-						y[n1]=yc[n2];
+        x[n1]=xc[n2];
+        y[n1]=yc[n2];
 
         if (verbose){
           if (n1 < min_n1 || min_n1 == -1) min_n1 = n1;
           if (n1 > max_n1) max_n1 = n1;
         }
+      }
     }
 
     /* cell center and copy to super grid */
     cell_center(nil[n], njl[n], xc + tile_offset[n], yc + tile_offset[n], xtmp, ytmp);
-    if (verbose) fprintf(stderr, "[INFO] CENTER n: %ld n*nip*nip: %ld tile_offset[n]: %ld\n", n, n*nip*nip, tile_offset[n]);
-    for(j=0; j<njl[n]; j++) for(i=0; i<nil[n]; i++) {
+    if (verbose) fprintf(stderr, "[INFO] CENTER n: %ld n*nip*nip: %ld tile_offset[n]: %d\n", n, n*nip*nip, tile_offset[n]);
+    for(j=0; j<njl[n]; j++) {
+      for(i=0; i<nil[n]; i++) {
         // Offset of 2 for i=0, j=0
         n1 = tile_offset_supergrid[n] + (j*2+1)*(2*nil[n]+1)+i*2+1;
         n2 = j*nil[n]+i;   // WDR why does this not have a tile_offset??
@@ -512,10 +518,12 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
         }
 
       }
+    }
 
     /* cell east and copy to super grid */
     cell_east(nil[n], njl[n], xc + tile_offset[n], yc + tile_offset[n], xtmp, ytmp);
-    for(j=0; j<njl[n]; j++) for(i=0; i<=nil[n]; i++) {
+    for(j=0; j<njl[n]; j++){
+      for(i=0; i<=nil[n]; i++) {
         // Offset of 2*nil[n] + 1 for i=0, j=0
         n1 = tile_offset_supergrid[n] + (j*2+1)*(2*nil[n]+1)+i*2;
         n2 = j*(nil[n]+1)+i;   // WDR why does this not have a tile_offset??
@@ -527,10 +535,12 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
           if (n1 > max_n1) max_n1 = n1;
         }
       }
+    }
 
     /* cell north and copy to super grid */
     cell_north(nil[n], njl[n], xc + tile_offset[n], yc + tile_offset[n], xtmp, ytmp);
-    for(j=0; j<=njl[n]; j++) for(i=0; i<nil[n]; i++) {
+    for(j=0; j<=njl[n]; j++){
+      for(i=0; i<nil[n]; i++) {
         // Offset of 1 for i=0, j=0
         n1 = tile_offset_supergrid[n] + (j*2)*(2*nil[n]+1)+i*2+1;
         n2 = j*nil[n]+i;   // WDR why does this not have a tile_offset??
@@ -542,6 +552,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
           if (n1 > max_n1) max_n1 = n1;
         }
       }
+    }
 
     if (verbose) fprintf(stderr,
                          "[INFO] INDEX tile: %ld min_n1: %ld max_n1: %ld max_n1 - min_n1: %ld sqrt(max_n1 - min_n1 + 1): %f\n",
@@ -573,7 +584,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
     /* Calculate dy */
     for(n=0; n<ntiles2; n++) {
-      if (verbose) fprintf(stderr, "[INFO] Calculating dy for tile n: %d ntiles: %ld ntiles2: %ld\n", n, ntiles, ntiles2);
+      if (verbose) fprintf(stderr, "[INFO] Calculating dy for tile n: %ld ntiles: %d ntiles2: %ld\n", n, ntiles, ntiles2);
 
       if( stretched_grid || (n >= 6) ) {
         for(j=0; j<nyl[n]; j++) {
@@ -659,30 +670,30 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     }
   }
 
-  if(global_nest != 1){
   /* calculate nested grid area */
   for (nn=0; nn < num_nest_grids; nn++) {
+    
     if (verbose) {
-      fprintf(stderr, "[INFO] call calc_cell_area  for nest nn=%ld tile n=%ld\n", nn, ntiles+nn);
+      fprintf(stderr, "[INFO] call calc_cell_area for nest nn=%ld tile n=%ld\n", nn, ntiles+nn);
     }
     calc_cell_area(nx_nest_arr[nn], ny_nest_arr[nn],
                    x + tile_offset_supergrid[ntiles+nn],
                    y + tile_offset_supergrid[ntiles+nn],
                    area + tile_offset_area[ntiles+nn]);
-  }
-
+      }
+  
   if (output_length_angle) {
     /*calculate rotation angle, just some workaround, will modify this in the future. */
     calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
-
-    /* since angle is used in the model, set angle to 0 for nested region */
+    
+    //since angle is used in the model, set angle to 0 for nested region
     for(nn=0; nn < num_nest_grids; nn++) {
-      for(i=0; i<(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
+      //TODO: IMA (Changing "<=" to < reduces one IMA but changes 4 numbers from GR pre-nested):
+      for(i=0; i<=(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
         angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
         angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
       }
     }
-  }
   }
 
   /* convert grid location from radians to degree */
@@ -713,6 +724,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   free(lat);
   free(xc2);
   free(yc2);
+
 
 } /* void create_gnomonic_cubic_grid */
 
@@ -960,13 +972,17 @@ void gnomonic_ed(int ni, double* lamda, double* theta)
 
   xyz2latlon(nip*nip, x, y, z, lamda, theta);
 
+  free(x);
+  free(y);
+  free(z);
+
 } /* gnomonic_ed */
 
 /*----------------------------------------------------------
   void gnomonic_angl()
   This is the commonly known equi-angular grid
-//TODO: Implement this function?
-**************************************************************/
+  //TODO: Implement this function?
+  **************************************************************/
 
 void gnomonic_angl(int ni, double* lamda, double* theta)
 {
@@ -977,11 +993,11 @@ void gnomonic_angl(int ni, double* lamda, double* theta)
   void gnomonic_dist()
   This is the commonly known equi-distance grid
   //TODO: Implement this function?
-**************************************************************/
+  **************************************************************/
 
 void gnomonic_dist(int ni, double* lamda, double* theta)
 {
-mpp_error("function gnomonic_dist not yet implemented");
+  mpp_error("function gnomonic_dist not yet implemented");
 
 
 } /* gnomonic_dist */
@@ -1657,12 +1673,14 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
   npj = nj+1;
   parent_npi = parent_ni+1;
 
+  //TODO: IMA. Partly done Introduced "last_point" to avoid array out of bounds access. Did not change
+  // repruduction of pre multi-nest version. Some IMAs still present?
   int last_point = 0;
   for(j=0; j<npj; j++) {
     jc = jstart - 1 + j/refine_ratio;
     jmod = j%refine_ratio;
     for(i=0; i<npi; i++) {
-      if((j = (npj -1)) && (i == (npi - 1))){
+      if((j == (npj -1)) && (i == (npi - 1))){
         last_point = 1;
       }
       ic = istart - 1 + i/refine_ratio;
@@ -1694,7 +1712,7 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
           t2[0] = parent_xc[idxb + 1];
           t2[1] = parent_yc[idxb + 1];
         }else{
-           //If on the last point of array, use itself to interpolate and not the out of bounds data.
+          //If on the last point of array, use itself to interpolate and not the out of bounds data.
           t2[0] = parent_xc[idxb];
           t2[1] = parent_yc[idxb];
         }
@@ -1725,3 +1743,4 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
     }
   }//end j loop
 }
+
