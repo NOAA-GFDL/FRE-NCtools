@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # ------------------------------------------------------------------------------
 # FMS/FRE Project: Script to Split netCDF Files
