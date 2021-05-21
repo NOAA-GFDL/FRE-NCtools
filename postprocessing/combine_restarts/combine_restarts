@@ -1,0 +1,112 @@
+#!/bin/sh
+usage () {
+    echo "Usage: combine_restarts [OPTIONS]"
+}
+
+help () {
+    echo "Usage:"
+    echo "     combine_restarts [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "     -h"
+    echo "          Display usage information."
+    echo ""
+    echo "     -v"
+    echo "          Be verbose in output"
+    echo ""
+}
+
+echoerr() {
+    echo "$@" 1>&2
+}
+
+# Default values
+verbose=0
+
+while getopts :hv OPT; do
+    case "$OPT" in
+	h)
+	    help
+	    exit 0
+	    ;;
+	v)
+	    (( verbose++ ))
+	    ;;
+	\?)
+	    echoerr "Unknown option:" $${OPTARG}
+	    usage >&2
+	    exit 1
+	    ;;
+    esac
+done
+
+# Determine if the required commands are available, if not exit.  As
+# all of these commands are part of FRE, usually if one is missing
+# all are missing.
+reqCommands="is-compressed \
+             combine-ncc \
+             mppnccombine"
+for c in $reqCommands
+do
+  command -v ${c} > /dev/null 2>&1
+  if [ $? -ne 0 ]
+  then
+    echo "Required application \"${c}\" is not in PATH.  Is the FRE module loaded" >&2
+    exit 1
+  fi
+done
+
+# Grep patterens needed
+patternGrepTail='\.[0-9]{4}$'
+patternGrepAscii='\<out\>|\<results\>'
+patternGrepRestartsOrNC='\<res\>|\<nc\>'
+patternGrepRegion='^rregion'
+patternGrepNC='\<nc\>'
+
+# matching patterns for find
+patternFindRestarts='.*\<res\>.*'
+patternFindNC='.*\<nc\>.*'
+
+restartFiles=$( ls -1 | egrep "$patternGrepRestartsOrNC.*$patternGrepTail" | sed -r "s/$patternGrepTail//g" | sort -u )
+
+# Options for combine programs
+mppCombOpts='-64 -h 16384 -m'
+
+for f in ${restartFiles}
+do
+    if [ ${verbose} -gt 0 ]; then
+	echo ${f}
+    fi
+    inputFiles=$( ls -1 | egrep "${f}${patternGrepTail}" )
+    if [ $( echo ${inputFiles} | wc -w ) -gt 0 ]; then
+	# Check if file is a compressed file
+	is-compressed $( echo ${inputFiles} | cut -d ' ' -f 1 )
+	if [ $? -eq 0 ]; then
+	    # File is compressed
+	    if [[ ${verbose} -gt 1 ]]; then
+		echo "combine-ncc ${inputFiles} ${f}"
+	    fi
+	    combine-ncc ${inputFiles} ${f}
+	    if [[ $? -ne 0 ]]; then
+		echoerr "Error while combining file '${f}'"
+		exit 1
+	    else
+		\rm -f ${inputFiles}
+	    fi
+	else
+	    if [ -e ${f} ]; then
+		\rm -f ${f}
+	    fi
+	    if [ ${verbose} -gt 1 ]; then
+		echo "mppnccombine $mppCombOpts ${f} ${inputFiles}"
+	    fi
+	    mppnccombine $mppCombOpts ${f} ${inputFiles}
+	    if [[ $? -ne 0 ]]; then
+		echoerr "Error while combining file '${f}'"
+		exit 1
+	    else
+		\rm -f ${inputFiles}
+	    fi
+	fi
+    fi
+done
