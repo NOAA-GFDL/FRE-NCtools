@@ -1693,9 +1693,9 @@ int main(int argc, char *argv[]) {
 
       /*-------------------------------------------------------------------------------
         Remap the data and write out to dst_restart_file
-        It is assumed all the fields need to be remapped will have the first
-        dimension name "tile_index" or "cohort_index" ( excludes "tile_index" or
-        "cohort_index")
+        See NCTools PR #81 for some ducumentaion on the possible field and index combinations.
+        Excluding fields that are actual indecies, the first dimension name is "cohort_index"
+        "tile_index", "literCCohort:, or "textlen".
         -----------------------------------------------------------------------------*/
 
       rdata_global = (double *)malloc(nidx_dst_global * sizeof(double));
@@ -2688,7 +2688,12 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
   }
 
 /*
-  gather compressed int data and make sure its sorted. If its not sorted, sort and adjust the associated data.
+  Gather compressed int data and make sure its sorted. If its not sorted, sort and adjust the associated data.
+  Note that array data_global is sorted by the values of that array, but also the data in array orig_pos_global
+  is co-rearranged in the sense that every time the sorting routine swaps two data_global points, the correspoding
+  two points in orig_pos_global are also swapped.  Along with the trick of initializing orig_pos_global[j]=j,
+  this will keep track of the original positions of the points of data_global. I.e., once the algorithm
+  is finished, the value orig_pos_global[j] is the original (pre-sort) array position of data_global[j].
   TODO: See if data can be gatherd so that its in order of pe number, then such data does notneed to be sorted?
 */
 void gather_sort_compressed_int_data(int npts, const int *data, int npts_global, int *data_global, int * orig_pos_global) {
