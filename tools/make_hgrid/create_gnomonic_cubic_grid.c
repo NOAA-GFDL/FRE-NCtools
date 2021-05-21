@@ -672,7 +672,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   /* calculate nested grid area */
   for (nn=0; nn < num_nest_grids; nn++) {
-    
+
     if (verbose) {
       fprintf(stderr, "[INFO] call calc_cell_area for nest nn=%ld tile n=%ld\n", nn, ntiles+nn);
     }
@@ -681,15 +681,15 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
                    y + tile_offset_supergrid[ntiles+nn],
                    area + tile_offset_area[ntiles+nn]);
       }
-  
+
   if (output_length_angle) {
     /*calculate rotation angle, just some workaround, will modify this in the future. */
     calc_rotation_angle2(nxp, x, y, angle_dx, angle_dy );
-    
+
     //since angle is used in the model, set angle to 0 for nested region
     for(nn=0; nn < num_nest_grids; nn++) {
       //TODO: IMA (Changing "<=" to < reduces one IMA but changes 4 numbers from GR pre-nested):
-      for(i=0; i<=(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
+      for(i=0; i<(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
         angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
         angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
       }
