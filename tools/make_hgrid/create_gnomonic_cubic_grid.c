@@ -32,8 +32,9 @@
                  NOAA-GFDL source. Kyle Ahern, AOML/HRD
   03/05/2020  -- Enable many level Telescoping nests
                  (Nests within nests). Joseph Mouallem FV3/GFDL
-  04/12/2021  -- Fixed overwritting unspecified memory locations through
-                 out-of-bounds resetting of array agle_dx and angle_dy. MZuniga
+  04/12/2021  -- Fixed several IMAs Invalid memory acess. See IMA notes scattered below.
+                 For GR (Global refinement) runs, not all of the IMAs could be fixed.
+                 Miguel Zuniga.
 *******************************************************************************/
 
 /**
@@ -178,8 +179,6 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   if(num_nest_grids && parent_tile[0]== 0){
     global_nest = 1;
-    //TODO: IMA related. Nncrease ntiles2 by 1 and will decrease some IMA below, but will also change to
-    //  0 two angle_dx and angle_dy values from GR pre multi-nest on tile1.nc
   }
   else {
     for (nn=0; nn < num_nest_grids; nn++) {
@@ -240,8 +239,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     nj_nest_arr[nn] = nj_nest[nn];
   }
 
-  //TODO: IMA: (IMA mean Invalid Memory access - usually do to array out of bounds access)
-  // These tile_offets are not big enough (by 1) for GR and and results in several IMAs below.
+  //Note : tile_offet arrays below are to small (by 1) for GR (Global Refinement) runs and
+  // result in several IMAs (Invalid Memory Access)
   tile_offset = (int *)malloc(ntiles2*sizeof(int));
   tile_offset_supergrid = (int *)malloc(ntiles2*sizeof(int));
   tile_offset_supergrid_m = (int *)malloc(ntiles2*sizeof(int));
@@ -255,7 +254,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   }
 
   /* Use of these arrays permits different sized nests */
-  if (global_nest != 1) {//DONE: For removing IMA and a core dump with GR.
+  if (global_nest != 1) {//This check removes one IMA with GR.
   for (nn = 0; nn < num_nest_grids; nn++) {
     nxl[nn + ntiles] = nx_nest_arr[nn];
     nyl[nn + ntiles] = ny_nest_arr[nn];
@@ -688,7 +687,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
     //since angle is used in the model, set angle to 0 for nested region
     for(nn=0; nn < num_nest_grids; nn++) {
-      //TODO: IMA (Changing "<=" to < reduces one IMA but changes 4 numbers from GR pre-nested):
+      //Note: Changed "<=" to "<" below to remove one IMA (twice) for GR AND non-GR runs.
+      // For GR runs, it also changed four result numbers. 
       for(i=0; i<(nx_nest_arr[nn]+1)*(ny_nest_arr[nn]+1); i++) {
         angle_dx[tile_offset_supergrid[ntiles+nn] + i]=0;
         angle_dy[tile_offset_supergrid[ntiles+nn] + i]=0;
@@ -1673,8 +1673,8 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
   npj = nj+1;
   parent_npi = parent_ni+1;
 
-  //TODO: IMA. Partly done Introduced "last_point" to avoid array out of bounds access. Did not change
-  // repruduction of pre multi-nest version. Some IMAs still present?
+  //"last_point" introduced to avoid IMAs (an array out of bounds access). Did not 
+  // change awnsers of pre multi-nest version. Some IMAs still present for GR?
   int last_point = 0;
   for(j=0; j<npj; j++) {
     jc = jstart - 1 + j/refine_ratio;
