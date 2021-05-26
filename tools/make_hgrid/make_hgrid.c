@@ -32,10 +32,10 @@
                  global grid refinement (old code no longer valid,
                  see comment with tag [Ahern]). Formatting changes.
                  Kyle Ahern, AOML/HRD
-  4/12/2021   -- Removed several IMAs (invalid memory access), mostly for
-                 the GR (global refinement) runs. GR runs now call the
-                 pre-multiple nest version of create_gnomonic_cubic_grid.
-
+  4/12/2021  --  Fixed several IMAs (Invalid Memory Access), memory leaks, and some 
+                 non-critical compiler warnings. Some notes in create_gnomonic_cubic_grid
+                 concerning changes related to global refinement runs.
+                 M Zuniga
 */
 #include <stdlib.h>
 #include <stdio.h>

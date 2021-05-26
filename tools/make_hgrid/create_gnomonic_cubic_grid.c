@@ -32,11 +32,11 @@
                  NOAA-GFDL source. Kyle Ahern, AOML/HRD
   03/05/2020  -- Enable many level Telescoping nests
                  (Nests within nests). Joseph Mouallem FV3/GFDL
-  04/12/2021  -- Fixed several IMAs (Invalid memory acess). See IMA notes scattered below.
-                 The pre-multiple nest version of create_gnomonic_cubic_grid was added back 
-                 as a second version of the functionality, which should be called for GR 
-                 (Global Refinement) runs. One IMA remains (in GR runs) but it 
-                 was not onserved to cause core dumps.
+  04/12/2021  -- Fixed several IMAs (Invalid Memory Access), memory leaks, and some 
+                 non-critical compiler warnings. Some notes related to MAs are scattered below.
+                 Inorder to help reproduce the pre multinest GR (Global Refinement) awnsers, 
+                 the pre mulit-nest version of function create_gnomonic_cubic_grid was added back 
+                 as a second version of the function by that name. 
                  Miguel Zuniga.
 *******************************************************************************/
 
@@ -729,6 +729,21 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
   free(yc2);
 } /* void create_gnomonic_cubic_grid */
 
+/*
+  Function create_gnomonic_cubic_grid_GR is mostly (some lines deleted) the version of
+  the function just prior to the multi nest version. 
+
+  This function should only be called for GR  computations.
+
+  Unsuccessful attempts were made to make the current general purpose 
+  create_gnomonic_cubic_grid version reproduce the pre multi-nest version answers for 
+  GR computations. This current GR version does reproduce the answers within a small
+  tolerance (e.g. to about the tenth decimal digit for fields x and y on gcc 9.3 compiler).
+
+  TODO: Update general purpose multi-nest version of create_gnomonic_cubic_grid so that it 
+  reproduces the pre multi-nest answers; remove the GR version below.
+*/
+
 void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, double *x, double *y,
 				double *dx, double *dy, double *area, double *angle_dx,
 				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
@@ -825,12 +840,8 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
 
   symm_ed(ni, lon, lat);
 
-
   npts = ntiles*nip*nip;
   if(ntiles2>ntiles) npts += (ni_nest+1)*(nj_nest+1);
-
-  printf(" FOR XC nip, npts: %ld, %ld\n", nip, npts);
-    
 
   xc = (double *)malloc(npts*sizeof(double));
   yc = (double *)malloc(npts*sizeof(double));
@@ -932,7 +943,7 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
     }
   }
   else{
-    mpp_error ("use for global nest only");
+    mpp_error ("Using function intended for global refinement only");
   }
 
   /* calculate grid box center location */
@@ -1150,7 +1161,7 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
   free(xc2);
   free(yc2);
     
-}//V2
+}
 
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area)
 {
@@ -2054,9 +2065,9 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
 
 /***
   Canculate the index into parent.
-  Function index_an_grintroduced to avoid IMAs (an array out of bounds access)
-  in some global_refinement situations. In other situations, going outside the
-  parent array is considered a fatal error.
+  Function index_an_gr is introduced to avoid IMAs (an array out of bounds access)
+  in some global_refinement situations. In other situations, attempting to 
+  go outside the parent array should not occur and is considered a fatal error.
 ***/
 int index_an_gr(int jcf, int p_npi, int icf, int max_ni, int max_nj, int is_gr){
   if(jcf > max_nj){
