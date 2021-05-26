@@ -88,7 +88,7 @@ void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, doubl
 																				int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
-                        double *xc, double *yc);
+                        double *xc, double *yc, int is_gr);
 
 void spherical_linear_interpolation(double beta, const double *p1, const double *p2, double *pb);
 
@@ -427,7 +427,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       /* zeroth index of refine_ratio array                  *
        * is assigned to all tiles if global_nest = 1 [Ahern] */
       setup_aligned_nest(ni2, ni2, xc2+ni2p*ni2p*n, yc2+ni2p*ni2p*n, 0, refine_ratio[0],
-                         1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip );
+                         1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip, 1 );
     }
   }
   else if( num_nest_grids > 0 ) {
@@ -444,7 +444,7 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       setup_aligned_nest(ni_parent[nn], nj_parent[nn], xc+tile_offset[parent_tile[nn]-1],
                          yc+tile_offset[parent_tile[nn]-1], halo, refine_ratio[nn],
                          istart[nn], iend[nn], jstart[nn], jend[nn],
-                         xc+tile_offset[ntiles+nn], yc+tile_offset[ntiles+nn]);
+                         xc+tile_offset[ntiles+nn], yc+tile_offset[ntiles+nn], 0);
     }
 
     if (verbose) fprintf(stderr, "[INFO] Completed processing setup_aligned_nest for nest(s)\n");
@@ -777,18 +777,8 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
   global_nest=0;
   if(nest_grid && parent_tile== 0)
     global_nest = 1;
-  else if(nest_grid) {
-    ntiles2 = ntiles+1;
-    if( (istart_nest+1)%2 ) mpp_error("create_gnomonic_cubic_grid: istart_nest+1 is not divisbile by 2");
-    if( iend_nest%2 ) mpp_error("create_gnomonic_cubic_grid: iend_nest is not divisbile by 2");
-    if( (jstart_nest+1)%2 ) mpp_error("create_gnomonic_cubic_grid: jstart_nest+1 is not divisbile by 2");
-    if( jend_nest%2 ) mpp_error("create_gnomonic_cubic_grid: jend_nest is not divisbile by 2");
-    istart = (istart_nest+1)/2;
-    iend   = iend_nest/2;
-    jstart = (jstart_nest+1)/2;
-    jend   = jend_nest/2;
-    ni_nest = (iend-istart+1)*refine_ratio;
-    nj_nest = (jend-jstart+1)*refine_ratio;
+  else{
+    mpp_error("use only for global nest");
   }
   nx_nest = ni_nest*2;
   ny_nest = nj_nest*2;
@@ -917,6 +907,7 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
 
   /* get nest grid */
   if(global_nest) {
+    fprintf(stderr, "[INFO] pre-callling setup_aligned_nest_GR, nip=%ld\n", nip);
     npts = ntiles*nip*nip;
     xc2 = (double *)malloc(npts*sizeof(double));
     yc2 = (double *)malloc(npts*sizeof(double));
@@ -934,16 +925,14 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
     xc = (double *)malloc(npts*sizeof(double));
     yc = (double *)malloc(npts*sizeof(double));
     for(n=0; n<ntiles; n++) {
-      printf("calling setup_aligned_nest, n=%ld\n",n);
-      setup_aligned_nest(ni2, ni2, xc2+ni2p*ni2p*n, yc2+ni2p*ni2p*n, 0, refine_ratio,
-                         1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip );
+      fprintf(stderr, "[INFO] callling setup_aligned_nest_GR,xc nip=%ld n=%ld\n",nip, n);
+      int offset_p = ni2p*ni2p*n;
+      setup_aligned_nest(ni2, ni2,xc2+offset_p, yc2+offset_p, 0, refine_ratio,
+                            1, ni2, 1, ni2, xc+n*nip*nip, yc+n*nip*nip, 1 );
     }
   }
-  else if( nest_grid ) {
-    setup_aligned_nest(ni, ni, xc+nip*nip*(parent_tile-1),
-                       yc+nip*nip*(parent_tile-1), halo, refine_ratio,
-                       istart, iend, jstart, jend,
-                       xc+ntiles*nip*nip, yc+ntiles*nip*nip );
+  else{
+    mpp_error ("use for global nest only");
   }
 
   /* calculate grid box center location */
@@ -2063,6 +2052,30 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
 }
 
 
+/***
+  Canculate the index into parent.
+  Function index_an_grintroduced to avoid IMAs (an array out of bounds access)
+  in some global_refinement situations. In other situations, going outside the
+  parent array is considered a fatal error.
+***/
+int index_an_gr(int jcf, int p_npi, int icf, int max_ni, int max_nj, int is_gr){
+  if(jcf > max_nj){
+    jcf = max_nj;//then use the uppr (last) row data
+    //fprintf(stderr, "[INFO] index_an_gr : jcf=%d max_nj=%d\n",jcf, max_nj);
+    if(is_gr == 0){          
+      mpp_error("make_hgrid in index_ar_gr, jcf > max_nj");
+    }
+  }
+  if(icf > max_ni){
+    icf = max_ni;//then use the rightmost column data
+    //fprintf(stderr, "[INFO] index_an_gr : icf=%d max_ni=%d\n",icf, max_ni);
+    if(is_gr == 0){          
+      mpp_error("make_hgrid in index_ar_gr, icf > max_ni");
+    }
+  }
+  return ( jcf * p_npi + icf );
+}
+
 
 /* void setup_aligned_nest
    parent_ni    : (input) parent grid size in x-direction.
@@ -2081,7 +2094,7 @@ void spherical_linear_interpolation(double beta, const double *p1, const double 
 */
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
-                        double *xc, double *yc)
+                        double *xc, double *yc, int is_gr)
 {
   double q1[2], q2[2], t1[2], t2[2];
   double two_pi;
@@ -2108,52 +2121,38 @@ void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, c
   npj = nj+1;
   parent_npi = parent_ni+1;
 
-  //"last_point" introduced to avoid IMAs (an array out of bounds access). Did not 
-  // change awnsers of pre multi-nest version. Some IMAs still present for GR?
-  int last_point = 0;
   for(j=0; j<npj; j++) {
     jc = jstart - 1 + j/refine_ratio;
     jmod = j%refine_ratio;
     for(i=0; i<npi; i++) {
-      if((j == (npj -1)) && (i == (npi - 1))){
-        last_point = 1;
-      }
       ic = istart - 1 + i/refine_ratio;
       imod = i%refine_ratio;
 
-      if(jmod == 0) {
-        int idxa = jc*parent_npi+ic;
-        q1[0] = parent_xc[ idxa ];
-        q1[1] = parent_yc[ idxa ];
-        if(last_point == 0){
-          q2[0] = parent_xc[idxa + 1];
-          q2[1] = parent_yc[idxa + 1];
-        }else{
-          //If on the last point of array, use itself to interpolate and not the out of bounds data.
-          q2[0] = parent_xc[idxa];
-          q2[1] = parent_yc[idxa];
-        }
+       if(jmod == 0) {
+        int idx = index_an_gr(jc,parent_npi,ic,parent_ni,parent_nj,is_gr);
+        int idx_pi = index_an_gr(jc,parent_npi,ic+1,parent_ni,parent_nj,is_gr);
+        q1[0] = parent_xc[ idx ];
+        q1[1] = parent_yc[ idx ];
+        q2[0] = parent_xc[ idx_pi ];
+        q2[1] = parent_yc[ idx_pi ];
       }
       else {
-        t1[0] = parent_xc[jc*parent_npi+ic];
-        t1[1] = parent_yc[jc*parent_npi+ic];
-        int idxb = (jc+1)*parent_npi+ic;
-        t2[0] = parent_xc[ idxb ];
-        t2[1] = parent_yc[ idxb ];
+        int idx = index_an_gr(jc,parent_npi,ic,parent_ni,parent_nj,is_gr);
+        int idx_pi = index_an_gr(jc,parent_npi,ic+1,parent_ni,parent_nj,is_gr);
+        int idx_pj = index_an_gr(jc+1,parent_npi,ic,parent_ni,parent_nj,is_gr);
+        int idx_pjpi = index_an_gr(jc+1,parent_npi,ic+1,parent_ni,parent_nj,is_gr);
+        t1[0] = parent_xc[ idx ];
+        t1[1] = parent_yc[ idx ];
+        t2[0] = parent_xc[ idx_pj ];
+        t2[1] = parent_yc[ idx_pj ];
         spherical_linear_interpolation( (double)jmod/refine_ratio, t1, t2, q1);
-        t1[0] = parent_xc[jc*parent_npi+ic+1];
-        t1[1] = parent_yc[jc*parent_npi+ic+1];
-        if(last_point == 0){
-          t2[0] = parent_xc[idxb + 1];
-          t2[1] = parent_yc[idxb + 1];
-        }else{
-          //If on the last point of array, use itself to interpolate and not the out of bounds data.
-          t2[0] = parent_xc[idxb];
-          t2[1] = parent_yc[idxb];
-        }
+        t1[0] = parent_xc[ idx_pi ];
+        t1[1] = parent_yc[ idx_pi ];
+        t2[0] = parent_xc[ idx_pjpi ];
+        t2[1] = parent_yc[ idx_pjpi ];
         spherical_linear_interpolation( (double)jmod/refine_ratio, t1, t2, q2);
       }
-
+       
       if (imod == 0) {
         xc[j*npi+i] = q1[0];
         yc[j*npi+i] = q1[1];
