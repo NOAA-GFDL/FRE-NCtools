@@ -31,26 +31,34 @@
 . $( dirname $( dirname $(readlink -f $0) ) )/env_functions.sh
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
-module load PrgEnv-intel/6.0.5
-module swap intel intel/18.0.6.288
-module load cray-netcdf/4.6.3.2
-module load cray-hdf5/1.10.5.2
-module load nccmp/1.8.6.5
+# Variables to control versions used
+intel_version=18.0.5.274
+gnu_version=6.5.0
+ncc_version=4.7.0
+mpi_version=2018.4.274
 
-# Add bats to PATH
-# Needed for testing
-module append-path PATH /ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin
+# GCC is needed for icc to use newer C11 constructs.  However, on systems
+# that use lmod, we cannot load two compiler family modules concurrently.
+# This should add the GNU path information to the *PATH variables
+module prepend-path PATH "/apps/gnu/gcc-9.2.0/bin"
+module prepend-path MANPATH "/apps/gnu/gcc-9.2.0/share/man"
+module prepend-path LD_LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib"
+module prepend-path LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib"
+module prepend-path LD_LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib64"
+module prepend-path LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib64"
+module prepend-path CPATH "/apps/gnu/gcc-9.2.0/include"
+module prepend-path CMAKE_PREFIX_PATH "/apps/gnu/gcc-9.2.0/"
 
-# **********************************************************************
-# Set environment variablesSetup and Load the Modules
-# **********************************************************************
-setenv MPICH_UNEX_BUFFER_SIZE 256m
-setenv MPICH_MAX_SHORT_MSG_SIZE 64000
-setenv MPICH_PTL_UNEX_EVENTS 160k
-setenv KMP_STACKSIZE 2g
-setenv F_UFMTENDIAN big
-setenv NC_BLKSZ 64K
+# Load the Intel compilers
+module load intel/${intel_version}
+
+# bats and nccmp are needed for tests
+module prepend-path PATH /home/Seth.Underwood/opt/bats/0.4.0/bin
+module load nccmp/1.8.5
+
+# Load the Intel modules required for building
+module load netcdf/$ncc_version
+module load impi/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
