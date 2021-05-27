@@ -125,16 +125,18 @@ run command make_solo_mosaic  \
 # MPI only
   if [ -z "$skip_mpi" ]; then
       #make the coupler_mosaic
-      run command mpirun -n 4 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
+      run command mpirun -n 2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
                          --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc \
                          --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check
+      [ "$status" -eq 0 ]
 
       #check reproducing ability between processor count for make_coupler_mosaic
       [ ! -d parallel ] && mkdir parallel
       cd parallel
-      run command mpirun -n 6 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
+      run command mpirun -n 4 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
                         --land_mosaic ../land_mosaic.nc --ocean_mosaic ../ocean_mosaic.nc \
                         --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
+      [ "$status" -eq 0 ]
       # just check all the files created in this dir
       # directory path should differ
       nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir grid_spec.nc ../grid_spec.nc
