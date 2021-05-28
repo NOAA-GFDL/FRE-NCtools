@@ -24,7 +24,7 @@ variables:
 .deployScript: &deployScript
   script:
     - cd ${CI_PROJECT_DIR}
-    - . ${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh
+    - eval `${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh`
     - autoreconf -i
     - cd ${CI_PROJECT_DIR}/${buildDir}
     - make install
