@@ -58,6 +58,18 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
+# Verify the ncdump executable is in PATH and is executable
+ncdumpPath=$( which ncdump 2>&1 )
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required command 'ncdump' is not in PATH."
+    exit 1
+else
+    if [ ! -x $ncdumpPath ]; then
+        echoerr "ERROR: Required command 'ncdump' is not executable ($ncdumpPath)."
+        exit 1
+    fi
+fi
+
 # Verify the ncrcat executable is in PATH and is executable (`ncrcat --version` exit status of 0)
 which ncrcat > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -99,7 +111,7 @@ while [ $# -gt 0 ]; do
             ncdumpOut=$( ncdump -h $curFile 2>&1 )
             status=$?
             if [ $status -ne 0 ]; then
-                echoerr "ERROR: in file '$curFile' is NOT a NetCDF formatted file."
+                echoerr "WARNING: skipping in file '$curFile' as it is NOT a NetCDF formatted file."
             else
                 # Check each iceberg_res_file to see if it has icebergs.
                 if [ $( echo "$ncdumpOut" | grep 'UNLIMITED' | awk '{gsub(/\(/," ");print $6}' ) -gt 0 ]; then
