@@ -2305,7 +2305,7 @@ int main(int argc, char *argv[]) {
       if (mpp_pe() == mpp_root_pe()) printf("NOTE from remap_land: %s is created\n", file_dst);
       if (print_memory) {
         char mesg[128];
-        sprintf(mesg, "End of loop face_dst = %d\n", face_dst);
+        sprintf(mesg, "End of loop face_dst = %d", face_dst);
         print_mem_usage(mesg);
       }
     }  // for (face_dst = 0; face_dst < nface_dst; face_dst++) {
@@ -2512,12 +2512,12 @@ source grid , on any face of the source grid. The resultant idx_map[] and
 face_map[] have the space index and the face index of the nearest.
 Note: the computational complexity is O(npts_dst * npts_src * nface_src).
 Note: this function does not  guarantee that an  identified nearest neighbor
-grid cell has any specific data in association, such as a particular cohort 
+grid cell has any specific data in association, such as a particular cohort
 number or tile number. In principle, in the usual way this is used to determine
 the idx_map_soil[] with the spil_src_cout[] as the mask_src[], it is possible (though
 not yet observed in tests) that the nearest neighbor identified does not have
 a desired tile or cohort.
-  
+
 ********************************************************************/
 void full_search_nearest(int nface_src, int npts_src, const double *lon_src, const double *lat_src, const int *mask_src,
                          int npts_dst, const double *lon_dst, const double *lat_dst, const int *mask_dst, int *idx_map,
