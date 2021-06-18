@@ -29,8 +29,8 @@ test -z "$CC" && CC=cc
 test -z "$FC" && FC=ftn
 
 # Compile/Link flags
-test -z "$CFLAGS" && CFLAGS="-msse2"
-test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback -msse2"
+test -z "$CFLAGS" && CFLAGS="-xSSE2"
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback -xSSE2"
 test -z "$LIBS" && LIBS=-static
 test -z "$NETCDF_LIBS" && NETCDF_LIBS="-lnetcdf -lhdf5_hl -lhdf5 -lz -lm"
 test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS="-L${NETCDF_DIR}/lib -L${HDF5_DIR}/lib"
