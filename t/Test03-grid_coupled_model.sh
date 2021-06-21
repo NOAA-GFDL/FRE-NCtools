@@ -112,7 +112,7 @@ load test_utils
   [ "$status" -eq 0 ]
 
 #Make coupler mosaic with parallel
-  if [ -z "$skip_mpi" && -z "$CI" ]; then
+  if [ -z "$skip_mpi" ]; then
       [ ! -d parallel ] && mkdir parallel
       cd parallel
 

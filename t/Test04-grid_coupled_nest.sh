@@ -137,8 +137,7 @@ run command make_solo_mosaic  \
                         --land_mosaic ../land_mosaic.nc --ocean_mosaic ../ocean_mosaic.nc \
                         --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
       [ "$status" -eq 0 ]
-      # just check all the files created in this dir
-      # directory path should differ
+      # directory paths should differ
       nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
   fi
 }
