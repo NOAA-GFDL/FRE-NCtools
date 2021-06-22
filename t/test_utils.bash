@@ -23,7 +23,8 @@
 # Utility functions for FRE-NCtools bats test scripts
 # setup and teardown run implicitly at beg and end of tests
 
-# SKIP_TESTS is to be set to a space separated list of one or two digit test numbers to be skipped
+# SKIP_TESTS can be set to a space separated list of one or two digit test numbers
+# to be skipped during make check
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
 testDir="`expr substr $testDir 1 6`"

@@ -138,6 +138,7 @@ run command make_solo_mosaic  \
                         --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
       [ "$status" -eq 0 ]
       # directory paths should differ
-      nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
+      nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir \
+                --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
   fi
 }
