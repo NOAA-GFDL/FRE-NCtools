@@ -48,4 +48,9 @@ prepare_input_data ()
   # Combine the file:
   run command mppnccombine -64 output/$test_file ${test_file}.????
   [ "$status" -eq 0 ]
+
+  # Compare output
+  run command nccmp -w format -md output/$test_file input/$test_file
+  [ "$status" -eq 0 ]
+
 }

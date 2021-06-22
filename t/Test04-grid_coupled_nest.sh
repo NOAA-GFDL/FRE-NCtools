@@ -123,7 +123,7 @@ run command make_solo_mosaic  \
   [ "$status" -eq 0 ]
 
 # MPI only
-  if [ -z "$skip_mpi" ]; then
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
       #make the coupler_mosaic
       run command mpirun -n 2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
                          --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc \
