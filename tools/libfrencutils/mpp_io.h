@@ -20,7 +20,7 @@
 /****************************************************************
                     mpp_io.h
    This headers defines interface to read and write netcdf file. All the data
-will be written out from root pe. 
+will be written out from root pe.
 
    contact: Zhi.Liang@noaa.gov
 
@@ -83,4 +83,5 @@ int mpp_dim_exist(int fid, const char *dimname);
 int get_great_circle_algorithm(int fid);
 void mpp_set_deflation(int fid_in, int fid_out, int deflation, int shuffle);
 void set_in_format(char *format);
+void reset_in_format(int format);
 #endif
