@@ -1517,3 +1517,21 @@ void set_in_format(char *format)
     mpp_error(errmsg);
     }
 }
+
+/**
+void reset_in_format(int format) 
+     Checks for validity of "format", prints a warning if needed, otherwise
+     resets the global variable in_format to the input argument "format".
+ **/
+void reset_in_format(int format) {
+  char errmsg[128];
+
+  if ((format != NC_FORMAT_NETCDF4) && (format != NC_FORMAT_NETCDF4_CLASSIC) && (format != NC_FORMAT_64BIT) &&
+      (format != NC_FORMAT_CLASSIC)) {
+    sprintf(errmsg, "mpp_io(reset_in_format): format = %d is not a valid format", format);
+    mpp_error(errmsg);
+  } else {
+    in_format = format;
+  }
+}
+
