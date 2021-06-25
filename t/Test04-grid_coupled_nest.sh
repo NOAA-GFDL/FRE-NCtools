@@ -22,15 +22,11 @@
 
 #Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region
 
+load test_utils
+
 @test "Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region" {
 
-  if [ ! -d "Test04" ] 
-  then
-  		mkdir Test04
-  fi
-
-  cd Test04
-  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
+ncgen -o OCCAM_p5degree.nc $BATS_TEST_DIRNAME/Test03-input/OCCAM_p5degree.ncl
 
 #create ocean_hgrid 
 run command make_hgrid \
@@ -126,19 +122,23 @@ run command make_solo_mosaic  \
 		--tile_file land_grid.tile1.nc,land_grid.tile2.nc,land_grid.tile3.nc,land_grid.tile4.nc,land_grid.tile5.nc,land_grid.tile6.nc
   [ "$status" -eq 0 ]
 
-# TO DO: Skipping this because it fails 
-#make the coupler_mosaic
-#run command aprun -n $npes2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc --land_mosaic land_mosaic.nc \
-#          --ocean_mosaic ocean_mosaic.nc --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check
+# MPI only
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
+      #make the coupler_mosaic
+      run command mpirun -n 2 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
+                         --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc \
+                         --ocean_topog  topog.nc --interp_order 1 --mosaic_name grid_spec --check
+      [ "$status" -eq 0 ]
 
-#check reproducing ability between processor count for make_coupler_mosaic
-#if( ! -d parallel ) mkdir parallel
-#cd parallel
-#run command aprun -n $npes make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc --land_mosaic ../land_mosaic.nc \
-#         --ocean_mosaic ../ocean_mosaic.nc --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
-#   nccmp -md $file ../$file
-
-#Remove the workdir 
-  cd ..
-  rm -rf Test04
+      #check reproducing ability between processor count for make_coupler_mosaic
+      [ ! -d parallel ] && mkdir parallel
+      cd parallel
+      run command mpirun -n 4 make_coupler_mosaic_parallel --atmos_mosaic ../atmos_mosaic.nc \
+                        --land_mosaic ../land_mosaic.nc --ocean_mosaic ../ocean_mosaic.nc \
+                        --ocean_topog  ../topog.nc --interp_order 1 --mosaic_name grid_spec
+      [ "$status" -eq 0 ]
+      # directory paths should differ
+      nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir \
+                --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
+  fi
 }

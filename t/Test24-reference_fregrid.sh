@@ -21,19 +21,13 @@
 #***********************************************************************
 
 # test regrid ocean restart file 
+load test_utils
 
 @test "Test fregrid ocean data" {
 
   if [ "$CC" != "icc" ]; then skip "Test fails reference check without icc"; fi
-  if [ ! -d "Test24" ] 
-  then
-  		mkdir Test24
-  fi
 
-  cd Test24
-  cp $top_srcdir/t/Test20-input/CM2.1_mosaic.nc .
-  cp $top_srcdir/t/Test20-input/CM2.1_grid.nc .
-  cp $top_srcdir/t/Test20-input/ocean_temp_salt.res.nc .
+  cp $top_srcdir/t/Test20-input/*.nc .
 
 #Create regular lat-lon grid (100:160, -15:15, size is 360x180)
   run command make_hgrid  \
@@ -80,6 +74,4 @@
    run nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
    [ "$status" -eq 0 ]
 
-  cd ..
-  rm -rf Test24
 }

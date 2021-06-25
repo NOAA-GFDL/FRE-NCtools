@@ -22,18 +22,11 @@
 
 # Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation
 
+load test_utils
+
 @test "Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation" {
 
-  if [ ! -d "Test06" ] 
-  then
-  		mkdir Test06
-  fi
-
-  cd Test06
-  ncgen -o ocean_hgrid.nc $top_srcdir/t/Test06-input/ocean_hgrid.ncl
-  ncgen -o ocean_mosaic.nc $top_srcdir/t/Test06-input/ocean_mosaic.ncl
-  ncgen -o ocean_vgrid.nc $top_srcdir/t/Test06-input/ocean_vgrid.ncl
-  ncgen -o WOA09_ann_theta.nc $top_srcdir/t/Test06-input/WOA09_ann_theta.ncl
+  generate_all_from_ncl
 
   run command make_hgrid \
 		--grid_type regular_lonlat_grid \
@@ -64,8 +57,5 @@
 		--dst_vgrid ocean_vgrid.nc \
 		--check_conserve
   [ "$status" -eq 0 ]
-
-  cd ..
-  rm -rf Test06
 
 }

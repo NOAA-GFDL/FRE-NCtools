@@ -19,18 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
-teardown () {
-  echo "$output"
-  rm -f ocean_vgrid.nc 
-}
-
-@test "make_vgrid exists and is executable" {
-  run command -v make_vgrid
-  [ "$status" -eq 0 ]
-  run make_vgrid -h
-  [ "$status" -eq 1 ]
-}
+load test_utils
 
 @test "make_vgrid creates ocean_vgrid" {
   run command make_vgrid \

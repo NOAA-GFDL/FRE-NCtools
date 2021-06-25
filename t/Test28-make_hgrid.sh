@@ -19,18 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
-teardown () {
-  echo "$output"
-  rm -f ocean_hgrid.nc
-}
-
-@test "make_hgrid exists and is executable" {
-  run command -v make_hgrid
-  [ "$status" -eq 0 ]
-  run make_hgrid -h
-  [ "$status" -eq 2 ]
-}
+load test_utils
 
 @test "make_hgrid creates ocean_hgrid" {
   run command make_hgrid \

@@ -21,18 +21,11 @@
 #***********************************************************************
 
 # test regrid ocean restart file 
+load test_utils
 
 @test "Test fregrid ocean data" {
 
-  if [ ! -d "Test20" ] 
-  then
-  		mkdir Test20
-  fi
-
-  cd Test20
-  cp $top_srcdir/t/Test20-input/CM2.1_mosaic.nc .
-  cp $top_srcdir/t/Test20-input/CM2.1_grid.nc .
-  cp $top_srcdir/t/Test20-input/ocean_temp_salt.res.nc . 
+  cp $top_srcdir/t/Test20-input/*.nc .
 
 #Create regular lat-lon grid (100:160, -15:15, size is 360x180)
   run command make_hgrid  \
@@ -64,6 +57,4 @@
 		--check_conserve
   [ "$status" -eq 0 ]
 
-  cd ..
-  rm -rf Test20
 }
