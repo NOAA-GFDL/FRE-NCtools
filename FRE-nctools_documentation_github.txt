@@ -1,0 +1,273 @@
+FRE-nctools Documentation Collection For GIthub
+
+FRE-NCtools is a collection of tools to help with the creation and
+manipulation of netCDF files used or written by the climate
+models.
+
+Available in FRE-NCtools:
+
+### Grid Tools Complete Description
+
+1.Check_mask
+
+   check_mask is used to configure the processors which contains all land points to be    
+   masked out for ocean model (--model ocean). It also is used to configure the           
+   processors which contains all ocean points to be masked out for land model             
+   (--model land). This program is supposed to run on single processor. This tool will    
+   print out number of processors to be masked, layout of the domain, masked out          
+   processors list. These information will be written into files, with file name is       
+   mask_table.n_mask.layout(1)Xlayout(2). The model is expected to read file mask_table   
+   if you want to mask out some processors.                                               
+                                                                                          
+   The ocean model is assumed to be logically rectangular grid and land model could be    
+   multiple tiles grid (like cubic shpere grid with 6 tiles). For land model, each        
+   processor list has three entries: layout position in x-direction, layout position in   
+   y-direction and tile number. For ocean model, each processor list has two entries:     
+   layout position in x-direction, layout position in y-direction.                        
+                                                                                          
+   The purpose of using mask domain is to decrease the processor usage without            
+   decreasing the performance, without changing bits relative to the case run without the 
+   mask domain option. The mask domain option acts to mask out regions that have zero     
+   ocean points (i.e., points that are all land) in both the ocean and sea ice models or  
+   mask out regions that have zero land points (i.e., points that are all ocean) in land  
+   model                                   
+
+2.Make_Remap_File
+
+  This program creates remap file from Cubic sphere grid to Cubic sphere grid.
+  The ratio of grid size of input and output grid must be integer. The purpose
+  of this tool is to create remap file on single processor for very high resoluton
+  grid ( It will large processor count and long time to create such file ). Currently
+  this tool can only remap file for data on grid cell center.
+
+3.Frigrid
+
+This program remaps (scalar or vector) data from the input grid to the output grid.
+
+4.Make_coupler_mosaic
+
+  This program Modifies land grid to match ocean grid at coast and calculate atmos/land,
+  atmos/ocean, and land/ocean overlaps using the Sutherland-Hodgeman polygon
+  clipping algorithm.
+
+5.Make_hgrid 
+
+  This program generates various types of horizontal grids in netCDF file format.
+
+6.Make_land_domain
+
+  This tools makes sure land_mask and land_ntile are consistent and pack the grid tile information into unstructured grid.
+
+7.Make_quick_mosaic
+
+  Make_quick_mosaic generates a complete grid a FMS coupler. When --ocean_topog  
+  is not specified, it takes a coupled mosaic as input_mosaic. Otherwise it     
+  takes a solo mosaic as input_mosaic. The atmosphere, ocean and land grid will 
+  be the same. The land/sea mask will be decided by the land/sea mask of        
+  input_mosaic if ocean_topog is not specified, otherwise by the ocean_topog    
+  file.  
+
+8.Make_topog
+
+  Make_topog can generate topography for any Mosaic. The output file                    
+  will contains the topography for each tile in the Mosaic. The field name in           
+  the output topography file will be depth_tile# and it is positive down.               
+  The topography data will be defined on model grid, the model grid size will be        
+  supergrid grid size divided by refinement (x_refine, y_refine, default is 2).         
+  --mosaic is a required option and all other options are optional, but                 
+  some options are required depending on the choice of topog_type.
+
+9.Make_vgrid
+
+  Make_vgrid is used to make a vertical grid for an FMS model.  It uses         
+  a piecewise monotonic shape preserving cubic-spline algorithm to             
+  calculate the grid cell location.  The output netcdf file contains            
+  information on the  supergrid with grid size equal to the model grid size    
+  multiplied by a refinement factor of two.
+
+10.Remap_land
+
+  Remap_land remaps land restart-file from one mosaic grid to another mosaic grid.
+
+11.River_regrid 
+
+  River_regrid will remap river network data from global regular lat-lon grid onto any  
+  other grid (includes regular lat-lon grid and cubic grid ), which is specified        
+  through option --mosaic.
+
+12.River_runoff
+
+  This tool remaps runoff data from a spherical grid onto any grid (spherical or tripolar) using conservative scheme.
+
+13.Transfer_to_mosaic_grid 
+
+  Transfer_to_mosaic_grid transfers previous version grid file (The grid file 
+  has field x_T.y_T ) into a mosaic grid. The input file could be a ocean    
+  only grid or a coupled grid.    
+
+### Combine Tools Complete Description
+
+1.Combine_Blobs
+
+  Combine_Blobs holds metadata information related to netcdf files and information necessary to extract slices of arrays.
+  Calculate the size of all variables based on their dimensions.
+  Then, lastly combines the MOM5 Lagrangian Blobs netCDF files.
+
+2.Combine_restarts
+
+  Combine_restart combines restart files generated by a FMS enabled model. This tool will use the correct combine utility (*mppnccombine*
+  or *combine-ncc*) to combine any restart files that reside in the currrent working directory.  *combine_restarts* uses the same options used
+  in the FRE workflow.
+
+3.Iceberg_comb
+
+  Iceberg_comb takes a list of FMS iceberg restart files, and combines them using the NCO record concatenation utility *ncrcat*.  It
+  checks the list of _<in_file>_ to determine if they actually contain
+  any icebergs prior to performing the *ncrcat*.
+
+4.Combine-ncc
+
+  Combine-ncc combines distributed unstructured FMS grid netCDF files. This program reads several input netcdf files, presumably containing
+  compressed by gathering" data, and combines them into a single output file.  This tool opens all input files and determine the creation mode of output file:
+  if any of the input files is 64-bit then the output is 64-bit as well, otherwise it's 32-bit.
+
+
+5.Decompress-ncc
+
+  This tool converts an unstructured FMS grid file to a standard lat-lon grid. This program also reads several input netcdf files, presumably containing "compressed
+  by gathering" data, and combines them into a single output file.
+
+6.Mppnccombine 
+
+  This tool combines destributed FMS netCDF files. This tool joins together netCDF data files representing a decomposed
+  domain into a unified netCDF file.  It was originally designed to be used as a postprocessor for the parallel I/O
+  programming interface "mpp_io_mod".
+
+7.Is-compressed 
+
+  This tool determines if a netCDF file has an unstructured FMS grid. This utility tests if any of the variables 
+  in the given netcdf file are compressed-by-gathering. It returns 0 if yes, and -1 otherwise.
+  
+
+### Statistical and Informational Tools Complete Description
+
+1.list_ncvars 
+
+ list_ncvars lists the variables in a netCDF file.
+
+2.Plevel 
+ 
+ Plevel interpolates data from model levels to pressure levels. The input model grid is a hybrid sigma-pressure coordinate
+ and the output pressure levels may be specified. The minimum required input fields are "bk", "pk", and "ps".
+
+
+3.Split_ncvars 
+
+ Split_ncvars writes the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field.
+
+4.Timavg 
+
+ Timavg creates a time average netCDF file. This tool averages variables stored in netCDF format over the time axis.
+ The script takes multiple netcdf files that all contain the same dimensions and variables but may have a different number of time
+ records and writes a new netcdf file that has a time record averaged from each input file.
+
+5.Ncexists 
+
+ Ncexists checks for variables and attributes in a netCDF file.
+
+### Hydrology Tools identified under simple_hydrog/post/cp_river_vars, simple_hydrog/rmvpr/rmv_parallel_rivers and simple_hydrog/lakes/cr_lake_files
+
+1.Cp_river_vars 
+
+ Cp_river_vars tool follows river downstream; get subA, travel, cell_length, and basin. 
+ Then gets number of grid cells accepting drainage and checks for crossing of tocell paths. 
+ Produces the number of cases of rivers crossing and computes basin area. Tool gets ordered list of drainage cells over land and ocean. 
+ Then writes out number of basins having the same area and assigns basin values, creating drainage flag internal and extern basins.
+ Lastly, creates new netCDF data set; overwrite existing dataset.
+
+2.Rmv_parallel_rivers 
+
+ Rmv_parallel_rivers tool eliminates cases of parallel rivers. River fields then are updated and iteration continues until no longer change.
+
+3.Cr_lake_files
+
+ Cr_lake_files tool adds GLCC Waterbod data. First reads glcc file -- get lats, lons, waterbod, pwetland and then tries averaging 0.125-degree data to 1-degree.
+ Then gets lon and lat dims from first river file should be identical for all files and opens river files 
+ read lat,lon grids, tocell, land_frac,  cellarea, and travel, then gets latitudes and longitudes of input river file.
+ Tool interpolates glcc water bodies and permanent wetlands to model grid. Finally, creates new netCDF data set; overwrite existing dataset.
+
+
+
+## Install
+
+FRE-NCtools has a collection of C and Fortran sources.  Within GFDL, FRE-NCtools
+is built using a recent version of the Intel C and Fortran compilers.  Using
+other compilers (GCC/GFortran) is possible, but is not tested by the Modeling
+Systems group at GFDL.
+
+FRE-NCtools is built using the GNU Build System.  If you received this as a
+package, the standard:
+
+```
+configure
+make
+make install
+```
+
+should be sufficient.  If you cloned the git repository, you must first run
+the `autoreconf` command with the `--install` option to copy in the missing
+autoconf files:
+
+```
+autoreconf -i
+./configure
+make
+make install
+
+
+Additionally, you will probably need to set the environment variable CONFIG_SITE
+and set the recommended environment (modules):
+
+```
+export CONFIG_SITE=/path/to/package/site-configs/<site>/config.site
+source /path/to/package/site-configs/<site>/env.sh
+```
+
+The above steps may need to be augmented depending upon your user evironment setup.
+For example, if autoreconfig is in /home/MyUsername/FRE-NCtools, it will create the
+configure command in this directory. You may tell the bash shell, for example,
+the location of both by this command:
+
+export PATH=/home/MyUsername/FRE-NCtools:$PATH
+
+Additionally, installing into a non-default directory may be desired or neccesary.
+For example, if the target directory is /home/MyUsername/bin, then FRE-NCtools
+building is configured by:
+
+autoreconf -i
+./configure --prefix=/home/MyUsername/bin
+
+Finally compile and install the tools as usual:
+
+make
+make install
+
+Some FRE-NCtools applications can be run in parallel using MPI.  If the
+`--with-mpi` option is given to `configure`, the MPI version of those
+applications will be built.
+
+A few site configurations, for GFDL managed systems, are available in the
+[site-config](site-config) directory.  These can be used by setting the
+`CONFIG_SITE` environment variable prior to running `configure`.
+
+Sources:
+
+[Geophysical Fluid Dynamics Laboratory](https://www.gfdl.noaa.gov)
+(GFDL).  These tools were primarily written by members of the GFDL
+[Modeling Systems Group](https://www.gfdl.noaa.gov/modeling-systems)
+to be used in the
+[Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
+[Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE).
+
+
+
