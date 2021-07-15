@@ -40,8 +40,8 @@ ncf_version=4.5.2
 mpi_version=3.3.2
 
 # Ensure the base spack modules are first in MODULEPATH
-module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel6-x86_64
-module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel6-x86_64
+module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
+module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
 
 # GCC is needed for icc to use newer C11 constructs
 module load gcc/$gcc_version
@@ -56,8 +56,8 @@ module load automake/1.16.2
 module load intel_compilers/${intel_version}
 
 # Ensure the Intel spack modules are first in MODULEPATH
-module remove-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel6-x86_64
-module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel6-x86_64
+module remove-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
+module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles-intel-${intel_version}/linux-rhel7-x86_64
 
 # Load the Intel modules required for building
 module load netcdf-c/$ncc_version
