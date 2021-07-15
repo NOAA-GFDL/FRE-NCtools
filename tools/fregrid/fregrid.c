@@ -280,6 +280,8 @@ char *usage[] = {
 const double D2R = M_PI/180.;
 char tagname[] = "$Name: bronx-10_performance_z1l $";
 
+extern int in_format; //declared in mpp_io.c
+
 int main(int argc, char* argv[])
 {
   unsigned int opcode = 0;
@@ -815,7 +817,12 @@ int main(int argc, char* argv[])
       set_mosaic_data_file(ntiles_out, mosaic_out, dir_out, file2_out, output_file[1]);    
     }
 
-    for(n=0; n<ntiles_in; n++) file_in[n].fid = mpp_open(file_in[n].name, MPP_READ);
+    //Open the input files. Save the nc format of the first one.
+    int in_format_0 = -1;
+    for (n = 0; n < ntiles_in; n++) {
+      file_in[n].fid = mpp_open(file_in[n].name, MPP_READ);
+      if(n == 0) in_format_0 = in_format;
+    }
 
     nscalar_orig = nscalar;
     /* filter field with interp_method = "none"  */
@@ -875,7 +882,15 @@ int main(int argc, char* argv[])
 
     set_weight_inf( ntiles_in, grid_in, weight_file, weight_field, file_in->has_cell_measure_att);
 
-    set_in_format(format);
+    //If the netcdf format was specified as an input argument, use that format. Otherwise
+    // use the format from the first ( tile 0) input file.
+    if(format != NULL) {
+      set_in_format(format);
+    }else if (in_format_0 >= 0){
+      reset_in_format( in_format_0);
+    }else{
+      printf("WARNING: fregrid could not set in_format");
+    }
     
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
 			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
