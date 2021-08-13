@@ -50,7 +50,8 @@ SUBDIRS = postprocessing/combine_restarts \
           tools/simple_hydrog/postp \
           tools/simple_hydrog/lakes \
           tools/simple_hydrog/rmvpr \
-          tools/nc_null_check
+          tools/nc_null_check \
+          tools/ocean_model_grid_generator
 
 if WITH_CHECK_PROGS
 SUBDIRS += t
