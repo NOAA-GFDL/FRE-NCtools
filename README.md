@@ -53,6 +53,17 @@ The tools available in FRE-NCtools are:
 * runoff_regrid -- Regrid land runoff data to the nearest ocean point
 * transfer_to_mosaic_grid -- Convert older style grids to newer mosaic grid
 
+## Cloning and submodules
+The NCTools github repository contains the GFDL ocean_model_grid_generator repository
+as a submodule. After cloning NCTools, it must be initialized and updated for its
+submodules:
+
+```
+git clone --recursive https://github.com/NOAA-GFDL/FRE-NCtools
+git submodule init
+git submodule update
+```
+
 ## Install
 
 FRE-NCtools has a collection of C and Fortran sources.  Within GFDL, FRE-NCtools
