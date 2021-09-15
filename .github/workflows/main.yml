@@ -1,7 +1,7 @@
 # Github actions CI file
 # Ryan Mulhall 2020
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
-# github.com/noaa-gfdl/fre-nctools-container 
+# github.com/noaa-gfdl/fre-nctools-container
 name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
@@ -19,8 +19,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: Configure
-      run: | 
+      run: |
         autoreconf -i configure.ac
         ./configure $MPI $QUAD_P
     - name: Build tools
