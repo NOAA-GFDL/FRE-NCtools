@@ -26,6 +26,7 @@
 
 # The mppnccombine and mppncscatter commands should probably be tested in
 # the same file, since here we assume mppnccombine is running correctly.
+load test_utils
 
 prepare_input_data ()
 {
@@ -36,21 +37,10 @@ prepare_input_data ()
   ncgen -o input/$test_file $top_srcdir/t/Test12-input/${test_file}l
 }
   
-setup ()
-{
-  BASE_TEST_DIR=$( pwd )
-  mkdir $( basename $BATS_TEST_FILENAME .sh )
-  cd  $( basename $BATS_TEST_FILENAME .sh )
-}
-
-teardown () {
-  cd $BASE_TEST_DIR
-  rm -rf  $( basename $BATS_TEST_FILENAME .sh )
-}
-
 @test "Test mppncscatter" {
+
   prepare_input_data
-  
+
   # Scatter the file
   run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/$test_file
   [ "$status" -eq 0 ]
@@ -58,4 +48,9 @@ teardown () {
   # Combine the file:
   run command mppnccombine -64 output/$test_file ${test_file}.????
   [ "$status" -eq 0 ]
+
+  # Compare output
+  run command nccmp -w format -md output/$test_file input/$test_file
+  [ "$status" -eq 0 ]
+
 }

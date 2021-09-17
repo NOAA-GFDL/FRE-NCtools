@@ -19,24 +19,13 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
 # Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
+# set setup to generate ncls from test's input directory
+load test_utils
 
 @test "Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)" {
 
-  if [ ! -d "Test03" ] 
-  then
-  		mkdir Test03
-  fi
-
-  cd Test03
-  ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
-  ncgen -o C48_grid.tile1.nc $top_srcdir/t/Test03-input/C48_grid.tile1.ncl
-  ncgen -o C48_grid.tile2.nc $top_srcdir/t/Test03-input/C48_grid.tile2.ncl
-  ncgen -o C48_grid.tile3.nc $top_srcdir/t/Test03-input/C48_grid.tile3.ncl
-  ncgen -o C48_grid.tile4.nc $top_srcdir/t/Test03-input/C48_grid.tile4.ncl
-  ncgen -o C48_grid.tile5.nc $top_srcdir/t/Test03-input/C48_grid.tile5.ncl
-  ncgen -o C48_grid.tile6.nc $top_srcdir/t/Test03-input/C48_grid.tile6.ncl
+  generate_all_from_ncl
 
 #Make_hgrid: create ocean_hgrid"
   run command make_hgrid \
@@ -57,7 +46,7 @@
 		--bnds 0.,220.,5500. \
 		--dbnds 10.,10.,367.14286 \
 		--center c_cell \
-		--grid_name ocean_vgrid 
+		--grid_name ocean_vgrid
   [ "$status" -eq 0 ]
 
 #Make_solo_mosaic: create ocean solo mosaic
@@ -77,22 +66,26 @@
 		--topog_field TOPO \
 		--scale_factor -1 \
 		--vgrid ocean_vgrid.nc \
-		--output topog.nc 
+		--output topog.nc
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails 
-#  run command mpirun -n 2 make_topog_parallel \
-#		--mosaic ocean_mosaic.nc \
-#		--topog_type realistic \
-#		--topog_file OCCAM_p5degree.nc \
-#		--topog_field TOPO \
-#		--scale_factor -1 \
-#		--vgrid ocean_vgrid.nc \
-#		--output topog_parallel.nc
-#  [ "$status" -eq 0 ]
+# MPI only tests
+# This test only fails within the CI
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
+      run command mpirun -n 2 make_topog_parallel \
+		--mosaic ocean_mosaic.nc \
+		--topog_type realistic \
+		--topog_file OCCAM_p5degree.nc \
+		--topog_field TOPO \
+		--scale_factor -1 \
+		--vgrid ocean_vgrid.nc \
+		--output topog_parallel.nc
+      [ "$status" -eq 0 ]
 
-#  run command nccmp -md topog.nc topog_parallel.nc
-#  [ "$status" -eq 0 ]
+      run command nccmp -md topog.nc topog_parallel.nc
+      [ "$status" -eq 0 ]
+  fi
+
 
 #Make_hgrid: create C48 grid for atmos/land
   run command make_hgrid \
@@ -116,20 +109,23 @@
 		--ocean_topog  topog.nc \
 		--check \
 		--area_ratio_thresh 1.e-10 \
+		--mosaic_name grid_spec
   [ "$status" -eq 0 ]
 
-#TO DO: Skipping this for now because it fails 
-#  run command cd parallel
+#Make coupler mosaic with parallel
+  if [ -z "$skip_mpi" && -z "$CI" ]; then
+      [ ! -d parallel ] && mkdir parallel
+      cd parallel
 
-#  run command aprun -n 2 make_coupler_mosaic_parallel \
-#		--atmos_mosaic ../C48_mosaic.nc \
-#		--ocean_mosaic ../ocean_mosaic.nc \
-#		--ocean_topog  ../topog.nc \
-#		--mosaic_name grid_spec  \
-#		--area_ratio_thresh 1.e-10
-#  [ "$status" -eq 0 ]
-
-#Remove the workdir 
-  cd ..
-  rm -rf Test03
+      run command mpirun -n 4 make_coupler_mosaic_parallel \
+		--atmos_mosaic ../C48_mosaic.nc \
+		--ocean_mosaic ../ocean_mosaic.nc \
+		--ocean_topog  ../topog.nc \
+		--mosaic_name grid_spec  \
+		--area_ratio_thresh 1.e-10
+      [ "$status" -eq 0 ]
+      # compare any created files to non-parallel (exclude directory differences)
+      nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir \
+                --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
+  fi
 }

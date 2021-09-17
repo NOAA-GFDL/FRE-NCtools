@@ -21,16 +21,11 @@
 #***********************************************************************
 
 # test remap ocean restart file from CM2.1 to CM2.5
+load test_utils
 
 @test "Test remap ocean restart file" {
   skip "TO DO: the input files needed are too large" 
 
-  if [ ! -d "Test14" ] 
-  then
-  		mkdir Test14
-  fi
-
-  cd Test14
   cp $top_srcdir/t/Test14-input/* . 
 
 #Create a OM3-like regular lat-lon grid.
@@ -77,6 +72,4 @@
 		--check_conserve 
   [ "$status" -eq 0 ]
 
-  cd ..
-  rm -rf Test14
 }

@@ -21,15 +21,10 @@
 #***********************************************************************
 
 # Test check_mask for MOM6 grid 
+load test_utils
 
 @test "Test check_mask for MOM6 grid " {
 
-  if [ ! -d "Test09" ] 
-  then
-  		mkdir Test09
-  fi
-
-  cd Test09
   ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
 
 #Make_hgrid: create ocean_hgrid"
@@ -80,8 +75,5 @@
 		--ocean_topog topog.nc \
 		--layout 45,72
   [ "$status" -eq 0 ]
-
-  cd ..
-  rm -rf Test09
 
 }

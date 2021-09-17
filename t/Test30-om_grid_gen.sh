@@ -24,12 +24,14 @@
 
 @test "Test the ocean_model_grid_generator subproject python app" {
 
-    if [ ! -d "Test28" ] 
-  then
-    mkdir Test28
-  fi
-  
-  cd Test28
+  #if [ ! -d "Test30" ] 
+  #  then
+  #    mkdir Test30
+  #  fi
+
+  #cd Test30
+
+  load test_utils
   
   oggappd=$top_srcdir/tools/ocean_model_grid_generator
   
@@ -55,12 +57,12 @@
   #run python3 ./ocean_grid_generator.py -f ocean_hgrid_res0.5_equenh.nc -r 2 --south_cutoff_row 130
   #[ -e ocean_hgrid_res0.5_equenh.nc ]
 
-  head -3 $top_srcdir/t/Test28-input/hash.md5 > hash.quick
+  head -3 $top_srcdir/t/Test30-input/hash.md5 > hash.quick
 
   md5sum -c hash.quick
 
   [ "$status" -eq 0 ]
 
-  cd ..
-  rm -rf Test28
+  # cd ..
+  # rm -rf Test30
 }

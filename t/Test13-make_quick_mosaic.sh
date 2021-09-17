@@ -24,14 +24,10 @@
 
 #First create an ocean_mosaic and ocean_topog.nc
 #Make_hgrid: create ocean_hgrid"
+load test_utils
 
 @test "Test make_quick_mosaic" {
-  if [ ! -d "Test13" ] 
-  then
-  		mkdir Test13
-  fi
 
-  cd Test13
   ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl
 
   run command make_hgrid \
@@ -80,8 +76,5 @@
 		--input_mosaic ocean_mosaic.nc \
 		--ocean_topog ocean_topog.nc 
   [ "$status" -eq 0 ]
-
-  cd ..
-  rm -rf Test13
 
 }
