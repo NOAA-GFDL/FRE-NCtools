@@ -39,15 +39,15 @@
 
   chmod ugo+x *.py
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res4.0.nc -r 0.25 --even_j --no_changing_meta
+  ./ocean_grid_generator.py -f ocean_hgrid_res4.0.nc -r 0.25 --even_j --no_changing_meta
 
   [ -e ocean_hgrid_res4.0.nc ]
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res1.0.nc -r 1.0  --south_cutoff_row 2 --no_changing_meta
+  ./ocean_grid_generator.py -f ocean_hgrid_res1.0.nc -r 1.0  --south_cutoff_row 2 --no_changing_meta
 
   [ -e ocean_hgrid_res1.0.nc ]
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res0.5.nc -r 2  --no_changing_meta
+  ./ocean_grid_generator.py -f ocean_hgrid_res0.5.nc -r 2  --no_changing_meta
 
   [ -e ocean_hgrid_res0.5.nc ]
 
@@ -58,8 +58,6 @@
   head -3 $top_srcdir/t/Test28-input/hash.md5 > hash.quick
 
   md5sum -c hash.quick
-
-  [ "$status" -eq 0 ]
 
   cd ..
   rm -rf Test28
