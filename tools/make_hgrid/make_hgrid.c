@@ -294,6 +294,16 @@ char *usage[] = {
   "   --out_halo #               extra halo size data to be written out. This is    ",
   "                              only works for gnomonic_ed.                        ",
   "                                                                                 ",
+  "   --angular_midpoint         WARNING: This is a deprecated, legacy related      ",
+  "                              option that will be removed.  If specified         ",
+  "                              when grid_type is from_file and the input is a     ",
+  "                              NetCDF file, then the supergrid face midpoint      ",
+  "                              coordinates are simply and independely (the lat    ",
+  "                              independently from the lon) calculated as simple   ",
+  "                              angular midpoints from the model grid coordiantes. ",
+  "                              The default is to use the angles that correspond   ",
+  "                              to the spatial midpoint on the great circle        ",
+  "                              between the model grid points.                     ",
   "   --non_length_angle         When specified, will not output length(dx,dy) and  ",
   "                              angle (angle_dx, angle_dy)                         ",
   "                                                                                 ",
@@ -533,6 +543,7 @@ int main(int argc, char* argv[])
   int    present_target_lon = 0;
   int    present_target_lat = 0;
   int    use_great_circle_algorithm = 0;
+  int    use_angular_midpoint = 0;
   int    output_length_angle = 1;
   unsigned int verbose = 0;
   double simple_dx=0, simple_dy=0;
@@ -593,6 +604,7 @@ int main(int argc, char* argv[])
                                          {"out_halo",        required_argument, NULL, 'K'},
                                          {"do_cube_transform", no_argument,     NULL, 'L'},
                                          {"no_length_angle", no_argument,       NULL, 'M'},
+                                         {"angular_midpoint", no_argument,      NULL, 'N'},
                                          {"help",            no_argument,       NULL, 'h'},
                                          {"verbose",         no_argument,       NULL, 'v'},
 
@@ -729,6 +741,9 @@ int main(int argc, char* argv[])
       break;
     case 'M':
       output_length_angle = 0;
+      break;
+    case 'N':
+      use_angular_midpoint = 1;
       break;
     case 'v':
       verbose = 1;
@@ -1108,7 +1123,7 @@ int main(int argc, char* argv[])
       n2 = n * nx  * nyp;
       n3 = n * nxp * ny;
       n4 = n * nx  * ny;
-      create_grid_from_file(my_grid_file[n], &nx, &ny, x+n1, y+n1, dx+n2, dy+n3, area+n4, angle_dx+n1, use_great_circle_algorithm);
+      create_grid_from_file(my_grid_file[n], &nx, &ny, x+n1, y+n1, dx+n2, dy+n3, area+n4, angle_dx+n1, use_great_circle_algorithm, use_angular_midpoint);
     }
   }
   else if(my_grid_type==SIMPLE_CARTESIAN_GRID)
