@@ -19,8 +19,8 @@
 #***********************************************************************
 
 # Prelude
-AC_PREREQ([2.63])
-AC_INIT([FRE NC Tools], [18.0.0], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
+AC_PREREQ([2.71])
+AC_INIT([FRE NC Tools],[18.0.0],[oar.gfdl.help@noaa.gov],[fre-nctools],[https://github.com/NOAA-GFDL/FRE-NCtools])
 # Place the git description informatin in the configure script
 m4_define([git_revision],
   [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
@@ -39,10 +39,9 @@ AM_PROG_AR
 
 AC_ARG_ENABLE([quad-precision],
   [AS_HELP_STRING([--enable-quad-precision],
-    [build using higher (quad) precision])])
-AS_IF([test ${enable_quad_precision:-no} = no],
-  [enable_quad_precision=no],
-  [enable_quad_precision=yes])
+    [build using higher (quad) precision])],
+    [],
+    [enable_quad_precision=no])
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
@@ -117,7 +116,7 @@ AC_LANG_POP([Fortran])
 # Check for typedefs, structures, and compiler characteristics
 # Check if the C compiler supports a working `long double` with more range
 # or precision than `double`.
-AS_IF([test $enable_quad_precision = yes], [
+AS_IF([test ${enable_quad_precision:-no} = yes], [
 AC_TYPE_LONG_DOUBLE_WIDER
 AS_IF([test $ac_cv_type_long_double_wider = no],
   [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])
@@ -132,6 +131,9 @@ AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.
 # Other defs
 AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
+
+AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
+
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
@@ -168,6 +170,5 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
-                 tools/ocean_model_grid_generator/Makefile
 ])
 AC_OUTPUT
