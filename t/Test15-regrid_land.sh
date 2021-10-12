@@ -27,16 +27,15 @@ load test_utils
 
   generate_all_from_ncl
 
-  run command fregrid \
+   fregrid \
 		--input_mosaic C180_mosaic.nc \
 		--interp_method conserve_order1 \
 		--nlon 144 \
 		--nlat 90 \
 		--remap_file remap_file.nc
-  [ "$status" -eq 0 ]
 
 #remap static field
-  run command fregrid  \
+   fregrid  \
 		--input_mosaic C180_mosaic.nc  \
 		--interp_method conserve_order1  \
 		--nlon 144  \
@@ -45,19 +44,17 @@ load test_utils
 		--scalar_field soil_frac,lake_frac,glac_frac,area,soil_area,lake_area,glac_area  \
 		--output_file out.nc  \
 		--remap_file remap_file.nc
-  [ "$status" -eq 0 ]
 
 # parallel call
   if [ -z "$skip_mpi" ]; then
-    run command fregrid_parallel \
+     mpirun -n 4 fregrid_parallel \
 		--input_mosaic C180_mosaic.nc \
 		--interp_method conserve_order1 \
 		--nlon 144 \
 		--nlat 90 \
 		--remap_file remap_file.nc
-    [ "$status" -eq 0 ]
 
-    run command fregrid_parallel  \
+     mpirun -n 4 fregrid_parallel  \
 		--input_mosaic C180_mosaic.nc  \
 		--interp_method conserve_order1  \
 		--nlon 144  \
@@ -66,12 +63,11 @@ load test_utils
 		--scalar_field soil_frac,lake_frac,glac_frac,area,soil_area,lake_area,glac_area  \
 		--output_file out.nc  \
 		--remap_file remap_file.nc
-    [ "$status" -eq 0 ]
   fi
 
 # remap other fields
 # Commented this part out because the input file is too large
-#  run command fregrid  \
+#   fregrid  \
 #		--input_mosaic C180_mosaic.nc  \
 #		--interp_method conserve_order1  \
 #		--nlon 144  \
@@ -80,6 +76,5 @@ load test_utils
 #		--scalar_field evap_land,evap_soil,evap_glac,evap_lake  \
 #		--output_file 00050101.land_month.nc  \
 #		--remap_file remap_file.nc
-#  [ "$status" -eq 0 ]
 
 }

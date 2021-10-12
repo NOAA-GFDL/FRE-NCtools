@@ -22,7 +22,7 @@
 load test_utils
 
 @test "make_hgrid creates ocean_hgrid" {
-  run command make_hgrid \
+   make_hgrid \
       --grid_type tripolar_grid \
       --nxbnd 2 \
       --nybnd 7 \
@@ -32,5 +32,4 @@ load test_utils
       --dlat 1.0,1.0,0.6666667,0.3333333,0.6666667,1.0,1.0 \
       --grid_name ocean_hgrid \
       --center c_cell
-  [ "$status" -eq 0 ]
 }

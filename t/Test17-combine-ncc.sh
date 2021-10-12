@@ -25,13 +25,11 @@ load test_utils
 
   cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy .
 
-  #Combine netcdf copy file 
-  run command combine-ncc \
+  #Combine netcdf copy file
+  combine-ncc \
       combine-ncc.atmos_daily.nc.copy \
-      combine-ncc_output.nc 
-  [ "$status" -eq 0 ]
+      combine-ncc_output.nc
   [ -e combine-ncc_output.nc ]
-  run ncdump -h combine-ncc_output.nc
-  [ "$status" -eq 0 ]
+  ncdump -h combine-ncc_output.nc
 
 }

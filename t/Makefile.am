@@ -17,7 +17,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-if WITH_MPI
+if WITH_MPI_TESTS
 skip_MPI=""
 else
 skip_MPI="skip"

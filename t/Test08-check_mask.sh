@@ -24,14 +24,12 @@
 # to save processor usage for a sea-ice model, baltic1 experiment
 load test_utils
 
-@test "Test check_ mask for baltic1 experiment" {
+@test "Test check_mask for baltic1 experiment" {
 
   generate_all_from_ncl
 
-  run command check_mask \
+  check_mask \
 		--grid_file baltic1_grid_spec.nc \
 		--min_pe 60 \
-		--max_pe 80 
-  [ "$status" -eq 0 ]
-
+		--max_pe 80
 }

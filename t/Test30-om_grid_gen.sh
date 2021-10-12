@@ -20,11 +20,11 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-# Test grid for multiple same level and telescoping nests 
+# Test grid for multiple same level and telescoping nests
 
 @test "Test the ocean_model_grid_generator subproject python app" {
 
-  #if [ ! -d "Test30" ] 
+  #if [ ! -d "Test30" ]
   #  then
   #    mkdir Test30
   #  fi
@@ -32,24 +32,24 @@
   #cd Test30
 
   load test_utils
-  
+
   oggappd=$top_srcdir/tools/ocean_model_grid_generator
-  
+
   cp -p $oggappd/ocean_grid_generator.py .
   cp -p $oggappd/numpypi/numpypi_series.py .
   cp -p $oggappd/numpypi/ignore_this.py .
 
   chmod ugo+x *.py
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res4.0.nc -r 0.25 --even_j --no_changing_meta
+  python3 ./ocean_grid_generator.py -f ocean_hgrid_res4.0.nc -r 0.25 --even_j --no_changing_meta
 
   [ -e ocean_hgrid_res4.0.nc ]
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res1.0.nc -r 1.0  --south_cutoff_row 2 --no_changing_meta
+  python3 ./ocean_grid_generator.py -f ocean_hgrid_res1.0.nc -r 1.0  --south_cutoff_row 2 --no_changing_meta
 
   [ -e ocean_hgrid_res1.0.nc ]
 
-  run python3 ./ocean_grid_generator.py -f ocean_hgrid_res0.5.nc -r 2  --no_changing_meta
+  python3 ./ocean_grid_generator.py -f ocean_hgrid_res0.5.nc -r 2  --no_changing_meta
 
   [ -e ocean_hgrid_res0.5.nc ]
 
@@ -60,8 +60,6 @@
   head -3 $top_srcdir/t/Test30-input/hash.md5 > hash.quick
 
   md5sum -c hash.quick
-
-  [ "$status" -eq 0 ]
 
   # cd ..
   # rm -rf Test30

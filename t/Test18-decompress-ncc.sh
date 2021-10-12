@@ -26,12 +26,9 @@ load test_utils
   cp $top_srcdir/t/Test18-input/decompress-ncc.atmos_daily.nc.copy .
 
   #Decompress compressed netcdf file(s) into 1
-  run command decompress-ncc \
+   decompress-ncc \
       decompress-ncc.atmos_daily.nc.copy \
-      decompress-ncc_output.nc 
-  [ "$status" -eq 0 ]
+      decompress-ncc_output.nc
   [ -e decompress-ncc_output.nc ]
-  run ncdump -h decompress-ncc_output.nc
-  [ "$status" -eq 0 ]
-
+  ncdump -h decompress-ncc_output.nc
 }

@@ -28,7 +28,7 @@ load test_utils
 
   mkdir output
 
-  run command fregrid \
+  fregrid \
 		--input_mosaic C48_mosaic.nc \
 		--input_file 19800101.atmos_daily \
 		--scalar_field zsurf,temp,t_surf \
@@ -38,6 +38,5 @@ load test_utils
 		--output_dir output \
 		--output_file 19800101.atmos_daily.nc \
 		--check_conserve \
-		--remap_file C48_to_N45_remap.nc 
-  [ "$status" -eq 0 ]
+		--remap_file C48_to_N45_remap.nc
 }

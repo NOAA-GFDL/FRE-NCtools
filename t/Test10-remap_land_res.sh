@@ -50,7 +50,7 @@ prepare_input_data ()
 
   prepare_input_data
 
-  run command remap_land \
+   remap_land \
 		--file_type land  \
 		--src_mosaic C48_mosaic/C48_mosaic.nc \
 		--dst_mosaic C192_mosaic/C192_mosaic.nc \
@@ -58,5 +58,4 @@ prepare_input_data ()
 		--dst_restart land.res \
 		--dst_cold_restart dst_cold_restart/land.res \
 		--remap_file remap_file_C48_to_C192 --print_memory
-  [ "$status" -eq 0 ]
 }

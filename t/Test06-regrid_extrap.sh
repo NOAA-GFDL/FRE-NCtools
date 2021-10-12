@@ -28,7 +28,7 @@ load test_utils
 
   generate_all_from_ncl
 
-  run command make_hgrid \
+   make_hgrid \
 		--grid_type regular_lonlat_grid \
 		--nxbnd 2 \
 		--nybnd 2 \
@@ -37,17 +37,15 @@ load test_utils
 		--nlon 720 \
 		--nlat 360 \
 		--grid_name levitus_grid
-  [ "$status" -eq 0 ]
 
-  run command make_solo_mosaic \
+   make_solo_mosaic \
 		--num_tiles 1 \
 		--dir . \
 		--mosaic_name levitus_mosaic \
 		--tile_file levitus_grid.nc \
 		--periodx 360
-  [ "$status" -eq 0 ]
 
-  run command fregrid \
+   fregrid \
 		--input_mosaic levitus_mosaic.nc \
 		--input_file WOA09_ann_theta.nc \
 		--scalar_field POTENTIAL_TEMP \
@@ -56,6 +54,5 @@ load test_utils
 		--extrapolate \
 		--dst_vgrid ocean_vgrid.nc \
 		--check_conserve
-  [ "$status" -eq 0 ]
 
 }

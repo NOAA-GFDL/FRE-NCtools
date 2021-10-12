@@ -20,13 +20,13 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-# Test grid for multiple same level and telescoping nests 
+# Test grid for multiple same level and telescoping nests
 load test_utils
 
 @test "Test grid for multiple same level and telescoping nests" {
 
 #Make_hgrid: create three same level -level1- nests in tiles 2,5,6"
-  run command make_hgrid \
+  make_hgrid \
 		--grid_type gnomonic_ed \
 		--nlon 96 \
 		--grid_name C48_grid \
@@ -44,12 +44,11 @@ load test_utils
         --halo 3 \
         --great_circle_algorithm \
         --verbose 1
-  [ "$status" -eq 0 ]
 
-#Make_hgrid: create two same level -level1- nests in tiles 2,5 
+#Make_hgrid: create two same level -level1- nests in tiles 2,5
 #            and one -level2- telescoping nest in tile7"
 #          ( tile7 refers to the first nest on the first level)
-  run command make_hgrid \
+   make_hgrid \
 		--grid_type gnomonic_ed \
 		--nlon 96 \
 		--grid_name C48_grid \
@@ -67,6 +66,5 @@ load test_utils
         --halo 3 \
         --great_circle_algorithm \
         --verbose 1
-  [ "$status" -eq 0 ]
 
 }

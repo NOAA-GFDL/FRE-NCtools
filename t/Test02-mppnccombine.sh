@@ -27,12 +27,9 @@ load test_utils
   generate_all_from_ncl_num mppnccombine Test02-input
 
   #Combine the files into 1
-  run command mppnccombine \
+  mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????
-  [ "$status" -eq 0 ]
   [ -e mppnccombine_output.nc ]
-  run ncdump -h mppnccombine_output.nc
-  [ "$status" -eq 0 ]
-
+  ncdump -h mppnccombine_output.nc
 }

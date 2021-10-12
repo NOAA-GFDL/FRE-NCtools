@@ -36,21 +36,18 @@ prepare_input_data ()
   test_file=fv_core.res.tile1.nc
   ncgen -o input/$test_file $top_srcdir/t/Test12-input/${test_file}l
 }
-  
+
 @test "Test mppncscatter" {
 
   prepare_input_data
 
   # Scatter the file
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/$test_file
-  [ "$status" -eq 0 ]
+   mppncscatter -i 2 -j 3 -x 2 -y 12 input/$test_file
 
   # Combine the file:
-  run command mppnccombine -64 output/$test_file ${test_file}.????
-  [ "$status" -eq 0 ]
+   mppnccombine -64 output/$test_file ${test_file}.????
 
   # Compare output
-  run command nccmp -w format -md output/$test_file input/$test_file
-  [ "$status" -eq 0 ]
+   nccmp -w format -md output/$test_file input/$test_file
 
 }

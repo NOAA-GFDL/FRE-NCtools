@@ -27,11 +27,10 @@ load test_utils
 
   generate_all_from_ncl
 
-  run command river_regrid \
+   river_regrid \
 		--mosaic grid_spec.nc \
 		--river_src z1l_river_output_M45_tripolar_aug24.nc \
 		--output river_data_C48 \
-		--land_thresh 0.000001 
-  [ "$status" -eq 0 ]
+		--land_thresh 0.000001
 
 }
