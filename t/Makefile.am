@@ -57,7 +57,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
         Test27-multiple_nests.sh \
-        Test28-om_grid_gen.sh \
         01-make_hgrid.sh \
         01-make_vgrid.sh
 
