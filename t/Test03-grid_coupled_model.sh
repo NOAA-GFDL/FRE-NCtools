@@ -66,8 +66,7 @@ load test_utils
 		--output topog.nc
 
 # MPI only tests
-# This test only fails within the CI
-  if [ -z "$skip_mpi" ] && [ -z "$CI" ]; then
+  if [ -z "$skip_mpi" ] ; then
        mpirun -n 2 make_topog_parallel \
 		--mosaic ocean_mosaic.nc \
 		--topog_type realistic \
@@ -104,7 +103,7 @@ load test_utils
 		--mosaic_name grid_spec
 
 #Make coupler mosaic with parallel
-  if [ -z "$skip_mpi" ] && [ -z "$CI" ]; then
+  if [ -z "$skip_mpi" ] ; then
       [ ! -d parallel ] && mkdir parallel
       cd parallel
 
