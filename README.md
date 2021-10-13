@@ -60,6 +60,7 @@ submodules:
 
 ```
 git clone --recursive https://github.com/NOAA-GFDL/FRE-NCtools
+cd FRE-NCtools
 git submodule update --init --recursive
 ```
 

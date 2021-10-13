@@ -17,7 +17,14 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+if WITH_MPI_TESTS
+skip_MPI=""
+else
+skip_MPI="skip"
+endif
+
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
+                    export skip_mpi=$(skip_MPI);                    \
     for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
@@ -57,9 +64,9 @@ TESTS = Test01-check_programs_exist.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
         Test27-multiple_nests.sh \
-        Test28-om_grid_gen.sh \
-        01-make_hgrid.sh \
-        01-make_vgrid.sh
+        Test28-make_hgrid.sh \
+        Test29-make_vgrid.sh \
+        Test30-om_grid_gen.sh
 
 EXTRA_DIST = $(TESTS) \
             Test02-input\
@@ -78,7 +85,8 @@ EXTRA_DIST = $(TESTS) \
             Test17-reference \
             Test18-reference \
             Test20-reference \
-            $(test25_data)
+            $(test25_data) \
+	           Test30-input
 
 clean-local:
-	$(RM) *.nc
+	$(RM) *.nc Test*/*
