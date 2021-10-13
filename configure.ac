@@ -68,6 +68,7 @@ AS_IF([test x"$with_mpi" = x"yes"],
       build_mpi="yes"
     fi])
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
+AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
 
 AC_CHECK_FUNCS(gettid, [], [])
 

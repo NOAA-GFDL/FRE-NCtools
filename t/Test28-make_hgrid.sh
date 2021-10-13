@@ -19,25 +19,17 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+load test_utils
 
-teardown () {
-  echo "$output"
-  rm -f ocean_vgrid.nc 
-}
-
-@test "make_vgrid exists and is executable" {
-  run command -v make_vgrid
-  [ "$status" -eq 0 ]
-  run make_vgrid -h
-  [ "$status" -eq 1 ]
-}
-
-@test "make_vgrid creates ocean_vgrid" {
-  run command make_vgrid \
-      --nbnds 3 \
-      --bnds 0.,220.,5500. \
-      --dbnds 10.,10.,367.14286 \
-      --center c_cell \
-      --grid_name ocean_vgrid
-  [ "$status" -eq 0 ]
+@test "make_hgrid creates ocean_hgrid" {
+   make_hgrid \
+      --grid_type tripolar_grid \
+      --nxbnd 2 \
+      --nybnd 7 \
+      --xbnd -280,80 \
+      --ybnd -82,-30,-10,0,10,30,90 \
+      --dlon 1.0,1.0 \
+      --dlat 1.0,1.0,0.6666667,0.3333333,0.6666667,1.0,1.0 \
+      --grid_name ocean_hgrid \
+      --center c_cell
 }
