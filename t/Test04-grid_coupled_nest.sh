@@ -115,7 +115,7 @@ ncgen -o OCCAM_p5degree.nc $BATS_TEST_DIRNAME/Test03-input/OCCAM_p5degree.ncl
 		--tile_file land_grid.tile1.nc,land_grid.tile2.nc,land_grid.tile3.nc,land_grid.tile4.nc,land_grid.tile5.nc,land_grid.tile6.nc
 
 # MPI only
-  if [ -z "$skip_mpi" ] && [ -z "$CI" ]; then
+  if [ -z "$skip_mpi" ]; then
       #make the coupler_mosaic
        mpirun -n 8 make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc \
                          --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc \
