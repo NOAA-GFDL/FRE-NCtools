@@ -32,7 +32,7 @@
                  global grid refinement (old code no longer valid,
                  see comment with tag [Ahern]). Formatting changes.
                  Kyle Ahern, AOML/HRD
-  4/12/2021  --  Fixed several IMAs (Invalid Memory Access), memory leaks, and some 
+  4/12/2021  --  Fixed several IMAs (Invalid Memory Access), memory leaks, and some
                  non-critical compiler warnings. Some notes in create_gnomonic_cubic_grid
                  concerning changes related to global refinement runs.
                  M Zuniga
@@ -294,6 +294,16 @@ char *usage[] = {
   "   --out_halo #               extra halo size data to be written out. This is    ",
   "                              only works for gnomonic_ed.                        ",
   "                                                                                 ",
+  "   --angular_midpoint         WARNING: This is a deprecated, legacy related      ",
+  "                              option that will be removed.  If specified         ",
+  "                              when grid_type is from_file and the input is a     ",
+  "                              NetCDF file, then the supergrid face midpoint      ",
+  "                              coordinates are simply and independely (the lat    ",
+  "                              independently from the lon) calculated as simple   ",
+  "                              angular midpoints from the model grid coordiantes. ",
+  "                              The default is to use the angles that correspond   ",
+  "                              to the spatial midpoint on the great circle        ",
+  "                              between the model grid points.                     ",
   "   --non_length_angle         When specified, will not output length(dx,dy) and  ",
   "                              angle (angle_dx, angle_dy)                         ",
   "                                                                                 ",
@@ -533,6 +543,7 @@ int main(int argc, char* argv[])
   int    present_target_lon = 0;
   int    present_target_lat = 0;
   int    use_great_circle_algorithm = 0;
+  int    use_angular_midpoint = 0;
   int    output_length_angle = 1;
   unsigned int verbose = 0;
   double simple_dx=0, simple_dy=0;
@@ -593,6 +604,7 @@ int main(int argc, char* argv[])
                                          {"out_halo",        required_argument, NULL, 'K'},
                                          {"do_cube_transform", no_argument,     NULL, 'L'},
                                          {"no_length_angle", no_argument,       NULL, 'M'},
+                                         {"angular_midpoint", no_argument,      NULL, 'N'},
                                          {"help",            no_argument,       NULL, 'h'},
                                          {"verbose",         no_argument,       NULL, 'v'},
 
@@ -730,6 +742,9 @@ int main(int argc, char* argv[])
     case 'M':
       output_length_angle = 0;
       break;
+    case 'N':
+      use_angular_midpoint = 1;
+      break;
     case 'v':
       verbose = 1;
       break;
@@ -852,6 +867,7 @@ int main(int argc, char* argv[])
 
     if(ntiles_file == 0) mpp_error("make_hgrid: grid_type is 'from_file', but my_grid_file is not specified");
     ntiles = ntiles_file;
+    ntiles_global = ntiles_file;
     for(n=0; n<ntiles; n++) {
       if(strstr(my_grid_file[n],".nc") ) {
         /* get the grid size for each tile, the grid is on model grid, should need to multiply by 2 */
@@ -982,46 +998,51 @@ int main(int argc, char* argv[])
   nyl = (int *)malloc(ntiles*sizeof(int));
 
   /* get super grid size */
-  if(use_legacy) {
+  if (use_legacy) {
     nxl[0] = get_legacy_grid_size(nxbnds, xbnds, dx_bnds);
     nyl[0] = get_legacy_grid_size(nybnds, ybnds, dy_bnds);
-  }
-  else {
-    if( my_grid_type == GNOMONIC_ED || my_grid_type == CONFORMAL_CUBIC_GRID ) {
-      /* NOTE: The if-block in the loop below is changed with multiple nests.
-         It appeared to allow refinement of the global grid
-         without using any nests. However, the method used the
-         nesting parameters "parent_tile" and "refine_ratio" to
-         achieve this, which was enabled by setting parent_tile = 0 .
-         This is no longer possible, as parent_tile is now an array.
-         Instead, if the first value in the list of parent_tile values is 0,
-         then the first value in the list of refine_ratio values will be
-         applied to the global grid. This global-refinement application
-         may not be valid for all permutations of nesting and refinement. [Ahern]
-      */
-      for(n=0; n<ntiles_global; n++) {
-        nxl[n] = nlon[0];
-        nyl[n] = nxl[n];
-        if(nest_grids && parent_tile[0] == 0) {
-          nxl[n] *= refine_ratio[0];
-          nyl[n] *= refine_ratio[0];
-        }
-      }
-
-      for (n=ntiles_global; n < ntiles; n++){
-        nn = n - ntiles_global;
-
-        nxl[n] = (iend_nest[nn]-istart_nest[nn]+1)*refine_ratio[nn];
-        nyl[n] = (jend_nest[nn]-jstart_nest[nn]+1)*refine_ratio[nn];
+  } else if (my_grid_type == GNOMONIC_ED || my_grid_type == CONFORMAL_CUBIC_GRID) {
+    /* NOTE: The if-block in the loop below is changed with multiple nests.
+       It appeared to allow refinement of the global grid
+       without using any nests. However, the method used the
+       nesting parameters "parent_tile" and "refine_ratio" to
+       achieve this, which was enabled by setting parent_tile = 0 .
+       This is no longer possible, as parent_tile is now an array.
+       Instead, if the first value in the list of parent_tile values is 0,
+       then the first value in the list of refine_ratio values will be
+       applied to the global grid. This global-refinement application
+       may not be valid for all permutations of nesting and refinement. [Ahern]
+    */
+    for (n = 0; n < ntiles_global; n++) {
+      nxl[n] = nlon[0];
+      nyl[n] = nxl[n];
+      if (nest_grids && parent_tile[0] == 0) {
+        nxl[n] *= refine_ratio[0];
+        nyl[n] *= refine_ratio[0];
       }
     }
-    else {
-      nxl[0] = 0;
-      nyl[0] = 0;
-      for(n=0; n<nxbnds-1; n++) nxl[0] += nlon[n];
-      for(n=0; n<nybnds-1; n++) nyl[0] += nlat[n];
+
+    for (n = ntiles_global; n < ntiles; n++) {
+      nn = n - ntiles_global;
+      nxl[n] = (iend_nest[nn] - istart_nest[nn] + 1) * refine_ratio[nn];
+      nyl[n] = (jend_nest[nn] - jstart_nest[nn] + 1) * refine_ratio[nn];
+    }
+  } else if (my_grid_type == FROM_FILE) {
+    for (n = 0; n < ntiles_global; n++) {
+      nxl[n] = nlon[n];
+      nyl[n] = nlat[n];
+    }
+  } else {
+    nxl[0] = 0;
+    nyl[0] = 0;
+    for (n = 0; n < nxbnds - 1; n++) {
+      nxl[0] += nlon[n];
+    }
+    for (n = 0; n < nybnds - 1; n++) {
+      nyl[0] += nlat[n];
     }
   }
+
   nx = nxl[0];
   ny = nyl[0];
   nxp = nx + 1;
@@ -1043,10 +1064,21 @@ int main(int argc, char* argv[])
       fprintf(stderr,"[INFO] tile: %d, nxl[%d], nyl[%d], ntiles: %d\n", n_nest, nxl[n_nest], nyl[n_nest], ntiles);
     }
 
-    size1 = (unsigned long) nxp     *  nyp    * ntiles_global;
-    size2 = (unsigned long) nxp     * (nyp+1) * ntiles_global;
-    size3 = (unsigned long) (nxp+1) * nyp     * ntiles_global;
-    size4 = (unsigned long) nxp     * nyp     * ntiles_global;
+      if (my_grid_type == FROM_FILE) {
+      size1 = size2 = size3 = size4 = 0;
+      for (n = 0; n < ntiles_global; n++) {
+        size1 += (nlon[n] + 1) * (nlat[n] + 1);
+        size2 += (nlon[n] + 1) * (nlat[n] + 1 + 1);
+        size3 += (nlon[n] + 1 + 1) * (nlat[n] + 1);
+        size4 += (nlon[n] + 1) * (nlat[n] + 1);
+      }
+    } else {
+      size1 = (unsigned long)nxp * nyp * ntiles_global;
+      size2 = (unsigned long)nxp * (nyp + 1) * ntiles_global;
+      size3 = (unsigned long)(nxp + 1) * nyp * ntiles_global;
+      size4 = (unsigned long)nxp * nyp * ntiles_global;
+    }
+
 
     if(!(nest_grids==1 && parent_tile[0] == 0)){
     for (n_nest = ntiles_global; n_nest < ntiles_global + nest_grids; n_nest++) { /* nest grid is the last tile */
@@ -1057,7 +1089,7 @@ int main(int argc, char* argv[])
       size4 += (nxl[n_nest]+1) * (nyl[n_nest]+1);
     }
     }
-    
+
     if (verbose) fprintf(stderr, "[INFO] Allocating arrays of size %d for x, y based on nxp: %d nyp: %d ntiles: %d\n", size1, nxp, nyp, ntiles);
     x        = (double *) malloc(size1*sizeof(double));
     y        = (double *) malloc(size1*sizeof(double));
@@ -1091,7 +1123,7 @@ int main(int argc, char* argv[])
       n2 = n * nx  * nyp;
       n3 = n * nxp * ny;
       n4 = n * nx  * ny;
-      create_grid_from_file(my_grid_file[n], &nx, &ny, x+n1, y+n1, dx+n2, dy+n3, area+n4, angle_dx+n1, use_great_circle_algorithm);
+      create_grid_from_file(my_grid_file[n], &nx, &ny, x+n1, y+n1, dx+n2, dy+n3, area+n4, angle_dx+n1, use_great_circle_algorithm, use_angular_midpoint);
     }
   }
   else if(my_grid_type==SIMPLE_CARTESIAN_GRID)

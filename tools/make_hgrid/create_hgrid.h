@@ -45,7 +45,7 @@ void create_simple_cartesian_grid( double *xbnds, double *ybnds, int *nlon, int 
 				   double *dx, double *dy, double *area, double *angle_dx);
 
 void create_grid_from_file( char *file, int *nlon, int *nlat, double *x, double *y, double *dx, double *dy,
-           		    double *area, double *angle_dx, int  use_great_circle_algorithm );
+           		    double *area, double *angle_dx, int  use_great_circle_algorithm, int use_angular_midpoint );
 
 void create_spectral_grid( int *nlon, int *nlat, int *isc, int *iec,
 			   int *jsc, int *jec, double *x, double *y, double *dx,

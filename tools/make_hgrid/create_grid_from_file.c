@@ -50,7 +50,7 @@ void get_grid_v5(int fid, double *xt, double *yt, double *xc, double *yc, int ni
    cell area and rotation angle
 ************************************************************************/
 void create_grid_from_file( char *file, int *nlon, int *nlat, double *x, double *y, double *dx, double *dy,
-           		    double *area, double *angle_dx, int use_great_circle_algorithm )
+           		    double *area, double *angle_dx, int use_great_circle_algorithm, int use_angular_midpoint)
 {
   double *xt, *yt, *xc, *yc;
   double p1[4], p2[4], cart_x[4], cart_y[4], cart_z[4];
@@ -125,8 +125,8 @@ void create_grid_from_file( char *file, int *nlon, int *nlat, double *x, double 
       for (j = 0; j < nj + 1; j++)
         for (i = 0; i < ni; i++) {
           int idx = j * 2 * nxp + i * 2 + 1;
-          x[ idx ] = xt[i];
-          y[ idx ] = yc[j * nip + i];
+          x[idx] = xt[i];
+          y[idx] = yc[j * nip + i];
         }
       for (j = 0; j < nj; j++)
         for (i = 0; i < ni + 1; i++) {
@@ -135,29 +135,52 @@ void create_grid_from_file( char *file, int *nlon, int *nlat, double *x, double 
         }
     } else {
       double p1[2], p2[2], pm[2];
-      for (j = 0; j < nj + 1; j++)
-        for (i = 0; i < ni; i++) {
-          int idx = j * 2 * nxp + i * 2 + 1;
-          p1[0] = xc[j * nip + i] * D2R;
-          p2[0] = xc[j * nip + i + 1] * D2R;
-          p1[1] = yc[j * nip + i] * D2R;
-          p2[1] = yc[j * nip + i + 1] * D2R;
-          mid_pt_sphere(p1, p2, pm);
-          x[idx] = pm[0] * R2D;
-          y[idx] = pm[1] * R2D;
+      if (use_angular_midpoint ) {
+        for (j = 0; j < nj + 1; j++){
+          for (i = 0; i < ni; i++) {
+            int idx = j * 2 * nxp + i * 2 + 1;
+            x[idx] = 0.5 * ( xc[j * nip + i] +  xc[j * nip + i + 1] );
+            y[idx] = 0.5 * ( yc[j * nip + i] +  yc[j * nip + i + 1] );
+          }
         }
-      for (j = 0; j < nj; j++)
-        for (i = 0; i < ni + 1; i++) {
-          int idx = (j * 2 + 1) * nxp + i * 2;
-          p1[0] = xc[j * nip + i] * D2R;
-          p2[0] = xc[(j + 1) * nip + i] * D2R;
-          p1[1] = yc[j * nip + i] * D2R;
-          p2[1] = yc[(j + 1) * nip + i] * D2R;
-          mid_pt_sphere(p1, p2, pm);
-          x[idx] = pm[0] * R2D;
-          y[idx] = pm[1] * R2D ;
+        for (j = 0; j < nj; j++){
+          for (i = 0; i < ni + 1; i++) {
+            int idx = (j * 2 + 1) * nxp + i * 2;
+            x[idx] = 0.5 * ( xc[j * nip + i] + xc[(j + 1) * nip + i] );
+            y[idx] = 0.5 * ( yc[j * nip + i] +  yc[(j + 1) * nip + i] );
+          }
         }
+      } else {
+        // The default for calculating a supergrid face midpoint angle from the two points
+        // on the model grid is to use the angle that corresponds to the spatial midpoint
+        // on the great circle between the two model grid points.
+        for (j = 0; j < nj + 1; j++) {
+          for (i = 0; i < ni; i++) {
+            int idx = j * 2 * nxp + i * 2 + 1;
+            p1[0] = xc[j * nip + i] * D2R;
+            p2[0] = xc[j * nip + i + 1] * D2R;
+            p1[1] = yc[j * nip + i] * D2R;
+            p2[1] = yc[j * nip + i + 1] * D2R;
+            mid_pt_sphere(p1, p2, pm);
+            x[idx] = pm[0] * R2D;
+            y[idx] = pm[1] * R2D;
+          }
+        }
+        for (j = 0; j < nj; j++){
+          for (i = 0; i < ni + 1; i++) {
+            int idx = (j * 2 + 1) * nxp + i * 2;
+            p1[0] = xc[j * nip + i] * D2R;
+            p2[0] = xc[(j + 1) * nip + i] * D2R;
+            p1[1] = yc[j * nip + i] * D2R;
+            p2[1] = yc[(j + 1) * nip + i] * D2R;
+            mid_pt_sphere(p1, p2, pm);
+            x[idx] = pm[0] * R2D;
+            y[idx] = pm[1] * R2D;
+          }
+        }
+      }
     }
+
     for (j = 0; j < nyp; j++)
       for (i = 0; i < nx; i++) {
         p1[0] = x[j * nxp + i] * D2R;

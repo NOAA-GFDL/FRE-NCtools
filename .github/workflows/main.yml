@@ -28,7 +28,13 @@ jobs:
         ../configure $MPI $QUAD_P
     - name: Build tools
       run: make -C build
-    - name: Run tests
+    - name: Run all tests
+      if: matrix.with_mpi == ''
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
+    - name: Run most tests (skip the slow ones)
+      if: matrix.with_mpi == '--with-mpi'
+      env:
+        SKIP_TESTS: 4
       run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1

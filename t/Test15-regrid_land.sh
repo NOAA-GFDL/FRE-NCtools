@@ -61,8 +61,10 @@ load test_utils
 		--nlat 90  \
 		--input_file 00050101.land_static  \
 		--scalar_field soil_frac,lake_frac,glac_frac,area,soil_area,lake_area,glac_area  \
-		--output_file out.nc  \
+		--output_file out_parallel.nc  \
 		--remap_file remap_file.nc
+
+    nccmp -md out.nc out_parallel.nc
   fi
 
 # remap other fields
