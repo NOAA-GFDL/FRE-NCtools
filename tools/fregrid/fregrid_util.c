@@ -821,17 +821,15 @@ void do_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_co
 /*******************************************************************************
   void get_input_metadata(Mosaic_config, *mosaic)
 *******************************************************************************/
-void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2,
-		        Field_config *scalar, Field_config *u_comp, Field_config *v_comp,
-			const Grid_config *grid, int kbegin, int kend, int lbegin, int lend,
-			unsigned int opcode, char *associated_file_dir)
-{
-  int     n, m, i, l, ll, nscalar, nvector, nfield;
-  int     ndim, dimsize[5], nz;
+void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2, Field_config *scalar,
+                        Field_config *u_comp, Field_config *v_comp, const Grid_config *grid, int kbegin, int kend,
+                        int lbegin, int lend, unsigned int opcode, char *associated_file_dir) {
+  int n, m, i, l, ll, nscalar, nvector, nfield;
+  int ndim, dimsize[5], nz;
   nc_type type[5];
-  char    cart[5];
-  char    dimname[5][STRING], bndname[5][STRING], errmsg[STRING];
-  File_config  *file  = NULL;
+  char cart[5];
+  char dimname[5][STRING], bndname[5][STRING], errmsg[STRING];
+  File_config *file = NULL;
   Field_config *field = NULL;
   size_t start[4], nread[4];
   int interp_method, use_bilinear, use_conserve;
@@ -840,15 +838,13 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
   standard_dimension = opcode & STANDARD_DIMENSION;
   use_bilinear = 0;
   use_conserve = 0;
-  if(opcode & CONSERVE_ORDER1) {
+  if (opcode & CONSERVE_ORDER1) {
     use_conserve = 1;
     interp_method = CONSERVE_ORDER1;
-  }
-  else if(opcode & CONSERVE_ORDER2) {
+  } else if (opcode & CONSERVE_ORDER2) {
     use_conserve = 1;
     interp_method = CONSERVE_ORDER2;
-  }
-  else if(opcode & BILINEAR) {
+  } else if (opcode & BILINEAR) {
     use_bilinear = 1;
     interp_method = BILINEAR;
   }
@@ -856,572 +852,587 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
   /* First find out how many fields in file and file2. */
   nscalar = 0;
   nvector = 0;
-  if( scalar) nscalar = scalar->nvar;
-  if( u_comp) nvector = u_comp->nvar;
+  if (scalar) nscalar = scalar->nvar;
+  if (u_comp) nvector = u_comp->nvar;
 
-  for(n=0; n<4; n++) {
-    start[n] = 0; nread[n] = 1;
+  for (n = 0; n < 4; n++) {
+    start[n] = 0;
+    nread[n] = 1;
   }
 
-  for(m=0; m<nfiles; m++) {
-    file = m==0? file1:file2;
-    for(n=0; n<ntiles; n++) {
-      file[n].nt        = 1;
-      file[n].axis      = (Axis_config *)malloc(MAXDIM*sizeof(Axis_config));
-      file[n].ndim      = 0;
+  for (m = 0; m < nfiles; m++) {
+    file = m == 0 ? file1 : file2;
+    for (n = 0; n < ntiles; n++) {
+      file[n].nt = 1;
+      file[n].axis = (Axis_config *)malloc(MAXDIM * sizeof(Axis_config));
+      file[n].ndim = 0;
       file[n].has_tavg_info = 0;
     }
   }
 
-  for(l=0; l<nscalar; l++) for(n=0; n<ntiles; n++) {
-    init_var_config(scalar[n].var+l, interp_method);
-  }
+  for (l = 0; l < nscalar; l++)
+    for (n = 0; n < ntiles; n++) {
+      init_var_config(scalar[n].var + l, interp_method);
+    }
 
-  for(l=0; l<nvector; l++) for(n=0; n<ntiles; n++) {
-    init_var_config(u_comp[n].var+l, interp_method);
-    init_var_config(v_comp[n].var+l, interp_method);
-  }
+  for (l = 0; l < nvector; l++)
+    for (n = 0; n < ntiles; n++) {
+      init_var_config(u_comp[n].var + l, interp_method);
+      init_var_config(v_comp[n].var + l, interp_method);
+    }
 
-  nfield = (nfiles == 1)? (nscalar+2*nvector):nvector;  /* when nfiles = 2, no scalar */
+  nfield = (nfiles == 1) ? (nscalar + 2 * nvector) : nvector; /* when nfiles = 2, no scalar */
 
-  for(m=0; m<nfiles; m++) {
-    file = m==0? file1:file2;
-    for(n=0; n<ntiles; n++) {
+  for (m = 0; m < nfiles; m++) {
+    file = m == 0 ? file1 : file2;
+    for (n = 0; n < ntiles; n++) {
       const int MAXLIST = 10;
       char file_list[MAXLIST][STRING];
       char file_id[MAXLIST];
       int nfile_list;
-      char orig_bnd_dimname[STRING]="";
-      for(i=0; i<MAXLIST; i++) {
-	file_list[i][0] = '\0';
-	file_id[i] = 0;
+      char orig_bnd_dimname[STRING] = "";
+      for (i = 0; i < MAXLIST; i++) {
+        file_list[i][0] = '\0';
+        file_id[i] = 0;
       }
       nfile_list = 0;
 
       file[n].has_cell_measure_att = 0;
-      for(l=0; l<nfield; l++) {
-	if(nfiles == 1) {
-	  if(l<nscalar) {
-	    field = scalar;
-	    ll = l;
-	  }
-	  else if(l<nscalar + nvector) {
-	    field = u_comp;
-	    ll = l - nscalar;
-	  }
-	  else {
-	    field = v_comp;
-	    ll = l - nscalar - nvector;
-	  }
-	}
-	else {
-	  ll = l;
-	  field = (m==0)?u_comp:v_comp;
-	}
+      for (l = 0; l < nfield; l++) {
+        if (nfiles == 1) {
+          if (l < nscalar) {
+            field = scalar;
+            ll = l;
+          } else if (l < nscalar + nvector) {
+            field = u_comp;
+            ll = l - nscalar;
+          } else {
+            field = v_comp;
+            ll = l - nscalar - nvector;
+          }
+        } else {
+          ll = l;
+          field = (m == 0) ? u_comp : v_comp;
+        }
 
-      	field[n].var[ll].vid = mpp_get_varid(file[n].fid, field[n].var[ll].name);
-	field[n].var[ll].type  = mpp_get_var_type(file[n].fid, field[n].var[ll].vid);
-	if(field[n].var[ll].type != NC_SHORT && field[n].var[ll].type != NC_INT &&
-	   field[n].var[ll].type != NC_FLOAT && field[n].var[ll].type != NC_DOUBLE ) {
-	  sprintf(errmsg, "fregrid_util(get_input_metadata): field %s in file %s has an invalid type, "
-		  "the type should be NC_DOUBLE, NC_FLOAT, NC_INT or NC_SHORT", field[n].var[ll].name, file[n].name );
-	  mpp_error(errmsg);
-	}
-	/* check if the variable needs to be remapped */
+        field[n].var[ll].vid = mpp_get_varid(file[n].fid, field[n].var[ll].name);
+        field[n].var[ll].type = mpp_get_var_type(file[n].fid, field[n].var[ll].vid);
+        if (field[n].var[ll].type != NC_SHORT && field[n].var[ll].type != NC_INT && field[n].var[ll].type != NC_FLOAT &&
+            field[n].var[ll].type != NC_DOUBLE) {
+          sprintf(errmsg,
+                  "fregrid_util(get_input_metadata): field %s in file %s has an invalid type, "
+                  "the type should be NC_DOUBLE, NC_FLOAT, NC_INT or NC_SHORT",
+                  field[n].var[ll].name, file[n].name);
+          mpp_error(errmsg);
+        }
+        /* check if the variable needs to be remapped */
         ndim = mpp_get_var_ndim(file[n].fid, field[n].var[ll].vid);
-	field[n].var[ll].ndim = ndim;
-	if(ndim>5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no larger than 5");
+        field[n].var[ll].ndim = ndim;
+        if (ndim > 5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no larger than 5");
         field[n].var[ll].do_regrid = 0;
-	if(ndim>1) {
-	  for(i=0; i<ndim; i++) {
-	    int vid;
-	    char xcart, ycart;
-	    char localname[STRING];
-	    mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim-1, localname);
-	    vid = mpp_get_varid(file[n].fid, localname);
-	    xcart = mpp_get_var_cart(file[n].fid, vid);
-	    mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim-2, localname);
-	    vid = mpp_get_varid(file[n].fid, localname);
-	    ycart = mpp_get_var_cart(file[n].fid, vid);
-            if(xcart == 'X' && ycart == 'Y') field[n].var[ll].do_regrid = 1;
-	  }
-	}
+        if (ndim > 1) {
+          for (i = 0; i < ndim; i++) {
+            int vid;
+            char xcart, ycart;
+            char localname[STRING];
+            mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim - 1, localname);
+            vid = mpp_get_varid(file[n].fid, localname);
+            xcart = mpp_get_var_cart(file[n].fid, vid);
+            mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, ndim - 2, localname);
+            vid = mpp_get_varid(file[n].fid, localname);
+            ycart = mpp_get_var_cart(file[n].fid, vid);
+            if (xcart == 'X' && ycart == 'Y'){
+              field[n].var[ll].do_regrid = 1;
+            }else{
+              printf("fregrid_util: Field %s will not be remapped as its independent of X,Y coordinates, for file :\n  %s\n",
+		     field[n].var[ll].name, file[n].name);
+            }
+          }
+        }
 
         /* check if time_avg_info attribute existed in any variables */
-	if(!file[n].has_tavg_info) {
-	  if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "time_avg_info") ) file[n].has_tavg_info = 1;
-	}
+        if (!file[n].has_tavg_info) {
+          if (mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "time_avg_info")) file[n].has_tavg_info = 1;
+        }
 
-	/* check the cell_methods */
-        field[n].var[ll].cell_methods=CELL_METHODS_MEAN;
-	if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "cell_methods")) {
-	  char attval[STRING] = "";
+        /* check the cell_methods */
+        field[n].var[ll].cell_methods = CELL_METHODS_MEAN;
+        if (mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "cell_methods")) {
+          char attval[STRING] = "";
           char areaval[STRING] = "";
           int status;
           char errout[STRING], errmsg[STRING];
           mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_methods", attval);
           status = parse_string(attval, "area:", areaval, errout);
-          if(status==-1) {
-              sprintf(errmsg, "fregrid_util(get_input_metadata): %s for cell_methods "
-                      "attribute of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
+          if (status == -1) {
+            sprintf(errmsg,
+                    "fregrid_util(get_input_metadata): %s for cell_methods "
+                    "attribute of field %s in file %s",
+                    errout, field[n].var[ll].name, file[n].name);
+            mpp_error(errmsg);
+          } else if (status == 1) {
+            if (strcmp(areaval, "mean") == 0)
+              field[n].var[ll].cell_methods = CELL_METHODS_MEAN;
+            else if (strcmp(areaval, "sum") == 0)
+              field[n].var[ll].cell_methods = CELL_METHODS_SUM;
+            else {
+              sprintf(errmsg,
+                      "fregrid_util(get_input_metadata): field %s in file %s attribute cell_methods "
+                      "should have value 'mean' or 'sum' after area: ",
+                      field[n].var[ll].name, file[n].name);
               mpp_error(errmsg);
+            }
           }
-          else if(status ==1) {
-	    if(strcmp(areaval,"mean")==0)
-	      field[n].var[ll].cell_methods=CELL_METHODS_MEAN;
-	    else if(strcmp(areaval,"sum")==0)
-	      field[n].var[ll].cell_methods=CELL_METHODS_SUM;
-    	    else {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata): field %s in file %s attribute cell_methods "
-	    	       "should have value 'mean' or 'sum' after area: ", field[n].var[ll].name, file[n].name );
-	      mpp_error(errmsg);
-	    }
-          }
-	}
-	/* check if exist attribute "cell_measures" and get the name of area */
-        if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "cell_measures")) {
+        }
+        /* check if exist attribute "cell_measures" and get the name of area */
+        if (mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "cell_measures")) {
           char attval[STRING] = "";
-          char *str2=NULL;
-	  char errout[STRING];
+          char *str2 = NULL;
+          char errout[STRING];
           int status;
 
-	  file[n].has_cell_measure_att = 1;
+          file[n].has_cell_measure_att = 1;
           field[n].var[ll].use_volume = 0;
           /* --source_grid must be set when cell_measures attribute exists */
-	  mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_measures", attval);
+          mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_measures", attval);
 
           status = parse_string(attval, "volume:", field[n].var[ll].area_name, errout);
-	  if(status==-1) {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata): %s for cell_measure "
-		      "attribute volume of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
-	      mpp_error(errmsg);
-	  }
-          else if(status ==1) {
-	    field[n].var[ll].cell_measures=1;
+          if (status == -1) {
+            sprintf(errmsg,
+                    "fregrid_util(get_input_metadata): %s for cell_measure "
+                    "attribute volume of field %s in file %s",
+                    errout, field[n].var[ll].name, file[n].name);
+            mpp_error(errmsg);
+          } else if (status == 1) {
+            field[n].var[ll].cell_measures = 1;
             field[n].var[ll].use_volume = 1;
-	  }
-	  else {
-	    status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
-	    if(status==-1) {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata): %s for cell_measure "
-		      "attribute area of field %s in file %s", errout, field[n].var[ll].name, file[n].name );
-	      mpp_error(errmsg);
-	    }
-	    else if(status ==1)
-	      field[n].var[ll].cell_measures=1;
-	    else
-	      field[n].var[ll].cell_measures=0;
-	  }
+          } else {
+            status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
+            if (status == -1) {
+              sprintf(errmsg,
+                      "fregrid_util(get_input_metadata): %s for cell_measure "
+                      "attribute area of field %s in file %s",
+                      errout, field[n].var[ll].name, file[n].name);
+              mpp_error(errmsg);
+            } else if (status == 1)
+              field[n].var[ll].cell_measures = 1;
+            else
+              field[n].var[ll].cell_measures = 0;
+          }
 
-	  if(field[n].var[ll].cell_measures==1) {
+          if (field[n].var[ll].cell_measures == 1) {
             char associated_file[512], dimname[32];
-	    int vid2;
-	    char cart;
-	    /* make sure field[n].var[ll].area_name exist in the current file or associated file */
-	    if( mpp_var_exist(file[n].fid, field[n].var[ll].area_name) ) {
-              strcpy(associated_file, file[n].name );
+            int vid2;
+            char cart;
+            /* make sure field[n].var[ll].area_name exist in the current file or associated file */
+            if (mpp_var_exist(file[n].fid, field[n].var[ll].area_name)) {
+              strcpy(associated_file, file[n].name);
               field[n].var[ll].area_fid = file[n].fid;
-            }
-            else {
-	      char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
+            } else {
+              char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
 
               /* check if the variable is in associated_files or not */
-              if( !mpp_global_att_exist(file[n].fid, "associated_files") ) {
-                 sprintf(errmsg, "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
-                                 "and the file also does not have global attribute 'associated_files' ",
-                                  field[n].var[ll].area_name, file[n].name );
-                 mpp_error(errmsg);
+              if (!mpp_global_att_exist(file[n].fid, "associated_files")) {
+                sprintf(errmsg,
+                        "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
+                        "and the file also does not have global attribute 'associated_files' ",
+                        field[n].var[ll].area_name, file[n].name);
+                mpp_error(errmsg);
               }
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
-	      sprintf(name, "%s:", field[n].var[ll].area_name);
+              sprintf(name, "%s:", field[n].var[ll].area_name);
               status = parse_string(globalatt, name, file2, errout);
-	      if(status==0) {
-		sprintf(errmsg, "fregrid_util(get_input_metadata): global sttribute associated_files "
-			"does not contains string %s in file %s",
-			name, file[n].name );
-		mpp_error(errmsg);
-	      }
-	      else if(status==-1) {
-		sprintf(errmsg, "fregrid_util(get_input_metadata): %s for associated_files "
-			"global attribute in file %s", errout, file[n].name );
-		mpp_error(errmsg);
-	      }
-	      if(associated_file_dir)
-		sprintf(file1, "%s/%s", associated_file_dir, file2);
-	      else
-		strcpy(file1, file2);
+              if (status == 0) {
+                sprintf(errmsg,
+                        "fregrid_util(get_input_metadata): global sttribute associated_files "
+                        "does not contains string %s in file %s",
+                        name, file[n].name);
+                mpp_error(errmsg);
+              } else if (status == -1) {
+                sprintf(errmsg,
+                        "fregrid_util(get_input_metadata): %s for associated_files "
+                        "global attribute in file %s",
+                        errout, file[n].name);
+                mpp_error(errmsg);
+              }
+              if (associated_file_dir)
+                sprintf(file1, "%s/%s", associated_file_dir, file2);
+              else
+                strcpy(file1, file2);
 
               /* check if the file exist or not, if not add tile# */
-              if(ntiles == 1) {
-                 if(mpp_file_exist(file1))
-                    strcpy(associated_file, file1);
-                 else {    /* add tile number if there is more than one tile */
-                    sprintf(errmsg, "fregrid_util(get_input_metadata): ntiles==1 and file %s does not exist", file1);
-                    mpp_error(errmsg);
-                 }
-              }
-              else {
-		 len = strlen(file1);
-		 if( strcmp(file1+len-3, ".nc") ==0 ) {
-		    strncpy(str1, file1, len-3);
-		    str1[len-3] = '\0';
-		 }
-		 else
-		    strcpy(str1, file1);
-	         sprintf(associated_file, "%s.tile%d.nc", str1, n+1);
+              if (ntiles == 1) {
+                if (mpp_file_exist(file1))
+                  strcpy(associated_file, file1);
+                else { /* add tile number if there is more than one tile */
+                  sprintf(errmsg, "fregrid_util(get_input_metadata): ntiles==1 and file %s does not exist", file1);
+                  mpp_error(errmsg);
+                }
+              } else {
+                len = strlen(file1);
+                if (strcmp(file1 + len - 3, ".nc") == 0) {
+                  strncpy(str1, file1, len - 3);
+                  str1[len - 3] = '\0';
+                } else
+                  strcpy(str1, file1);
+                sprintf(associated_file, "%s.tile%d.nc", str1, n + 1);
 
-                 if( ! mpp_file_exist(associated_file) ) {
-                    if(mpp_file_exist(file1))
-                       strcpy(associated_file, file1);
-                    else {
-                       sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1, associated_file);
-                       mpp_error(errmsg);
-                    }
-                 }
+                if (!mpp_file_exist(associated_file)) {
+                  if (mpp_file_exist(file1))
+                    strcpy(associated_file, file1);
+                  else {
+                    sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1,
+                            associated_file);
+                    mpp_error(errmsg);
+                  }
+                }
               }
               {
-		/*search through the list */
-		int found_file;
+                /*search through the list */
+                int found_file;
 
-		found_file = 0;
-		for(i=0; i<nfile_list; i++) {
-		  if( !strcmp(associated_file, file_list[i]) ) {
-		    field[n].var[ll].area_fid = file_id[i];
-		    found_file = 1;
-		    break;
-		  }
-		}
-		if(!found_file) {
+                found_file = 0;
+                for (i = 0; i < nfile_list; i++) {
+                  if (!strcmp(associated_file, file_list[i])) {
+                    field[n].var[ll].area_fid = file_id[i];
+                    found_file = 1;
+                    break;
+                  }
+                }
+                if (!found_file) {
                   field[n].var[ll].area_fid = mpp_open(associated_file, MPP_READ);
-		  if(nfile_list >= MAXLIST)mpp_error("fregrid_util(get_input_metadata): nfile_list > MAXLIST");
-		  strcpy(file_list[i], associated_file);
-		  file_id[i] = field[n].var[ll].area_fid;
-		  nfile_list++;
-		}
+                  if (nfile_list >= MAXLIST) mpp_error("fregrid_util(get_input_metadata): nfile_list > MAXLIST");
+                  strcpy(file_list[i], associated_file);
+                  file_id[i] = field[n].var[ll].area_fid;
+                  nfile_list++;
+                }
               }
-	    }
-	    /* get the vid of area_name and check if area_name is time dependent or not */
-	    field[n].var[ll].area_vid = mpp_get_varid(field[n].var[ll].area_fid, field[n].var[ll].area_name);
-	    ndim = mpp_get_var_ndim(field[n].var[ll].area_fid, field[n].var[ll].area_vid);
-	    /* check if it has T-axis */
-	    mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
-	    vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
-	    cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+            }
+            /* get the vid of area_name and check if area_name is time dependent or not */
+            field[n].var[ll].area_vid = mpp_get_varid(field[n].var[ll].area_fid, field[n].var[ll].area_name);
+            ndim = mpp_get_var_ndim(field[n].var[ll].area_fid, field[n].var[ll].area_vid);
+            /* check if it has T-axis */
+            mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+            vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+            cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
 
-	    if( cart == 'T' ) {
-	      field[n].var[ll].area_has_taxis = 1;
-	    }
-	    else {
-	      field[n].var[ll].area_has_taxis = 0;
-	    }
-	    /* check if has n-axis (diurnal data). */
-	    field[n].var[ll].area_has_naxis = 0;
-	    field[n].var[ll].area_has_zaxis = 0;
-	    if(ndim>2) {
-	      if(field[n].var[ll].area_has_taxis)
-		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 1, dimname);
-	      else
-		mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
-	      vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
-	      cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
-	      if(cart == 'N' )
-		field[n].var[ll].area_has_naxis = 1;
-	      else if( cart == 'Z' )
-		field[n].var[ll].area_has_zaxis = 1;
+            if (cart == 'T') {
+              field[n].var[ll].area_has_taxis = 1;
+            } else {
+              field[n].var[ll].area_has_taxis = 0;
+            }
+            /* check if has n-axis (diurnal data). */
+            field[n].var[ll].area_has_naxis = 0;
+            field[n].var[ll].area_has_zaxis = 0;
+            if (ndim > 2) {
+              if (field[n].var[ll].area_has_taxis)
+                mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 1, dimname);
+              else
+                mpp_get_var_dimname(field[n].var[ll].area_fid, field[n].var[ll].area_vid, 0, dimname);
+              vid2 = mpp_get_varid(field[n].var[ll].area_fid, dimname);
+              cart = mpp_get_var_cart(field[n].var[ll].area_fid, vid2);
+              if (cart == 'N')
+                field[n].var[ll].area_has_naxis = 1;
+              else if (cart == 'Z')
+                field[n].var[ll].area_has_zaxis = 1;
 
-	      if(field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
-		if(ndim==3 && field[n].var[ll].area_has_taxis) {
-		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field %s in file %s",
-			  field[n].var[ll].area_name, associated_file );
-		  mpp_error(errmsg);
-		}
-		else if(ndim==4 && !field[n].var[ll].area_has_taxis) {
-		  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
-			  field[n].var[ll].area_name, associated_file );
-		  mpp_error(errmsg);
-		}
-	      }
+              if (field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
+                if (ndim == 3 && field[n].var[ll].area_has_taxis) {
+                  sprintf(errmsg,
+                          "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field "
+                          "%s in file %s",
+                          field[n].var[ll].area_name, associated_file);
+                  mpp_error(errmsg);
+                } else if (ndim == 4 && !field[n].var[ll].area_has_taxis) {
+                  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
+                          field[n].var[ll].area_name, associated_file);
+                  mpp_error(errmsg);
+                }
+              }
             }
 
-	    if(ndim>4) {
-	      sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s > 4" ,
-		      field[n].var[ll].area_name, associated_file );
-	      mpp_error(errmsg);
-	    }
-	    if( mpp_var_att_exist(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "missing_value") ) {
-	      mpp_get_var_att_double(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "missing_value", &(field[n].var[ll].area_missing));
-	    }
-	    else if( mpp_var_att_exist(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "_FillValue") ) {
-	      mpp_get_var_att_double(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "_FillValue", &(field[n].var[ll].area_missing));
-	    }
-	    else
-	      field[n].var[ll].area_missing = 0;
-	  }
+            if (ndim > 4) {
+              sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s > 4",
+                      field[n].var[ll].area_name, associated_file);
+              mpp_error(errmsg);
+            }
+            if (mpp_var_att_exist(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "missing_value")) {
+              mpp_get_var_att_double(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "missing_value",
+                                     &(field[n].var[ll].area_missing));
+            } else if (mpp_var_att_exist(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "_FillValue")) {
+              mpp_get_var_att_double(field[n].var[ll].area_fid, field[n].var[ll].area_vid, "_FillValue",
+                                     &(field[n].var[ll].area_missing));
+            } else
+              field[n].var[ll].area_missing = 0;
+          }
+        } else {
+          field[n].var[ll].cell_measures = 0;
+          field[n].var[ll].area_missing = 0;
+          field[n].var[ll].area_has_taxis = 0;
         }
-	else {
-	    field[n].var[ll].cell_measures=0;
-	    field[n].var[ll].area_missing = 0;
-	    field[n].var[ll].area_has_taxis = 0;
-	}
 
-	/* get the interp_method from the field attribute if existing
+        /* get the interp_method from the field attribute if existing
            when interp_method is not conserve_order2_monotonic
         */
-        if( !(opcode & MONOTONIC) ) {
-	  if(mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
-            char    remap_method[STRING] = "";
-	    mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
-            if(!strcmp(remap_method, "conserve_order1") ) {
-  	      use_conserve = 1;
-  	      field[n].var[ll].interp_method = CONSERVE_ORDER1;
-	    }
-  	    else if(!strcmp(remap_method, "conserve_order2") ) {
-	      use_conserve = 1;
-	      field[n].var[ll].interp_method = CONSERVE_ORDER2;
-	    }
-	    else if(!strcmp(remap_method, "bilinear") ) {
-	      use_bilinear = 1;
-	      field[n].var[ll].interp_method = BILINEAR;
-	    }
-	    else {
-	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
- 		      " is not suitable, it should be conserve_order1, conserve_order2 or bilinear", file[n].name,
-		      field[n].var[ll].name, remap_method);
-      	      mpp_error(errmsg);
-	    }
-	  }
-	}
-	ndim = field[n].var[ll].ndim;
-	for(i=0; i<ndim; i++) {
-	  int vid;
+        if (!(opcode & MONOTONIC)) {
+          if (mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "interp_method")) {
+            char remap_method[STRING] = "";
+            mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "interp_method", remap_method);
+            if (!strcmp(remap_method, "conserve_order1")) {
+              use_conserve = 1;
+              field[n].var[ll].interp_method = CONSERVE_ORDER1;
+            } else if (!strcmp(remap_method, "conserve_order2")) {
+              use_conserve = 1;
+              field[n].var[ll].interp_method = CONSERVE_ORDER2;
+            } else if (!strcmp(remap_method, "bilinear")) {
+              use_bilinear = 1;
+              field[n].var[ll].interp_method = BILINEAR;
+            } else {
+              sprintf(
+                  errmsg,
+                  "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
+                  " is not suitable, it should be conserve_order1, conserve_order2 or bilinear",
+                  file[n].name, field[n].var[ll].name, remap_method);
+              mpp_error(errmsg);
+            }
+          }
+        }
+        ndim = field[n].var[ll].ndim;
+        for (i = 0; i < ndim; i++) {
+          int vid;
           mpp_get_var_dimname(file[n].fid, field[n].var[ll].vid, i, dimname[i]);
-	  dimsize[i] = mpp_get_dimlen(file[n].fid, dimname[i]);
-	  vid = mpp_get_varid(file[n].fid, dimname[i]);
-	  cart[i] = mpp_get_var_cart(file[n].fid, vid);
-	  type[i] = mpp_get_var_type(file[n].fid, vid);
-	  mpp_get_var_bndname(file[n].fid, vid, bndname[i]);
-      	}
-	if(field[n].var[ll].do_regrid) {
-	  if(cart[ndim-1] != 'X') mpp_error("get_input_metadata(fregrid_util.c): the last dimension cartesian should be 'X'");
-	  if(cart[ndim-2] != 'Y') mpp_error("get_input_metadata(fregrid_util.c): the second last dimension cartesian should be 'Y'");
-	  if(dimsize[ndim-1] != grid[n].nx) mpp_error("get_input_metadata(fregrid_util.c): x-size in grid file in not the same as in data file");
-	  if(dimsize[ndim-2] != grid[n].ny) mpp_error("get_input_metadata(fregrid_util.c): y-size in grid file in not the same as in data file");
-	  if(ndim > 2) {
-	    if(cart[ndim-3] == 'Z') {
-	      field[n].var[ll].has_zaxis = 1;
-	      field[n].var[ll].nz        = dimsize[ndim-3];
-	      if(kend > field[n].var[ll].nz) {
-		sprintf(errmsg, "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
-			"number of vertical levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
-		mpp_error(errmsg);
-	      }
-	      if(kbegin>0) {
-		field[n].var[ll].kstart = kbegin - 1;
-		field[n].var[ll].kend   = kend - 1;
-		field[n].var[ll].nz     = kend - kbegin + 1;
-	      }
-	      else {
-		field[n].var[ll].kstart = 0;
-		field[n].var[ll].kend   = field[n].var[ll].nz - 1;
-	      }
-	    }
-	    else if(cart[ndim-3] == 'N') {
-	      field[n].var[ll].has_naxis = 1;
-	      field[n].var[ll].nn        = dimsize[ndim-3];
-	    }
-	  }
-	  if(ndim > 3) {
-	    if(cart[ndim-4] == 'Z') {
-	      mpp_error("get_input_metadata(fregrid_util.c): the Z-axis must be the third dimension");
-	    }
-	    if(cart[ndim-4] == 'N') {
-	      field[n].var[ll].has_naxis = 1;
-	      field[n].var[ll].nn        = dimsize[ndim-4];
-	    }
-	  }
+          dimsize[i] = mpp_get_dimlen(file[n].fid, dimname[i]);
+          vid = mpp_get_varid(file[n].fid, dimname[i]);
+          cart[i] = mpp_get_var_cart(file[n].fid, vid);
+          type[i] = mpp_get_var_type(file[n].fid, vid);
+          mpp_get_var_bndname(file[n].fid, vid, bndname[i]);
+        }
+        if (field[n].var[ll].do_regrid) {
+          if (cart[ndim - 1] != 'X')
+            mpp_error("get_input_metadata(fregrid_util.c): the last dimension cartesian should be 'X'");
+          if (cart[ndim - 2] != 'Y')
+            mpp_error("get_input_metadata(fregrid_util.c): the second last dimension cartesian should be 'Y'");
+          if (dimsize[ndim - 1] != grid[n].nx)
+            mpp_error("get_input_metadata(fregrid_util.c): x-size in grid file in not the same as in data file");
+          if (dimsize[ndim - 2] != grid[n].ny)
+            mpp_error("get_input_metadata(fregrid_util.c): y-size in grid file in not the same as in data file");
+          if (ndim > 2) {
+            if (cart[ndim - 3] == 'Z') {
+              field[n].var[ll].has_zaxis = 1;
+              field[n].var[ll].nz = dimsize[ndim - 3];
+              if (kend > field[n].var[ll].nz) {
+                sprintf(errmsg,
+                        "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
+                        "number of vertical levels of field %s in file %s.",
+                        field[n].var[ll].name, file[n].name);
+                mpp_error(errmsg);
+              }
+              if (kbegin > 0) {
+                field[n].var[ll].kstart = kbegin - 1;
+                field[n].var[ll].kend = kend - 1;
+                field[n].var[ll].nz = kend - kbegin + 1;
+              } else {
+                field[n].var[ll].kstart = 0;
+                field[n].var[ll].kend = field[n].var[ll].nz - 1;
+              }
+            } else if (cart[ndim - 3] == 'N') {
+              field[n].var[ll].has_naxis = 1;
+              field[n].var[ll].nn = dimsize[ndim - 3];
+            }
+          }
+          if (ndim > 3) {
+            if (cart[ndim - 4] == 'Z') {
+              mpp_error("get_input_metadata(fregrid_util.c): the Z-axis must be the third dimension");
+            }
+            if (cart[ndim - 4] == 'N') {
+              field[n].var[ll].has_naxis = 1;
+              field[n].var[ll].nn = dimsize[ndim - 4];
+            }
+          }
 
-	  if(cart[0] == 'T') {
-	    field[n].var[ll].has_taxis = 1;
-	    if(lend > dimsize[0]) {
-	      sprintf(errmsg, "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
-		      "number of time levels of field %s in file %s.", field[n].var[ll].name, file[n].name);
-	      mpp_error(errmsg);
-	    }
-	    if(lbegin>0) {
-	      field[n].var[ll].lstart = lbegin - 1;
-	      field[n].var[ll].lend   = lend - 1;
-	      file[n].nt              = lend - lbegin + 1;
-	    }
-	    else {
-	      field[n].var[ll].lstart = 0;
-	      field[n].var[ll].lend   = dimsize[0] - 1;
-	      file[n].nt              = dimsize[0];
-	    }
-	  }
-	}
-	for(i=0; i<ndim; i++) {
-	  /* loop through all the file dimensions to see if the dimension already exist or not */
-	  int found, j;
-	  found = 0;
-	  for(j=0; j<file[n].ndim; j++) {
-	    if(!strcmp(dimname[i], file[n].axis[j].name) ) {
-	      found = 1;
-	      field[n].var[ll].index[i] = j;
-	      break;
-	    }
-	  }
-	  if(!found) {
-	    j                         = file[n].ndim;
-	    field[n].var[ll].index[i] = file[n].ndim;
-	    file[n].ndim++;
-            if(	file[n].ndim > MAXDIM) mpp_error("get_input_metadata(fregrid_util.c):ndim is greater than MAXDIM");
+          if (cart[0] == 'T') {
+            field[n].var[ll].has_taxis = 1;
+            if (lend > dimsize[0]) {
+              sprintf(errmsg,
+                      "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
+                      "number of time levels of field %s in file %s.",
+                      field[n].var[ll].name, file[n].name);
+              mpp_error(errmsg);
+            }
+            if (lbegin > 0) {
+              field[n].var[ll].lstart = lbegin - 1;
+              field[n].var[ll].lend = lend - 1;
+              file[n].nt = lend - lbegin + 1;
+            } else {
+              field[n].var[ll].lstart = 0;
+              field[n].var[ll].lend = dimsize[0] - 1;
+              file[n].nt = dimsize[0];
+            }
+          }
+        }
+        for (i = 0; i < ndim; i++) {
+          /* loop through all the file dimensions to see if the dimension already exist or not */
+          int found, j;
+          found = 0;
+          for (j = 0; j < file[n].ndim; j++) {
+            if (!strcmp(dimname[i], file[n].axis[j].name)) {
+              found = 1;
+              field[n].var[ll].index[i] = j;
+              break;
+            }
+          }
+          if (!found) {
+            j = file[n].ndim;
+            field[n].var[ll].index[i] = file[n].ndim;
+            file[n].ndim++;
+            if (file[n].ndim > MAXDIM) mpp_error("get_input_metadata(fregrid_util.c):ndim is greater than MAXDIM");
 
-	    file[n].axis[j].cart = cart[i];
-	    file[n].axis[j].type = type[i];
-	    strcpy(file[n].axis[j].name, dimname[i]);
-	    strcpy(file[n].axis[j].bndname, bndname[i]);
-	    file[n].axis[j].vid = mpp_get_varid(file[n].fid, dimname[i]);
-	    if( field[n].var[ll].do_regrid ) {
-	      if(cart[i] == 'T') {
-		start[0] = field[n].var[ll].lstart;
-		file[n].axis[j].size = file[n].nt;
-	      }
-	      else if(cart[i] == 'Z') {
-		start[0] = field[n].var[ll].kstart;
-		file[n].axis[j].size = field[n].var[ll].nz;
-	      }
-	      else {
-		start[0] = 0;
-		file[n].axis[j].size = dimsize[i];
-	      }
-	    }
-	    else
-	      file[n].axis[j].size = dimsize[i];
-	    file[n].axis[j].data = (double *)malloc(file[n].axis[j].size*sizeof(double));
-	    nread[0] = file[n].axis[j].size;
-	    mpp_get_var_value_block(file[n].fid, file[n].axis[j].vid, start, nread, file[n].axis[j].data);
-	    file[n].axis[j].bndtype = 0;
-	    if(strcmp(bndname[i], "none") ) {
-	      file[n].axis[j].bndid = mpp_get_varid(file[n].fid, bndname[i]);
-	      if(mpp_get_var_ndim(file[n].fid,file[n].axis[j].bndid) == 1) {
-		file[n].axis[j].bndtype = 1;
-		file[n].axis[j].bnddata = (double *)malloc((file[n].axis[j].size+1)*sizeof(double));
-		nread[0] = file[n].axis[j].size+1;
-	      }
-	      else {
-	        file[n].axis[j].bndtype = 2;
-		file[n].axis[j].bnddata = (double *)malloc(2*file[n].axis[j].size*sizeof(double));
-		nread[0] = file[n].axis[j].size; nread[1] = 2;
-		/* find the bnd variable name */
-		mpp_get_var_dimname(file[n].fid,file[n].axis[j].bndid, 1, orig_bnd_dimname);
-	      }
-	      mpp_get_var_value_block(file[n].fid, file[n].axis[j].bndid, start, nread, file[n].axis[j].bnddata);
-	    }
-	    else if( cart[i] == 'X' || cart[i] == 'Y' ) {
-	      sprintf(file[n].axis[j].bndname, "%s_bnds", file[n].axis[j].name);
-	    }
-
-	  }
-	} /*ndim*/
-      }  /* nvar */
+            file[n].axis[j].cart = cart[i];
+            file[n].axis[j].type = type[i];
+            strcpy(file[n].axis[j].name, dimname[i]);
+            strcpy(file[n].axis[j].bndname, bndname[i]);
+            file[n].axis[j].vid = mpp_get_varid(file[n].fid, dimname[i]);
+            if (field[n].var[ll].do_regrid) {
+              if (cart[i] == 'T') {
+                start[0] = field[n].var[ll].lstart;
+                file[n].axis[j].size = file[n].nt;
+              } else if (cart[i] == 'Z') {
+                start[0] = field[n].var[ll].kstart;
+                file[n].axis[j].size = field[n].var[ll].nz;
+              } else {
+                start[0] = 0;
+                file[n].axis[j].size = dimsize[i];
+              }
+            } else
+              file[n].axis[j].size = dimsize[i];
+            file[n].axis[j].data = (double *)malloc(file[n].axis[j].size * sizeof(double));
+            nread[0] = file[n].axis[j].size;
+            mpp_get_var_value_block(file[n].fid, file[n].axis[j].vid, start, nread, file[n].axis[j].data);
+            file[n].axis[j].bndtype = 0;
+            if (strcmp(bndname[i], "none")) {
+              file[n].axis[j].bndid = mpp_get_varid(file[n].fid, bndname[i]);
+              if (mpp_get_var_ndim(file[n].fid, file[n].axis[j].bndid) == 1) {
+                file[n].axis[j].bndtype = 1;
+                file[n].axis[j].bnddata = (double *)malloc((file[n].axis[j].size + 1) * sizeof(double));
+                nread[0] = file[n].axis[j].size + 1;
+              } else {
+                file[n].axis[j].bndtype = 2;
+                file[n].axis[j].bnddata = (double *)malloc(2 * file[n].axis[j].size * sizeof(double));
+                nread[0] = file[n].axis[j].size;
+                nread[1] = 2;
+                /* find the bnd variable name */
+                mpp_get_var_dimname(file[n].fid, file[n].axis[j].bndid, 1, orig_bnd_dimname);
+              }
+              mpp_get_var_value_block(file[n].fid, file[n].axis[j].bndid, start, nread, file[n].axis[j].bnddata);
+            } else if (cart[i] == 'X' || cart[i] == 'Y') {
+              sprintf(file[n].axis[j].bndname, "%s_bnds", file[n].axis[j].name);
+            }
+          }
+        } /*ndim*/
+      }   /* nvar */
       /* make sure the dimension name is bnds when standard_dimension is set */
       {
-	int j;
-	for(j=0; j<file[n].ndim; j++) file[n].axis[j].is_defined = 0;
+        int j;
+        for (j = 0; j < file[n].ndim; j++) file[n].axis[j].is_defined = 0;
       }
-      if(standard_dimension) {
-	int j;
-	for(j=0; j<file[n].ndim; j++) {
-	  if(!strcmp(file[n].axis[j].name,orig_bnd_dimname) ) strcpy(file[n].axis[j].name, "bnds");
-	}
+      if (standard_dimension) {
+        int j;
+        for (j = 0; j < file[n].ndim; j++) {
+          if (!strcmp(file[n].axis[j].name, orig_bnd_dimname)) strcpy(file[n].axis[j].name, "bnds");
+        }
       }
 
       /* loop through each variable to see if will be axis data */
-      for(l=0; l<nfield; l++) {
-	field[n].var[l].is_axis_data = 0;
-	for(i=0; i<file[n].ndim; i++) {
-	  if(!strcmp(field[n].var[l].name, file[n].axis[i].name) || !strcmp(field[n].var[l].name, file[n].axis[i].bndname)
-	     || !strcmp(field[n].var[l].name, orig_bnd_dimname) ) {
-	    field[n].var[l].is_axis_data = 1;
-	    break;
-	  }
-	}
+      for (l = 0; l < nfield; l++) {
+        field[n].var[l].is_axis_data = 0;
+        for (i = 0; i < file[n].ndim; i++) {
+          if (!strcmp(field[n].var[l].name, file[n].axis[i].name) ||
+              !strcmp(field[n].var[l].name, file[n].axis[i].bndname) ||
+              !strcmp(field[n].var[l].name, orig_bnd_dimname)) {
+            field[n].var[l].is_axis_data = 1;
+            break;
+          }
+        }
       }
 
     } /* ntile */
     /* make sure the consistency between tiles */
-    for(n=1; n<ntiles; n++) {
-      if(file[n].has_tavg_info != file[0].has_tavg_info)
-	mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for field attribute has_tavg_info");
+    for (n = 1; n < ntiles; n++) {
+      if (file[n].has_tavg_info != file[0].has_tavg_info)
+        mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for field attribute has_tavg_info");
 
-      if(file[n].ndim != file[0].ndim)
-	mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for file ndim");
-      for(l=0; l<file[n].ndim; l++) {
-	if(strcmp(file[n].axis[l].name, file[0].axis[l].name) )
-	   mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for file axis name");
+      if (file[n].ndim != file[0].ndim)
+        mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for file ndim");
+      for (l = 0; l < file[n].ndim; l++) {
+        if (strcmp(file[n].axis[l].name, file[0].axis[l].name))
+          mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for file axis name");
       }
-      for(l=0; l<nscalar+2*nvector; l++) {
-	if(l<nscalar) {
-	  field = scalar;
-	  ll = l;
-	}
-	else if(l<nscalar + nvector) {
-	  field = u_comp;
-	  ll = l - nscalar;
-	}
-	else {
-	  field = v_comp;
-	  ll = l - nscalar - nvector;
-	}
+      for (l = 0; l < nscalar + 2 * nvector; l++) {
+        if (l < nscalar) {
+          field = scalar;
+          ll = l;
+        } else if (l < nscalar + nvector) {
+          field = u_comp;
+          ll = l - nscalar;
+        } else {
+          field = v_comp;
+          ll = l - nscalar - nvector;
+        }
 
-        if(field[n].var[ll].cell_measures != field[0].var[ll].cell_measures) {
-	    sprintf(errmsg, "get_input_metadata(fregrid_util.c): mismatch of attribute `cell_measures` between tiles "
-		    "for field %s in file %s", field[n].var[ll].name, file[n].name);
-	    mpp_error(errmsg);
-	}
-        if(field[n].var[ll].area_has_taxis != field[0].var[ll].area_has_taxis) {
-	    sprintf(errmsg, "get_input_metadata(fregrid_util.c): mismatch of has_taxis between tiles "
-		    "for field %s in file %s", field[n].var[ll].area_name, file[n].name);
-	    mpp_error(errmsg);
-	}
-	if(field[n].var[ll].ndim != field[0].var[ll].ndim)
-	  mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for var ndim");
-	if(field[n].var[ll].interp_method != field[0].var[ll].interp_method)
-	  mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for interp_method");
-	for(i=0; i<field[n].var[ll].ndim; i++) {
-	  if(field[n].var[ll].index[i] != field[0].var[ll].index[i])
-	    mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for var dimindex");
-	}
+        if (field[n].var[ll].cell_measures != field[0].var[ll].cell_measures) {
+          sprintf(errmsg,
+                  "get_input_metadata(fregrid_util.c): mismatch of attribute `cell_measures` between tiles "
+                  "for field %s in file %s",
+                  field[n].var[ll].name, file[n].name);
+          mpp_error(errmsg);
+        }
+        if (field[n].var[ll].area_has_taxis != field[0].var[ll].area_has_taxis) {
+          sprintf(errmsg,
+                  "get_input_metadata(fregrid_util.c): mismatch of has_taxis between tiles "
+                  "for field %s in file %s",
+                  field[n].var[ll].area_name, file[n].name);
+          mpp_error(errmsg);
+        }
+        if (field[n].var[ll].ndim != field[0].var[ll].ndim)
+          mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for var ndim");
+        if (field[n].var[ll].interp_method != field[0].var[ll].interp_method)
+          mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for interp_method");
+        for (i = 0; i < field[n].var[ll].ndim; i++) {
+          if (field[n].var[ll].index[i] != field[0].var[ll].index[i])
+            mpp_error("get_input_metadata(fregrid_util.c): mismatch between tiles for var dimindex");
+        }
       }
     }
     /* close the file and get the tavg_info */
-    for(n=0; n<ntiles; n++) {
-      if(file[n].has_tavg_info) {
-
-	file[n].t1    = (double *)malloc(file[n].nt*sizeof(double));
-	file[n].t2    = (double *)malloc(file[n].nt*sizeof(double));
-	file[n].dt    = (double *)malloc(file[n].nt*sizeof(double));
-	file[n].id_t1 = mpp_get_varid(file[n].fid, "average_T1");
-	file[n].id_t2 = mpp_get_varid(file[n].fid, "average_T2");
-	file[n].id_dt = mpp_get_varid(file[n].fid, "average_DT");
-	file[n].tavg_type = mpp_get_var_type(file[n].fid, file[n].id_t1);
-	if(lbegin > 0)
-	  start[0] = lbegin-1;
-	else
-	  start[0] = 0;
-	nread[0] = file[n].nt; nread[1] = 1;
-	mpp_get_var_value_block(file[n].fid, file[n].id_t1, start, nread, file[n].t1);
-	mpp_get_var_value_block(file[n].fid, file[n].id_t2, start, nread, file[n].t2);
-	mpp_get_var_value_block(file[n].fid, file[n].id_dt, start, nread, file[n].dt);
+    for (n = 0; n < ntiles; n++) {
+      if (file[n].has_tavg_info) {
+        file[n].t1 = (double *)malloc(file[n].nt * sizeof(double));
+        file[n].t2 = (double *)malloc(file[n].nt * sizeof(double));
+        file[n].dt = (double *)malloc(file[n].nt * sizeof(double));
+        file[n].id_t1 = mpp_get_varid(file[n].fid, "average_T1");
+        file[n].id_t2 = mpp_get_varid(file[n].fid, "average_T2");
+        file[n].id_dt = mpp_get_varid(file[n].fid, "average_DT");
+        file[n].tavg_type = mpp_get_var_type(file[n].fid, file[n].id_t1);
+        if (lbegin > 0)
+          start[0] = lbegin - 1;
+        else
+          start[0] = 0;
+        nread[0] = file[n].nt;
+        nread[1] = 1;
+        mpp_get_var_value_block(file[n].fid, file[n].id_t1, start, nread, file[n].t1);
+        mpp_get_var_value_block(file[n].fid, file[n].id_t2, start, nread, file[n].t2);
+        mpp_get_var_value_block(file[n].fid, file[n].id_dt, start, nread, file[n].dt);
       }
     }
 
   } /*nfile*/
 
   /* make sure bilinear and conservative interpolation do not co-exist. */
-  if(use_bilinear && use_conserve) mpp_error("get_input_metadata(fregrid_util.c): bilinear interpolation and conservative "
-					     "interpolation can not co-exist, check you option interp_method in command "
-					     "line and field attribute interp_method in source file");
+  if (use_bilinear && use_conserve)
+    mpp_error(
+        "get_input_metadata(fregrid_util.c): bilinear interpolation and conservative "
+        "interpolation can not co-exist, check you option interp_method in command "
+        "line and field attribute interp_method in source file");
 
 }; /* get_input_metadata */
 
