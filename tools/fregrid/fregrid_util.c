@@ -930,6 +930,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
         field[n].var[ll].ndim = ndim;
         if (ndim > 5) mpp_error("get_input_metadata(fregrid_util.c): ndim should be no larger than 5");
         field[n].var[ll].do_regrid = 0;
+        int number_independent = 0;
         if (ndim > 1) {
           for (i = 0; i < ndim; i++) {
             int vid;
@@ -944,10 +945,14 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
             if (xcart == 'X' && ycart == 'Y'){
               field[n].var[ll].do_regrid = 1;
             }else{
-              printf("fregrid_util: Field %s will not be remapped as its independent of X,Y coordinates, for file :\n  %s\n",
-                     field[n].var[ll].name, file[n].name);
+              number_independent++;
             }
           }
+        }
+        if (field[n].var[ll].do_regrid == 0) {
+          printf("fregrid_util: Field %s will not be remapped for file :\n  %s\n", field[n].var[ll].name, file[n].name);
+          printf("fregrid_util: Field %s is independent of X,Y coordinates in %d of %d dims\n", field[n].var[ll].name,
+                 number_independent, ndim);
         }
 
         /* check if time_avg_info attribute existed in any variables */
