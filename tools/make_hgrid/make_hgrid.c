@@ -447,7 +447,11 @@ int parse_comma_list(char *arg_list, int var_array[MAX_NESTS])
   return i;
 }
 
+#include <unistd.h>
 void print_provenance(int fid, char * history){
+  char hostname[128];
+  gethostname(hostname, 128);
+
   char * crTimeStringNoNL;
   time_t crTime;
   time(&crTime);
@@ -458,6 +462,8 @@ void print_provenance(int fid, char * history){
   mpp_def_global_att(fid, "git_hash", GIT_HEADHASH);
 
   mpp_def_global_att(fid, "creationtime", crTimeStringNoNL);
+
+  mpp_def_global_att(fid, "hostname", hostname);
 
   if(history != NULL){
     mpp_def_global_att(fid, "history", history);
