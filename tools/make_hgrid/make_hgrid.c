@@ -42,6 +42,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <netcdf.h>
+#include <time.h>
+#include "config.h"
 #include "create_hgrid.h"
 #include "mpp.h"
 #include "mpp_domain.h"
@@ -445,6 +447,22 @@ int parse_comma_list(char *arg_list, int var_array[MAX_NESTS])
   return i;
 }
 
+void print_provenance(int fid, char * history){
+  char * crTimeStringNoNL;
+  time_t crTime;
+  time(&crTime);
+  crTimeStringNoNL = strtok( ctime(&crTime), "\n");//remove the newline char
+
+  mpp_def_global_att(fid, "code_version", PACKAGE_VERSION);  //from autotools config.h
+
+  mpp_def_global_att(fid, "git_hash", GIT_HEADHASH);
+
+  mpp_def_global_att(fid, "creationtime", crTimeStringNoNL);
+
+  if(history != NULL){
+    mpp_def_global_att(fid, "history", history);
+  }
+}
 
 
 void fill_cubic_grid_halo(int nx, int ny, int halo, double *data, double *data1_all,
@@ -1239,10 +1257,11 @@ int main(int argc, char* argv[])
         id_arcx = mpp_def_var(fid, "arcx", MPP_CHAR, 1, dimlist, 2, "standard_name", "grid_edge_x_arc_type",
                               "north_pole", north_pole_arcx );
       mpp_def_global_att(fid, "grid_version", grid_version);
-      mpp_def_global_att(fid, "code_version", tagname);
+      //mpp_def_global_att(fid, "code_version", tagname);
       if(use_great_circle_algorithm) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
       if(n>=ntiles_global) mpp_def_global_att(fid, "nest_grids", "TRUE");
-      mpp_def_global_att(fid, "history", history);
+      print_provenance(fid,  history);
+      //mpp_def_global_att(fid, "history", history);
 
       mpp_end_def(fid);
       for(m=0; m<4; m++) { start[m] = 0; nwrite[m] = 0; }

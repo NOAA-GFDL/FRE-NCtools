@@ -26,6 +26,10 @@ m4_define([git_revision],
   [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
 AC_REVISION([$git_revision])
 
+m4_define([git_hashval],
+  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
+AC_REVISION([$git_hashval])
+
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
@@ -133,6 +137,8 @@ AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.
 # Other defs
 AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
+AC_DEFINE([GIT_HEADHASH], "git_hashval",
+          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
