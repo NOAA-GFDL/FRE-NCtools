@@ -240,8 +240,7 @@ int main(int argc, char* argv[])
     dim  = mpp_def_dim(fid, "nzv", nk+1);
     varid = mpp_def_var(fid, "zeta", NC_DOUBLE, 1, &dim, 2, "standard_name", "vertical_grid_vertex",
 			"units", "meters");
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    print_provenance(fid, history);
+    print_provenance_gv(fid, history, grid_version);
     mpp_end_def(fid);
     mpp_put_var_value(fid, varid, zeta);
 

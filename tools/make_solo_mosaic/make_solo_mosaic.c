@@ -304,8 +304,7 @@ int main (int argc, char *argv[])
 
     }
 
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    print_provenance(fid, history);
+    print_provenance_gv(fid, history, grid_version);
 
     mpp_end_def(fid);
 

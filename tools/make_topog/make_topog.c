@@ -723,11 +723,7 @@ int main(int argc, char* argv[])
     }
     mpp_close(m_fid);
 
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    if(use_great_circle_algorithm){
-       mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-    }
-    print_provenance(fid, history);
+    print_provenance_gv_gca(fid, history, grid_version, use_great_circle_algorithm);
     mpp_end_def(fid);
 
     if(mpp_pe()==mpp_root_pe() && use_great_circle_algorithm)

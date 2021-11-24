@@ -1237,14 +1237,11 @@ int main(int argc, char* argv[])
       else
         id_arcx = mpp_def_var(fid, "arcx", MPP_CHAR, 1, dimlist, 2, "standard_name", "grid_edge_x_arc_type",
                               "north_pole", north_pole_arcx );
-      mpp_def_global_att(fid, "grid_version", grid_version);
-      //mpp_def_global_att(fid, "code_version", tagname);
-      if(use_great_circle_algorithm) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-      if(n>=ntiles_global) mpp_def_global_att(fid, "nest_grids", "TRUE");
-      print_provenance(fid,  history);
-      //mpp_def_global_att(fid, "history", history);
 
+      print_provenance_gv_gca(fid,  history, grid_version, use_great_circle_algorithm);
+      if(n>=ntiles_global) mpp_def_global_att(fid, "nest_grids", "TRUE");
       mpp_end_def(fid);
+
       for(m=0; m<4; m++) { start[m] = 0; nwrite[m] = 0; }
       nwrite[0] = strlen(tilename);
       mpp_put_var_value_block(fid, id_tile, start, nwrite, tilename );
