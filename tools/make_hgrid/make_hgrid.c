@@ -42,8 +42,6 @@
 #include <string.h>
 #include <getopt.h>
 #include <netcdf.h>
-#include <time.h>
-#include "config.h"
 #include "create_hgrid.h"
 #include "mpp.h"
 #include "mpp_domain.h"
@@ -445,29 +443,6 @@ int parse_comma_list(char *arg_list, int var_array[MAX_NESTS])
     }
 
   return i;
-}
-
-#include <unistd.h>
-void print_provenance(int fid, char * history){
-  char hostname[128];
-  gethostname(hostname, 128);
-
-  char * crTimeStringNoNL;
-  time_t crTime;
-  time(&crTime);
-  crTimeStringNoNL = strtok( ctime(&crTime), "\n");//remove the newline char
-
-  mpp_def_global_att(fid, "code_version", PACKAGE_VERSION);  //from autotools config.h
-
-  mpp_def_global_att(fid, "git_hash", GIT_HEADHASH);
-
-  mpp_def_global_att(fid, "creationtime", crTimeStringNoNL);
-
-  mpp_def_global_att(fid, "hostname", hostname);
-
-  if(history != NULL){
-    mpp_def_global_att(fid, "history", history);
-  }
 }
 
 

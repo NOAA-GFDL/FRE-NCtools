@@ -73,11 +73,11 @@ char *usage[] = {
   "                                                                                 ",
   "   --nbnds nbnds             Specify number of vertical regions for varying      ",
   "                             resolution.                                         ",
-  "                                                                                 ", 
+  "                                                                                 ",
   "   --bnds z(1),.,z(nbnds)    Specify boundaries for defining vertical regions of ",
   "                             varying resolution.                                 ",
   "                                                                                 ",
-  
+
   "   Optional Flags:                                                               ",
   "                                                                                 ",
   "   --nz nz(1),..,nz(nbnds-1) Number of supergrid points (double number of        ",
@@ -92,7 +92,7 @@ char *usage[] = {
   " --grid_name gridname        Specify the grid name. The output grid file name    ",
   "                             will be grid_name.nc. The default value is          ",
   "                             vertical_grid.                                      ",
-  "                                                                                 ", 
+  "                                                                                 ",
   " --center   center           Specify the center location of grid. The valid      ",
   "                             entry will be 'none', 't_cell' or 'c_cell' with     ",
   "                             default value 'none'. The grid refinement is        ",
@@ -101,7 +101,7 @@ char *usage[] = {
   "                             used in MOM.                                        ",
   "                                                                                 ",
   "                                                                                 ",
-  "   Example 1: Use Monotonic cubic spline interpolation                           ", 
+  "   Example 1: Use Monotonic cubic spline interpolation                           ",
   "                                                                                 ",
   "     make_vgrid --nbnds 3 --bnds 10,200,1000 --nz 10,20                          ",
   "       will make a grid file with 60 supergrid cells, 30 model grid cells        ",
@@ -125,7 +125,7 @@ char *usage[] = {
   "      Will make a vertical grid similar to GFDL/CM2/ocn w/ 100 supergrid cells.  ",
   "                                                                                 ",
   "",
-  NULL };  
+  NULL };
 
 char grid_version[] = "0.2";
 char tagname[] = "$Name: fre-nctools-bronx-10 $";
@@ -145,17 +145,17 @@ int main(int argc, char* argv[])
   char entry[512];
   char history[256];
   int errflg, c, option_index = 0;
-  static struct option long_options[]= {  
+  static struct option long_options[]= {
     {"nbnds",    required_argument, NULL, 'n'},
     {"bnds",     required_argument, NULL, 'b'},
     {"nz",       required_argument, NULL, 'z'},
     {"dbnds",    required_argument, NULL, 'd'},
     {"stretch",    required_argument, NULL, 's'},
-    {"grid_name",required_argument, NULL, 'o'},        
-    {"center",   required_argument, NULL, 'c'},    
+    {"grid_name",required_argument, NULL, 'o'},
+    {"center",   required_argument, NULL, 'c'},
     {0, 0, 0, 0}
   };
-  
+
     /*
    * process command line
    */
@@ -190,14 +190,14 @@ int main(int argc, char* argv[])
       strcpy(center, optarg);
       break;
     case '?':
-      errflg++;      
+      errflg++;
     }
 
   if (errflg ) {
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     mpp_error("Wrong usage of this program, check arguments") ;
-  }    
+  }
 
   /* check the command-line arguments to make sure the value are suitable */
   if( nbnds < 2 ) mpp_error("number of bounds specified through -nbnd should be an integer greater than 1");
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
     create_vgrid(nbnds, bnds, nz, dbnds, stretch, use_legacy, zeta, &npts, center);
     if(use_legacy) nk = npts;
   }
-  
+
   /* define history to be the history in the grid file */
   strcpy(history,argv[0]);
 
@@ -231,27 +231,26 @@ int main(int argc, char* argv[])
   }
 
   sprintf(filename, "%s.nc", gridname);
-  
+
   /* write out vertical grid into a netcdf file */
   {
     int fid, dim, varid;
-    
+
     fid = mpp_open(filename, MPP_WRITE);
     dim  = mpp_def_dim(fid, "nzv", nk+1);
     varid = mpp_def_var(fid, "zeta", NC_DOUBLE, 1, &dim, 2, "standard_name", "vertical_grid_vertex",
 			"units", "meters");
     mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);    
+    print_provenance(fid, history);
     mpp_end_def(fid);
     mpp_put_var_value(fid, varid, zeta);
-  
+
     mpp_close(fid);
   }
 
   /*  if(mpp_pe() == mpp_root_pe()) printf("Successfully generate vertical grid file %s\n", filename); */
-  
+
   mpp_end();
 
   return 0;
-}    
+}
