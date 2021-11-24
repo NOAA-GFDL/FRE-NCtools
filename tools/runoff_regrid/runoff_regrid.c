@@ -23,20 +23,20 @@
 
  AUTHOR: Zhi Liang (Zhi.Liang@noaa.gov)
           NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
- 
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
- 
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   For the full text of the GNU General Public License,
   write to: Free Software Foundation, Inc.,
-            675 Mass Ave, Cambridge, MA 02139, USA.  
+            675 Mass Ave, Cambridge, MA 02139, USA.
 -----------------------------------------------------------------------
 */
 
@@ -116,7 +116,7 @@ typedef struct {
   double *xt;
   double *yt;
   double *xc;
-  double *yc;  
+  double *yc;
   double *xt1d;
   double *yt1d;
   double *xc1d;
@@ -143,7 +143,7 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
 void process_data(const char *infile, const char *fld_name_in, const char *outfile, const char *fld_name_out,
 		  const Grid_type *grid_in, const Grid_type *grid_out, const Remap_type *remap, const char *history);
 void nearest(int nlon, int nlat, double *mask, const double *lon, const double *lat,
-	     double plon, double plat, int *iout, int *jout);  
+	     double plon, double plat, int *iout, int *jout);
 int main(int argc, char* argv[])
 {
   unsigned int opcode = 0;
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
   char    *output_mosaic=NULL;           /* output mosaic file name */
   char    *output_topog=NULL;
   double  sea_level = 0;
-  char    history[MAXATT];  
+  char    history[MAXATT];
   char    default_output_file[] = "runoff.nc";
   char    default_fld_name[]    = "runoff";
   int errflg = (argc == 1);
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
   Grid_type grid_in;
   Grid_type grid_out;
   Remap_type remap;
-  
+
   static struct option long_options[] = {
     {"input_file",        required_argument, NULL, 'a'},
     {"input_fld_name",    required_argument, NULL, 'b'},
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
     {"sea_level",         required_argument, NULL, 'g'},
     {"help",              no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
-  };  
+  };
 
   mpp_init(NULL,NULL);
   /*  if(mpp_npes() > 1) mpp_error("runoff_regrid: the tool is supposed to run on single processor"); */
@@ -227,17 +227,17 @@ int main(int argc, char* argv[])
     strcat(history, " ");
     strcat(history, argv[i]);
   }
-  
+
   /* get input grid */
   get_input_grid(input_file, input_fld_name, &grid_in);
   if(mpp_pe() == mpp_root_pe() )printf("\nNOTE from runoff_regrid: complete get_input_grid\n");
   /* get output grid */
   get_output_grid(output_mosaic, output_topog, sea_level, &grid_out);
-  if(mpp_pe() == mpp_root_pe() ) printf("\nNOTE from runoff_regrid: complete get_output_grid\n");  
+  if(mpp_pe() == mpp_root_pe() ) printf("\nNOTE from runoff_regrid: complete get_output_grid\n");
   /* computing remapping information */
   setup_remap(&grid_in, &grid_out, &remap);
   if(mpp_pe() == mpp_root_pe() )printf("\nNOTE from runoff_regrid: complete setup_remap\n");
-  
+
   /* do the remapping and write out data */
   /* process data on the root pe */
   if(mpp_pe() == mpp_root_pe()) {
@@ -249,9 +249,9 @@ int main(int argc, char* argv[])
   mpp_end();
 
   return 0;
-}  
-     
-  
+}
+
+
 
 void get_input_grid(const char *file, const char *field, Grid_type *grid)
 {
@@ -261,7 +261,7 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   size_t start[4], nread[4];
   double *data=NULL;
   double missing_value;
-  
+
   fid = mpp_open(file, MPP_READ);
   vid = mpp_get_varid(fid, field);
   ndim = mpp_get_var_ndim(fid, vid);
@@ -283,7 +283,7 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   grid->yc   = (double *)malloc(nyp*nxp*sizeof(double));
   grid->mask = (double *)malloc(nx*ny*sizeof(double));
   grid->area = (double *)malloc(nx*ny*sizeof(double));
-  
+
   vid = mpp_get_varid(fid, xname);
   mpp_get_var_value(fid, vid, grid->xt1d);
   vid = mpp_get_varid(fid, yname);
@@ -299,20 +299,20 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   /* convert to radians */
   for(i=0; i<nxp; i++) grid->xc1d[i] *= D2R;
   for(j=0; j<nyp; j++) grid->yc1d[j] *= D2R;
-    
+
   for(j=0; j<nyp; j++) for(i=0; i<nxp; i++) {
     grid->xc[j*nxp+i] = grid->xc1d[i];
     grid->yc[j*nxp+i] = grid->yc1d[j];
   }
 
   get_grid_area(&nx, &ny, grid->xc, grid->yc, grid->area);
-  
+
   /* get the mask */
   vid = mpp_get_varid(fid, field);
   data = (double *)malloc(nx*ny*sizeof(double));
   for(i=0; i<4; i++) {
     start[i] = 0; nread[i] = 1;
-  }  
+  }
   nread[ndim-1] = nx;
   nread[ndim-2] = ny;
   mpp_get_var_value_block(fid, vid, start, nread, data);
@@ -327,18 +327,18 @@ void get_input_grid(const char *file, const char *field, Grid_type *grid)
   }
 
   free(data);
-  
+
   mpp_close(fid);
-  
+
 }
-   
+
 void get_output_grid(const char *mosaic, const char *topog_file, double sea_level, Grid_type *grid)
 {
   int fid, ntile, vid, i, j, ind, n_ext;
   int ni, nj, nip, njp, nx, ny, nxp, nyp, ny_old;
   char gridfile[256], filename[256], dir[256];
-  double *tmp=NULL, *depth=NULL;  
-  
+  double *tmp=NULL, *depth=NULL;
+
    get_file_path(mosaic, dir);
    fid = mpp_open(mosaic, MPP_READ);
    ntile  = mpp_get_dimlen(fid, "ntiles");
@@ -359,7 +359,7 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    mpp_get_var_value(fid, vid, tmp);
    /* we might need to add one extra raw to expand to south pole to ensure conservative */
    n_ext = 0;
-   
+
    if(tmp[0] > -90 + EPSLN10 ) n_ext = 1;
    if(mpp_pe() == mpp_root_pe() ) printf("The south extension is %d\n", n_ext);
    nx  = ni/2;
@@ -367,7 +367,7 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    ny_old = ny;
    ny += n_ext;
    nxp = nx+1;
-   nyp = ny+1;   
+   nyp = ny+1;
    grid->nx = nx;
    grid->ny = ny;
    grid->n_ext = n_ext;
@@ -378,17 +378,17 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    grid->xt1d = (double *)malloc(nx*sizeof(double));
    grid->yt1d = (double *)malloc(ny_old*sizeof(double));
    grid->area = (double *)malloc(nx*ny*sizeof(double));
-   
+
    for(j=n_ext; j<nyp; j++) for(i=0; i<nxp; i++) grid->yc[j*nxp+i] = tmp[2*(j-n_ext)*nip+2*i];
    for(j=n_ext; j<ny ; j++) for(i=0; i<nx ; i++) grid->yt[j*nx +i] = tmp[(2*(j-n_ext)+1)*nip+2*i+1];
    ind = nx/4;
-   for(j=0; j<ny_old; j++) grid->yt1d[j] = tmp[(2*j+1)*nip+2*ind];   
-   
+   for(j=0; j<ny_old; j++) grid->yt1d[j] = tmp[(2*j+1)*nip+2*ind];
+
    if(n_ext >0) {
      for(i=0; i<nxp; i++) grid->yc[i] = -90;
      for(i=0; i<nx; i++) grid->yt[i] = 0.5*(grid->yc[i] + grid->yc[nxp+i]);
    }
-        
+
 
    vid = mpp_get_varid(fid, "x");
    mpp_get_var_value(fid, vid, tmp);
@@ -398,8 +398,8 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    if(n_ext >0) {
      for(i=0; i<nxp; i++) grid->xc[i] = grid->xc[nxp+i];
      for(i=0; i<nx; i++) grid->xt[i] =  grid->xt[nx+i];
-   }     
-   
+   }
+
    free(tmp);
    mpp_close(fid);
 
@@ -414,7 +414,7 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    }
 
    get_grid_area(&nx, &ny, grid->xc, grid->yc, grid->area);
-   
+
    /* read the topography data to get the land sea mask */
    fid = mpp_open(topog_file, MPP_READ);
    ntile = 1;
@@ -434,10 +434,10 @@ void get_output_grid(const char *mosaic, const char *topog_file, double sea_leve
    for(j=n_ext; j<ny; j++) for(i=0; i<nx; i++) {
      if(depth[(j-n_ext)*nx+i] >sea_level) grid->mask[j*nx+i] = 1.0;
    }
-   free(depth);			    
+   free(depth);
 
 
-    
+
 }
 
 void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type *remap)
@@ -451,14 +451,14 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   domain2D domain;
   double *xc=NULL, *yc=NULL;
   int *imap=NULL, *jmap=NULL;
-  
-  
+
+
   nx_in = grid_in ->nx;
   ny_in = grid_in ->ny;
   nx_out = grid_out ->nx;
   ny_out = grid_out ->ny;
   npes = mpp_npes();
-  
+
   mpp_define_layout(nx_out, ny_out, npes, layout);
   mpp_define_domain2d(nx_out, ny_out, layout, 0, 0, &domain);
 
@@ -472,10 +472,10 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   for(j=0; j<=nyc; j++) for(i=0; i<=nxc; i++) {
     jj = j+jsc;
     ii = i+isc;
-    xc[j*(nxc+1)+i] = grid_out->xc[jj*(nx_out+1)+ii];  
+    xc[j*(nxc+1)+i] = grid_out->xc[jj*(nx_out+1)+ii];
     yc[j*(nxc+1)+i] = grid_out->yc[jj*(nx_out+1)+ii];
   }
-    
+
   i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
   j_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
   i_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
@@ -492,12 +492,12 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   }
 
   nxgrid_local = nxgrid;
-  
+
   mpp_sum_int(1, &nxgrid);
-  
+
   remap->nxgrid = nxgrid;
   remap->i_in = (int *)malloc(nxgrid*sizeof(int));
-  remap->j_in = (int *)malloc(nxgrid*sizeof(int));  
+  remap->j_in = (int *)malloc(nxgrid*sizeof(int));
   remap->i_out = (int *)malloc(nxgrid*sizeof(int));
   remap->j_out = (int *)malloc(nxgrid*sizeof(int));
   remap->xgrid_area = (double *)malloc(nxgrid*sizeof(double));
@@ -508,7 +508,7 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   mpp_gather_field_int_root( nxgrid_local, j_out, remap->j_out);
   mpp_gather_field_double_root( nxgrid_local, xgrid_area, remap->xgrid_area);
 
-  
+
   /* compute the nearest ocean points for any land points */
   imap = (int *)malloc(nxc*nyc*sizeof(int));
   jmap = (int *)malloc(nxc*nyc*sizeof(int));
@@ -519,8 +519,8 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
     imap[i] = -1;
     jmap[i] = -1;
   }
-  
-  
+
+
   for(j=0; j<nyc; j++) {
     for(i=0; i<nxc; i++) {
       jj = j+jsc;
@@ -535,11 +535,11 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   }
   mpp_global_field_int(domain, nxc, nyc, imap, remap->imap);
   mpp_global_field_int(domain, nxc, nyc, jmap, remap->jmap);
-  
+
 
   free(imap);
   free(jmap);
-    
+
   free(xc);
   free(yc);
   free(i_in);
@@ -548,7 +548,7 @@ void setup_remap(const Grid_type *grid_in, const Grid_type *grid_out, Remap_type
   free(j_out);
   free(xgrid_area);
   mpp_delete_domain2d(&domain);
-  
+
 }
 
 
@@ -567,7 +567,7 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
   double *data_in=NULL, *data_out=NULL;
   double runoff_total_in, runoff_total_out, rate_change;
   char timename[128];
-  
+
   /* get the time information in the file */
   fid_in = mpp_open(infile, MPP_READ);
   vid_in = mpp_get_varid(fid_in, fld_name_in);
@@ -580,7 +580,7 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
     id_time_in = mpp_get_varid(fid_in, timename);
     mpp_get_var_value(fid_in, id_time_in, time_value);
   }
-  
+
   /* set up the output metadata */
   nx_in = grid_in ->nx;
   ny_in = grid_in ->ny;
@@ -591,7 +591,8 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
   data_out = (double *)malloc(nx_out*ny_out*sizeof(double));
 
   fid_out = mpp_open(outfile, MPP_WRITE);
-  mpp_def_global_att(fid_out, "history", history);
+  print_provenance(fid_out, history );
+
   dims[ndim-1] = mpp_def_dim(fid_out, "grid_x_T", nx_out);
   dims[ndim-2] = mpp_def_dim(fid_out, "grid_y_T", ny_out-n_ext);
   if(ndim>2) { /* has time axis */
@@ -606,13 +607,13 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
   id_yt = mpp_def_var(fid_out, "grid_y_T", NC_DOUBLE, 1, dims+(ndim-2), 0);
   mpp_def_var_att(fid_out, id_yt, "long_name", "Nominal Latitude of T-cell center");
   mpp_def_var_att(fid_out, id_yt, "cartesian_axis", "Y");
-  mpp_def_var_att(fid_out, id_yt, "units", "degree_north");  
+  mpp_def_var_att(fid_out, id_yt, "units", "degree_north");
 
   if(ndim > 2) {
     id_time = mpp_def_var(fid_out, "Time", NC_DOUBLE, 1, dims, 0);
     mpp_copy_var_att(fid_in, id_time_in, fid_out, id_time);
   }
-    
+
   id_fld = mpp_def_var(fid_out, fld_name_out, NC_DOUBLE, ndim, dims, 0);
   mpp_copy_var_att(fid_in, vid_in, fid_out, id_fld);
   mpp_end_def(fid_out);
@@ -620,13 +621,13 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
   /* write out axis data */
   mpp_put_var_value(fid_out, id_xt, grid_out->xt1d);
   mpp_put_var_value(fid_out, id_yt, grid_out->yt1d);
-  
+
   /* loop through ntime */
   for(n=0; n<ntime; n++) {
-    
+
     for(i=0; i<4; i++) {
       start[i] = 0; nwrite[i] = 1; nread[i] = 1;
-    }        
+    }
     start[0] = n;
     if(ndim>2) {
       mpp_put_var_value_block(fid_out, id_time, start, nwrite, time_value+n);
@@ -640,14 +641,14 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
       i2   = remap->i_out[l];
       j2   = remap->j_out[l];
       i1   = remap->i_in [l];
-      j1   = remap->j_in [l];    
+      j1   = remap->j_in [l];
       xarea = remap->xgrid_area [l];
       /* since input mask is already considered when computing exchange grid,
 	 there is no need to consider missing value
       */
       data_out[j2*nx_out+i2] += data_in[j1*nx_in+i1]*xarea;
     }
-    
+
     /* move the runoff to the nearest ocean points */
     for(j=0; j<ny_out; j++) for(i=0; i<nx_out; i++) {
       l = j*nx_out+i;
@@ -681,13 +682,13 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
       if(grid_in->mask[i]>0)runoff_total_in += (data_in[i]*grid_in->area[i]);
     }
     for(i=0; i<nx_out*ny_out; i++) runoff_total_out += (data_out[i]*grid_out->area[i]);
-    if(runoff_total_in > 0 && runoff_total_out > 0) 
+    if(runoff_total_in > 0 && runoff_total_out > 0)
       rate_change = (runoff_total_out-runoff_total_in)/runoff_total_in;
     else
       rate_change = 0.0;
     printf("At time step %d, runoff_total_in=%g, runoff_total_out=%g, change rate is =%g%%\n",
 	   n, runoff_total_in, runoff_total_out, rate_change);
-    
+
   }
   mpp_close(fid_out);
   mpp_close(fid_in);
@@ -695,7 +696,7 @@ void process_data(const char *infile, const char *fld_name_in, const char *outfi
   free(time_value);
   free(data_in);
   free(data_out);
-  
+
 }
 
 /* calculate a distance in 3-d between points on unit square */
@@ -703,7 +704,7 @@ double distance(double lon1, double lat1, double lon2, double lat2)
 {
   double dist, z1, z2, x1, x2, y1, y2;
 
-  
+
   z1 = sin(lat1);
   z2 = sin(lat2);
   x1 = cos(lat1)*cos(lon1);
@@ -714,7 +715,7 @@ double distance(double lon1, double lat1, double lon2, double lat2)
   dist = sqrt(pow((z1-z2),2)+pow((x1-x2),2)+pow((y1-y2),2));
   return dist;
 }
-	  
+
 /* find the nearest ocean point of a given land point. */
 
 void nearest(int nlon, int nlat, double *mask, const double *lon, const double *lat,
@@ -758,4 +759,4 @@ void nearest(int nlon, int nlat, double *mask, const double *lon, const double *
 
 
 /*   } */
-  
+

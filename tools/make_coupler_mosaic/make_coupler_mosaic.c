@@ -33,10 +33,10 @@
 	Calculate LND grid cell area area_lnd, =area_atm if the same grid
 	Read in OCN (super) grid xocn,yocn (I added read grid cell area)
 	Calculate OCN grid cell area area_ocn
-	Extend OCN grid south if it does not cover the southern cap 			
+	Extend OCN grid south if it does not cover the southern cap
 	*** Extending area_ocn[j=0,:]=area_ocn[j=1,:] is inaccurate if it's used
 	Read OCN depth and set ocean mask omask=1 where wet
-	 
+
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -611,7 +611,7 @@ int main (int argc, char *argv[])
     }
     else {
       for(n=0; n<ntile_atm; n++) {
-	int i, j;   
+	int i, j;
         //Calculate the ATM grid cell area (not read from grid files)
 	get_grid_global_area(nxa[n], nya[n], xatm[n], yatm[n], area_atm[n]);
 	for(j=0; j<nya[n]; j++) for(i=0; i<nxa[n]; i++) {
@@ -762,10 +762,10 @@ int main (int argc, char *argv[])
     lnd_great_circle_algorithm = atm_great_circle_algorithm;
   }
   int n;
-  for(n=0; n<ntile_lnd; n++) {      
+  for(n=0; n<ntile_lnd; n++) {
     if(mpp_pe()==mpp_root_pe() && verbose) printf("Number of ATM and LND cells for tile %d are %d, %d.\n",n+1,nxa[n]*nya[n],nxl[n]*nyl[n]);
-    if(nxa[n]*nya[n] != nxl[n]*nyl[n]) printf("Warning: Number of ATM and LND cells for tile %d are not equal %d, %d.\n",n+1,nxa[n]*nya[n],nxl[n]*nyl[n]); 
-  } 
+    if(nxa[n]*nya[n] != nxl[n]*nyl[n]) printf("Warning: Number of ATM and LND cells for tile %d are not equal %d, %d.\n",n+1,nxa[n]*nya[n],nxl[n]*nyl[n]);
+  }
   if(print_memory)print_mem_usage("after read land grid");
 
   if (strcmp(omosaic, amosaic) == 0 ) ocn_same_as_atm = 1;
@@ -1214,7 +1214,7 @@ int main (int argc, char *argv[])
       double   x_out[MV], y_out[MV], z_out[MV];
       double   y_out_max, y_out_min;
       double   atmxlnd_x[MX][MV], atmxlnd_y[MX][MV], atmxlnd_z[MX][MV];
-      int      atmxlnd_c[MX][MV]; 
+      int      atmxlnd_c[MX][MV];
       int      num_v[MX];
       int      axl_i[MX], axl_j[MX], axl_t[MX];
       double   axl_xmin[MX], axl_xmax[MX], axl_ymin[MX], axl_ymax[MX];
@@ -1481,7 +1481,7 @@ int main (int argc, char *argv[])
 	        n_out = clip_2dx2d( xa, ya, na_in, xl, yl, nl_in, x_out, y_out );
 	      }
 	   }
-	 
+
 	    if (  n_out > 0 ) {
 	      if(clip_method == GREAT_CIRCLE_CLIP)
 		xarea=great_circle_area ( n_out, x_out, y_out, z_out);
@@ -2050,12 +2050,9 @@ int main (int argc, char *argv[])
 	    sprintf(ocn_mask_file, "ocean_mask_tile%d.nc", no+1);
 	  else
 	    strcpy(ocn_mask_file, "ocean_mask.nc");
-	  fid = mpp_open(ocn_mask_file, MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-	  mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
 
+	  fid = mpp_open(ocn_mask_file, MPP_WRITE);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
 
 	  dims[1] = mpp_def_dim(fid, "nx", nxo[no]);
 	  dims[0] = mpp_def_dim(fid, "ny", ny);
@@ -2103,10 +2100,8 @@ int main (int argc, char *argv[])
 	  else
 	    strcpy(lnd_mask_file, "land_mask.nc");
 	  fid = mpp_open(lnd_mask_file, MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-	  mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
+
 	  dims[1] = mpp_def_dim(fid, "nx", nxl[nl]);
 	  dims[0] = mpp_def_dim(fid, "ny", nyl[nl]);
 	  id_mask = mpp_def_var(fid, "mask", MPP_DOUBLE, 2, dims,  2, "standard_name",
@@ -2158,11 +2153,10 @@ int main (int argc, char *argv[])
 	  else
 	    sprintf(axl_file[nfile_axl], "%s_%sX%s_%s.nc", amosaic_name, atile_name[na], lmosaic_name, ltile_name[nl]);
 	  sprintf(contact, "%s:%s::%s:%s", amosaic_name, atile_name[na], lmosaic_name, ltile_name[nl]);
+
 	  fid = mpp_open(axl_file[nfile_axl], MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-	  mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version,  clip_method == GREAT_CIRCLE_CLIP);
+
 	  dim_string = mpp_def_dim(fid, "string", STRING);
 	  dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
 	  dim_two    = mpp_def_dim(fid, "two", 2);
@@ -2280,10 +2274,8 @@ int main (int argc, char *argv[])
 
 	  sprintf(contact, "%s:%s::%s:%s", amosaic_name, atile_name[na], omosaic_name, otile_name[no]);
 	  fid = mpp_open(axo_file[nfile_axo], MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-          mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
+
 	  dim_string = mpp_def_dim(fid, "string", STRING);
 	  dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
 	  dim_two    = mpp_def_dim(fid, "two", 2);
@@ -2850,10 +2842,8 @@ int main (int argc, char *argv[])
 	  sprintf(contact, "%s:%s::%s:%s", lmosaic_name, ltile_name[nl], omosaic_name, otile_name[no]);
 
 	  fid = mpp_open(lxo_file[nfile_lxo], MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-          mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
+
 	  dim_string = mpp_def_dim(fid, "string", STRING);
 	  dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
 	  dim_two    = mpp_def_dim(fid, "two", 2);
@@ -3398,7 +3388,7 @@ int main (int argc, char *argv[])
       }
 
       /* calculate land/sea fraction for wave grid from wavxocn */
-      {
+  {
 	int    iw, jw;
 	double ocn_frac;
 	int    id_mask, fid, dims[2];
@@ -3418,12 +3408,9 @@ int main (int argc, char *argv[])
 	    sprintf(wav_mask_file, "wave_mask_tile%d.nc", nw+1);
 	  else
 	    strcpy(wav_mask_file, "wave_mask.nc");
-	  fid = mpp_open(wav_mask_file, MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-	  mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
 
+	  fid = mpp_open(wav_mask_file, MPP_WRITE);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
 
 	  dims[1] = mpp_def_dim(fid, "nx", nxw[nw]);
 	  dims[0] = mpp_def_dim(fid, "ny", nyw[nw]);
@@ -3434,7 +3421,9 @@ int main (int argc, char *argv[])
 	  mpp_close(fid);
 	  free(mask);
 	}
-      }
+
+
+  }
     }
 
 
@@ -3469,10 +3458,8 @@ int main (int argc, char *argv[])
 	  sprintf(contact, "%s:%s::%s:%s", wmosaic_name, wtile_name[nw], omosaic_name, otile_name[no]);
 
 	  fid = mpp_open(wxo_file[nfile_wxo], MPP_WRITE);
-	  mpp_def_global_att(fid, "grid_version", grid_version);
-          mpp_def_global_att(fid, "code_version", tagname);
-	  if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-	  mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
+
 	  dim_string = mpp_def_dim(fid, "string", STRING);
 	  dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
 	  dim_two    = mpp_def_dim(fid, "two", 2);
@@ -3628,7 +3615,7 @@ int main (int argc, char *argv[])
 	for(i=0; i<nxa[n]*nya[n]; i++) {
 	  cur_ratio = fabs(atm_xarea[n][i] - area_atm[n][i])/area_atm[n][i];
 	  if(cur_ratio > 1.e-5) {
-	    printf("at tile =%d, i=%d, j=%d, ratio=%g, area1=%g, area2=%g\n", 
+	    printf("at tile =%d, i=%d, j=%d, ratio=%g, area1=%g, area2=%g\n",
 		   n+1, i%nxa[n], i/nxa[n], cur_ratio,  area_atm[n][i], atm_xarea[n][i] );
 	  }
 	  if(cur_ratio > max_ratio) {
@@ -3686,10 +3673,8 @@ int main (int argc, char *argv[])
     int id_amosaic, id_lmosaic, id_omosaic, id_wmosaic;
 
     fid = mpp_open(mosaic_file, MPP_WRITE);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    if( clip_method == GREAT_CIRCLE_CLIP) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-    mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, grid_version, clip_method == GREAT_CIRCLE_CLIP );
+
     dim_string = mpp_def_dim(fid, "string", STRING);
     if(nfile_axo >0) dim_axo = mpp_def_dim(fid, "nfile_aXo", nfile_axo);
     if(nfile_axl >0) dim_axl = mpp_def_dim(fid, "nfile_aXl", nfile_axl);
@@ -3809,7 +3794,7 @@ int main (int argc, char *argv[])
      else{
        printf("\n***** You have run make_coupler_mosaic, but there were at least %d grid cells with issues.\n",nbad);
        mpp_error("make_coupler_mosaic: omask is not equal ocn_frac");}
-  } 
+  }
   mpp_end();
 
   return 0;

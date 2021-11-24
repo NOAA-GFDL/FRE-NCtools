@@ -83,18 +83,18 @@ int main(int argc, char* argv[])
   mpp_init(&argc, &argv);
 
   if(mpp_npes() != 1) mpp_error("make_land_domain: this tool must be run on single procesor");
-  
+
     while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1)
     switch (c) {
     case 'g':
       grid_file = optarg;
-      break;      
+      break;
     case 'l':
       land_restart = optarg;
       break;
     case 'o':
       strcpy(outfile, optarg);
-      break;      
+      break;
     case '?':
       errflg++;
       break;
@@ -127,24 +127,24 @@ int main(int argc, char* argv[])
     nfaces = read_mosaic_ntiles(land_mosaic);
     nxl = (int *)malloc(nfaces*sizeof(int));
     nyl = (int *)malloc(nfaces*sizeof(int));
-  
+
     read_mosaic_grid_sizes(land_mosaic, nxl, nyl);
 
     /* nx, ny should have the same value on each face */
     for(n=1; n<nfaces; n++) {
       if(nxl[n] != nxl[0] || nyl[n] != nyl[0])
 	mpp_error("remap_land: all the faces of source grid should have the same number of grid points");
-    }  
+    }
     nx = nxl[0];
     ny = nyl[0];
     free(nxl);
     free(nyl);
   }
-  
+
   /* read the exchange grid information and get the land/sea mask of land model*/
   {
-    int nfile_aXl;    
-    double *land_area;    
+    int nfile_aXl;
+    double *land_area;
     land_area = (double *)malloc(nx*ny*sizeof(double));
     for(n=0; n<nx*ny; n++) land_area[n] = 0;
 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
     nfile_aXl = mpp_get_dimlen( fid, "nfile_aXl");
     vid = mpp_get_varid(fid, "lnd_mosaic");
     mpp_get_var_value(fid, vid, mosaic_name);
-  
+
     vid = mpp_get_varid(fid, "aXl_file");
 
     land_mask = (int **)malloc(nfaces*sizeof(int *));
@@ -161,12 +161,12 @@ int main(int argc, char* argv[])
     for(face=0; face<nfaces; face++) {
       char face_name[STRING];
 
-    
+
       nland_face[face] = 0;
       land_mask[face] = (int *)malloc(nx*ny*sizeof(int));
       for(n=0; n<nx*ny; n++) land_mask[face][n] = 0;
       sprintf(face_name, "%s_tile%d", mosaic_name, face+1);
-      for(n=0; n<nx*ny; n++) land_area[n] = 0.0;  
+      for(n=0; n<nx*ny; n++) land_area[n] = 0.0;
       for(n=0; n<nfile_aXl; n++) {
 	size_t start[4], nread[4];
 	int nxgrid;
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
     }
     free(land_area);
   }
-  
+
   mpp_close(fid);
   /* compute total number of land points */
 
@@ -218,14 +218,14 @@ int main(int argc, char* argv[])
     land_ntile[face] = (int *)malloc(nx*nx*sizeof(int));
     for(n=0; n<nx*ny; n++) land_ntile[face][n] = 0;
   }
-  
+
   /* open the land restart file and get tile_index */
   {
     int fid2, vid2;
     int npts;
 
     npts = nx*ny;
-    
+
     for(face=0; face<nfaces; face++) {
       char land_restart_file[STRING];
       int num_idx, i;
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
 	i = idx[n]%npts;
 	(land_ntile[face][i])++;
       }
-      
+
       free(idx);
       mpp_close(fid2);
     }
@@ -259,8 +259,8 @@ int main(int argc, char* argv[])
 	mpp_error("make_land: land_mask = 0 but land_ntile > 0");
     }
   }
-    
-  
+
+
   /* pack the grid tile information into unstructured grid */
   grid_index = (int *)malloc(nlands*sizeof(int));
   grid_ntile = (int *)malloc(nlands*sizeof(int));
@@ -268,10 +268,10 @@ int main(int argc, char* argv[])
     grid_index[n] = -1;
     grid_ntile[n] = 0;
   }
-  
+
   {
     int pos;
-    
+
     pos = 0;
     for(face=0; face<nfaces; face++) {
       for(n=0; n<nx*ny; n++) {
@@ -284,21 +284,21 @@ int main(int argc, char* argv[])
     }
 
   }
-  
+
   /* write out the data */
   {
     char history[1280];
     int dim_nfaces, dim_nlands;
     int id_nland_face, id_grid_index, id_grid_ntile;
     int n;
-    
+
     strcpy(history,argv[0]);
     for(n=1;n<argc;n++) {
       strcat(history, " ");
       strcat(history, argv[n]);
     }
 
-    
+
     fid = mpp_open(outfile, MPP_WRITE);
     dim_nfaces = mpp_def_dim(fid, "nfaces", nfaces);
     dim_nlands =  mpp_def_dim(fid, "nlands", nlands);
@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
     id_grid_ntile = mpp_def_var(fid, "grid_ntile", MPP_INT, 1, &dim_nlands, 2, "standard_name",
 			    "number of tiles in each grid", "units", "none");
 
-    mpp_def_global_att(fid, "history", history);
+    print_provenance(fid, history);
     mpp_end_def(fid);
 
     mpp_put_var_value(fid, id_nland_face, nland_face);
@@ -329,5 +329,5 @@ int main(int argc, char* argv[])
   free(nland_face);
   free(grid_index);
   free(grid_ntile);
-  
+
 }

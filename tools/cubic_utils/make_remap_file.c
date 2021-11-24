@@ -26,20 +26,20 @@
 
  AUTHOR: Zhi Liang (Zhi.Liang@noaa.gov)
           NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
- 
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
- 
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   For the full text of the GNU General Public License,
   write to: Free Software Foundation, Inc.,
-            675 Mass Ave, Cambridge, MA 02139, USA.  
+            675 Mass Ave, Cambridge, MA 02139, USA.
 -----------------------------------------------------------------------
 */
 #include <stdlib.h>
@@ -94,7 +94,7 @@ char *usage[] = {
   "                              remap_file.                                             ",
   "                                                                                      ",
   "OPTIONAL FLAGS                                                                        ",
-  "                                                                                      ",  
+  "                                                                                      ",
   "--interp_method interp_method specify the remapping algorithm to be used. Default is  ",
   "                              'conserve_order1'. Currently only 'conserve_order1',    ",
   "                              'conserve_order2' remapping scheme are implemented in   ",
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
   int *i_in=NULL, *j_in=NULL, *t_in=NULL;
   int *i_out=NULL, *j_out=NULL;
   int nx_in, ny_in, ni_in, nj_in;
-  int nx_out, ny_out, ni_out, nj_out; 
+  int nx_out, ny_out, ni_out, nj_out;
   int errflg = (argc == 1);
 
   static struct option long_options[] = {
@@ -156,10 +156,10 @@ int main(int argc, char* argv[])
       break;
     case 'r':
       remap_file = optarg;
-      break;    
+      break;
     case 'm':
       strcpy(interp_method, optarg);
-      break;    
+      break;
     case '?':
       errflg++;
       break;
@@ -170,12 +170,12 @@ int main(int argc, char* argv[])
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     exit(2);
-  }      
+  }
   /* check the arguments */
   if( !mosaic_in  ) mpp_error("make_remap_file: input_mosaic is not specified");
   if( !mosaic_out ) mpp_error("make_remap_file: output_mosaic is not specified");
   if( !remap_file ) mpp_error("make_remap_file: remap_file is not specified");
-  
+
   remap_method = CONSERVE_ORDER1;
   if( strcmp(interp_method, "conserve_order1") && strcmp(interp_method, "conserve_order2"))
     mpp_error("make_remap_file: interp_method should be conserve_order1 or conserve_order2");
@@ -201,12 +201,12 @@ int main(int argc, char* argv[])
   ntiles_in = mpp_get_dimlen(mid_in, "ntiles");
   mid_out = mpp_open(mosaic_out, MPP_READ);
   ntiles_out = mpp_get_dimlen(mid_out, "ntiles");
-  if( ntiles_out != ntiles_in)  mpp_error("make_remap_file: ntiles_out not equal to ntiles_in"); 
+  if( ntiles_out != ntiles_in)  mpp_error("make_remap_file: ntiles_out not equal to ntiles_in");
 
 
   if(ntiles_in != 6 && remap_method == CONSERVE_ORDER2)
     mpp_error("make_remap_file: only cubic sphere grid supports interp_method = conserve_order2");
-  
+
   /*get the path of input_mosaic and output_mosaic, assume the grid file are in the same directory */
   get_file_path(mosaic_in, dir_in);
   get_file_path(mosaic_out, dir_out);
@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
     else
       strcpy(remap_file_base, remap_file);
   }
-    
+
   /* loop through ntiles to get the input and output grid, also create the remap file */
   for(n=0; n<ntiles_in; n++) {
     char   filename[STRING];
@@ -241,7 +241,7 @@ int main(int argc, char* argv[])
     int id_tile1, id_tile1_cell, id_tile2_cell, id_xgrid_area;
     int id_tile1_dist;
     int out_is_fine;
-    
+
     /**********************************************************************
                          Get input grid
     ***********************************************************************/
@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
     mpp_get_var_value(fid, vid, tmp_in);
     for(j=0; j<njp_in; j++) for(i=0; i<nip_in; i++) {
       y_in[j*nip_in+i] = tmp_in[2*j*nxp_in+2*i]*D2R;
-    }    
+    }
     mpp_close(fid);
 
     /**********************************************************************
@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
     mpp_get_var_value(fid, vid, tmp_out);
     for(j=0; j<njp_out; j++) for(i=0; i<nip_out; i++) {
       y_out[j*nip_out+i] = tmp_out[2*j*nxp_out+2*i]*D2R;
-    }    
+    }
     mpp_close(fid);
     /**********************************************************************
             check the ratio of input and output grid size is integer
@@ -348,7 +348,7 @@ int main(int argc, char* argv[])
     }
     else
       mpp_error("make_remap_file: ratio is not integer");
-    
+
     /**********************************************************************
                   Create remap information, number of exchange grid will
                   equal number of output grid.
@@ -463,7 +463,7 @@ int main(int argc, char* argv[])
 	}
       }
     }
-      
+
 
     if(pos != nxgrid) {
       printf("pos=%d, nxgrid=%d\n", pos, nxgrid);
@@ -472,22 +472,22 @@ int main(int argc, char* argv[])
 
 
     /* write out the remap information */
-    if(ntiles_in > 1) 
+    if(ntiles_in > 1)
       sprintf(my_remap_file, "%s.tile%d.nc", remap_file_base, n+1);
     else
       sprintf(my_remap_file, "%s.nc", remap_file_base);
 
     /*convert from c-index to fortran index */
     for(i=0; i<nxgrid; i++) {
-      t_in[i]++;  
+      t_in[i]++;
       i_in[i]++;
       j_in[i]++;
       i_out[i]++;
       j_out[i]++;
     }
-    
+
     fid = mpp_open(my_remap_file, MPP_WRITE);
-    mpp_def_global_att(fid, "history", history);
+    print_provenance(fid, history);
     dim_string = mpp_def_dim(fid, "string", STRING);
     dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
     dim_two    = mpp_def_dim(fid, "two", 2);
@@ -524,7 +524,7 @@ int main(int argc, char* argv[])
       start[1] = 1;
       mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, dj_in);
     }
-	  
+
     mpp_close(fid);
   }
 
@@ -549,13 +549,13 @@ int main(int argc, char* argv[])
     free(clon_in);
     free(clat_in);
   }
-    
+
   printf("Successfully running make_remap_file and the following output file are generated.\n");
-      
+
   mpp_end();
   return 0;
-  
-} /* end of main */
-  
 
-  
+} /* end of main */
+
+
+
