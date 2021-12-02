@@ -1659,12 +1659,11 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
       }
 	for(l=0; l<nscalar; l++)scalar_out[n].var[l].type = scalar_in[0].var[l].type;
 
-      if(mpp_pe() == mpp_root_pe()) {
+  if(mpp_pe() == mpp_root_pe()) {
 	int found;
 	file_out[n].fid = mpp_open(file_out[n].name, MPP_WRITE);
 	mpp_copy_global_att(file_in[0].fid, file_out[n].fid);
-	mpp_def_global_att(file_out[n].fid, "history", history);
-	mpp_def_global_att(file_out[n].fid, "code_version", tagname);
+  print_provenance(file_out[n].fid, history);
 	/* check if bnds exist in axis dimensions */
 	found = 0;
 	for(i=0; i<ndim; i++) {
