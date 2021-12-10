@@ -990,9 +990,9 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
    int varrecdim;  /* Variable's record dimension */
    static unsigned char first=1;  /* First time reading variables? */
    int imax, jmax, kmax, lmax;
-   int imaxfull, jmaxfull, kmaxfull, lmaxfull;
-   int imaxjmaxfull, imaxjmaxkmaxfull;
-   int offset, ioffset, joffset, koffset, loffset;
+   long long int imaxfull, jmaxfull, kmaxfull, lmaxfull;
+   long long int imaxjmaxfull, imaxjmaxkmaxfull;
+   long long int offset, ioffset, joffset, koffset, loffset;
    int recdimsize; /* Using a local recdimsize to correct issue when netcdf file does not have a record dimension */
    long long varbufsize;
 
