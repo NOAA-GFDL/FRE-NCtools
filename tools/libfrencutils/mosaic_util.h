@@ -37,8 +37,6 @@
 #define min(a,b) (a<b ? a:b)
 #define max(a,b) (a>b ? a:b)
 #define SMALL_VALUE ( 1.e-10 )
-typedef enum {ORIG_LON_FIX = 1, NO_LON_FIX, ROTATE, SPHERE_EXCESS} PolyAreaStrategy;
-
 struct Node{
   double x, y, z, u, u_clip;
   int intersect; /* indicate if this point is an intersection, 0 = no, 1= yes, 2=both intersect and vertices */
@@ -113,15 +111,7 @@ void getCoordinates(struct Node *node, double *p);
 void setCoordinate(struct Node *node, double x, double y, double z);
 void setInbound(struct Node *interList, struct Node *list);
 int isInside(struct Node *node);
-int areApproxEqual(double a, double b, double delta);
-int at_pole(const double x[], const double y[], int n);
-double se_area(const double x[], const double y[], const int n);
-void rotate_point_ra( double rv[]);
-double rotate_poly(const double x[], const double y[], const int n, 
-  double xr[], double yr[]);
-int lon_fix_pas(double *x, double *y, int n_in, double tlon, PolyAreaStrategy pas); 
 void set_reproduce_siena_true(void);
-
 
 
 #endif
