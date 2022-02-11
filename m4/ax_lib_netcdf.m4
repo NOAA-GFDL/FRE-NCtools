@@ -259,8 +259,8 @@ AS_IF([test ! -z "${NF_CONFIG+x}"],[
   # has nf-config --fflags not return the -I flag.  This causes issues if trying to not use the
   # wrapper.  Thus, we add the -I flag if the cflags variable doesn't have it.  This should be
   # harmless.
-  _ax_c_lib_netcdf_includedir=$(eval $NC_CONFIG --includedir 2> /dev/null)
-  echo "$_ax_c_lib_netcdf_cflags" | $GREP -e "-I$_ac_c_lib_netcdf_includedir" 2>&1 > /dev/null || _ax_c_lib_netcdf_cflags="$_ax_c_lib_netcdf_cflags -I$_ax_c_lib_netcdf_includedir"
+  _ax_fc_lib_netcdf_includedir=$(eval $NF_CONFIG --includedir 2> /dev/null)
+  echo "$_ax_fc_lib_netcdf_cflags" | $GREP -e "-I$_ax_fc_lib_netcdf_includedir" 2>&1 > /dev/null || _ax_fc_lib_netcdf_cflags="$_ax_fc_lib_netcdf_cflags -I$_ax_fc_lib_netcdf_includedir"
   # LIBS and LDFLAGS sorted based on prefix (e.g. -L and -l)
   for arg in $(eval $NF_CONFIG --flibs 2> /dev/null) ; do
     AS_CASE([$arg],
@@ -333,7 +333,7 @@ rm conftest.$ac_ext
 FCFLAGS=$_ax_fc_lib_netcdf_save_FCFLAGS
 AS_VAR_COPY([ax_netcdf_cflags_res], [ax_netcdf_cflags_search])
 AS_IF([test "$ax_netcdf_fcflags_res" != no],
-      [test "$ax_netcdf_fcflags_res" = "none required" || NETCDF_CFLAGS=$ax_netcdf_fcflags_res
+      [test "$ax_netcdf_fcflags_res" = "none required" || NETCDF_FCFLAGS=$ax_netcdf_fcflags_res
        ax_netcdf_fcflags_search="yes"])
 ])
 # Check for the netcdf module, and if it is usable with the current FC compiler
