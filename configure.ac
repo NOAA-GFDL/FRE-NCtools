@@ -20,11 +20,21 @@
 
 # Prelude
 AC_PREREQ([2.63])
-AC_INIT([FRE NC Tools],[18.0.0],[oar.gfdl.help@noaa.gov],[fre-nctools],[https://github.com/NOAA-GFDL/FRE-NCtools])
+AC_INIT(
+  [FRE NC Tools],
+  [2.20.0],
+  [oar.gfdl.help@noaa.gov],
+  [fre-nctools],
+  [https://github.com/NOAA-GFDL/FRE-NCtools])
+
 # Place the git description informatin in the configure script
 m4_define([git_revision],
   [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
 AC_REVISION([$git_revision])
+
+m4_define([git_hashval],
+  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
+AC_REVISION([$git_hashval])
 
 AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
@@ -67,6 +77,7 @@ AS_IF([test x"$with_mpi" = x"yes"],
       build_mpi="yes"
     fi])
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
+AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
 
 AC_CHECK_FUNCS(gettid, [], [])
 
@@ -131,6 +142,8 @@ AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.
 # Other defs
 AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
+AC_DEFINE([GIT_HEADHASH], "git_hashval",
+          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 
 AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
 

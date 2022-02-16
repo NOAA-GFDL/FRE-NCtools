@@ -980,7 +980,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
                  unsigned char appendnc, int *nrecs, int *nblocks, int* bf, int r, int nfiles,
                  int f, unsigned char verbose, unsigned char missing)
   {
-   int v, d, i, j, k, l, b, s;  /* Loop variables */
+   int v, d, i, j, k, l, s;  /* Loop variables */
    int dimid;  /* ID of a dimension */
    void *values = NULL;  /* Current data values */
    long instart[MAX_NC_DIMS], outstart[MAX_NC_DIMS];  /* Data array sizes */
@@ -990,11 +990,13 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
    int varrecdim;  /* Variable's record dimension */
    static unsigned char first=1;  /* First time reading variables? */
    int imax, jmax, kmax, lmax;
-   int imaxfull, jmaxfull, kmaxfull, lmaxfull;
-   int imaxjmaxfull, imaxjmaxkmaxfull;
-   int offset, ioffset, joffset, koffset, loffset;
+   long long int imaxfull, jmaxfull, kmaxfull, lmaxfull;
+   long long int imaxjmaxfull, imaxjmaxkmaxfull;
+   long long int offset, ioffset, joffset, koffset, loffset;
+   long long int b;
    int recdimsize; /* Using a local recdimsize to correct issue when netcdf file does not have a record dimension */
    long long varbufsize;
+
 
    if ( ncinfile->recdim < 0 )
      recdimsize=1;
@@ -1260,7 +1262,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
            }
          else lmaxfull=1;
          if (verbose > 1)
-           printf("      imaxfull=%d  jmaxfull=%d  kmaxfull=%d  lmaxfull=%d\n",
+           printf("      imaxfull=%lld  jmaxfull=%lld  kmaxfull=%lld  lmaxfull=%lld\n",
                   imaxfull,jmaxfull,kmaxfull,lmaxfull);
          imaxjmaxfull=imaxfull*jmaxfull;
          imaxjmaxkmaxfull=imaxfull*jmaxfull*kmaxfull;
@@ -1294,7 +1296,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
               }
            }
          if (verbose > 1)
-           printf("      ioffset=%d  joffset=%d  koffset=%d  loffset=%d\n",
+           printf("      ioffset=%lld  joffset=%lld  koffset=%lld  loffset=%lld\n",
                   ioffset,joffset,koffset,loffset);
          switch (ncinfile->datatype[v])
            {

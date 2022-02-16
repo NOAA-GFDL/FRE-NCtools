@@ -22,20 +22,13 @@
 
 # Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation
 
+load test_utils
+
 @test "Test remap data onto cm2m ocean grid with extrapolation and vertical interpolation" {
 
-  if [ ! -d "Test06" ] 
-  then
-  		mkdir Test06
-  fi
+  generate_all_from_ncl
 
-  cd Test06
-  ncgen -o ocean_hgrid.nc $top_srcdir/t/Test06-input/ocean_hgrid.ncl
-  ncgen -o ocean_mosaic.nc $top_srcdir/t/Test06-input/ocean_mosaic.ncl
-  ncgen -o ocean_vgrid.nc $top_srcdir/t/Test06-input/ocean_vgrid.ncl
-  ncgen -o WOA09_ann_theta.nc $top_srcdir/t/Test06-input/WOA09_ann_theta.ncl
-
-  run command make_hgrid \
+   make_hgrid \
 		--grid_type regular_lonlat_grid \
 		--nxbnd 2 \
 		--nybnd 2 \
@@ -44,17 +37,15 @@
 		--nlon 720 \
 		--nlat 360 \
 		--grid_name levitus_grid
-  [ "$status" -eq 0 ]
 
-  run command make_solo_mosaic \
+   make_solo_mosaic \
 		--num_tiles 1 \
 		--dir . \
 		--mosaic_name levitus_mosaic \
 		--tile_file levitus_grid.nc \
 		--periodx 360
-  [ "$status" -eq 0 ]
 
-  run command fregrid \
+   fregrid \
 		--input_mosaic levitus_mosaic.nc \
 		--input_file WOA09_ann_theta.nc \
 		--scalar_field POTENTIAL_TEMP \
@@ -63,9 +54,5 @@
 		--extrapolate \
 		--dst_vgrid ocean_vgrid.nc \
 		--check_conserve
-  [ "$status" -eq 0 ]
-
-  cd ..
-  rm -rf Test06
 
 }

@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   double *x=NULL, *y=NULL;
   char history[512], dir[512];
   char gridfile[512], tilename[32];
-  int errflg, c, i;  
+  int errflg, c, i;
   int option_index;
 
   static struct option long_options[] = {
@@ -116,13 +116,13 @@ int main(int argc, char* argv[])
     printf("ERROR from make_regional_mosaic: regional_file is not specified");
     errflg++;
   }
-  
+
   if (errflg) {
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     exit(2);
   }
-  
+
   strcpy(history,argv[0]);
 
   for(i=1;i<argc;i++) {
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     ntiles = mpp_get_dimlen(fid, "ntiles");
     mpp_close(fid);
   }
-  
+
   /* figure out the tile number from the regional_file name */
   {
     char *pch=NULL;
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     for(n=0; n<ntiles; n++) {
       sprintf(str, ".tile%d.nc", n+1);
       pch = strstr (regional_file, str);
-      
+
       if( pch ) {
 	tile = n;
 	break;
@@ -159,12 +159,12 @@ int main(int argc, char* argv[])
     }
     if(tile == -1) mpp_error("make_regional_mosaic: tile number not found in the regional_file name");
   }
-    
+
   {
     int fid, vid;
     double *tmpx=NULL, *tmpy=NULL;
     int *indx=NULL, *indy=NULL;
-    
+
     fid = mpp_open(regional_file, MPP_READ);
     nx = mpp_get_dimlen(fid, xaxis_name);
     ny = mpp_get_dimlen(fid, yaxis_name);
@@ -190,14 +190,14 @@ int main(int argc, char* argv[])
     /* i_max-i_min+1 should equal nx and j_max-j_min+1 should equal ny */
     if( i_max-i_min+1 != nx ) mpp_error("make_regional_mosaic: i_max-i_min+1 != nx ");
     if( j_max-j_min+1 != ny ) mpp_error("make_regional_mosaic: j_max-j_min+1 != ny ");
-    
+
   }
-  
+
   {
     char filename[512], gridfile[512];
     size_t start[4], nread[4];
     int fid, vid, n;
-    
+
     /* read the regional grid from global grid */
     for(n=0; n<4; n++) {
       start[n] = 0;
@@ -210,10 +210,10 @@ int main(int argc, char* argv[])
     mpp_get_var_value_block(fid, vid, start, nread, filename);
     sprintf(gridfile, "%s/%s", dir, filename);
     mpp_close(fid);
-    
+
     x = (double *)malloc((2*nx+1)*(2*ny+1)*sizeof(double));
     y = (double *)malloc((2*nx+1)*(2*ny+1)*sizeof(double));
-  
+
     fid = mpp_open(gridfile, MPP_READ);
     start[0] = 2*j_min - 2; nread[0] = 2*ny+1;
     start[1] = 2*i_min - 2; nread[1] = 2*nx+1;
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
     int fid;
     int m;
     size_t start[4], nwrite[4];
-    
+
     sprintf(gridfile, "regional_grid.tile%d.nc", tile+1);
     fid = mpp_open(gridfile, MPP_WRITE);
     dimlist[0] = mpp_def_dim(fid, "string", STRING);
@@ -245,8 +245,8 @@ int main(int argc, char* argv[])
 		       "units", "degree_east");
     id_y = mpp_def_var(fid, "y", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_latitude",
 		       "units", "degree_north");
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+
+    print_provenance(fid, history);
 
     mpp_end_def(fid);
     sprintf(tilename, "tile%d", tile+1);
@@ -275,8 +275,9 @@ int main(int argc, char* argv[])
     dim[0] = dim_ntiles; dim[1] = dim_string;
     id_gridfiles = mpp_def_var(fid, "gridfiles", MPP_CHAR, 2, dim, 0);
     id_gridtiles = mpp_def_var(fid, "gridtiles", MPP_CHAR, 2, dim, 0);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+
+    print_provenance(fid, history);
+
     mpp_end_def(fid);
 
         /* write out data */
@@ -297,5 +298,5 @@ int main(int argc, char* argv[])
   printf("congradulation: You have successfully run make_regional_mosaic\n");
 
   return 0;
-  
+
 }; // end of main

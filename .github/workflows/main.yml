@@ -23,15 +23,22 @@ jobs:
         submodules: recursive
     - name: Configure
       run: |
-        autoreconf -i configure.ac
-        ./configure $MPI $QUAD_P
+        mkdir build && cd build
+        autoreconf -i ../configure.ac
+        ../configure $MPI $QUAD_P
     - name: Build tools
-      run: make
-    - name: Run tests
-      run: make -j check LOG_DRIVER_FLAGS=--comments
+      run: make -C build
+    - name: Run all tests
+      if: matrix.with_mpi == ''
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
+    - name: Run most tests (skip the slow ones)
+      if: matrix.with_mpi == '--with-mpi'
+      env:
+        SKIP_TESTS: 4
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1
       if: failure()
       with:
         name: test-suite.log
-        path: t/test-suite.log
+        path: build/t/test-suite.log

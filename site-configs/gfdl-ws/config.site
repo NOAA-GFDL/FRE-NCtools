@@ -29,4 +29,7 @@ test -z "$CC" && CC=icc
 test -z "$FC" && FC=ifort
 
 # Compile/Link flags
-test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"
+# Note: using -lm before the object file causes the Intel compiler to use the
+#       standard GNU math library instead of the optimized Intel Math library
+test -z "$CFLAGS" && CFLAGS="-xSSE2 -lm"
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback -xSSE2"
