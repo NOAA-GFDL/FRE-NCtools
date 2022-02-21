@@ -35,6 +35,7 @@ build:gfdl-ws:
     - gfdl-ws
   variables:
     GIT_STRATEGY: clone
+    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: gfdl-ws
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -45,6 +46,7 @@ build:gfdl:
     - gfdl
   variables:
     GIT_STRATEGY: clone
+    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: gfdl
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -55,6 +57,7 @@ build:ncrc:
     - ncrc
   variables:
     GIT_STRATEGY: clone
+    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: ncrc
     FMS_HOME: /ncrc/home2/fms
   <<: *buildScript

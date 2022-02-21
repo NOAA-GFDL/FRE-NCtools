@@ -26,6 +26,9 @@
 # files for a given test.  prepare_input_data expects a single argument <dir_name>
 # which is the directory name in $top_srcdir/t/Test10-input/<dir_name>
 # that contains the input data
+
+load test_utils
+
 prepare_input_data ()
 {
   local inputdir=$top_srcdir/t/Test10-input
@@ -43,23 +46,11 @@ prepare_input_data ()
   done
 }
 
-setup ()
-{
-  BASE_TEST_DIR=$( pwd )
-  mkdir $( basename $BATS_TEST_FILENAME .sh )
-  cd  $( basename $BATS_TEST_FILENAME .sh )
-}
-
-teardown ()
-{
-  cd $BASE_TEST_DIR
-  rm -rf  $( basename $BATS_TEST_FILENAME .sh )
-}
-
 @test "Test remap_land can remap land restart files" {
+
   prepare_input_data
 
-  run command remap_land \
+   remap_land \
 		--file_type land  \
 		--src_mosaic C48_mosaic/C48_mosaic.nc \
 		--dst_mosaic C192_mosaic/C192_mosaic.nc \
@@ -67,5 +58,4 @@ teardown ()
 		--dst_restart land.res \
 		--dst_cold_restart dst_cold_restart/land.res \
 		--remap_file remap_file_C48_to_C192 --print_memory
-  [ "$status" -eq 0 ]
 }

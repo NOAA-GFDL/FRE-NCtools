@@ -491,14 +491,15 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
       mask = (double *)malloc(nx[n]*ny[n]*sizeof(double));
       for(i=0; i<nx[n]*ny[n]; i++) mask[i] = land_area[n][i]/cell_area[n][i];
 
-      if(ntiles > 1)
-	sprintf(lnd_mask_file, "land_mask_tile%d.nc", n+1);
-      else
-	strcpy(lnd_mask_file, "land_mask.nc");
+      if (ntiles > 1) {
+        sprintf(lnd_mask_file, "land_mask_tile%d.nc", n + 1);
+      } else {
+        strcpy(lnd_mask_file, "land_mask.nc");
+      }
+
       fid = mpp_open(lnd_mask_file, MPP_WRITE);
-      mpp_def_global_att(fid, "grid_version", grid_version);
-      mpp_def_global_att(fid, "code_version", tagname);
-      mpp_def_global_att(fid, "history", history);
+      print_provenance_gv(fid, history, grid_version);
+
       dims[1] = mpp_def_dim(fid, "nx", nx[n]);
       dims[0] = mpp_def_dim(fid, "ny", ny[n]);
       id_mask = mpp_def_var(fid, "mask", MPP_DOUBLE, 2, dims,  2, "standard_name",
@@ -519,14 +520,15 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
       mask = (double *)malloc(nx[n]*ny[n]*sizeof(double));
       for(i=0; i<nx[n]*ny[n]; i++) mask[i] = ocean_area[n][i]/cell_area[n][i];
 
-      if(ntiles > 1)
-	sprintf(ocn_mask_file, "ocean_mask_tile%d.nc", n+1);
-      else
-	strcpy(ocn_mask_file, "ocean_mask.nc");
+      if (ntiles > 1) {
+        sprintf(ocn_mask_file, "ocean_mask_tile%d.nc", n + 1);
+      } else {
+        strcpy(ocn_mask_file, "ocean_mask.nc");
+      }
+
       fid = mpp_open(ocn_mask_file, MPP_WRITE);
-      mpp_def_global_att(fid, "grid_version", grid_version);
-      mpp_def_global_att(fid, "code_version", tagname);
-      mpp_def_global_att(fid, "history", history);
+      print_provenance_gv(fid, history, grid_version);
+
       dims[1] = mpp_def_dim(fid, "nx", nx[n]);
       dims[0] = mpp_def_dim(fid, "ny", ny[n]);
       id_mask = mpp_def_var(fid, "mask", MPP_DOUBLE, 2, dims,  2, "standard_name",
@@ -599,23 +601,22 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
     /* write out the atmosXland exchange grid file, The file name will be atmos_mosaic_tile#Xland_mosaic_tile#.nc */
     nxgrid = 0;
     for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
-      if(land_area[n][j*nx[n]+i] >0) {
-	i1[nxgrid] = i+1;
-	j1[nxgrid] = j+1;
-	i2[nxgrid] = i+1;
-	j2[nxgrid] = j+1;
-	area[nxgrid] = land_area[n][j*nx[n]+i];
-	di[nxgrid] = 0;
-	dj[nxgrid] = 0;
-	nxgrid++;
-      }
+        if (land_area[n][j * nx[n] + i] > 0) {
+          i1[nxgrid] = i + 1;
+          j1[nxgrid] = j + 1;
+          i2[nxgrid] = i + 1;
+          j2[nxgrid] = j + 1;
+          area[nxgrid] = land_area[n][j * nx[n] + i];
+          di[nxgrid] = 0;
+          dj[nxgrid] = 0;
+          nxgrid++;
+        }
     }
 
     fid = mpp_open(axl_file[n], MPP_WRITE);
     sprintf(contact, "atmos_mosaic:%s::land_mosaic:%s", tilename[n], tilename[n]);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+    print_provenance_gv(fid, history, grid_version);
+
     dim_string = mpp_def_dim(fid, "string", STRING);
     dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
     dim_two    = mpp_def_dim(fid, "two", 2);
@@ -650,23 +651,22 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
     /* write out the atmosXocean exchange grid file, The file name will be atmos_mosaic_tile#Xocean_mosaic_tile#.nc */
     nxgrid = 0;
     for(j=0; j<ny[n]; j++) for(i=0; i<nx[n]; i++) {
-      if(ocean_area[n][j*nx[n]+i] >0) {
-	i1[nxgrid] = i+1;
-	j1[nxgrid] = j+1;
-	i2[nxgrid] = i+1;
-	j2[nxgrid] = j+1;
-	area[nxgrid] = ocean_area[n][j*nx[n]+i];
-	di[nxgrid] = 0;
-	dj[nxgrid] = 0;
-	nxgrid++;
-      }
+        if (ocean_area[n][j * nx[n] + i] > 0) {
+          i1[nxgrid] = i + 1;
+          j1[nxgrid] = j + 1;
+          i2[nxgrid] = i + 1;
+          j2[nxgrid] = j + 1;
+          area[nxgrid] = ocean_area[n][j * nx[n] + i];
+          di[nxgrid] = 0;
+          dj[nxgrid] = 0;
+          nxgrid++;
+        }
     }
+
     fid = mpp_open(axo_file[n], MPP_WRITE);
+    print_provenance_gv(fid, history,grid_version);
 
     sprintf(contact, "atmos_mosaic:%s::ocean_mosaic:%s", tilename[n], tilename[n]);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
     dim_string = mpp_def_dim(fid, "string", STRING);
     dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
     dim_two    = mpp_def_dim(fid, "two", 2);
@@ -702,9 +702,8 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
     /* write out landXocean exchange grid information */
     fid = mpp_open(lxo_file[n], MPP_WRITE);
     sprintf(contact, "land_mosaic:%s::ocean_mosaic:%s", tilename[n], tilename[n]);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+    print_provenance_gv(fid, history, grid_version);
+
     dim_string = mpp_def_dim(fid, "string", STRING);
     dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
     dim_two    = mpp_def_dim(fid, "two", 2);
@@ -761,9 +760,8 @@ printf("%15.10f, %15.10f, %15.10f\n", ocean_area[n][i], land_area[n][i]+AREA_RAT
     }
     printf("mosaic_file is %s\n", mosaic_file);
     fid = mpp_open(mosaic_file, MPP_WRITE);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+    print_provenance_gv(fid, history, grid_version);
+
     dim_string = mpp_def_dim(fid, "string", STRING);
     dim_axo = mpp_def_dim(fid, "nfile_aXo", ntiles);
     dim_axl = mpp_def_dim(fid, "nfile_aXl", ntiles);

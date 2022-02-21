@@ -1414,8 +1414,7 @@ int main(int argc, char *argv[]) {
             id_index_lake =
               mpp_def_var(fid, "remap_index_lake", NC_INT, 1, &dim_npts, 1, "standard_name", "lake remap index");
           }
-          mpp_def_global_att(fid, "history", history);
-
+          print_provenance(fid, history);
           mpp_end_def(fid);
 
           mpp_gather_field_int_root(nxc_dst, face_map_soil, gdata);
@@ -1688,8 +1687,7 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      mpp_def_global_att(fid_dst, "history", history);
-
+      print_provenance(fid_dst, history);
       mpp_end_def(fid_dst);
 
       /*-------------------------------------------------------------------------------
