@@ -54,8 +54,7 @@
 #include "mosaic_util.h"
 #include "tool_util.h"
 #include "create_hgrid.h"
-#define  D2R (M_PI/180.)
-#define  R2D (180./M_PI)
+
 #define  EPSLN10 (1.e-10)
 #define  EPSLN4 (1.e-4)
 #define  EPSLN5 (1.e-5)

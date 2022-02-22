@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
 	 usage(argv[0]);
 	 return 1;
       }
+
+   int optind = argc - 1;
    
    __NC_ASRT__(nc_open(argv[optind],NC_NOWRITE,&ncid));
    __NC_ASRT__(nc_inq_ndims(ncid,&ndims));

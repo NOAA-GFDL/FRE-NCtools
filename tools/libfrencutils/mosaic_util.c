@@ -32,9 +32,6 @@
 #include <mpi.h>
 #endif
 
-#define R2D (180./M_PI)
-#define HPI (0.5*M_PI)
-#define TPI (2.0*M_PI)
 #define TOLORENCE (1.e-6)
 #define EPSLN8 (1.e-8)
 #define EPSLN10 (1.e-10)

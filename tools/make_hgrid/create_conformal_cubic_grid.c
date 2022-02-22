@@ -27,8 +27,7 @@
 #include "tool_util.h"
 #include "constant.h"
 #include "create_hgrid.h"
-#define  D2R (M_PI/180.)
-#define  R2D (180./M_PI)
+
 /*********************************************************************************
    some private routines used in this file
 *********************************************************************************/

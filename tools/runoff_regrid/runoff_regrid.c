@@ -45,6 +45,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <math.h>
+#include "constant.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "mpp_domain.h"
