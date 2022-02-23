@@ -50,6 +50,10 @@ AS_IF([test ${enable_quad_precision:-no} = no],
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
+GX_C__GENERIC
+AS_IF([test $gx_cv_c__Generic = no],
+  AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
+)
 
 AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O
