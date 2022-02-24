@@ -277,7 +277,6 @@ char *usage[] = {
   "                                                                                      ",
   NULL};
 #define EPSLN10  (1.e-10)
-const double D2R = M_PI/180.;
 char tagname[] = "$Name: bronx-10_performance_z1l $";
 
 extern int in_format; //declared in mpp_io.c

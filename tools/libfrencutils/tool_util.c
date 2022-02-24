@@ -31,8 +31,7 @@
 #include "interp.h"
 #include "mpp.h"
 #include "mpp_io.h"
-#define  D2R (M_PI/180.)
-#define  R2D (180./M_PI)
+
 
 const double SMALL = 1.0e-4;
 double distant(double a, double b, double met1, double met2);

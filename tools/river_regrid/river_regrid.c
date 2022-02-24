@@ -22,6 +22,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <math.h>
+#include "constant.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "create_xgrid.h"
@@ -90,7 +91,6 @@ const int    x_refine          = 2;
 const int    y_refine          = 2;
 const double EPSLN             = 1.e-4;
 const double MIN_AREA_RATIO    = 1.e-6;
-const double D2R               = M_PI/180.;
 const char   subA_name[]       = "subA";
 const char   tocell_name[]     = "tocell";
 const char   travel_name[]     = "travel";

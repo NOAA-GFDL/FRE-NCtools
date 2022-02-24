@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
+#include "constant.h"
 #include "mpp.h"
 #include "mpp_domain.h"
 #include "mpp_io.h"
@@ -631,7 +632,6 @@ int main(int argc, char* argv[])
   }
 
   {
-    const int STRING = 255;
     int m_fid, g_fid, vid;
     int ntiles, fid, dim_ntiles, n, dims[2];
     size_t start[4], nread[4], nwrite[4];

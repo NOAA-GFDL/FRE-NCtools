@@ -32,8 +32,6 @@
 #include "mpp_io.h"
 #include "create_hgrid.h"
 #include "gradient_c2l.h" //includes declaration of function mid_pt_sphere()
-#define  D2R (M_PI/180.)
-#define  R2D (180./M_PI)
 
 void create_grid_from_text_file( char *file, int *nlon, int *nlat, double *x, double *y, double *dx, double *dy,
 				 double *area, double *angle_dx );

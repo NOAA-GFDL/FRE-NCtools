@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "constant.h"
 #include "create_xgrid.h"
 #include "mosaic_util.h"
 #include "interp.h"
@@ -28,7 +29,6 @@
 #include "mpp_domain.h"
 #include "topog.h"
 
-#define D2R (M_PI/180.)
 
 const double deg2metre=111.324e3;
 void filter_topo( int nx, int ny, int num_pass, int smooth_topo_allow_deepening, double *depth, domain2D domain);

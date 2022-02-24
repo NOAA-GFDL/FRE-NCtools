@@ -29,9 +29,7 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
-#define R2D (180/M_PI)
-#define TPI (2.0*M_PI)
-#define HPI (0.5*M_PI)
+
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
 			  const double *x2, const double *y2, const double *z2, int n2);
