@@ -53,6 +53,15 @@ AC_ARG_ENABLE([quad-precision],
     [],
     [enable_quad_precision=no])
 
+AC_ARG_ENABLE([ocean-model-grid-generator],
+  [AS_HELP_STRING([--enable-ocean-model-grid-generator],
+    [build and install the ocean model grid generator tool])])
+AS_IF([test ${enable_ocean_model_grid_generator:-yes} = yes],
+  [enable_ocean_model_grid_generator=yes],
+  [enable_ocean_model_grid_generator=no])
+AM_CONDITIONAL([ENABLE_OCEAN_MODEL_GRID_GENERATOR],
+  [test $enable_ocean_model_grid_generator = yes])
+
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
 
@@ -145,7 +154,9 @@ AC_DEFINE([GIT_REVISION], "git_revision",
 AC_DEFINE([GIT_HEADHASH], "git_hashval",
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 
-AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
+AS_IF([test $enable_ocean_model_grid_generator = yes],
+  AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
+)
 
 # Output files
 AC_CONFIG_HEADERS([config.h])
