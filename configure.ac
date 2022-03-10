@@ -50,6 +50,8 @@ AS_IF([test ${enable_quad_precision:-no} = no],
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
+## When autoconf v2.70 is more available, this can be replaced with:
+##AC_C__GENERIC
 GX_C__GENERIC
 AS_IF([test $gx_cv_c__Generic = no],
   AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
