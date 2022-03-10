@@ -96,7 +96,7 @@ if test -n "$ASCIIDOC"; then
     ;;
   *)
     AC_MSG_RESULT([${asciidoc_version} (unknown)])
-    ;;This issue( https://github.com/NOAA-GFDL/FRE-NCtools/issues/76 ) may be relate and (Possibly) should be jointly fixed.This issue( https://github.com/NOAA-GFDL/FRE-NCtools/issues/76 ) may be relate and (Possibly) should be jointly fixed.This issue( https://github.com/NOAA-GFDL/FRE-NCtools/issues/76 ) may be relate and (Possibly) should be jointly fixed.
+    ;;
   esac
 fi
 AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
@@ -130,9 +130,6 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
 ])
 
 # Check for library functions
-
-# Check if Test25-input link points to an existing directory
-AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
 
 # Check if Test25-input link points to an existing directory
 AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
