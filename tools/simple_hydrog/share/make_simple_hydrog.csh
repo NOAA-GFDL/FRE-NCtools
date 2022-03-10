@@ -30,11 +30,16 @@
 #    -- add GLCC waterbod fractions
 # =========================================================================
 
-if (`gfdl_platform` == "hpcs-csc") then
+if ( (! { gfdl_platform })  || ( `gfdl_platform` != "hpcs-csc" )  ) then
     echo "WARNING: Intended for PP/AN use; may not work properly on this site"
 endif
 
 set my_tempdir=`mktemp -d`
+
+if ( $status ) then
+  echo "ERROR: Cannot create temporary directory"
+  exit 1
+endif
 
 set outdir = ""
 set argv = (`getopt ho:f:t:m:d $*`)
