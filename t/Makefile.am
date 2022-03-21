@@ -65,8 +65,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test26-reference_fregrid_gcc.sh \
         Test27-multiple_nests.sh \
         Test28-make_hgrid.sh \
-        Test29-make_vgrid.sh \
-        Test30-om_grid_gen.sh
+        Test29-make_vgrid.sh
 
 EXTRA_DIST = $(TESTS) \
             Test02-input\
