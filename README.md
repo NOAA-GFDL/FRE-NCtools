@@ -72,11 +72,11 @@ environment varialbes. The ocean_model_grid_generator is a Python3 project,
 and its installation may require the use of configutration options.
 
 Some of the commonly needed environment variables are:
-  CC          C compiler command
-  FC          Fortran compiler command
-  CFLAGS      C compiler flags
-  FCFLAGS     Fortran compiler flags
-  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
+*  CC          C compiler command
+*  FC          Fortran compiler command
+*  CFLAGS      C compiler flags
+*  FCFLAGS     Fortran compiler flags
+*  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
 
 On many systems, information of the NetCDF headers and libraries
