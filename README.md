@@ -67,7 +67,7 @@ git submodule update --init --recursive
 ## Building and Installation - General
 FRE-NCtools has a collection of C and Fortran sources. Within GFDL, FRE-NCtools
 is built using a recent version of the GNU and Intel C and Fortran compilers.
-Compiler flags are required cor compilation and they are commonly set as
+Compiler flags are required for compilation and they are commonly set in
 environment varialbes. The ocean_model_grid_generator is a Python3 project,
 and its installation may require the use of configutration options.
 
