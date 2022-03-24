@@ -64,7 +64,7 @@ cd FRE-NCtools
 git submodule update --init --recursive
 ```
 
-## Building and Installation - General
+## Building and Installation - General Information
 FRE-NCtools has a collection of C and Fortran sources. Within GFDL, FRE-NCtools
 is built using a recent version of the GNU and Intel C and Fortran compilers.
 Compiler flags are required for compilation and they are commonly set in
@@ -82,23 +82,23 @@ Some of the commonly needed environment variables are:
 On many systems, information of the NetCDF headers and libraries
 can be obtained by the nf-config and nc-config commands.
 
-## Building and Installation - possible minimum configuration
+## Building and Installation - Possible minimum configuration
 
 If you received this as a package, the standard:
 
 ```
-cd FRE-NCTools
+cd FRE-NCtools
 configure
 make
 make install
 ```
 
 should be sufficient.  If you cloned the git repository, you must first run
-the `autoreconf` command with the `--install` option to install missing
-autotools files:
+the `autoreconf` command with the `-i` (or `--install`) option to install
+missing autotools files:
 
 ```
-cd FRE-NCTools
+cd FRE-NCtools
 autoreconf -i
 ./configure
 make
@@ -112,16 +112,16 @@ make --help
 configure --help=recursive
 ```
 
-It is common to compile into a build directory (say build_dir) and
-install into an installation directory (say install_dir). If the
-ocean_model_grid_generator is desired, it may be convenient to allow
+It is common to compile into a build directory (e.g. named build) and
+install into an installation directory (e.g. with full path <install path>).
+If the ocean_model_grid_generator is desired, it may be convenient to allow
 the build system to set up a Python venv. These three choices can be
 done with these steps:
 ```
-cd FRE-NCTools
+cd FRE-NCtools
 autoreconf -i
-mkdir build_dir && cd build_dir
-../configure --prefix=install_dir --enable-venv
+mkdir build && cd build
+../configure --prefix=<install path> --enable-venv
 make
 make install
 ```
@@ -130,13 +130,18 @@ If the ocean_model_grid_generator is not desired, a similar configuration would
 be achieved by :
 
 ```
-cd FRE-NCTools
+cd FRE-NCtools
 autoreconf -i
-mkdir build_dir && cd build_dir
-../configure --prefix=install_dir --disable-ocean-model-grid-generator
+mkdir build && cd build
+../configure --prefix=<install path> --disable-ocean-model-grid-generator
 make
 make install
 ```
+
+### Parallel NCTools applications
+The option  `--with-mpi` to the `configure` command will configure for building
+parallel running versions of certain FRE-NCtools applications.
+
 
 ## Building on a GFDL-managed system
 The recommended environment with the recommended autoconf defaults can be loaded by running
@@ -152,9 +157,6 @@ For example:
 eval `site-configs/<site>/env.sh`
 ```
 
-## Building parallel NCTools applications
-To also build the parallel running version of certain FRE-NCtools applications,
-the `configure` command should be given the option `--with-mpi`.
 
 ## Compiler Requirements.
 
