@@ -67,20 +67,21 @@ git submodule update --init --recursive
 ## Building and Installation - General Information
 FRE-NCtools has a collection of C and Fortran sources. Within GFDL, FRE-NCtools
 is built using a recent version of the GNU and Intel C and Fortran compilers.
-Compiler flags are required for compilation and they are commonly set in
-environment varialbes. The ocean_model_grid_generator is a Python3 project,
-and its installation may require the use of configutration options.
+Compiler flags required for compilation are commonly set in
+environment variables and the important ones include :
 
-Some of the commonly needed environment variables are:
-*  CC          C compiler command
-*  FC          Fortran compiler command
-*  CFLAGS      C compiler flags
-*  FCFLAGS     Fortran compiler flags
-*  LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
-              nonstandard directory <lib dir>
+*  CC          (The C compiler command)
+*  FC          (The Fortran compiler command)
+*  CFLAGS      (The C compiler flags)
+*  FCFLAGS     (The Fortran compiler flags)
+*  LDFLAGS     (The linker flags, e.g. -L<lib dir> if you have libraries in a
+              nonstandard directory <lib dir>)
 
 On many systems, information of the NetCDF headers and libraries
 can be obtained by the nf-config and nc-config commands.
+
+The ocean_model_grid_generator is a Python3 project and its installation
+may require the use of configutration options discussed below.
 
 ## Building and Installation - Possible minimum configuration
 
