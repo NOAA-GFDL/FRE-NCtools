@@ -113,8 +113,8 @@ make --help
 configure --help=recursive
 ```
 
-It is common to compile into a build directory (e.g. named build) and
-install into an installation directory (e.g. with full path <install path>).
+It is common to compile into a build directory (e.g. named `build`) and
+install into an installation directory (e.g. with full path `<install path>`).
 If the ocean_model_grid_generator is desired, it may be convenient to allow
 the build system to set up a Python venv. These three choices can be
 done with these steps:
