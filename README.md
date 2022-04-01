@@ -61,9 +61,9 @@ and also it is a Python3 project. Because of the former attribute, recursive
 cloning (see below) is recommended. Because of the latter attribute,
 the users python environment may need modification and/or options to the
 autotools configure command may need to be specified. This includes the
---[enable|disable]-ocean-model-grid-generator option and the --enable-venv
-option to build a Python venv containing the Ocean Model Grid Generator script
-and all python dependencies.
+--[enable|disable]-ocean-model-grid-generator option (default is enable)
+and the --enable-venv option to build a Python venv containing the
+Ocean Model Grid Generator script and all python dependencies.
 
 ## Cloning and submodules
 The NCTools github repository contains Ocean MOdel Grid Generator's repository
