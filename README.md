@@ -54,19 +54,19 @@ The tools available in FRE-NCtools are:
 * transfer_to_mosaic_grid -- Convert older style grids to newer mosaic grid
 
 ### Other tools
-The [ Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator)
+The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator)
 is a collection of tools for creating finite element spherical tripolar grids for
 GFDL's MOM based ocean models. Unlike the other tools, NCTools includes it as a submodule,
 and also it is a Python3 project. Because of the former attribute, recursive
 cloning (see below) is recommended. Because of the latter attribute,
 the users python environment may need modification and/or options to the
 autotools configure command may need to be specified. This includes the
---[enable|disable]-ocean-model-grid-generator option (default is enable)
-and the --enable-venv option to build a Python venv containing the
+``--disable-ocean-model-grid-generator`` option (default is enable)
+and the ```--enable-venv``` option to build a Python venv containing the
 Ocean Model Grid Generator script and all python dependencies.
 
 ## Cloning and submodules
-The NCTools github repository contains Ocean MOdel Grid Generator's repository
+The NCTools github repository contains Ocean Model Grid Generator's repository
 as a submodule. After cloning NCTools, it must be initialized and updated for its
 submodules:
 
