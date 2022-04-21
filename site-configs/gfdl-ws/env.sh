@@ -32,25 +32,22 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Variables to control versions used
-env_version=v0.15
-gcc_version=9.2.0
-ncc_version=4.7.3
-ncf_version=4.5.2
-mpi_version=3.3.2
+env_version=v0.17
+gcc_version=11.2.0
+ncc_version=4.8.1
+ncf_version=4.5.3
+mpi_version=3.4.2
 
 # Ensure the base spack modules are first in MODULEPATH
 module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
 module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
+
 # bats and nccmp are needed for tests
 module load bats/0.4.0
-module load nccmp/1.8.2.0
+module load nccmp/1.9.0.1
 
-# Load the GCC compiler
+# Load the GCC compilers
 module load gcc/$gcc_version
-
-# Ensure the GCC spack modules are first in MODULEPATH
-module remove-path MODULEPATH /app/spack/${env_version}/modulefiles-gcc-${gcc_version}/linux-rhel7-x86_64
-module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles-gcc-${gcc_version}/linux-rhel7-x86_64
 
 # Load the GCC modules required for building
 module load netcdf-c/$ncc_version
