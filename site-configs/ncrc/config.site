@@ -29,8 +29,8 @@ test -z "$CC" && CC=cc
 test -z "$FC" && FC=ftn
 
 # Compile/Link flags
-test -z "$CFLAGS" && CFLAGS=""
-test -z "$FCFLAGS" && FCFLAGS=""
+test -z "$CFLAGS" && CFLAGS="-O2"
+test -z "$FCFLAGS" && FCFLAGS="-O2"
 test -z "$LIBS" && LIBS=""
 test -z "$NETCDF_LIBS" && NETCDF_LIBS=""
 test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS=""

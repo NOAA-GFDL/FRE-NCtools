@@ -29,5 +29,5 @@ test -z "$CC" && CC=mpicc
 test -z "$FC" && FC=mpifort
 
 # Compile/Link flags
-test -z "$CFLAGS" && CFLAGS=""
-test -z "$FCFLAGS" && FCFLAGS=""
+test -z "$CFLAGS" && CFLAGS="-O2"
+test -z "$FCFLAGS" && FCFLAGS="-O2"
