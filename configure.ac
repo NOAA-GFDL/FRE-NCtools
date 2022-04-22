@@ -20,7 +20,13 @@
 
 # Prelude
 AC_PREREQ([2.63])
-AC_INIT([FRE NC Tools], [19.1], [oar.gfdl.help@noaa.gov], [fre-nctools], [https://github.com/NOAA-GFDL/FRE-NCtools])
+AC_INIT(
+  [FRE NC Tools],
+  [2.20.0],
+  [oar.gfdl.help@noaa.gov],
+  [fre-nctools],
+  [https://github.com/NOAA-GFDL/FRE-NCtools])
+
 # Place the git description informatin in the configure script
 m4_define([git_revision],
   [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
@@ -43,13 +49,27 @@ AM_PROG_AR
 
 AC_ARG_ENABLE([quad-precision],
   [AS_HELP_STRING([--enable-quad-precision],
-    [build using higher (quad) precision])])
-AS_IF([test ${enable_quad_precision:-no} = no],
-  [enable_quad_precision=no],
-  [enable_quad_precision=yes])
+    [build using higher (quad) precision])],
+    [],
+    [enable_quad_precision=no])
+
+AC_ARG_ENABLE([ocean-model-grid-generator],
+  [AS_HELP_STRING([--enable-ocean-model-grid-generator],
+    [build and install the ocean model grid generator tool])])
+AS_IF([test ${enable_ocean_model_grid_generator:-yes} = yes],
+  [enable_ocean_model_grid_generator=yes],
+  [enable_ocean_model_grid_generator=no])
+AM_CONDITIONAL([ENABLE_OCEAN_MODEL_GRID_GENERATOR],
+  [test $enable_ocean_model_grid_generator = yes])
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
+## When autoconf v2.70 is more available, this can be replaced with:
+##AC_C__GENERIC
+GX_C__GENERIC
+AS_IF([test $gx_cv_c__Generic = no],
+  AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
+)
 
 AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O
@@ -122,7 +142,7 @@ AC_LANG_POP([Fortran])
 # Check for typedefs, structures, and compiler characteristics
 # Check if the C compiler supports a working `long double` with more range
 # or precision than `double`.
-AS_IF([test $enable_quad_precision = yes], [
+AS_IF([test ${enable_quad_precision:-no} = yes], [
 AC_TYPE_LONG_DOUBLE_WIDER
 AS_IF([test $ac_cv_type_long_double_wider = no],
   [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])
@@ -139,6 +159,11 @@ AC_DEFINE([GIT_REVISION], "git_revision",
           [Holds the 'git describe' information if configure ran within a git working directory])
 AC_DEFINE([GIT_HEADHASH], "git_hashval",
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
+
+AS_IF([test $enable_ocean_model_grid_generator = yes],
+  AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
+)
+
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
@@ -175,6 +200,5 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
-                 tools/ocean_model_grid_generator/Makefile
 ])
 AC_OUTPUT

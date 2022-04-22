@@ -34,6 +34,11 @@ load test_utils
       skip 'Input dataset is not available'
   fi
 
+  run command -v gfdl_platform
+  if [ "$status" -ne 0 ]; then
+    skip 'cmd not exist'
+  fi
+
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh
   [ "$status" -eq 1 ]
 
