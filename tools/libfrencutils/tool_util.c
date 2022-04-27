@@ -777,7 +777,7 @@ void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, 
   - grid version is written if passed in as not null.
   - gca_flag is the great circle algorithm flag.
   */
-void print_provenance_gv_gca(int fid, char *history, char *grid_version, int gca_flag) {
+void print_provenance_gv_gca(int fid, const char *history, char *grid_version, int gca_flag) {
   char hostname[128];
   gethostname(hostname, 128);
 
@@ -807,11 +807,11 @@ void print_provenance_gv_gca(int fid, char *history, char *grid_version, int gca
   }
 }
 
-void print_provenance_gv(int fid, char * history, char * grid_version){
+void print_provenance_gv(int fid, const char * history, char * grid_version){
   print_provenance_gv_gca(fid, history, grid_version, 0 );
 }
 
-void print_provenance(int fid,  char * history){
+void print_provenance(int fid,  const char * history){
   print_provenance_gv_gca(fid, history, NULL, 0 );
 }
 

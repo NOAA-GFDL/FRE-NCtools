@@ -44,7 +44,7 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
 int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds);
 void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, int *cyclic_y, int *is_tripolar );
 
-void print_provenance_gv_gca(int fid,  char * history, char * grid_version, int gca_flag);
-void print_provenance_gv(int fid,  char * history, char * grid_version);
-void print_provenance(int fid, char * history);
+void print_provenance_gv_gca(int fid,  const char * history, char * grid_version, int gca_flag);
+void print_provenance_gv(int fid,  const char * history, char * grid_version);
+void print_provenance(int fid, const char * history);
 #endif

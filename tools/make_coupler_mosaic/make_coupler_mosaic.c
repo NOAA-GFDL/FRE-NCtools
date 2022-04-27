@@ -141,8 +141,6 @@ char *usage[] = {
   "",
   NULL };
 
-#define D2R (M_PI/180.)
-#define R2D (180./M_PI)
 #define MAXXGRIDFILE 100
 #define MX 2000
 #define TINY_VALUE (1.e-7)
