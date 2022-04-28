@@ -21,6 +21,7 @@
 #
 # configure options
 test -z "$with_mpi" && with_mpi=yes
+test -z "$enable_venv" && enable_venv=yes
 # Standard prefix location for FRE distribution
 test "$prefix" = NONE && prefix=/home/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl-ws
 
