@@ -17,4 +17,4 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-dist_bin_SCRIPTS = split_ncvars.csh split_ncvars.pl split_ncvars.py varlist.csh
+dist_bin_SCRIPTS = split_ncvars.pl varlist.csh
