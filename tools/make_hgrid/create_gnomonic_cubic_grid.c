@@ -83,9 +83,11 @@ void cell_east(int ni, int nj, const double *lonc, const double *latc, double *l
 void cell_north(int ni, int nj, const double *lonc, const double *latc, double *lonn, double *latn);
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area);
 void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-																						int n, double *lon, double *lat);
+		      int n, double *lon, double *lat);
+void direct_transform_suggest_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
+		      int n, double *lon, double *lat);
 void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-																				int n, double *lon, double *lat);
+		    int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
                         double *xc, double *yc, int is_gr);
@@ -390,6 +392,8 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
       if (verbose) fprintf(stderr, "[INFO] Calling direct_transform for tile %ld\n", n);
 
+      direct_transform_suggest_lats(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
+                       n, xc+n*nip*nip, yc+n*nip*nip);
       direct_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
                        n, xc+n*nip*nip, yc+n*nip*nip);
 
@@ -1225,7 +1229,6 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
 
   sin_p = sin(lat_p);
   cos_p = cos(lat_p);
-
   for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
       l = j*nxp+i;
       if ( fabs(c2m1) > EPSLN7 ) {
@@ -1241,6 +1244,7 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
       if ( (1.-fabs(sin_o)) < EPSLN7 ) {    /* poles */
         lon[l] = 0.;
         lat[l] = (sin_o < 0) ? -p2:p2;
+        printf("Generated grid has the pole at %g\n",R2D*lat[l]);
       }
       else {
         lat[l] = asin( sin_o );
@@ -1252,6 +1256,80 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
       }
     }
 } /* direct_transform */
+
+/*
+  void direct_transform_suggest_lats(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
+  double *lon, double *lat)
+  
+  This subroutine suggests values for target latitude close to the desired ones
+  so that the stretched grid would include the North pole or the South pole as a point.
+  
+  South pole is a fixed point of the stretch transformation:
+       inter_lat   = asin( (c2m1+c2p1*sin(init_lat))/(c2p1+c2m1*sin(init_lat)) ); 
+  After stretching the intermediate grid is rotated so that the South pole
+  shifts to the target point of the final stretched grid:
+       final_latitude = -asin(sin_p*sin(inetr_lat) + cos_p*cos(inter_lat)*cos(init_lon[l]));    
+       final_longitude= lon_p + atan(-cos(inter_lat)*sin(init_lon) / -sin(inter_lat)*cos_p+cos(inter_lat)*sin_p*cos(init_lon));
+  We can optionally restrict the final grid to include the North pole by 
+  slightly adjusting the target latitude. Since the intermediate grid is roateted
+  by 90+lat_p to shift the intemediate South pole to target point, 
+  the intermediate point with (lon,lat)=(180,-lat_p) would rotate to the North pole.
+  So if such a point is in the intermediate grid it would generate the North pole in the final grid.
+  There is no guarantee that (180,-lat_p) with arbitrary lat_p would be in the intermedaite grid.
+  But, we can adjust lat_p a little to have the pre-image of the North pole in the intermedaite grid.
+  We first find the latitude of the pre-image in the inital grid by inverting the formula for the stretch transformation:
+       lam_North_pre=-asin((c2m1-c2p1*sin_p)/(c2p1-c2m1*sin_p))
+  Then we find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
+  Then we find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
+*/    
+void direct_transform_suggest_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
+                      int n, double *lon, double *lat)
+{
+#ifndef HAVE_LONG_DOUBLE_WIDER
+  double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  double c2p1, c2m1;
+#else
+  long double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  long double c2p1, c2m1;
+#endif
+  int i, j, l, nxp;
+  double lam_North_pre,lam_South_pre,adjusted_target_lat;
+
+  nxp = i2-i1+1;
+  c2p1 = 1. + stretch_factor*stretch_factor;
+  c2m1 = 1. - stretch_factor*stretch_factor;
+  sin_p = sin(lat_p);
+  cos_p = cos(lat_p);
+  //North pole adjustment?
+  //find the latitude of the pre-image in the inital grid by inverting the formula for the stretch transformation
+  lam_North_pre=-asin((c2m1+c2p1*sin_p)/(c2p1+c2m1*sin_p));
+  //find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
+  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+      l = j*nxp+i;
+      if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_North_pre)<0.0050){
+          //printf("FoundN: %d,%g,%g,%g\n",n,R2D*lon[l],R2D*lat[l],R2D*lam_North_pre);
+          //find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
+          lam_North_pre = lat[l];
+          adjusted_target_lat = -asin((c2m1+c2p1*sin(lam_North_pre))/(c2p1+c2m1*sin(lam_North_pre)));
+          printf("Input target latitude: %g\n",R2D*lat_p);
+          printf("Suggested target latitude to include NP: %g\n",R2D*adjusted_target_lat);
+          break;
+      }
+  }
+  //South pole adjustment?
+  lam_South_pre=-asin((c2m1-c2p1*sin_p)/(c2p1-c2m1*sin_p));
+  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+      l = j*nxp+i;
+      if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_South_pre)<0.0050){
+          //printf("FoundS: %d,%g,%g,%g\n",n,R2D*lon[l],R2D*lat[l],R2D*lam_South_pre);
+          lam_South_pre = lat[l];
+          adjusted_target_lat = asin((c2m1+c2p1*sin(lam_South_pre))/(c2p1+c2m1*sin(lam_South_pre)));
+          printf("Input target latitude: %g\n",R2D*lat_p);
+          printf("Suggested target latitude to include SP: %g\n",R2D*adjusted_target_lat);
+          break;
+      }
+  }
+} /*direct_transform_suggest_lats*/
 
 /*-------------------------------------------------------------------------
   void cube_transform(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
