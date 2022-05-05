@@ -21,6 +21,7 @@
 #
 # configure options
 test -z "$with_mpi" && with_mpi=yes
+test -z "$enable_venv" && enable_venv=yes
 # Standard prefix location for FRE distribution
 test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc
 
@@ -29,10 +30,10 @@ test -z "$CC" && CC=cc
 test -z "$FC" && FC=ftn
 
 # Compile/Link flags
-test -z "$CFLAGS" && CFLAGS="-xSSE2"
-test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback -xSSE2"
-test -z "$LIBS" && LIBS=-static
-test -z "$NETCDF_LIBS" && NETCDF_LIBS="-lnetcdf -lhdf5_hl -lhdf5 -lz -lm"
-test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS="-L${NETCDF_DIR}/lib -L${HDF5_DIR}/lib"
-test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS="-lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz -lm"
-test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS="-L${NETCDF_DIR}/lib -L${HDF5_DIR}/lib"
+test -z "$CFLAGS" && CFLAGS="-O2"
+test -z "$FCFLAGS" && FCFLAGS="-O2"
+test -z "$LIBS" && LIBS=""
+test -z "$NETCDF_LIBS" && NETCDF_LIBS=""
+test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS=""
+test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS=""
+test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS=""
