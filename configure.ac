@@ -22,7 +22,7 @@
 AC_PREREQ([2.63])
 AC_INIT(
   [FRE NC Tools],
-  [2.20.0],
+  [2022.01],
   [oar.gfdl.help@noaa.gov],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
