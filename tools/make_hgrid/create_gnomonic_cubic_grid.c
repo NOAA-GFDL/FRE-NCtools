@@ -84,8 +84,8 @@ void cell_north(int ni, int nj, const double *lonc, const double *latc, double *
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area);
 void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
 		      int n, double *lon, double *lat);
-void direct_transform_suggest_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-		      int n, double *lon, double *lat);
+void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat);
 void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
 		    int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
@@ -388,12 +388,16 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   /* Schmidt transformation */
   if ( do_schmidt ) {
+    /*Search for target latitudes close to the specified one that would allow both North and South poles
+      to be included in the stretched grid. Using such targets could avoid later issues with the exchange grids 
+      such as tiling errors and missing or wrong exchange grid cells.
+    */
+    suggest_target_lats(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R, ntiles, xc, yc);
+
     for(n=0; n<ntiles; n++) {
 
       if (verbose) fprintf(stderr, "[INFO] Calling direct_transform for tile %ld\n", n);
 
-      direct_transform_suggest_lats(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
-                       n, xc+n*nip*nip, yc+n*nip*nip);
       direct_transform(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R,
                        n, xc+n*nip*nip, yc+n*nip*nip);
 
@@ -1258,8 +1262,8 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
 } /* direct_transform */
 
 /*
-  void direct_transform_suggest_lats(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
-  double *lon, double *lat)
+  void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat)
   
   This subroutine suggests values for target latitude close to the desired ones
   so that the stretched grid would include the North pole or the South pole as a point.
@@ -1282,8 +1286,8 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
   Then we find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
   Then we find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
 */    
-void direct_transform_suggest_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-                      int n, double *lon, double *lat)
+void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat)
 {
 #ifndef HAVE_LONG_DOUBLE_WIDER
   double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
@@ -1292,44 +1296,82 @@ void direct_transform_suggest_lats(double stretch_factor, int i1, int i2, int j1
   long double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
   long double c2p1, c2m1;
 #endif
-  int i, j, l, nxp;
-  double lam_North_pre,lam_South_pre,adjusted_target_lat;
+  int i, j, l, nxp, n, nip,jn,js,is,in,ln,ls;
+  double lam_South_pre,lam_North_pre,adjusted_r,r4,sTN,sN,sTS,sS;
+  double adjusted_target_latN=-99.,adjusted_target_latS=-99.,f,b;
+  int NPtile=-1,NPi=-1,NPj=-1,SPtile=-1,SPi=-1,SPj=-1;
 
   nxp = i2-i1+1;
+  nip = i2+1;
   c2p1 = 1. + stretch_factor*stretch_factor;
   c2m1 = 1. - stretch_factor*stretch_factor;
   sin_p = sin(lat_p);
   cos_p = cos(lat_p);
+  printf("Input target latitude: %g\n",R2D*lat_p);
   //North pole adjustment?
   //find the latitude of the pre-image in the inital grid by inverting the formula for the stretch transformation
   lam_North_pre=-asin((c2m1+c2p1*sin_p)/(c2p1+c2m1*sin_p));
-  //find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
-  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
-      l = j*nxp+i;
-      if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_North_pre)<0.0050){
-          //printf("FoundN: %d,%g,%g,%g\n",n,R2D*lon[l],R2D*lat[l],R2D*lam_North_pre);
-          //find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
-          lam_North_pre = lat[l];
-          adjusted_target_lat = -asin((c2m1+c2p1*sin(lam_North_pre))/(c2p1+c2m1*sin(lam_North_pre)));
-          printf("Input target latitude: %g\n",R2D*lat_p);
-          printf("Suggested target latitude to include NP: %g\n",R2D*adjusted_target_lat);
-          break;
-      }
-  }
-  //South pole adjustment?
   lam_South_pre=-asin((c2m1-c2p1*sin_p)/(c2p1-c2m1*sin_p));
-  for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
-      l = j*nxp+i;
-      if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_South_pre)<0.0050){
-          //printf("FoundS: %d,%g,%g,%g\n",n,R2D*lon[l],R2D*lat[l],R2D*lam_South_pre);
-          lam_South_pre = lat[l];
-          adjusted_target_lat = asin((c2m1+c2p1*sin(lam_South_pre))/(c2p1+c2m1*sin(lam_South_pre)));
-          printf("Input target latitude: %g\n",R2D*lat_p);
-          printf("Suggested target latitude to include SP: %g\n",R2D*adjusted_target_lat);
+
+  for(n=0; n<ntiles; n++) {
+    //find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
+    for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+	l = n*nip*nip + j*nxp+i;
+	if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_North_pre)<0.0050){
+	  NPtile = n;
+	  NPj = j;
+	  NPi = i;
+          //find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
+          adjusted_target_latN = -asin((c2m1+c2p1*sin(lat[l]))/(c2p1+c2m1*sin(lat[l])));
+          printf("Suggested target latitude to have the North pole in the grid: %g\n",R2D*adjusted_target_latN);
+	  //printf("FoundN: %d,%d,%d,%g,%g,%g\n",NPtile,NPj,l,R2D*lon[l],R2D*lat[l],R2D*lam_North_pre);
           break;
+	}
+      }
+    //South pole adjustment?
+    for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+	l = n*nip*nip + j*nxp+i;
+	if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_South_pre)<0.0050){
+	  SPtile = n;
+	  SPj = j;
+	  SPi = i;
+          adjusted_target_latS = asin((c2m1+c2p1*sin(lat[l]))/(c2p1+c2m1*sin(lat[l])));
+          printf("Suggested target latitude to have the South pole in the grid: %g\n",R2D*adjusted_target_latS);
+	  //printf("FoundS: %d,%d,%d,%g,%g,%g\n",SPtile,SPj,l,R2D*lon[l],R2D*lat[l],R2D*lam_South_pre);
+          break;
+	}
       }
   }
-} /*direct_transform_suggest_lats*/
+  //printf("NPtile ,i,j: %d,%d,%d\n",NPtile,NPi,NPj);
+  //printf("SPtile ,i,j: %d,%d,%d\n",SPtile,SPi,SPj);
+
+  /*
+    In the following f=b is the condition that could generate both N & S poles in the final grid 
+    for a given stretch factor. We search the initial grid points near what we found previously for
+    N and S separately to find a suitable target latitude so that the final grid includes both poles. 
+  */
+  f=(c2p1/c2m1 + c2m1/c2p1);
+  for(in=NPi-10; in<=NPi+10; in++) {
+     for(is=SPi-10; is<=SPi+10; is++) {
+	  ln = NPtile*nip*nip + NPj*nxp+in;
+	  ls = SPtile*nip*nip + SPj*nxp+is;
+	  b = -2*(1.0+sin(lat[ln])*sin(lat[ls]))/(sin(lat[ln])+sin(lat[ls]));         
+	  if(fabs(f-b)<0.0001){
+	    sS=sin(lat[ls]);
+	    sTS= (c2m1+c2p1*sS)/(c2p1+c2m1*sS);
+	    adjusted_target_latS = asin(sTS);
+	    printf("Suggested target latitude to have both North and South poles in the grid: %g\n",R2D*adjusted_target_latS);
+	    /* similarly 
+	    sN=sin(lat[ln]);
+	    sTN=-(c2m1+c2p1*sN)/(c2p1+c2m1*sN);
+	    adjusted_target_latN = asin(sTN);
+	    but adjusted_target_latN should equal adjusted_target_latS and does not yield more info.
+	    */
+	    //printf("FoundSPj: %d,%d,%g,%g,%g\n",in,is,fabs(f-b),R2D*adjusted_target_latN,R2D*adjusted_target_latS);
+  	  } 
+     }
+  }
+} /*suggest_target_lats*/
 
 /*-------------------------------------------------------------------------
   void cube_transform(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
