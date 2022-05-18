@@ -174,6 +174,12 @@ if test x$ac_compiler_gnu = xyes; then
 			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
 		fi
 	done
+  for word in $NETCDF_FCLDFLAGS; do
+		if test `expr $word : -L/` -eq 3; then
+			RPDIR=${word:2}
+			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
+		fi
+	done
 	AC_SUBST(RPATH_FLAGS)
 fi
 
