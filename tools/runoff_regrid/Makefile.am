@@ -24,7 +24,7 @@ endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 runoff_regrid_SOURCES = runoff_regrid.c
 runoff_regrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)

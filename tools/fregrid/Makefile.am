@@ -24,7 +24,7 @@ endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_SOURCES = bilinear_interp.c \
                   bilinear_interp.h \
