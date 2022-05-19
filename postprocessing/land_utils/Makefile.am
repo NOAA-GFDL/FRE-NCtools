@@ -18,7 +18,6 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 bin_PROGRAMS = combine-ncc decompress-ncc is-compressed scatter-ncc
-dist_bin_SCRIPTS = combine-lumip-vars.py
 # Helper library for the land utilties
 noinst_LIBRARIES = libnfu.a
 
