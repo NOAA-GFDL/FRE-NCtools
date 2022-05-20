@@ -21,7 +21,8 @@
 #
 # configure options
 test -z "$with_mpi" && with_mpi=yes
-test -z "$enable_venv" && enable_venv=yes
+test -z "$enable_ocean_model_grid_generator" && enable_ocean_model_grid_generator=no
+test -z "$enable_venv" && enable_venv=no
 # Standard prefix location for FRE distribution
 test "$prefix" = NONE && prefix=/home/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl
 
