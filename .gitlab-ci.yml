@@ -7,13 +7,16 @@ before_script:
 
 variables:
   buildDir: build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
+  GIT_STRATEGY: clone
+  GIT_SUBMODULE_STRATEGY: recursive
 .buildScript: &buildScript
   script:
+    - if [[ -n ${CI_COMMIT_TAG} ]]; then installLabel=${CI_COMMIT_TAG}; else installLabel=${CI_COMMIT_BRANCH}; fi
     - eval `${CI_PROJECT_DIR}/site-configs/${FRE_SITE}/env.sh`
     - autoreconf -i
     - mkdir ${buildDir}
     - cd ${buildDir}
-    - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/test/${FRE_SITE}
+    - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/${installLabel}/${FRE_SITE}
     - make
     - make -j check
   artifacts:
@@ -34,8 +37,6 @@ build:gfdl-ws:
   tags:
     - gfdl-ws
   variables:
-    GIT_STRATEGY: clone
-    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: gfdl-ws
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -45,8 +46,6 @@ build:gfdl:
   tags:
     - gfdl
   variables:
-    GIT_STRATEGY: clone
-    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: gfdl
     FMS_HOME: /home/fms
   <<: *buildScript
@@ -56,10 +55,9 @@ build:ncrc:
   tags:
     - ncrc
   variables:
-    GIT_STRATEGY: clone
-    GIT_SUBMODULE_STRATEGY: recursive
     FRE_SITE: ncrc
     FMS_HOME: /ncrc/home2/fms
+    SKIP_MPI_TEST: 1
   <<: *buildScript
 
 deploy:gfdl-ws:
@@ -73,6 +71,7 @@ deploy:gfdl-ws:
     FMS_HOME: /home/fms
   only:
     - master
+    - tags
   dependencies:
     - build:gfdl-ws
   <<: *deployScript
@@ -88,6 +87,7 @@ deploy:gfdl:
     FMS_HOME: /home/fms
   only:
     - master
+    - tags
   dependencies:
     - build:gfdl
   <<: *deployScript
@@ -103,6 +103,7 @@ deploy:ncrc:
     FMS_HOME: /ncrc/home2/fms
   only:
     - master
+    - tags
   dependencies:
     - build:ncrc
   <<: *deployScript
