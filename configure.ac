@@ -164,6 +164,26 @@ AS_IF([test $enable_ocean_model_grid_generator = yes],
   AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
 )
 
+#Code for setting rpath based ncview's configure.in code.
+echo "ac_computer_gnu: $ac_compiler_gnu"
+if test x$ac_compiler_gnu = xyes; then
+	RPATH_FLAGS=""
+	for word in $NETCDF_LDFLAGS; do
+		if test `expr $word : -L/` -eq 3; then
+			RPDIR=${word:2}
+			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
+		fi
+	done
+  for word in $NETCDF_FCLDFLAGS; do
+		if test `expr $word : -L/` -eq 3; then
+			RPDIR=${word:2}
+			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
+		fi
+	done
+	AC_SUBST(RPATH_FLAGS)
+fi
+
+
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
