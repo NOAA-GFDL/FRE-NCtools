@@ -54,7 +54,8 @@
 #include "mosaic_util.h"
 #include "tool_util.h"
 #include "create_hgrid.h"
-
+#define  D2R (M_PI/180.)
+#define  R2D (180./M_PI)
 #define  EPSLN10 (1.e-10)
 #define  EPSLN4 (1.e-4)
 #define  EPSLN5 (1.e-5)
@@ -82,9 +83,11 @@ void cell_east(int ni, int nj, const double *lonc, const double *latc, double *l
 void cell_north(int ni, int nj, const double *lonc, const double *latc, double *lonn, double *latn);
 void calc_cell_area(int nx, int ny, const double *x, const double *y, double *area);
 void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-																						int n, double *lon, double *lat);
+		      int n, double *lon, double *lat);
+void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat);
 void cube_transform(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p,
-																				int n, double *lon, double *lat);
+                    int n, double *lon, double *lat);
 void setup_aligned_nest(int parent_ni, int parent_nj, const double *parent_xc, const double *parent_yc,
                         int halo, int refine_ratio, int istart, int iend, int jstart, int jend,
                         double *xc, double *yc, int is_gr);
@@ -385,6 +388,14 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
   /* Schmidt transformation */
   if ( do_schmidt ) {
+    /*In general for a given stretch factor and target latitude the resulting stretch grid will not have the poles as grid points.
+      This may cause issues later with other tools such as exchange grid generator manifested as tiling errors and cells with a wrong land mask.
+      The following call searches for target latitudes close to the specified one that would allow both North and South poles
+      to be grid points in the resulting stretched grid. 
+      Currently this just prints the advisory target latitude values and will not change the grid in any way. It is possible to add an option later to use the adjusted value.  
+    */
+    if(num_nest_grids == 0) suggest_target_lats(stretch_factor, 0, ni, 0, ni, target_lon*D2R, target_lat*D2R, ntiles, xc, yc);
+
     for(n=0; n<ntiles; n++) {
 
       if (verbose) fprintf(stderr, "[INFO] Calling direct_transform for tile %ld\n", n);
@@ -1251,6 +1262,120 @@ void direct_transform(double stretch_factor, int i1, int i2, int j1, int j2, dou
       }
     }
 } /* direct_transform */
+
+/*
+  void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat)
+  
+  This subroutine suggests values for target latitude close to the desired ones
+  so that the stretched grid would include the North pole and/or the South pole as grid points.
+  
+  South pole is a fixed point of the stretching transformation:
+       inter_lat   = asin( (c2m1+c2p1*sin(init_lat))/(c2p1+c2m1*sin(init_lat)) ); 
+  After stretching the intermediate grid is rotated so that the South pole
+  shifts to the target point of the final stretched grid:
+       final_latitude = -asin(sin_p*sin(inetr_lat) + cos_p*cos(inter_lat)*cos(init_lon[l]));    
+       final_longitude= lon_p + atan(-cos(inter_lat)*sin(init_lon) / -sin(inter_lat)*cos_p+cos(inter_lat)*sin_p*cos(init_lon));
+  Generally for a given target latitude the final grid will not have the N or S poles (they are not rotated into grid points).  
+  But it is possible to restrict the final grid to include one or both poles by slightly adjusting the target latitude. 
+  In the generating algorithm the intermediate grid is roateted by 90+lat_p, to shift the intemediate South pole to the target point. 
+  Hence the intermediate point with (lon,lat)=(180,-lat_p) would rotate to the North pole and (lon,lat)=(180,180-lat_p) would rotate to the South pole.  
+  So if such points are in the intermediate grid they would generate the N&S poles in the final grid.
+  There is no guarantee that (180,-lat_p) with arbitrary lat_p would be in the intermedaite grid.
+  But, we can adjust lat_p a little to have the pre-image of the North pole in the intermedaite grid.
+  We first find the latitude of the pre-image in the inital grid by inverting the formula for the stretch transformation:
+       lam_North_pre=-asin((c2m1-c2p1*sin_p)/(c2p1-c2m1*sin_p))
+  Then we find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
+  Then we find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
+  A similar formula applies to generate the South pole.
+  To have both poles as grid points an intermediate value for target can be found so that both N&S conditions hold. 
+*/    
+void suggest_target_lats(double stretch_factor, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int ntiles,
+                         double *lon, double *lat)
+{
+#ifndef HAVE_LONG_DOUBLE_WIDER
+  double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  double c2p1, c2m1;
+#else
+  long double lat_t, sin_p, cos_p, sin_lat, cos_lat, sin_o, p2, two_pi;
+  long double c2p1, c2m1;
+#endif
+  int i, j, l, nxp, n, nip,jn,js,is,in,ln,ls;
+  double lam_South_pre,lam_North_pre,adjusted_r,r4,sTN,sN,sTS,sS;
+  double adjusted_target_latN=-99.,adjusted_target_latS=-99.,f,b;
+  int NPtile=-1,NPi=-1,NPj=-1,SPtile=-1,SPi=-1,SPj=-1;
+
+  nxp = i2-i1+1;
+  nip = i2+1;
+  c2p1 = 1. + stretch_factor*stretch_factor;
+  c2m1 = 1. - stretch_factor*stretch_factor;
+  sin_p = sin(lat_p);
+  cos_p = cos(lat_p);
+  printf("Input target latitude: %g\n",R2D*lat_p);
+  //North pole adjustment?
+  //find the latitude of the pre-image in the inital grid by inverting the formula for the stretch transformation
+  lam_North_pre=-asin((c2m1+c2p1*sin_p)/(c2p1+c2m1*sin_p));
+  lam_South_pre=-asin((c2m1-c2p1*sin_p)/(c2p1-c2m1*sin_p));
+
+  for(n=0; n<ntiles; n++) {
+    //find the closest point in the initial grid  with (lon,lat)=(180,lam_North_pre)
+    for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+	l = n*nip*nip + j*nxp+i;
+	if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_North_pre)<0.0050){
+	  NPtile = n;
+	  NPj = j;
+	  NPi = i;
+          //find the target point latitude that would generate the pre-image of North pole in intermediate grid. 
+          adjusted_target_latN = -asin((c2m1+c2p1*sin(lat[l]))/(c2p1+c2m1*sin(lat[l])));
+          printf("Suggested target latitude to have the North pole in the grid: %g\n",R2D*adjusted_target_latN);
+	  //printf("FoundN: %d,%d,%d,%g,%g,%g\n",NPtile,NPj,l,R2D*lon[l],R2D*lat[l],R2D*lam_North_pre);
+          break;
+	}
+      }
+    //South pole adjustment?
+    for(j=j1; j<=j2; j++) for(i=i1; i<=i2; i++) {
+	l = n*nip*nip + j*nxp+i;
+	if(fabs(lon[l]-M_PI)<0.00010 & fabs(lat[l]-lam_South_pre)<0.0050){
+	  SPtile = n;
+	  SPj = j;
+	  SPi = i;
+          adjusted_target_latS = asin((c2m1+c2p1*sin(lat[l]))/(c2p1+c2m1*sin(lat[l])));
+          printf("Suggested target latitude to have the South pole in the grid: %g\n",R2D*adjusted_target_latS);
+	  //printf("FoundS: %d,%d,%d,%g,%g,%g\n",SPtile,SPj,l,R2D*lon[l],R2D*lat[l],R2D*lam_South_pre);
+          break;
+	}
+      }
+  }
+  //printf("NPtile ,i,j: %d,%d,%d\n",NPtile,NPi,NPj);
+  //printf("SPtile ,i,j: %d,%d,%d\n",SPtile,SPi,SPj);
+
+  /*
+    In the following f=b is the condition that could generate both N & S poles in the final grid 
+    for a given stretch factor. We search the initial grid points near what we found previously for
+    N and S separately to find a suitable target latitude so that the final grid includes both poles. 
+  */
+  f=(c2p1/c2m1 + c2m1/c2p1);
+  for(in=NPi-10; in<=NPi+10; in++) {
+     for(is=SPi-10; is<=SPi+10; is++) {
+	  ln = NPtile*nip*nip + NPj*nxp+in;
+	  ls = SPtile*nip*nip + SPj*nxp+is;
+	  b = -2*(1.0+sin(lat[ln])*sin(lat[ls]))/(sin(lat[ln])+sin(lat[ls]));         
+	  if(fabs(f-b)<0.0001){
+	    sS=sin(lat[ls]);
+	    sTS= (c2m1+c2p1*sS)/(c2p1+c2m1*sS);
+	    adjusted_target_latS = asin(sTS);
+	    printf("Suggested target latitude to have both North and South poles in the grid: %g\n",R2D*adjusted_target_latS);
+	    /* similarly 
+	    sN=sin(lat[ln]);
+	    sTN=-(c2m1+c2p1*sN)/(c2p1+c2m1*sN);
+	    adjusted_target_latN = asin(sTN);
+	    but adjusted_target_latN should equal adjusted_target_latS and does not yield more info.
+	    */
+	    //printf("FoundSPj: %d,%d,%g,%g,%g\n",in,is,fabs(f-b),R2D*adjusted_target_latN,R2D*adjusted_target_latS);
+  	  } 
+     }
+  }
+} /*suggest_target_lats*/
 
 /*-------------------------------------------------------------------------
   void cube_transform(double c, int i1, int i2, int j1, int j2, double lon_p, double lat_p, int n,
