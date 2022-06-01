@@ -25,6 +25,7 @@
 #include "constant.h"
 #include "mpp_io.h"
 #include "mpp.h"
+#include "tool_util.h"
 
 char *usage[] = {
   "",
@@ -302,9 +303,9 @@ int main (int argc, char *argv[])
 				     "starting_ending_point_index_of_contact");
 
     }
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    mpp_def_global_att(fid, "history", history);
+
+    print_provenance_gv(fid, history, grid_version);
+
     mpp_end_def(fid);
 
     /* write out data */

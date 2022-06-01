@@ -19,7 +19,7 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
+load test_utils
 
 @test "Wrapper complete hydrology test" {
 
@@ -29,12 +29,15 @@
   # TODO: Get a way to download Test25-input if missing
   test ! -e $top_srcdir/t/Test25-input/grid_spec.nc && skip 'Input directory does not exist on this system'
 
-  if [ ! -d "Test25" ]
-  then
-                mkdir Test25
+  # skip test if needed input dataset is empty
+  if ! ncdump -h $top_srcdir/tools/simple_hydrog/share/river_network_mrg_0.5deg_ad3nov_fill_coast_auto1_0.125.nc; then
+      skip 'Input dataset is not available'
   fi
 
-  cd Test25
+  run command -v gfdl_platform
+  if [ "$status" -ne 0 ]; then
+    skip 'cmd not exist'
+  fi
 
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh
   [ "$status" -eq 1 ]
@@ -45,9 +48,5 @@
   #Run wrapper hydrology script
   run $top_srcdir/tools/simple_hydrog/share/make_simple_hydrog.csh -f 0. -t 1.e-5 -m $top_srcdir/t/Test25-input/grid_spec.nc
   [ "$status" -eq 0 ]
-
-  #Clean up
-  cd ..
-  rm -rf Test25
 
 }

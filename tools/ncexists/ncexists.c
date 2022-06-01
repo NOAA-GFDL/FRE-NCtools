@@ -26,6 +26,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "getopt.h"
 
 void handle_error(int status);
 

@@ -21,7 +21,7 @@ bin_PROGRAMS = cp_river_vars
 
 AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 
-LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) 
+LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(RPATH_FLAGS)
 
-cp_river_vars_SOURCES = cp_river_vars.f90  
- 
+cp_river_vars_SOURCES = cp_river_vars.f90
+

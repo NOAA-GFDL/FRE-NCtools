@@ -13,8 +13,8 @@ combine_restarts [options]
 
 DESCRIPTION
 -----------
-*combine_restarts* will use the correct combine utility (*mppnccombine*
-or *combine-ncc*) to combine any restart files that reside in the
+*combine_restarts* will use the correct combine utility (*mppnccombine*,
+*combine-ncc*, or *iceberg_comb.sh*) to combine any restart files that reside in the
 currrent working directory.  *combine_restarts* uses the same options used
 in the FRE workflow.
 

@@ -14,14 +14,19 @@
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with FRE-NCTools.  If not, see
+# License along with FRE-NCTools (LICENSE.md).  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = combine_blobs
+# Default site configuration for MSU Orion platforms
+#
+# configure options
+test -z "$with_mpi" && with_mpi=yes
+# Standard prefix location for FRE distribution
+test "$prefix" = NONE && prefix=/contrib/gfdl/fre-nctools/${PACKAGE_VERSION}/
 
-combine_blobs_SOURCES = combine_blobs.c
-combine_blobs_CFLAGS = $(NETCDF_CFLAGS) $(AM_CFLAGS)
-combine_blobs_LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+# Compilers
+test -z "$CC" && CC=icc
+test -z "$FC" && FC=ifort
 
-clean-local:
-	$(RM) *.mod
+# Compile/Link flags
+test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"

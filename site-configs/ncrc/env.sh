@@ -32,22 +32,25 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
-module load PrgEnv-intel/6.0.5
-module swap intel intel/18.0.6.288 
-module load cray-netcdf/4.6.3.2
-module load cray-hdf5/1.10.5.2
-module load nccmp/1.8.6.5
+module load PrgEnv-gnu/6.0.10
+module swap gcc/10.3.0
+module load cray-netcdf/4.7.4.4
+module load cray-hdf5/1.12.0.4
+module load nccmp/1.8.8.0
 
 # Add bats to PATH
 # Needed for testing
-setenv PATH=${PATH}:/ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin
+module append-path PATH /ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin
 
 # **********************************************************************
 # Set environment variablesSetup and Load the Modules
 # **********************************************************************
-setenv MPICH_UNEX_BUFFER_SIZE=256m
-setenv MPICH_MAX_SHORT_MSG_SIZE=64000
-setenv MPICH_PTL_UNEX_EVENTS=160k
-setenv KMP_STACKSIZE=2g
-setenv F_UFMTENDIAN=big
-setenv NC_BLKSZ=64K
+setenv MPICH_UNEX_BUFFER_SIZE 256m
+setenv MPICH_MAX_SHORT_MSG_SIZE 64000
+setenv MPICH_PTL_UNEX_EVENTS 160k
+setenv KMP_STACKSIZE 2g
+setenv F_UFMTENDIAN big
+setenv NC_BLKSZ 64K
+
+# Set CONFIG_SITE to the correct config.site file for the system
+setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site

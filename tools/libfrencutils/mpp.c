@@ -31,11 +31,12 @@
 #endif
 #include "mpp.h"
 
+//These four fields are defined in the file of mpp_domain.c.
+extern int npes, root_pe, pe; 
 
 /****************************************************
          global variables
 *****************************************************/
-int npes, root_pe, pe;
 int *pelist=NULL;
 const int tag = 1;
 #ifdef use_libMPI

@@ -45,7 +45,8 @@ done
 # all are missing.
 reqCommands="is-compressed \
              combine-ncc \
-             mppnccombine"
+             mppnccombine \
+             iceberg_comb.sh"
 for c in $reqCommands
 do
   command -v ${c} > /dev/null 2>&1
@@ -62,6 +63,7 @@ patternGrepAscii='\<out\>|\<results\>'
 patternGrepRestartsOrNC='\<res\>|\<nc\>'
 patternGrepRegion='^rregion'
 patternGrepNC='\<nc\>'
+patternGrepIcebergs='icebergs.res*.nc'
 
 # matching patterns for find
 patternFindRestarts='.*\<res\>.*'
@@ -77,7 +79,7 @@ do
     if [ ${verbose} -gt 0 ]; then
 	echo ${f}
     fi
-    inputFiles=$( ls -1 | egrep "${f}${patternGrepTail}" )
+    inputFiles=$( ls -1 | egrep "${f}${patternGrepTail}" | xargs )
     if [ $( echo ${inputFiles} | wc -w ) -gt 0 ]; then
 	# Check if file is a compressed file
 	is-compressed $( echo ${inputFiles} | cut -d ' ' -f 1 )
@@ -92,6 +94,17 @@ do
 		exit 1
 	    else
 		\rm -f ${inputFiles}
+	    fi
+        elif echo $f | grep $patternGrepIcebergs; then
+            if [ ${verbose} -gt 1 ]; then
+                echo "iceberg_comb.sh ${inputFiles} ${f}"
+            fi
+            iceberg_comb.sh ${inputFiles} ${f}
+	    if [[ $? -ne 0 ]]; then
+                echoerr "Error while combining file '${f}'"
+                exit 1
+	    else
+                \rm -f ${inputFiles}
 	    fi
 	else
 	    if [ -e ${f} ]; then

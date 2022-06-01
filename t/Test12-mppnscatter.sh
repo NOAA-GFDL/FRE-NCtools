@@ -20,131 +20,34 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-# first use mppncscatter to split the file
-#             and then use mppnccombine to combine the file. The output should reproduce
-#             original file
+# Test procedure for mppncscatter is to first split the files.  Once scattered,
+# run mppnccombine to re-combine the files.  The final, recombined file should
+# match the unscattered file.
 
-@test "Test mppncscatter and  mppnccombine" {
-  if [ ! -d "Test12" ] 
-  then
-  		mkdir Test12
-  fi
+# The mppnccombine and mppncscatter commands should probably be tested in
+# the same file, since here we assume mppnccombine is running correctly.
+load test_utils
 
-  cd Test12
+prepare_input_data ()
+{
+  # Directories for input and final output (re-combined) files
   mkdir input
-  cd input
-  ncgen -o fv_core.res.tile1.nc $top_srcdir/t/Test12-input/fv_core.res.tile1.ncl
-  ncgen -o fv_core.res.tile2.nc $top_srcdir/t/Test12-input/fv_core.res.tile2.ncl
-  ncgen -o fv_core.res.tile3.nc $top_srcdir/t/Test12-input/fv_core.res.tile3.ncl
-  ncgen -o fv_core.res.tile4.nc $top_srcdir/t/Test12-input/fv_core.res.tile4.ncl
-  ncgen -o fv_core.res.tile5.nc $top_srcdir/t/Test12-input/fv_core.res.tile5.ncl
-  ncgen -o fv_core.res.tile6.nc $top_srcdir/t/Test12-input/fv_core.res.tile6.ncl
+  mkdir output
+  test_file=fv_core.res.tile1.nc
+  ncgen -o input/$test_file $top_srcdir/t/Test12-input/${test_file}l
+}
 
-  cd ..
+@test "Test mppncscatter" {
 
-#TO DO: For loop through tiles?
-#Tile1 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile1.nc
-  [ "$status" -eq 0 ]
+  prepare_input_data
 
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile1.nc fv_core.res.tile1.nc.???? 
-  [ "$status" -eq 0 ]
+  # Scatter the file
+   mppncscatter -i 2 -j 3 -x 2 -y 12 input/$test_file
 
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile1.nc input/fv_core.res.tile1.nc
-#  [ "$status" -eq 0 ]
+  # Combine the file:
+   mppnccombine -64 output/$test_file ${test_file}.????
 
-#Tile2 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile2.nc
-  [ "$status" -eq 0 ]
-
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile2.nc fv_core.res.tile2.nc.???? 
-  [ "$status" -eq 0 ]
-
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile2.nc input/fv_core.res.tile2.nc
-#  [ "$status" -eq 0 ]
-
-#Tile3 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile3.nc
-  [ "$status" -eq 0 ]
-
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile3.nc fv_core.res.tile3.nc.???? 
-  [ "$status" -eq 0 ]
-
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile3.nc input/fv_core.res.tile3.nc
-#  [ "$status" -eq 0 ]
-
-#Tile4 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile4.nc
-  [ "$status" -eq 0 ]
-
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile4.nc fv_core.res.tile4.nc.???? 
-  [ "$status" -eq 0 ]
-
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile4.nc input/fv_core.res.tile4.nc
-#  [ "$status" -eq 0 ]
-
-#Tile5 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile5.nc
-  [ "$status" -eq 0 ]
-
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile5.nc fv_core.res.tile5.nc.???? 
-  [ "$status" -eq 0 ]
-
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile5.nc input/fv_core.res.tile5.nc
-#  [ "$status" -eq 0 ]
-
-#Tile6 
-#Split the file: 
-  run command mppncscatter -i 2 -j 3 -x 2 -y 12 input/fv_core.res.tile6.nc
-  [ "$status" -eq 0 ]
-
-#Combine the file: 
-  run command mppnccombine -64 fv_core.res.tile6.nc fv_core.res.tile6.nc.???? 
-  [ "$status" -eq 0 ]
-
-#Compare the two:
-#  run command nccmp -md fv_core.res.tile6.nc input/fv_core.res.tile6.nc
-#  [ "$status" -eq 0 ]
-
-# TO DO: This works on GAEA, but can't run in on travis because the files are too large, 
-#		(add ocean_temp_salt.res.nc and ice_model.res.nc) to put on git
-
-#Try with ocean_temp_salt.res.nc
-#  run command mppncscatter  -i 7 -j 7 -x 21 -y 14  input/ocean_temp_salt.res.nc
-#  [ "$status" -eq 0 ]
-
-#  run command mppnccombine -64 ocean_temp_salt.res.nc ocean_temp_salt.res.nc.???? 
-#  [ "$status" -eq 0 ]
-
-#  run command nccmp -md ocean_temp_salt.res.nc input/ocean_temp_salt.res.nc
-#  [ "$status" -eq 0 ]
-
-#Try with ice_model.res.nc
-#  run command mppncscatter  -i 7 -j 7 -x 21 -y 14  input/ice_model.res.nc
-#  [ "$status" -eq 0 ]
-
-#  run command mppnccombine -64 ice_model.res.nc ice_model.res.nc.???? 
-#  [ "$status" -eq 0 ]
-
-#  run command nccmp -md ice_model.res.nc input/ice_model.res.nc
-#  [ "$status" -eq 0 ]
-
-  cd ..
-  rm -rf Test12
+  # Compare output
+   nccmp -w format -md output/$test_file input/$test_file
 
 }
