@@ -17,7 +17,14 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
+if WITH_MPI_TESTS
+skip_MPI=""
+else
+skip_MPI="skip"
+endif
+
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
+                    export skip_mpi=$(skip_MPI);                    \
     for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
@@ -57,32 +64,29 @@ TESTS = Test01-check_programs_exist.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
         Test27-multiple_nests.sh \
-        Test28-fregrid_stretched.sh \
-        Test29-fregrid_no_stretched.sh \
-        Test30-make_coupler_mosaic_grid.sh \
-	01-make_hgrid.sh \
-        01-make_vgrid.sh
+        Test28-make_hgrid.sh \
+        Test29-make_vgrid.sh \
+        Test31-fregrid_stretched.sh \
+	Test32-fregrid_no_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
-             Test02-input\
-             Test02-reference \
-             Test03-input \
-             Test06-input \
-             Test07-input \
-             Test08-input \
-             Test10-input \
-             Test12-input \
-             Test15-input \
-             Test16-input \
-             Test17-input \
-             Test18-input \
-             Test20-input \
-             $(test25_data) \
-             Test28-input \
-             Test30-input \
-             Test17-reference \
-             Test18-reference \
-             Test20-reference 
+            Test02-input\
+            Test02-reference \
+            Test03-input \
+            Test06-input \
+            Test07-input \
+            Test08-input \
+            Test10-input \
+            Test12-input \
+            Test15-input \
+            Test16-input \
+            Test17-input \
+            Test18-input \
+            Test20-input \
+            Test17-reference \
+            Test18-reference \
+            Test20-reference \
+            $(test25_data) 
 
 clean-local:
-	$(RM) *.nc
+	$(RM) *.nc Test*/*

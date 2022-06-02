@@ -1,17 +1,17 @@
 #!/usr/bin/env bats
-# test stretched grid 
+# test stretched grid
 
 @test "Test stretched grid data lats 32.0 34.0 35.4" {
 
-  if [ ! -d "Test28" ] 
+  if [ ! -d "Test31" ] 
   then
-  		mkdir Test28
+  		mkdir Test31
   fi
 
-  cd Test28
-   cp $top_srcdir/t/Test28-input/ocean_hgrid.nc . 
-   cp $top_srcdir/t/Test28-input/ocean_mosaic.nc .
-   cp $top_srcdir/t/Test28-input/topog.nc .
+  cd Test31
+   cp $top_srcdir/t/Test31-input/ocean_hgrid.nc . 
+   cp $top_srcdir/t/Test31-input/ocean_mosaic.nc .
+   cp $top_srcdir/t/Test31-input/topog.nc .
 
 #Make streetched grid 
   run command make_hgrid \
@@ -108,5 +108,5 @@
   [[ ${var_35_4} < 0.0 ]]
  
   cd ..
-#  rm -rf Test28
+#  rm -rf Test31
 }

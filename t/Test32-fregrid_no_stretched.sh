@@ -3,15 +3,15 @@
 
 @test "Test no stretched grid data lats 32.0 34.0 35.4" {
 
-  if [ ! -d "Test29" ] 
+  if [ ! -d "Test32" ] 
   then
-  		mkdir Test29
+  		mkdir Test32
   fi
 
-  cd Test29
-  cp $top_srcdir/t/Test28-input/ocean_hgrid.nc . 
-  cp $top_srcdir/t/Test28-input/ocean_mosaic.nc .
-  cp $top_srcdir/t/Test28-input/topog.nc .
+  cd Test32
+  cp $top_srcdir/t/Test31-input/ocean_hgrid.nc . 
+  cp $top_srcdir/t/Test31-input/ocean_mosaic.nc .
+  cp $top_srcdir/t/Test31-input/topog.nc .
 
 #Make no stretched grid 
   run command make_hgrid \
@@ -98,5 +98,5 @@
   [[ ${var_35_4} < 0.0 ]]
 
   cd ..
- # rm -rf Test29
+ # rm -rf Test32
 }
