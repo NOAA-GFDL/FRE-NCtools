@@ -9,9 +9,9 @@
   fi
 
   cd Test32
-  cp $top_srcdir/t/Test31-input/ocean_hgrid.nc . 
-  cp $top_srcdir/t/Test31-input/ocean_mosaic.nc .
-  cp $top_srcdir/t/Test31-input/topog.nc .
+  cp $top_srcdir/t/Test32-input/ocean_hgrid.nc . 
+  cp $top_srcdir/t/Test32-input/ocean_mosaic.nc .
+  cp $top_srcdir/t/Test32-input/topog.nc .
 
 #Make no stretched grid 
   run command make_hgrid \

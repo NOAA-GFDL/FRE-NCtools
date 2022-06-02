@@ -87,7 +87,8 @@ EXTRA_DIST = $(TESTS) \
              Test18-reference \
              Test20-reference \
              $(test25_data) \
-             Test30-input
-          
+             Test31-input \
+	     Test32-input
+
 clean-local:
 	$(RM) *.nc Test*/*
