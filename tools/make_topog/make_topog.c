@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
+#include "constant.h"
 #include "mpp.h"
 #include "mpp_domain.h"
 #include "mpp_io.h"
@@ -79,7 +80,7 @@ char *usage[] = {
   "     3.  'gaussian':          Construct gaussian bump on a sloping bottom.               ",
   "                              --bottom_depth, --min_depth --gauss_amp, --gauss_scale,    ",
   "                              --slope_x, --slope_y are optional arguments.               ",
-  "                                                                                         ",  
+  "                                                                                         ",
   "     4.. 'bowl':              --bottom_depth, --min_depth, --bowl_south, --bowl_north,   ",
   "                              --bowl_west, --bowl_east are optional arguments.           ",
   "                                                                                         ",
@@ -123,13 +124,13 @@ char *usage[] = {
   "                                                                                         ",
   "   --min_depth #                 Specify minimum depth of ocean.                         ",
   "                                 default value is 10 meter.                              ",
-  "                                                                                         ",  
+  "                                                                                         ",
   "   --scale_factor #              Specify scaling factor for topography data (e.g. -1 to  ",
   "                                 flip sign or 0.01 to convert from centimeters).         ",
   "                                 default value is 1.                                     ",
   "                                                                                         ",
   "   --num_filter_pass #           Specify number of passes of spatial filter              ",
-  "                                 default value is 1.                                     ",  
+  "                                 default value is 1.                                     ",
   "                                                                                         ",
   "   --gauss_amp #                 specify height of gaussian bump as percentage of ocean  ",
   "                                 depth. default value is 0.5.                            ",
@@ -147,11 +148,11 @@ char *usage[] = {
   "                                 Default value is 60.                                    ",
   "                                                                                         ",
   "   --bowl_north #                Specify northern boundary of Winton bowl.               ",
-  "                                 Default value is 70.                                    ",  
+  "                                 Default value is 70.                                    ",
   "                                                                                         ",
   "   --bowl_west #                 Specify western boundary of Winton bowl.                ",
   "                                 Default value is 0.                                     ",
-  "                                                                                         ",  
+  "                                                                                         ",
   "   --bowl_east #                 Specify eastern boundary of Winton bowl.                ",
   "                                 Default value is 20.                                    ",
   "                                                                                         ",
@@ -178,7 +179,7 @@ char *usage[] = {
   "                                 the box channel.                                        ",
   "                                                                                         ",
   "   --jwest_north #               Specify the ending j-index on the west boundary of      ",
-  "                                 the box channel.                                        ",  
+  "                                 the box channel.                                        ",
   "                                                                                         ",
   "   --jeast_south #               Specify the starting j-index on the east boundary of    ",
   "                                 the box channel.                                        ",
@@ -241,8 +242,8 @@ char *usage[] = {
   "   --verbose                     Will print out running time message when this           ",
   "                                 option is set. Otherwise the run will be silent         ",
   "                                 when there is no error.                                 ",
-  
-  "   Example                                                                               ", 
+
+  "   Example                                                                               ",
   "                                                                                         ",
   "   1. Generate 'realistic' topography                                                    ",
   "   > make_topog --mosaic mosaic.nc --topog_type realistic                                ",
@@ -295,7 +296,7 @@ int main(int argc, char* argv[])
   int    jwest_south=0, jwest_north=0, jeast_south=0, jeast_north=0;
   double dome_slope=0.01;
   double dome_bottom=3600.0;
-  double dome_embayment_west=19.0; 
+  double dome_embayment_west=19.0;
   double dome_embayment_east=21.0;
   double dome_embayment_south=69.0;
   double dome_embayment_depth=600.0;
@@ -314,7 +315,7 @@ int main(int argc, char* argv[])
   int    errflg = (argc == 1);
   int    option_index, i, c;
   unsigned int verbose = 0;
-  
+
   /*
    * process command line
    */
@@ -332,14 +333,14 @@ int main(int argc, char* argv[])
     {"num_filter_pass",             required_argument, NULL, 'j'},
     {"gauss_amp",                   required_argument, NULL, 'k'},
     {"gauss_scale",                 required_argument, NULL, 'l'},
-    {"slope_x",                     required_argument, NULL, 'm'},    
+    {"slope_x",                     required_argument, NULL, 'm'},
     {"slope_y",                     required_argument, NULL, 'n'},
     {"bowl_south",                  required_argument, NULL, 'p'},
     {"bowl_north",                  required_argument, NULL, 'q'},
     {"bowl_west",                   required_argument, NULL, 'r'},
     {"bowl_east",                   required_argument, NULL, 's'},
     {"fill_first_row",              no_argument,       NULL, 't'},
-    {"filter_topog",                no_argument,       NULL, 'u'},    
+    {"filter_topog",                no_argument,       NULL, 'u'},
     {"round_shallow",               no_argument,       NULL, 'v'},
     {"fill_shallow",                no_argument,       NULL, 'w'},
     {"deepen_shallow",              no_argument,       NULL, 'x'},
@@ -374,13 +375,13 @@ int main(int argc, char* argv[])
 
   mpp_init(&argc, &argv);
 
-  mpp_domain_init();  
-   
+  mpp_domain_init();
+
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1)
     switch (c) {
     case 'a':
       mosaic_file = optarg;
-      break;      
+      break;
     case 'b':
       strcpy(topog_type, optarg);
       break;
@@ -389,7 +390,7 @@ int main(int argc, char* argv[])
       break;
     case 'Y':
       y_refine = atoi(optarg);
-      break;      
+      break;
     case 'd':
       topog_file = optarg;
       break;
@@ -398,7 +399,7 @@ int main(int argc, char* argv[])
       break;
     case 'f':
       bottom_depth = atof(optarg);
-      break; 
+      break;
     case 'g':
       min_depth = atof(optarg);
       break;
@@ -407,7 +408,7 @@ int main(int argc, char* argv[])
       break;
     case 'j':
       num_filter_pass = atoi(optarg);
-      break; 
+      break;
     case 'k':
       gauss_amp = atof(optarg);
       break;
@@ -515,7 +516,7 @@ int main(int argc, char* argv[])
       break;
     case 'V':
       verbose = 1;
-      break;      
+      break;
     case '?':
       errflg++;
       break;
@@ -536,7 +537,7 @@ int main(int argc, char* argv[])
   if(mpp_pe() == mpp_root_pe() && verbose) printf("NOTE from make_topog ==> x_refine is %d, y_refine is %d\n",
 				       x_refine, y_refine);
 
-  /* vgrid_file can only be passed in when topog_type is realistic */ 
+  /* vgrid_file can only be passed in when topog_type is realistic */
   if(vgrid_file && strcmp(topog_type,"realistic"))
       mpp_error("make_topog: --vgrid_file should not be specified when topog_type = realistic");
 
@@ -552,7 +553,7 @@ int main(int argc, char* argv[])
       printf("NOTE from make_topog ==> gauss_amp is: %f\n", gauss_amp );
       printf("NOTE from make_topog ==> gauss_scale is: %f\n", gauss_scale );
       printf("NOTE from make_topog ==> slope_x is: %f\n", slope_x );
-      printf("NOTE from make_topog ==> slope_y is: %f\n", slope_y );      
+      printf("NOTE from make_topog ==> slope_y is: %f\n", slope_y );
     }
   }
   else if(strcmp(topog_type,"bowl") == 0) {
@@ -592,7 +593,7 @@ int main(int argc, char* argv[])
 	printf("NOTE from make_topog ==> vgrid_file is %s\n", vgrid_file);
       else
 	printf("NOTE from make_topog ==> no vgrid_file is specified\n");
-      
+
       if(fill_first_row) printf("NOTE from make_topog ==>make first row of ocean model all land points.\n");
       if(filter_topog) printf("NOTE from make_topog ==>will apply filter to topography.\n");
       if(round_shallow) printf("NOTE from make_topog ==>Make cells land if depth is less than 1/2 "
@@ -624,14 +625,13 @@ int main(int argc, char* argv[])
   else {
     mpp_error("make_topog: topog_type should be rectangular_basin, gaussian, bowl, idealized, realistic, box_channel or dome");
   }
-  
+
   if(mpp_pe() == mpp_root_pe() && verbose) {
     printf("**************************************************\n");
     printf("Begin to generate topography \n");
   }
 
   {
-    const int STRING = 255;
     int m_fid, g_fid, vid;
     int ntiles, fid, dim_ntiles, n, dims[2];
     size_t start[4], nread[4], nwrite[4];
@@ -642,7 +642,7 @@ int main(int argc, char* argv[])
     char **tile_files=NULL;
     char history[512], dimx_name[128], dimy_name[128], depth_name[128], level_name[128];
     char gridfile[256], griddir[256];
-    
+
     /* history will be write out as global attribute
        in output file to specify the command line arguments
     */
@@ -656,11 +656,11 @@ int main(int argc, char* argv[])
 
     /* grid should be located in the same directory of mosaic file */
     get_file_path(mosaic_file, griddir);
-    
+
     /* get mosaic dimension */
     m_fid = mpp_open(mosaic_file, MPP_READ);
     ntiles = mpp_get_dimlen( m_fid, "ntiles");
-    
+
     tile_files = (char **)malloc(ntiles*sizeof(double *));
     id_depth = (int *)malloc(ntiles*sizeof(int));
     id_level = (int *)malloc(ntiles*sizeof(int));
@@ -671,10 +671,10 @@ int main(int argc, char* argv[])
     nx = (int *)malloc(ntiles*sizeof(int));
     ny = (int *)malloc(ntiles*sizeof(int));
     nxp = (int *)malloc(ntiles*sizeof(int));
-    nyp = (int *)malloc(ntiles*sizeof(int));   
+    nyp = (int *)malloc(ntiles*sizeof(int));
     for( n = 0; n < ntiles; n++ ) {
       int use_great_circle_algorithm_prev=0;
-      
+
       tile_files[n] = (char *)malloc(STRING*sizeof(double));
       start[0] = n;
       start[1] = 0;
@@ -705,7 +705,7 @@ int main(int argc, char* argv[])
 	if(vgrid_file)sprintf(level_name, "num_levels_tile%d", n+1);
       }
 
-      dims[1] = mpp_def_dim(fid, dimx_name, nx[n]); 
+      dims[1] = mpp_def_dim(fid, dimx_name, nx[n]);
       dims[0] = mpp_def_dim(fid, dimy_name, ny[n]);
       id_depth[n] = mpp_def_var(fid, depth_name, NC_DOUBLE, 2, dims,  2, "standard_name",
 				"topographic depth at T-cell centers", "units", "meters");
@@ -722,26 +722,23 @@ int main(int argc, char* argv[])
       mpp_close(g_fid);
     }
     mpp_close(m_fid);
-    mpp_def_global_att(fid, "grid_version", grid_version);
-    mpp_def_global_att(fid, "code_version", tagname);
-    if(use_great_circle_algorithm) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-    mpp_def_global_att(fid, "history", history);
-    
+
+    print_provenance_gv_gca(fid, history, grid_version, use_great_circle_algorithm);
     mpp_end_def(fid);
 
     if(mpp_pe()==mpp_root_pe() && use_great_circle_algorithm)
       printf("\n NOTE from make_topog: use great circle algorithm\n");
-    
+
     /* get the boundary condition for realistics topogrpahy, currently only support tripolar_grid,
      cyclic_x and cyclic_y*/
     if(my_topog_type == REALISTIC) get_boundary_type(mosaic_file, VERSION_2, &cyclic_x, &cyclic_y, &tripolar_grid);
-    
+
     /* Generate topography and write out to the output_file */
     for(n=0; n<ntiles; n++) {
       int layout[2], isc, iec, jsc, jec, nxc, nyc, ni, i, j;
       double *gdata=NULL, *tmp=NULL;
       domain2D domain;
-      
+
       /* define the domain, each tile will be run on all the processors. */
       mpp_define_layout( nx[n], ny[n], mpp_npes(), layout);
       mpp_define_domain2d( nx[n], ny[n], layout, 0, 0, &domain);
@@ -758,7 +755,7 @@ int main(int argc, char* argv[])
 	y   = (double *)malloc((nxc+1)*(nyc+1)*sizeof(double));
       }
       depth = (double *)malloc(nxc*nyc*sizeof(double));
-      if(vgrid_file) num_levels = (int* )malloc(nxc*nyc*sizeof(int)); 
+      if(vgrid_file) num_levels = (int* )malloc(nxc*nyc*sizeof(int));
       tmp   = (double *)malloc((nxc*x_refine+1)*(nyc*y_refine+1)*sizeof(double));
       start[0] = jsc*y_refine; start[1] = isc*x_refine;
       nread[0] = nyc*y_refine+1; nread[1] = nxc*x_refine+1;
@@ -800,7 +797,7 @@ int main(int argc, char* argv[])
       case IDEALIZED:
 	create_idealized_topog( nx[n], ny[n], x, y, bottom_depth, min_depth, depth);
 	break;
-      case REALISTIC:	
+      case REALISTIC:
 	create_realistic_topog(nxc, nyc, x, y, vgrid_file, topog_file, topog_field, scale_factor,
 			       tripolar_grid, cyclic_x, cyclic_y, fill_first_row, filter_topog, num_filter_pass,
 			       smooth_topo_allow_deepening, round_shallow, fill_shallow,
@@ -841,7 +838,7 @@ int main(int argc, char* argv[])
       mpp_delete_domain2d(&domain);
     }
     mpp_close(fid);
-  
+
     /*release memory */
     free(id_depth);
     free(id_level);
@@ -852,7 +849,7 @@ int main(int argc, char* argv[])
     free(nxp);
     free(nyp);
   }
-    
+
   if(mpp_pe() == mpp_root_pe() && verbose ) printf("Successfully generate %s\n",output_file);
 
   mpp_end();

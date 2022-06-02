@@ -70,23 +70,24 @@ TESTS = Test01-check_programs_exist.sh \
 	Test32-fregrid_no_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
-            Test02-input\
-            Test02-reference \
-            Test03-input \
-            Test06-input \
-            Test07-input \
-            Test08-input \
-            Test10-input \
-            Test12-input \
-            Test15-input \
-            Test16-input \
-            Test17-input \
-            Test18-input \
-            Test20-input \
-            Test17-reference \
-            Test18-reference \
-            Test20-reference \
-            $(test25_data) 
-
+             Test02-input\
+             Test02-reference \
+             Test03-input \
+             Test06-input \
+             Test07-input \
+             Test08-input \
+             Test10-input \
+             Test12-input \
+             Test15-input \
+             Test16-input \
+             Test17-input \
+             Test18-input \
+             Test20-input \
+	     Test17-reference \
+             Test18-reference \
+             Test20-reference \
+             $(test25_data) \
+             Test30-input
+          
 clean-local:
 	$(RM) *.nc Test*/*

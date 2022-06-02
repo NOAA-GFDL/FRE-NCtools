@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 #***********************************************************************
 #                   GNU Lesser General Public License

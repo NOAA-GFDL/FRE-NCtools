@@ -1,7 +1,7 @@
 # Github actions CI file
 # Ryan Mulhall 2020
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
-# github.com/noaa-gfdl/fre-nctools-container 
+# github.com/noaa-gfdl/fre-nctools-container
 name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
@@ -12,24 +12,33 @@ jobs:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
-      image: noaagfdl/fre-nctools-base:focal
+      image: noaagfdl/fre-nctools-base:2.0.0-focal
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: Configure
-      run: | 
-        autoreconf -i configure.ac
-        ./configure $MPI $QUAD_P
+      run: |
+        mkdir build && cd build
+        autoreconf -i ../configure.ac
+        ../configure $MPI $QUAD_P
     - name: Build tools
-      run: make
-    - name: Run tests
-      run: make -j check LOG_DRIVER_FLAGS=--comments
+      run: make -C build
+    - name: Run all tests
+      if: matrix.with_mpi == ''
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
+    - name: Run most tests (skip the slow ones)
+      if: matrix.with_mpi == '--with-mpi'
+      env:
+        SKIP_TESTS: 4
+      run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
       uses: actions/upload-artifact@v2.2.1
       if: failure()
       with:
         name: test-suite.log
-        path: t/test-suite.log
+        path: build/t/test-suite.log

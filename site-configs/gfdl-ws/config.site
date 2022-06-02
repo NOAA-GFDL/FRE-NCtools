@@ -21,12 +21,14 @@
 #
 # configure options
 test -z "$with_mpi" && with_mpi=yes
+test -z "$enable_venv" && enable_venv=yes
 # Standard prefix location for FRE distribution
 test "$prefix" = NONE && prefix=/home/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/gfdl-ws
 
 # Standard compilers on gfdl-ws
-test -z "$CC" && CC=icc
-test -z "$FC" && FC=ifort
+test -z "$CC" && CC=mpicc
+test -z "$FC" && FC=mpifort
 
 # Compile/Link flags
-test -z "$FCFLAGS" && FCFLAGS="-fltconsistency -fno-alias -stack_temps -ftz -assume byterecl -i4 -traceback"
+test -z "$CFLAGS" && CFLAGS="-O2"
+test -z "$FCFLAGS" && FCFLAGS="-O2"

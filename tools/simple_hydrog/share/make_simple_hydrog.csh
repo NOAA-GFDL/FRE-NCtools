@@ -30,18 +30,15 @@
 #    -- add GLCC waterbod fractions
 # =========================================================================
 
-if (`gfdl_platform` == "hpcs-csc") then
-    wipetmp
-else
-    if ($?TMPDIR) then
-        echo WARNING
-        echo "WARNING: Intended for PP/AN use; may not work properly on this site"
-        echo WARNING
-        echo
-    else
-        echo 'FATAL: $TMPDIR needed'
-        exit 1
-    endif
+if ( (! { gfdl_platform })  || ( `gfdl_platform` != "hpcs-csc" )  ) then
+    echo "WARNING: Intended for PP/AN use; may not work properly on this site"
+endif
+
+set my_tempdir=`mktemp -d`
+
+if ( $status ) then
+  echo "ERROR: Cannot create temporary directory"
+  exit 1
 endif
 
 set outdir = ""
@@ -102,6 +99,7 @@ endif
 
 set riv_regrd = river_regrid
 
+#  TODO: Verify this filepath relationship is resonable
 set share_dir = `dirname $0`/../share
 
 # set path for the disaggregated, extended river network
@@ -113,7 +111,7 @@ set glcc_file = $share_dir/gigbp2_0ll.nc
 echo River network input dataset: $river_network_ext_file
 echo GLCC input dataset: $glcc_file
 
-cd $TMPDIR
+cd $my_tempdir
 
 mkdir -p OUTPUT/{river_regrid,post_regrid,rmv_parallel_rivers,post_rmvp}
 
@@ -128,7 +126,7 @@ mv river_output*nc OUTPUT/river_regrid/
 # ------------------------------------------------
 #  POST-PROCESS OUTPUT FROM RIVER_REGRID
 # ------------------------------------------------
-set river_input_files = OUTPUT/river_regrid/river_output*nc 
+set river_input_files = OUTPUT/river_regrid/river_output*nc
 echo $#river_input_files > fort.5
 foreach file ($river_input_files)
    echo OUTPUT/river_regrid/$file:t >> fort.5
@@ -227,7 +225,7 @@ if ($outdir != "") then
 else
     echo ""
     echo SUCCESS!
-    ls -lh $TMPDIR/hydrography*
+    ls -lh $my_tempdir/hydrography*
 endif
 
 exit 0

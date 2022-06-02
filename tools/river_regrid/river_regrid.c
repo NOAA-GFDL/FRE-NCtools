@@ -22,6 +22,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <math.h>
+#include "constant.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "create_xgrid.h"
@@ -90,7 +91,6 @@ const int    x_refine          = 2;
 const int    y_refine          = 2;
 const double EPSLN             = 1.e-4;
 const double MIN_AREA_RATIO    = 1.e-6;
-const double D2R               = M_PI/180.;
 const char   subA_name[]       = "subA";
 const char   tocell_name[]     = "tocell";
 const char   travel_name[]     = "travel";
@@ -109,7 +109,7 @@ char   x_name[]     = "x";
 char   y_name[]     = "y";
 int    sizeof_int  = 0;
 int    sizeof_double = 0;
-double suba_cutoff = 1.e12;  
+double suba_cutoff = 1.e12;
 double land_thresh = 0;
 double min_frac = 0;
 
@@ -163,7 +163,7 @@ double distance(double lon1, double lat1, double lon2, double lat2);
 
 int main(int argc, char* argv[])
 {
-  unsigned int opcode = 0;  
+  unsigned int opcode = 0;
   int          option_index, c;
   char         *mosaic_file     = NULL;
   char         *river_src_file  = NULL;
@@ -171,11 +171,11 @@ int main(int argc, char* argv[])
   int          ntiles, n;
   char         land_mosaic_dir[256];
   char         land_mosaic[256];
-  char         land_mosaic_file[256];  
+  char         land_mosaic_file[256];
   char         history[1024];
   int          read_land_mask = 0;
   int          great_circle_algorithm = 0;
-  
+
   river_type river_in;
   river_type *river_out; /* may be more than one tile */
 
@@ -189,12 +189,12 @@ int main(int argc, char* argv[])
     {"min_frac",          required_argument, NULL, 'e'},
     {"read_land_mask",    no_argument,       NULL, 'f'},
     {0, 0, 0, 0},
-  };      
+  };
 
   mpp_init(&argc, &argv);
   sizeof_int = sizeof(int);
   sizeof_double = sizeof(double);
-  
+
   /* currently we are assuming the tool is always run on 1 processor */
   if(mpp_npes() > 1) mpp_error("river_regrid: parallel is not supported yet, try running one single processor");
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1) {
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
       break;
     case 'e':
       min_frac = atof(optarg);
-      break;      
+      break;
     case 'f':
       read_land_mask = 1;
       break;
@@ -222,12 +222,12 @@ int main(int argc, char* argv[])
       break;
     }
   }
-  
+
   if (errflg) {
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     exit(2);
-  }       
+  }
 
   /* check the arguments */
   if( !mosaic_file    ) mpp_error("fregrid: mosaic_grid is not specified");
@@ -236,10 +236,10 @@ int main(int argc, char* argv[])
   strcpy(history,argv[0]);
   for(n=1;n<argc;n++)  {
     strcat(history, " ");
-    strcat(history, argv[n]); 
+    strcat(history, argv[n]);
   }
 
-#ifdef test_qsort  
+#ifdef test_qsort
   {
     /* test qsort_index here */
     int    i, size = 7;
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
     for(i=0; i<size; i++) printf("value = %f, rank = %d \n", array[i], rank[i]);
   }
 #endif
-  
+
   /* First read the source data and source grid */
   get_source_data(river_src_file, &river_in);
 
@@ -268,11 +268,11 @@ int main(int argc, char* argv[])
     mpp_close(fid);
   }
   river_out = (river_type *)malloc(ntiles*sizeof(river_type));
-  
+
   get_mosaic_grid(mosaic_file, land_mosaic, ntiles, river_out, &opcode, read_land_mask, &great_circle_algorithm);
 
   init_river_data(ntiles, river_out, &river_in);
-  
+
   calc_max_subA(&river_in, river_out, ntiles, opcode );
 
   calc_tocell(ntiles, river_out, opcode );
@@ -280,17 +280,17 @@ int main(int argc, char* argv[])
   calc_river_data(ntiles, river_out, opcode );
 
   sort_basin(ntiles, river_out);
-  
+
   check_river_data(ntiles, river_out);
-  
+
   write_river_data(river_src_file, output_file, river_out, history, ntiles, great_circle_algorithm);
-  
+
   printf("Successfully running river_regrid and the following output file are generated.\n");
   for(n=0; n<ntiles; n++) printf("****%s\n", river_out[n].filename);
-  
+
   mpp_end();
 
-  return 0;  
+  return 0;
 
 } /* end of main */
 
@@ -308,7 +308,7 @@ void get_source_data(const char *src_file, river_type *river_data)
 
   fid = mpp_open(src_file, MPP_READ);
   vid = mpp_get_varid(fid, subA_name);
-  
+
   mpp_get_var_dimname(fid, vid, 1, xaxis_name);
   mpp_get_var_dimname(fid, vid, 0, yaxis_name);
   nx  = mpp_get_dimlen(fid, xaxis_name );
@@ -317,12 +317,12 @@ void get_source_data(const char *src_file, river_type *river_data)
   nyp = ny + 1;
   river_data->nx  = nx;
   river_data->ny  = ny;
-  
+
   river_data->xt   = (double *)malloc(nx*sizeof(double));
   river_data->yt   = (double *)malloc(ny*sizeof(double));
-  river_data->xb   = (double *)malloc(nxp*sizeof(double)); 
+  river_data->xb   = (double *)malloc(nxp*sizeof(double));
   river_data->yb   = (double *)malloc(nyp*sizeof(double));
-  river_data->xb_r = (double *)malloc(nxp*sizeof(double)); 
+  river_data->xb_r = (double *)malloc(nxp*sizeof(double));
   river_data->yb_r = (double *)malloc(nyp*sizeof(double));
   river_data->subA = (double *)malloc(nx*ny*sizeof(double));
   mpp_get_var_att(fid, vid, "missing_value", &(river_data->subA_missing) );
@@ -347,7 +347,7 @@ void get_source_data(const char *src_file, river_type *river_data)
   vid = mpp_get_varid(fid, yaxis_name);
   mpp_get_var_value(fid, vid, river_data->yt);
   mpp_close(fid);
-  
+
   for(i=1; i<nx; i++ ) river_data->xb[i] = 0.5*(river_data->xt[i-1]+river_data->xt[i]);
   for(j=1; j<ny; j++ ) river_data->yb[j] = 0.5*(river_data->yt[j-1]+river_data->yt[j]);
   river_data->xb[0] = 2*river_data->xt[0] - river_data->xb[1];
@@ -357,9 +357,9 @@ void get_source_data(const char *src_file, river_type *river_data)
 
   /* make sure the xb is in the range [0,360] and yb is in the range [-90,90] */
   if(fabs(river_data->xb[0]) > EPSLN) mpp_error("river_regrid: The starting longitude of grid bound is not 0");
-  if(fabs(river_data->xb[nx]-360) > EPSLN) mpp_error("river_regrid: The ending longitude of grid bound is not 360");  
+  if(fabs(river_data->xb[nx]-360) > EPSLN) mpp_error("river_regrid: The ending longitude of grid bound is not 360");
   if(fabs(river_data->yb[0]+90) > EPSLN) mpp_error("river_regrid: The starting latitude of grid bound is not -90");
-  if(fabs(river_data->yb[ny]-90) > EPSLN) mpp_error("river_regrid: The ending latitude of grid bound is not 90");  
+  if(fabs(river_data->yb[ny]-90) > EPSLN) mpp_error("river_regrid: The ending latitude of grid bound is not 90");
   river_data->xb[0]  = 0.;
   river_data->xb[nx] = 360.;
   river_data->yb[0]  = -90.;
@@ -370,11 +370,11 @@ void get_source_data(const char *src_file, river_type *river_data)
 }
 
 /*----------------------------------------------------------------------
-   read the grid of detination mosaic. 
+   read the grid of detination mosaic.
    void get_mosaic_grid(char *file)
    where file is the coupler mosaic file.
    --------------------------------------------------------------------*/
-void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int ntiles, 
+void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int ntiles,
                      river_type *river_data, unsigned int *opcode, int read_land_mask, int *great_circle_algorithm)
 {
   int    n_xgrid_files, nx, ny, nxp, nyp, ni, nj, nip, njp;
@@ -389,17 +389,17 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
   int  m_fid, m_vid, g_fid, g_vid;
 
 
-  
+
   /* coupler_mosaic, land_mosaic, and exchange grid file should be located in the same directory */
   get_file_path(coupler_mosaic, dir);
-  
+
   m_fid = mpp_open(coupler_mosaic, MPP_READ);
 
   /* first find out if great_circle_algorithm is used or not, normally it could find from
    reading attribute of field aXl_file
   */
   *great_circle_algorithm = get_great_circle_algorithm(m_fid);
-  
+
   m_vid = mpp_get_varid(m_fid, "lnd_mosaic");
   mpp_get_var_value(m_fid, m_vid, land_mosaic_name);
 
@@ -409,23 +409,23 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     xgrid_file = (char **)malloc(n_xgrid_files*sizeof(char *));
 
     m_vid = mpp_get_varid(m_fid, "aXl_file");
-  
+
     for(n=0; n<n_xgrid_files; n++) {
       xgrid_file[n] = (char *)malloc(STRING*sizeof(char));
       start[0] = n;
       start[1] = 0;
       nread[0] = 1;
-      nread[1] = STRING;    
+      nread[1] = STRING;
       mpp_get_var_value_block(m_fid, m_vid, start, nread, xgrid_file[n]);
     }
   }
   mpp_close(m_fid);
   m_fid = mpp_open(land_mosaic, MPP_READ);
   m_vid = mpp_get_varid(m_fid, "gridfiles");
-  
+
   for( n = 0; n < ntiles; n++ ) {
     double *area;
-    
+
     start[0] = n;
     start[1] = 0;
     nread[0] = 1;
@@ -454,16 +454,16 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     nyp2 = ny + 2;
     river_data[n].nx       = nx;
     river_data[n].ny       = ny;
-    river_data[n].xt       = (double *)malloc(nxp2*nyp2*sizeof(double));        
+    river_data[n].xt       = (double *)malloc(nxp2*nyp2*sizeof(double));
     river_data[n].yt       = (double *)malloc(nxp2*nyp2*sizeof(double));
     river_data[n].xb       = (double *)malloc(nxp*nyp*sizeof(double));
     river_data[n].yb       = (double *)malloc(nxp*nyp*sizeof(double));
     river_data[n].xb_r     = (double *)malloc(nxp*nyp*sizeof(double));
-    river_data[n].yb_r     = (double *)malloc(nxp*nyp*sizeof(double));    
+    river_data[n].yb_r     = (double *)malloc(nxp*nyp*sizeof(double));
     river_data[n].area     = (double *)malloc(nx*ny*sizeof(double));
-    river_data[n].landfrac = (double *)malloc(nx*ny*sizeof(double));    
+    river_data[n].landfrac = (double *)malloc(nx*ny*sizeof(double));
     area                   = (double *)malloc(nx*ny*sizeof(double));
-    
+
     /* copy the data from super grid to fine grid */
     for(i=0; i<nx*ny; i++) area[i] = 0.0;
     for(j = 0; j < ny; j++) for(i = 0; i < nx; i++) {
@@ -475,7 +475,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     for(j = 0; j < nyp; j++) for(i = 0; i < nxp; i++) {
       river_data[n].xb[j*nxp+i] = x[(j*y_refine)*nip+i*x_refine];
       river_data[n].yb[j*nxp+i] = y[(j*y_refine)*nip+i*x_refine];
-    }     
+    }
     free(x);
     free(y);
     /* calculate cell area */
@@ -491,7 +491,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     else {
       get_grid_great_circle_area(&nx, &ny, river_data[n].xb_r, river_data[n].yb_r, river_data[n].area);
     }
-	      
+
     /* calculate the land fraction */
     if(!read_land_mask) {
       sprintf(tilename, "X%s_tile%d", land_mosaic_name, n+1);
@@ -501,13 +501,13 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
 	  int    *i1, *j1, *i2, *j2;
 	  double *xgrid_area;
 	  char filewithpath[512];
-	
+
 	  sprintf(filewithpath, "%s/%s", dir, xgrid_file[m]);
 	  g_fid = mpp_open(filewithpath, MPP_READ);
 	  nxgrid = mpp_get_dimlen(g_fid, "ncells");
 	  mpp_close(g_fid);
 	  i1         = (int    *)malloc(nxgrid*sizeof(int));
-	  j1         = (int    *)malloc(nxgrid*sizeof(int));	  
+	  j1         = (int    *)malloc(nxgrid*sizeof(int));
 	  i2         = (int    *)malloc(nxgrid*sizeof(int));
 	  j2         = (int    *)malloc(nxgrid*sizeof(int));
 	  xgrid_area = (double *)malloc(nxgrid*sizeof(double));
@@ -528,7 +528,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     else { /* read from land_mask.tile#.nc */
       char land_mask_file[512];
       int nx2, ny2;
-      
+
       sprintf(land_mask_file, "%s/land_mask_tile%d.nc", dir, n+1);
       g_fid = mpp_open(land_mask_file, MPP_READ);
       nx2 = mpp_get_dimlen(g_fid, "nx");
@@ -542,25 +542,25 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
 
     for(m=0; m<nx*ny; m++) {
       /* consider truncation error */
-      if(river_data[n].landfrac[m] > 1 + 1.e-3) mpp_error("river_regrid: land_frac > 1 + 1.e-3" ); 
+      if(river_data[n].landfrac[m] > 1 + 1.e-3) mpp_error("river_regrid: land_frac > 1 + 1.e-3" );
       if(river_data[n].landfrac[m] > 1 - land_thresh) river_data[n].landfrac[m] = 1;
       if(fabs(river_data[n].landfrac[m])   < min_frac) river_data[n].landfrac[m] = 0;
       if(river_data[n].landfrac[m] > 1 || river_data[n].landfrac[m] < 0)
 	mpp_error("river_regrid: land_frac should be between 0 or 1");
-    }    
+    }
 
-      
+
     free(area);
   } /* n = 0, ntiles */
 
   mpp_close(m_fid);
-  
+
   /* currently we are assuming all the times have the same grid size */
   for(n=1; n<ntiles; n++) {
     if(river_data[n].nx != river_data[0].nx || river_data[n].ny != river_data[0].ny )
       mpp_error("river_regrid: all the tiles should have the same grid size");
   }
-  
+
   /*----------------------------------------------------------------------------
     get boundary condition, currently we are assuming the following case,
     solid walls: number of contact will be 0.
@@ -574,7 +574,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
     int *tile1, *tile2;
     int *istart1, *iend1, *jstart1, *jend1;
     int *istart2, *iend2, *jstart2, *jend2;
-    
+
     ncontact = read_mosaic_ncontacts(land_mosaic);
     tile1   = (int *)malloc(ncontact*sizeof(int));
     tile2   = (int *)malloc(ncontact*sizeof(int));
@@ -631,7 +631,7 @@ void get_mosaic_grid(const char *coupler_mosaic, const char *land_mosaic, int nt
   update_halo_double(ntiles, pyt, nx, ny, *opcode);
   free(pxt);
   free(pyt);
-  
+
 }; /* get_mosaic_grid */
 
 /*------------------------------------------------------------------------------
@@ -643,7 +643,7 @@ void init_river_data(int ntiles, river_type *river_out, const river_type * const
   int nx, ny, nxp2, nyp2, n, i;
   int tocell_missing, subA_missing, travel_missing, basin_missing;
   double cellarea_missing, celllength_missing;
-  
+
   nx = river_out->nx;
   ny = river_out->ny;
   nxp2 = nx + 2;
@@ -700,18 +700,18 @@ void calc_max_subA(const river_type *river_in, river_type *river_out, int ntiles
   double *xb_in, *yb_in;
   double *xb_out, *yb_out;
   double **psubA;
-  
+
   nx_in = river_in->nx;
   ny_in = river_in->ny;
   xb_in = river_in->xb_r;
   yb_in = river_in->yb_r;
   missing = river_out->subA_missing;
-  
+
   for(n=0; n<ntiles; n++) {
     nx_out   = river_out[n].nx;
     ny_out   = river_out[n].ny;
     nxp2     = nx_out + 2;
-    nyp2     = ny_out + 2;    
+    nyp2     = ny_out + 2;
     nxp_out  = nx_out+1;
     xb_out   = river_out[n].xb_r;
     yb_out   = river_out[n].yb_r;
@@ -723,16 +723,16 @@ void calc_max_subA(const river_type *river_in, river_type *river_out, int ntiles
 	river_out[n].subA[j1*nxp2+i1] = LARGE_VALUE;
 	continue;
       }
-      
+
       xv1[0] = xb_out[j*nxp_out+i];
       xv1[1] = xb_out[j*nxp_out+i1];
       xv1[2] = xb_out[j1*nxp_out+i1];
-      xv1[3] = xb_out[j1*nxp_out+i]; 
+      xv1[3] = xb_out[j1*nxp_out+i];
       yv1[0] = yb_out[j*nxp_out+i];
       yv1[1] = yb_out[j*nxp_out+i1];
       yv1[2] = yb_out[j1*nxp_out+i1];
-      yv1[3] = yb_out[j1*nxp_out+i]; 
-      
+      yv1[3] = yb_out[j1*nxp_out+i];
+
       for(jj=0; jj<ny_in; jj++) {
 	ll_y = yb_in[jj];
 	ur_y = yb_in[jj+1];
@@ -740,7 +740,7 @@ void calc_max_subA(const river_type *river_in, river_type *river_out, int ntiles
 	      && (yv1[2]<=ll_y) && (yv1[3]<=ll_y) ) continue;
 	if (  (yv1[0]>=ur_y) && (yv1[1]>=ur_y)
 	      && (yv1[2]>=ur_y) && (yv1[3]>=ur_y) ) continue;
-	
+
 	for(ii=0; ii<nx_in; ii++) {
 	  if(river_in->subA[jj*nx_in+ii] == missing) continue;
 	  ll_x = xb_in[ii];
@@ -748,9 +748,9 @@ void calc_max_subA(const river_type *river_in, river_type *river_out, int ntiles
 	  /* adjust xv1 to make sure it is in the range as ll_x and ur_x */
 	  adjust_lon(xv1, 0.5*(ll_x + ur_x) );
 	  if ( (xv1[0]<=ll_x) && (xv1[1]<=ll_x) && (xv1[2]<=ll_x) && (xv1[3]<=ll_x) ) continue;
-	  if ( (xv1[0]>=ur_x) && (xv1[1]>=ur_x) && (xv1[2]>=ur_x) && (xv1[3]>=ur_x) ) continue;	  
+	  if ( (xv1[0]>=ur_x) && (xv1[1]>=ur_x) && (xv1[2]>=ur_x) && (xv1[3]>=ur_x) ) continue;
 	  if ( (n_out = clip ( xv1, yv1, 4, ll_x, ll_y, ur_x, ur_y, xv2, yv2 )) > 0 ) {
-	    double xarea; 
+	    double xarea;
 	    xarea = poly_area (xv2, yv2, n_out );
 	    if( xarea/river_out[n].area[j*nx_out+i] < MIN_AREA_RATIO ) continue;
 	    if(river_in->subA[jj*nx_in+ii] > river_out[n].subA[j1*nxp2+i1])
@@ -760,11 +760,11 @@ void calc_max_subA(const river_type *river_in, river_type *river_out, int ntiles
       }
     }
   }
-	
+
   /* fill the halo of subA */
   psubA = (double **)malloc(ntiles*sizeof(double *));
-  for(n=0; n<ntiles; n++) psubA[n] = river_out[n].subA; 
-  update_halo_double(ntiles, psubA, river_out->nx, river_out->ny, opcode); 
+  for(n=0; n<ntiles; n++) psubA[n] = river_out[n].subA;
+  update_halo_double(ntiles, psubA, river_out->nx, river_out->ny, opcode);
   free(psubA);
 };/* calc_max_subA */
 
@@ -776,7 +776,7 @@ void update_halo_double(int ntiles, double **data, int nx, int ny, unsigned int 
 {
   int nxp1, nyp1, nxp2, i, j, n;
   int te, tw, ts, tn;
-  
+
   nxp1   = nx + 1;
   nyp1   = ny + 1;
   nxp2   = nx + 2;
@@ -794,14 +794,14 @@ void update_halo_double(int ntiles, double **data, int nx, int ny, unsigned int 
   }
   if(opcode & X_CYCLIC && opcode & Y_CYCLIC) {
     data[0][0]              = data[0][ny*nxp2];      /* southwest */
-    data[0][nxp1]           = data[0][ny*nxp2+1];    /* southeast */    
+    data[0][nxp1]           = data[0][ny*nxp2+1];    /* southeast */
     data[0][nyp1*nxp2+nxp1] = data[0][nxp2+1];       /* northeast */
-    data[0][nyp1*nxp2]      = data[0][nxp2+nx];      /* northwest */     
+    data[0][nyp1*nxp2]      = data[0][nxp2+nx];      /* northwest */
   }
 
   if(opcode & CUBIC_GRID) {
     for(n=0; n<ntiles; n++) {
-      
+
       if(n%2) { /* tile 2 4 6 */
 	tw = (n+5)%ntiles; te = (n+2)%ntiles; ts = (n+4)%ntiles; tn = (n+1)%ntiles;
 	for(j=1; j<nyp1; j++) {
@@ -825,19 +825,19 @@ void update_halo_double(int ntiles, double **data, int nx, int ny, unsigned int 
       }
     }
   }
-  
+
 };/* update_halo */
 
 void update_halo_int(int ntiles, int **data, int nx, int ny, unsigned int opcode)
 {
   double **ldata;
   int n, i, j, nxp2, nyp2;
-  
+
   nxp2 = nx + 2;
   nyp2 = ny + 2;
 
 
-  
+
   ldata = (double **)malloc(ntiles*sizeof(double *));
   for(n=0; n<ntiles; n++) {
     ldata[n] =  (double *)malloc(nxp2*nyp2*sizeof(double));
@@ -849,7 +849,7 @@ void update_halo_int(int ntiles, int **data, int nx, int ny, unsigned int opcode
     free(ldata[n]);
   }
   free(ldata);
-  
+
 }
 
 void adjust_lon(double x[], double tlon)
@@ -876,7 +876,7 @@ void adjust_lon(double x[], double tlon)
   Find the tocell value for the new grid.
   void calc_tocell( )
   ----------------------------------------------------------------------------*/
-void calc_tocell(int ntiles, river_type *river_data, unsigned int opcode )  
+void calc_tocell(int ntiles, river_type *river_data, unsigned int opcode )
 {
   const int out_flow[] = { 8, 4, 2, 16, -1, 1, 32, 64, 128};
   const int out_dir[]  = { 3, 2, 1, 4,  -1, 0, 5,   6,   7};
@@ -884,7 +884,7 @@ void calc_tocell(int ntiles, river_type *river_data, unsigned int opcode )
   int i, j, ii, jj, iget, jget, im1, jm1;
   double tval, subA_missing, subA, subA_me;
   int **ptocell, **pdir;
-  
+
   nx = river_data->nx;
   ny = river_data->ny;
   nxp2 = nx + 2;
@@ -895,7 +895,7 @@ void calc_tocell(int ntiles, river_type *river_data, unsigned int opcode )
     ptocell[n] = river_data[n].tocell;
     pdir   [n] = river_data[n].dir;
   }
-  
+
   for(n=0; n<ntiles; n++) {
     for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
       jm1 = j - 1;
@@ -968,16 +968,16 @@ void calc_tocell(int ntiles, river_type *river_data, unsigned int opcode )
 	  else
 	    ptocell[n][j*nxp2+i] = 0;
 	}
-	else 
+	else
 	  ptocell[n][j*nxp2+i] = 0;
       }
     }
   }
-  update_halo_int(ntiles, ptocell, nx, ny, opcode);   
+  update_halo_int(ntiles, ptocell, nx, ny, opcode);
   update_halo_int(ntiles, pdir, nx, ny, opcode);
   free(ptocell);
   free(pdir);
-  
+
 };/* calc_tocell */
 
 
@@ -998,7 +998,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
   int    **pbasin, **ptravel, **pdir;
   double **psubA;
   double xv[4], yv[4];
-  
+
   const int di[] = {1,1,0,-1,-1,-1,0,1};
   const int dj[] = {0,-1,-1,-1,0,1,1,1};
   nx = river_data->nx;
@@ -1027,9 +1027,9 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
 
   /* reinitialize subA */
   for(n=0; n<ntiles; n++) {
-    for(i=0; i<nxp2*nyp2; i++) psubA[n][i] = subA_missing;    
+    for(i=0; i<nxp2*nyp2; i++) psubA[n][i] = subA_missing;
   }
-  
+
   /* calculate celllength and cellarea */
   for(n=0; n<ntiles; n++) {
     for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
@@ -1049,7 +1049,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
 	dir = pdir[n][jj*nxp2+ii];
 	if( dir >= 0) {
 	  i_dest = ii + di[dir];
-	  j_dest = jj + dj[dir];	
+	  j_dest = jj + dj[dir];
 	  river_data[n].celllength[j*nx+i] = distance(river_data[n].xt[jj*nxp2+ii],
 						      river_data[n].yt[jj*nxp2+ii],
 						      river_data[n].xt[j_dest*nxp2+i_dest],
@@ -1061,9 +1061,9 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
     }
   }
 
-  
+
   /* define the basinid and travel for the coast point */
-  
+
   for(n=0; n<ntiles; n++) {
     for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
       if(river_data[n].tocell[j*nxp2+i] == 0) {
@@ -1086,7 +1086,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
 
   update_halo_int(ntiles, pbasin, nx, ny, opcode);
   update_halo_int(ntiles, ptravel, nx, ny, opcode);
-  
+
   /* then define the travel and basin for all other points */
   cur_travel = 0;
 
@@ -1112,7 +1112,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
     }
     cur_travel++;
     update_halo_int(ntiles, pbasin, nx, ny, opcode);
-    update_halo_int(ntiles, ptravel, nx, ny, opcode);    
+    update_halo_int(ntiles, ptravel, nx, ny, opcode);
   }
 
   /* figure out maximum travel and maximum basin*/
@@ -1120,7 +1120,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
   maxbasin  = -1;
   basin_missing = river_data->basin_missing;
   for(n=0; n<ntiles; n++) {
-    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {    
+    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
       maxtravel = max(maxtravel, ptravel[n][j*nxp2+i]);
       maxbasin  = max(maxbasin,  pbasin[n][j*nxp2+i]);
     }
@@ -1141,7 +1141,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
 	  /* consider about the rotation when it is on the boundary */
 	  if(dir >=0 ) {
 	    if( opcode & CUBIC_GRID ) {
-	      if(ii == 0) { /* west */ 
+	      if(ii == 0) { /* west */
 		if(n%2==0) dir = (dir+2)%8;  /* tile 1 3 5 */
 	      }
 	      else if(ii == nxp) { /*east */
@@ -1163,7 +1163,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
     }
     update_halo_double(ntiles, psubA, nx, ny, opcode);
   }
-  
+
   free(pbasin);
   free(ptravel);
   free(psubA);
@@ -1175,7 +1175,7 @@ void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode )
   check to make sure all the river points have been assigned travel and basin value
   and all the ocean points will have missing value.
   ----------------------------------------------------------------------------*/
-  
+
 void check_river_data(int ntiles, river_type *river_data )
 {
   int maxtravel = -1;
@@ -1187,7 +1187,7 @@ void check_river_data(int ntiles, river_type *river_data )
   int ncoast_full_land, nsink;
   double subA, subA_missing;
   int *ncoast;
-  
+
   /* print out maximum travel and number of rivers */
   maxtravel = -1;
   maxbasin  = -1;
@@ -1199,9 +1199,9 @@ void check_river_data(int ntiles, river_type *river_data )
   tocell_missing = river_data->tocell_missing;
   basin_missing = river_data->basin_missing;
   travel_missing = river_data->travel_missing;
-  
+
   for(n=0; n<ntiles; n++) {
-    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {    
+    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
       maxtravel = max(maxtravel, river_data[n].travel[j*nxp2+i]);
       maxbasin  = max(maxbasin, river_data[n].basin[j*nxp2+i]);
     }
@@ -1250,7 +1250,7 @@ void check_river_data(int ntiles, river_type *river_data )
 	}
 	 printf("At point (i=%d,j=%d,t=%d), tocell = 0 and landfrac = 1 is a sink point\n", i, j, n+1);
         nsink++;
-      done_check: continue;	
+      done_check: continue;
       }
     }
   }
@@ -1264,7 +1264,7 @@ void check_river_data(int ntiles, river_type *river_data )
     printf("Warning from river_regrid: there are %d sink points is a full land cell\n", nsink);
   else
     printf("NOTE from river_regrid: there are no sink points is a full land cell\n");
-  
+
   /* check river travel to make sure there is one and only one point with travel = 0. */
   ncoast = (int *)malloc(maxbasin*sizeof(int));
   for(n=0; n<maxbasin; n++) ncoast[n] = 0;
@@ -1284,7 +1284,7 @@ void check_river_data(int ntiles, river_type *river_data )
     }
   }
   free(ncoast);
-  
+
 
 }; /* check_river_data */
 
@@ -1301,7 +1301,7 @@ void sort_basin(int ntiles, river_type* river_data)
   int    maxbasin, basin_missing, basin;
   int    *rank, *indx;
   double subA_missing, *maxsuba;
-  
+
   river_type *river_tmp;
 
   nx   = river_data->nx;
@@ -1314,10 +1314,10 @@ void sort_basin(int ntiles, river_type* river_data)
   maxbasin  = -1;
   basin_missing = river_data->basin_missing;
   for(n=0; n<ntiles; n++) {
-    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {    
+    for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
       maxbasin  = max(maxbasin,  river_data[n].basin[j*nxp2+i]);
     }
-  }  
+  }
 
   /* copy basinid data to the tmp data */
   for(n=0; n<ntiles; n++) {
@@ -1349,14 +1349,14 @@ void sort_basin(int ntiles, river_type* river_data)
   for(n=0; n<maxbasin; n++) {
     if(maxsuba[n] == subA_missing) mpp_error("river_regrid: maxsuba is not assigned for some basin");
   }
-  
+
   /* sort maxsuba to get the index rank */
   qsort_index(maxsuba, 0, maxbasin-1, indx);
   for(n=0; n<maxbasin; n++) rank[indx[n]] = n;
   for(n=0; n<maxbasin; n++) {
     if(rank[n] < 0) mpp_error("river_regrid: rank should be no less than 0");
   }
-  
+
   /* now assign basin according to the index rank */
   for(n=0; n<ntiles; n++) for(j=1; j<=ny; j++) for(i=1; i<=nx; i++) {
     basin = river_tmp[n].basin[j*nxp2+i];
@@ -1365,7 +1365,7 @@ void sort_basin(int ntiles, river_type* river_data)
       river_data[n].basin[j*nxp2+i] = maxbasin - rank[basin-1];
     }
   }
-  
+
   /* release the memory */
   for(n=0; n<ntiles; n++) free(river_tmp[n].basin);
   free(river_tmp);
@@ -1392,7 +1392,7 @@ void write_river_data(const char *river_src_file, const char *output_file, river
   int id_xaxis, id_yaxis, id_xaxis_in, id_yaxis_in;
   int fid, fid_in, dimid[2];
   int n, i, j, ii, jj, nx, ny, nxp2;
-  
+
   fid_in = mpp_open(river_src_file, MPP_READ);
   id_subA_in = mpp_get_varid(fid_in, subA_name);
   id_tocell_in = mpp_get_varid(fid_in, tocell_name);
@@ -1411,11 +1411,10 @@ void write_river_data(const char *river_src_file, const char *output_file, river
     nx = river_data[n].nx;
     ny = river_data[n].ny;
     nxp2 = nx + 2;
+
     fid = mpp_open(river_data[n].filename, MPP_WRITE);
-    mpp_def_global_att(fid, "version", version);  
-    mpp_def_global_att(fid, "code_version", tagname);
-    if(great_circle_algorithm) mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
-    mpp_def_global_att(fid, "history", history);
+    print_provenance_gv_gca(fid, history, NULL, great_circle_algorithm );
+
     dimid[1] = mpp_def_dim(fid, gridx_name, nx);
     dimid[0] = mpp_def_dim(fid, gridy_name, ny);
     id_xaxis = mpp_def_var(fid, gridx_name, MPP_DOUBLE, 1, &(dimid[1]), 0);
@@ -1439,7 +1438,7 @@ void write_river_data(const char *river_src_file, const char *output_file, river
     id_x        = mpp_def_var(fid, x_name, MPP_DOUBLE, 2, dimid, 2,
 			      "long_name", "Geographic longitude", "units", "degree_east");
     id_y        = mpp_def_var(fid, y_name, MPP_DOUBLE, 2, dimid, 2,
-			      "long_name", "Geographic latitude", "units", "degree_north");    
+			      "long_name", "Geographic latitude", "units", "degree_north");
     mpp_end_def(fid);
     xt = (double *)malloc(nx*sizeof(double));
     yt = (double *)malloc(ny*sizeof(double));
@@ -1478,7 +1477,7 @@ void write_river_data(const char *river_src_file, const char *output_file, river
       xt    [j*nx+i] = river_data[n].xt    [jj*nxp2+ii];
       yt    [j*nx+i] = river_data[n].yt    [jj*nxp2+ii];
     }
-    
+
     mpp_put_var_value(fid, id_subA, subA);
     mpp_put_var_value(fid, id_tocell, tocell);
     mpp_put_var_value(fid, id_travel, travel);
@@ -1509,14 +1508,14 @@ double distance(double lon1, double lat1, double lon2, double lat2)
 {
   double s1, s2, dx;
   double dist;
-    
+
   dx = lon2 - lon1;
   if(dx > 180.) dx = dx - 360.;
   if(dx < -180.) dx = dx + 360.;
 
   if(lon1 == lon2)
     dist = fabs(lat2 - lat1) * D2R;
-  else if(lat1 == lat2) 
+  else if(lat1 == lat2)
     dist = fabs(dx) * D2R * cos(lat1*D2R);
   else {   /* diagonal distance */
     s1 =  fabs(dx)  * D2R * cos(lat1*D2R);
@@ -1526,13 +1525,13 @@ double distance(double lon1, double lat1, double lon2, double lat2)
   dist *= RADIUS;
 
   return dist;
-}    
+}
 
 /*------------------------------------------------------------------------------
   void qsort_index(double array[], int start, int end, int rank[])
   sort array in increasing order and get the rank of each member in the original array
-  the array size of array and rank will be size. 
-  
+  the array size of array and rank will be size.
+
   ----------------------------------------------------------------------------*/
 #define swap(a,b,t) ((t)=(a),(a)=(b),(b)=(t))
 void qsort_index(double array[], int start, int end, int rank[])
@@ -1574,6 +1573,6 @@ void qsort_index(double array[], int start, int end, int rank[])
       }
    }
 }
- 
+
 
 

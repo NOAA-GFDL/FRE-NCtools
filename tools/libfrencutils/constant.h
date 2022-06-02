@@ -17,5 +17,21 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+
+#ifndef NCTOOLS_CONSTANT_H
+#define NCTOOLS_CONSTANT_H
+
 #define RADIUS        (6371000.)
 #define STRING        255
+
+#ifndef M_PI
+#define M_PI		(3.14159265358979323846)
+#endif
+
+#define R2D (180/M_PI)
+#define D2R (M_PI/180)
+#define TPI (2.0*M_PI)
+#define HPI (0.5*M_PI)
+
+#endif
+

@@ -19,38 +19,23 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-
+load test_utils
+#ncks atmos daily *.nc file
 
 @test "reference combine-ncc combines comparison to bronx-16 stored copy" {
-  if [ ! -d "Test22" ] 
-  then
-  mkdir Test22
-  fi
 
-  cd Test22
-
-  #ncks atmos daily *.nc file
- 
   cp $top_srcdir/t/Test17-input/combine-ncc.atmos_daily.nc.copy .
 
-  #Combine netcdf copy file 
-  run command combine-ncc \
+  #Combine netcdf copy file
+   combine-ncc \
       combine-ncc.atmos_daily.nc.copy \
-      combine-ncc_output.nc 
-  [ "$status" -eq 0 ]
+      combine-ncc_output.nc
   [ -e combine-ncc_output.nc ]
-  run ncdump -h combine-ncc_output.nc
-  [ "$status" -eq 0 ]
+  ncdump -h combine-ncc_output.nc
 
   [ -e $top_srcdir/t/Test17-reference/combine-ncc_output.nc ]
 
-  run nccmp -V
-  [ "$status" -eq 0 ]
+  nccmp -V
 
-  run nccmp -d combine-ncc_output.nc  $top_srcdir/t/Test17-reference/combine-ncc_output.nc
-  [ "$status" -eq 0 ]
-
-  #Clean up 
-  cd ..
-  rm -rf Test22
+  nccmp -d combine-ncc_output.nc  $top_srcdir/t/Test17-reference/combine-ncc_output.nc
 }

@@ -19,7 +19,7 @@
  **********************************************************************/
 /*******************************************************************************
                              create_hgrid.h
-  This header file provide interface to create different types of horizontal 
+  This header file provide interface to create different types of horizontal
   grid. geographical grid location, cell length, cell area and rotation
   angle are returned. All the returned data are on supergrid.
 
@@ -45,7 +45,7 @@ void create_simple_cartesian_grid( double *xbnds, double *ybnds, int *nlon, int 
 				   double *dx, double *dy, double *area, double *angle_dx);
 
 void create_grid_from_file( char *file, int *nlon, int *nlat, double *x, double *y, double *dx, double *dy,
-           		    double *area, double *angle_dx, int  use_great_circle_algorithm );
+           		    double *area, double *angle_dx, int  use_great_circle_algorithm, int use_angular_midpoint );
 
 void create_spectral_grid( int *nlon, int *nlat, int *isc, int *iec,
 			   int *jsc, int *jec, double *x, double *y, double *dx,
@@ -74,4 +74,12 @@ void create_f_plane_grid( int *nxbnds, int *nybnds, double *xbnds, double *ybnds
 			  int use_legacy, double f_plane_latitude, int *isc, int *iec,
                           int *jsc, int *jec, double *x, double *y, double *dx,
                           double *dy, double *area, double *angle_dx, const char *center );
+
+void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, double *x, double *y,
+				double *dx, double *dy, double *area, double *angle_dx,
+				 double *angle_dy, double shift_fac, int do_schmidt, int do_cube_transform, double stretch_factor,
+				 double target_lon, double target_lat, int nest_grid,
+				 int parent_tile, int refine_ratio, int istart_nest,
+                                  int iend_nest, int jstart_nest, int jend_nest, int halo, int output_length_angle);
+
 #endif

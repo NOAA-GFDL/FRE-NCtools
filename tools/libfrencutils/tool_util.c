@@ -17,19 +17,21 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h> 
-#include "constant.h" 
-#include "mosaic_util.h" 
+#include <math.h>
+#include <unistd.h>
+#include <time.h>
+#include "config.h"
+#include "constant.h"
+#include "mosaic_util.h"
 #include "read_mosaic.h"
 #include "tool_util.h"
 #include "interp.h"
 #include "mpp.h"
 #include "mpp_io.h"
-#define  D2R (M_PI/180.)
-#define  R2D (180./M_PI)
+
 
 const double SMALL = 1.0e-4;
 double distant(double a, double b, double met1, double met2);
@@ -42,7 +44,6 @@ int lon_fix(double *x, double *y, int n_in, double tlon);
 
 int round_to_nearest_int(double r)
 {
-
   return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
 }
 
@@ -57,7 +58,7 @@ void get_file_path(const char *file, char *dir)
   char *strptr = NULL;
 
   /* get the diretory */
- 
+
   strptr = strrchr(file, '/');
   if(strptr) {
     len = strptr - file;
@@ -69,13 +70,13 @@ void get_file_path(const char *file, char *dir)
   }
   dir[len] = 0;
 
-}; /* get_file_path */
+} /* get_file_path */
 
 int get_int_entry(char *line, int* value)
 {
   char* pch;
   int num;
-  
+
   pch = strtok(line, ", ");
   num = 0;
   while( pch != NULL) {
@@ -83,14 +84,14 @@ int get_int_entry(char *line, int* value)
     pch = strtok(NULL, ", ");
   }
   return num;
-    
-};
+
+}
 
 int get_double_entry(char *line, double *value)
 {
   char* pch;
   int num;
-  
+
   pch = strtok(line, ", ");
   num = 0;
   while( pch != NULL) {
@@ -98,7 +99,7 @@ int get_double_entry(char *line, double *value)
     pch = strtok(NULL, ", ");
   }
   return num;
-};
+}
 
 /*********************************************************************
   double spherical_dist(double x1, double y1, double x2, double y2)
@@ -109,7 +110,7 @@ double spherical_dist(double x1, double y1, double x2, double y2)
 {
   double dist = 0.0;
   double h1, h2;
-  
+
   if(x1 == x2) {
     h1 = RADIUS;
     h2 = RADIUS;
@@ -120,12 +121,12 @@ double spherical_dist(double x1, double y1, double x2, double y2)
     h2 = RADIUS * cos(y2*D2R);
     dist = distant(x1,x2,h1,h2);
   }
-  else 
+  else
     mpp_error("tool_till: This is not rectangular grid");
 
   return dist;
-}; /* spherical_dist */
-  
+} /* spherical_dist */
+
 
 /*********************************************************************
   void double bipolar_dist(double x1, double y1, double x2, double y2)
@@ -137,10 +138,10 @@ double bipolar_dist(double x1, double y1, double x2, double y2,
   double dist, x[2],y[2], bp_lon[2], bp_lat[2], metric[2];
   double h1[2], h2[2], chic;
   int n;
-  
+
   x[0] = x1;  x[1] = x2;
   y[0] = y1;  y[1] = y2;
-  
+
   /*--- get the bipolar grid and metric term ----------------------------*/
   for(n=0; n<2; n++){
     bp_lon[n] = bp_lam(x[n],y[n],bpeq, rp);     /* longitude (degrees) in bipolar grid system */
@@ -156,16 +157,16 @@ double bipolar_dist(double x1, double y1, double x2, double y2,
   }
 
   /*--- then calculate the distance -------------------------------------*/
-  if(x1 == x2) 
+  if(x1 == x2)
     dist = distant(bp_lon[0],bp_lon[1],metric[0]*h1[0],metric[1]*h1[1]);
-  else if(y1 == y2) 
+  else if(y1 == y2)
     dist = distant(bp_lat[0],bp_lat[1],metric[0]*h2[0],metric[1]*h2[1]);
   else
-    mpp_error("tool_util: This tripolar grid not transformed from rectangular grid");    
+    mpp_error("tool_util: This tripolar grid not transformed from rectangular grid");
 
   return dist;
-  
-}; /* bipolar_dist */
+
+} /* bipolar_dist */
 
 /*********************************************************************
   double distant(double a, double b, double met1, double met2)
@@ -174,11 +175,11 @@ double bipolar_dist(double x1, double y1, double x2, double y2,
 double distant(double a, double b, double met1, double met2)
 {
    return fabs(a-b)*D2R*(met1+met2)/2. ;
-}; /* distant */
+} /* distant */
 
 /*********************************************************************
    double spherical_area(double x1, double y1, double x2, double y2,
-                   double x3, double y3, double x4, double y4 )            
+                   double x3, double y3, double x4, double y4 )
    rectangular grid box area
  ********************************************************************/
 double spherical_area(double x1, double y1, double x2, double y2,
@@ -186,7 +187,7 @@ double spherical_area(double x1, double y1, double x2, double y2,
 {
   double area, dx, lat1, lat2, x[4],y[4];
   int i, ip;
-  
+
   x[0] = x1; y[0] = y1;
   x[1] = x2; y[1] = y2;
   x[2] = x3; y[2] = y3;
@@ -206,18 +207,18 @@ double spherical_area(double x1, double y1, double x2, double y2,
 
     if (lat1 == lat2) /* cheap area calculation along latitude  */
       area = area - dx*sin(lat1);
-    else 
+    else
       area = area - dx*(sin(lat1)+sin(lat2))/2;   /*  TRAPEZOID_RULE */
   }
 
   area = area * RADIUS * RADIUS;
 
   return area;
-}; /* spherical_area */
+} /* spherical_area */
 
 /*********************************************************************
    double bipolar_area(double x1, double y1, double x2, double y2,
-                       double x3, double y3, double x4, double y4 )            
+                       double x3, double y3, double x4, double y4 )
    bipolar grid  area
  ********************************************************************/
 double bipolar_area(double x1, double y1, double x2, double y2,
@@ -225,7 +226,7 @@ double bipolar_area(double x1, double y1, double x2, double y2,
 {
   double area, dx, lat1, lat2, x[8],y[8];
   int i, ip, n;
-  
+
   x[0] = x1; y[0] = y1;
   x[1] = x2; y[1] = y2;
   x[2] = x3; y[2] = y3;
@@ -236,7 +237,7 @@ double bipolar_area(double x1, double y1, double x2, double y2,
   n = lon_fix(x, y, 4, 180.);
 
   /*--- calculate the area ----------------------------------------------  */
-  area = 0.0;  
+  area = 0.0;
   for(i=0; i<n; i++){
     ip = i+1;
     if(ip == n) ip = 0;
@@ -252,11 +253,11 @@ double bipolar_area(double x1, double y1, double x2, double y2,
     else
       area = area - dx*(sin(lat1)+sin(lat2))/2;   /*  TRAPEZOID_RULE */
   }
-  
+
   area = area * RADIUS * RADIUS;
 
   return area;
-}; /* bipolar_area */
+} /* bipolar_area */
 
 /*********************************************************************
   double lat_dist(double x1, double x2)
@@ -265,7 +266,7 @@ double bipolar_area(double x1, double y1, double x2, double y2,
   double lat_dist(double x1, double x2)
 {
   return min(fmod(x1-x2+720,360.),fmod(x2-x1+720,360.));
-};
+}
 
 
 /*********************************************************************
@@ -295,23 +296,23 @@ double bipolar_area(double x1, double y1, double x2, double y2,
     return (-90+lat_dist(x,bpsp));
   else
     return ( 90-lat_dist(x,bpnp));
-}; /* bp_phi */
+} /* bp_phi */
 
 
 /*********************************************************************
   void tp_trans(double& lon, double& lat, double lon_ref)
   calculate tripolar grid
  ********************************************************************/
-void tp_trans(double *lon, double *lat, double lon_ref, double lon_start, 
+void tp_trans(double *lon, double *lat, double lon_ref, double lon_start,
 		    double lam0, double bpeq, double bpsp, double bpnp, double rp )
 {
   double lamc, phic, lams, chic, phis;
-  
+
   lamc = bp_lam(*lon, *lat, bpeq, rp )*D2R;
   phic = bp_phi(*lon, *lat, bpsp, bpnp)*D2R;
 
   if (fabs(*lat-90.) < SMALL) {
-       if (phic > 0) 
+       if (phic > 0)
 	 *lon=lon_in_range(lon_start,lon_ref);
        else
 	 *lon=lon_start+180.;
@@ -330,10 +331,10 @@ void tp_trans(double *lon, double *lat, double lon_ref, double lon_start,
     chic = acos(cos(lamc)*cos(phic));                          /* eqn. 6 */
     phis = M_PI*0.5-2*atan(rp*tan(chic/2));                        /* eqn. 5 */
     *lon = lams*R2D;
-    *lon = lon_in_range(*lon,lon_ref); 
+    *lon = lon_in_range(*lon,lon_ref);
     *lat = phis*R2D;
   }
-}; /* tp_trans */
+} /* tp_trans */
 
 /*********************************************************************
   double Lon_in_range(double lon, double lon_strt)
@@ -346,13 +347,13 @@ double lon_in_range(double lon, double lon_strt)
   lon_in_range = lon;
   lon_end = lon_strt+360.;
 
-  if (fabs(lon_in_range - lon_strt) < SMALL) 
+  if (fabs(lon_in_range - lon_strt) < SMALL)
     lon_in_range = lon_strt;
   else if (fabs(lon_in_range - lon_end) < SMALL)
     lon_in_range = lon_strt;
   else {
     while(1) {
-      if (lon_in_range < lon_strt)          
+      if (lon_in_range < lon_strt)
 	lon_in_range = lon_in_range +  360.;
       else if (lon_in_range  >  lon_end)
 	lon_in_range  = lon_in_range - 360.;
@@ -361,18 +362,18 @@ double lon_in_range(double lon, double lon_strt)
     }
   }
   return lon_in_range;
-}; /* lon_in_range */
+} /* lon_in_range */
 
 
 /*********************************************************************
-   int lon_fix(double *x, double *y, int n_in, double tlon) 
+   int lon_fix(double *x, double *y, int n_in, double tlon)
    fix longitude at pole.
  ********************************************************************/
 int lon_fix(double *x, double *y, int n_in, double tlon)
 {
   int i, ip, im, n_out;
   double x_sum, dx;
-  
+
   n_out = n_in;
   i     = 0;
   while( i < n_out) {
@@ -413,7 +414,7 @@ int lon_fix(double *x, double *y, int n_in, double tlon)
   x_sum = x[1];
   for(i=1;i< n_out;i++){
     dx = x[i] - x[i-1];
-    if(dx < -180) 
+    if(dx < -180)
       dx = dx + 360;
     else if (dx >  180)
       dx = dx - 360;
@@ -423,14 +424,14 @@ int lon_fix(double *x, double *y, int n_in, double tlon)
   }
 
   dx = x_sum/(n_out) - tlon;
-  if (dx < -180.) 
+  if (dx < -180.)
     for(i=0;i<n_out;i++) x[i] = x[i] + 360.;
   else if (dx > 180.)
     for(i=0;i<n_out;i++) x[i] = x[i] - 360.;
 
   return n_out;
-  
-}; /* lon_fix */
+
+} /* lon_fix */
 
 
 /*********************************************************************
@@ -447,7 +448,7 @@ void vtx_delete(double *x, double *y, int *n, int n_del)
       y[i] = y[i+1];
     }
   (*n)--;
-}; /* vtx_delete */
+} /* vtx_delete */
 
 /*********************************************************************
    void Vtx_insert(double *x, double *y, int *n, int n_del)
@@ -463,14 +464,14 @@ void vtx_insert(double *x, double *y, int *n, int n_ins)
   }
   (*n)++;
 
-}; /* vtx_insert */
+} /* vtx_insert */
 
 
 /*----------------------------------------------------------------------
     void vect_cross(e, p1, p2)
     Perform cross products of 3D vectors: e = P1 X P2
     -------------------------------------------------------------------*/
-    
+
 /********************************************************************************
   void compute_grid_bound(int nb, const couble *bnds, const int *npts, int *grid_size, const char *center_cell)
   compute the 1-D grid location. This algorithm is developed by Russell Fiedler
@@ -487,7 +488,7 @@ double* compute_grid_bound(int nb, const double *bnds, const int *npts, int *gri
     refine = 2;
   else
     mpp_error("tool_util: center should be 'none', 'c_cell' or 't_cell' ");
-	  
+
   grid1 = (double *)malloc(nb*sizeof(double));
   grid1[0] = 1;
   n = 0;
@@ -525,14 +526,14 @@ double* compute_grid_bound(int nb, const double *bnds, const int *npts, int *gri
     for(i=1; i<n;  i++) grid[2*i+1] = 2*grid[2*i] - grid[2*i-1];
 */
   }
-    
+
   free(grid1);
   free(grid2);
-  free(tmp);  
+  free(tmp);
 
   return grid;
-  
-};/* compute_grid_bound */
+
+}/* compute_grid_bound */
 
 int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds)
 {
@@ -540,9 +541,9 @@ int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds)
   int refine, l;
   double avg_res, chg_res, wid, an;
   int ncells;
-  
+
   refine = 2;
-  
+
   grid_size = 0;
   for(l=0; l<nb-1; l++) {
     avg_res = 0.5*(dbnds[l] + dbnds[l+1]);
@@ -551,7 +552,7 @@ int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds)
     wid   = fabs(bnds[l+1] - bnds[l]);
     an    = wid/avg_res;
     ncells = round(an);
-    grid_size += ncells;    
+    grid_size += ncells;
   }
 
   grid_size *= refine;
@@ -573,16 +574,16 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
   int    maxlen = MAX_GRID_LENGTH/2;
   double delta[maxlen];
   int    num, ncells, npts;
-  
+
   if(!strcmp(center, "t_cell") || !strcmp(center, "c_cell") || nb == 2 )
-    refine = 2;	         
+    refine = 2;
   else
     mpp_error("tool_util(compute_grid_bound_legacy): center should be 'c_cell' or 't_cell' when nb > 2 ");
 
   /* when center is 't_cell', stretch must be 1 */
   if( !strcmp(center, "t_cell") && stretch != 1 )
     mpp_error("tool_util(ompute_grid_bound_legacy): stretch must be 1 when center = 't_cell' ");
-  
+
   num = 0;
   for(l=0; l<nb-1; l++) {
     int keep_going;
@@ -591,7 +592,7 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
        wid     = width of region
        tol     = tolerance for fitting T cels within region width
     */
-      
+
     /* provide for stretching last region if needed */
 
     if( l == nb-2 ) {
@@ -610,7 +611,7 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
     if( !strcmp(center, "t_cell") ) {
       if( fabs(an-ncells) > tol )
 	mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 't_cell'");
-    
+
       for(i=0; i<ncells; i++) {
 	del = avg_res - 0.5*chg_res*cos((M_PI/ncells)*(i+0.5));
 	num++;
@@ -625,7 +626,7 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
 	 note: "sum" initially discounts half of the U cells widths
 	 at the boundaries
       */
-       
+
       sum = 0.5*dbnds[l] - 0.5*dbnds[l+1];
       n   = 0;
       i = 0;
@@ -651,14 +652,14 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
 	  }
 	  mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 'c_cell'");
 	}
-      }      
+      }
     }
   }
 
   npts = refine*num + 1;
   *grid_size = refine*num;
   grid = (double *)malloc(npts*sizeof(double));
-			  
+
   grid[0] = bnds[0];
   if( !strcmp(center, "t_cell") ) {
     for(i = 0; i<num; i++ ) {
@@ -671,15 +672,15 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
     grid[1] = grid[0] + 0.5*dbnds[0];
     for( i = 0; i < num-1; i++ ) {
       del = 0.5*delta[i];
-      grid[2*i+2] = grid[2*i+1] + del; 
-      grid[2*i+3] = grid[2*i+2] + del; 
+      grid[2*i+2] = grid[2*i+1] + del;
+      grid[2*i+3] = grid[2*i+2] + del;
     }
     grid[2*num] = grid[2*num-1] + 0.5*delta[num-1];
   }
-    
+
   return grid;
-  
-};/* compute_grid_bound_legacy */
+
+}/* compute_grid_bound_legacy */
 
 
 void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, int *cyclic_y, int *is_tripolar )
@@ -689,28 +690,28 @@ void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, 
   char errmsg[512];
   char attvalue[128];
   int tile1[2], tile2[2];
-  int istart1[2], iend1[2], jstart1[2], jend1[2]; 
+  int istart1[2], iend1[2], jstart1[2], jend1[2];
   int istart2[2], iend2[2], jstart2[2], jend2[2];
-  
+
   *cyclic_x = 0;
   *cyclic_y = 0;
   *is_tripolar = 0;
 
 
-  
+
   if( grid_version == VERSION_2)  { /* mosaic grid */
     /* make sure there is only one tile in the ocean mosaic */
     ntiles = read_mosaic_ntiles(grid_file);
-      
+
     if( ntiles != 1) mpp_error("==>Error from get_boundary_type: ntiles is not 1, contact developer");
-    
+
     if(mpp_field_exist(grid_file, "contacts") ) {
       ncontacts = read_mosaic_ncontacts(grid_file);
       if(ncontacts < 1) {
 	sprintf(errmsg, "==>Error from get_boundary_type: number of contacts "
 		"number of contacts should be larger than 0 when field contacts exist in file %s",grid_file );
 	mpp_error(errmsg);
-      }  
+      }
       if(ncontacts > 2) {
 	sprintf(errmsg, "==>Error from get_boundary_type: "
                        "number of contacts should be no larger than 2 in file %s",grid_file );
@@ -759,7 +760,7 @@ void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, 
      else
        printf("\n==>NOTE from get_boundary_type: x_boundary_type is solid_walls\n");
 
-     if(*cyclic_y) 
+     if(*cyclic_y)
        printf("\n==>NOTE from get_boundary_type: y_boundary_type is cyclic\n");
      else if(*is_tripolar)
        printf("\n==>NOTE from get_boundary_type: y_boundary_type is fold_north_edge\n");
@@ -767,4 +768,50 @@ void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, 
        printf("\n==>NOTE from get_boundary_type: y_boundary_type is solid_walls\n");
   }
 
-}; /* get_boundary_type */
+} /* get_boundary_type */
+
+
+/*
+  write (define) the provenance information as  global attributes in the netcdf file.
+  - history (the command and arguemnts used) is written if passed in as not null).
+  - grid version is written if passed in as not null.
+  - gca_flag is the great circle algorithm flag.
+  */
+void print_provenance_gv_gca(int fid, const char *history, char *grid_version, int gca_flag) {
+  char hostname[128];
+  gethostname(hostname, 128);
+
+  char *crTimeStringNoNL;
+  time_t crTime;
+  time(&crTime);
+  crTimeStringNoNL = strtok(ctime(&crTime), "\n");  // remove the newline char
+
+  if (grid_version != NULL) {
+    mpp_def_global_att(fid, "grid_version", grid_version);
+  }
+
+  mpp_def_global_att(fid, "code_release_version", PACKAGE_VERSION);  // from autotools config.h
+
+  if (gca_flag != 0) {
+    mpp_def_global_att(fid, "great_circle_algorithm", "TRUE");
+  }
+
+  mpp_def_global_att(fid, "git_hash", GIT_HEADHASH);
+
+  mpp_def_global_att(fid, "creationtime", crTimeStringNoNL);
+
+  mpp_def_global_att(fid, "hostname", hostname);
+
+  if (history != NULL) {
+    mpp_def_global_att(fid, "history", history);
+  }
+}
+
+void print_provenance_gv(int fid, const char * history, char * grid_version){
+  print_provenance_gv_gca(fid, history, grid_version, 0 );
+}
+
+void print_provenance(int fid,  const char * history){
+  print_provenance_gv_gca(fid, history, NULL, 0 );
+}
+

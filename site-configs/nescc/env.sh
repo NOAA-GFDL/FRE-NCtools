@@ -32,27 +32,36 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Variables to control versions used
-env_version=v0.17
-gcc_version=11.2.0
-ncc_version=4.8.1
-ncf_version=4.5.3
-mpi_version=3.4.2
+intel_version=18.0.5.274
+gnu_version=6.5.0
+ncc_version=4.7.0
+mpi_version=2018.4.274
 
-# Ensure the base spack modules are first in MODULEPATH
-module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
-module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
+# GCC is needed for icc to use newer C11 constructs.  However, on systems
+# that use lmod, we cannot load two compiler family modules concurrently.
+# This should add the GNU path information to the *PATH variables
+module prepend-path PATH "/apps/gnu/gcc-9.2.0/bin"
+module prepend-path MANPATH "/apps/gnu/gcc-9.2.0/share/man"
+module prepend-path LD_LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib"
+module prepend-path LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib"
+module prepend-path LD_LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib64"
+module prepend-path LIBRARY_PATH "/apps/gnu/gcc-9.2.0/lib64"
+module prepend-path CPATH "/apps/gnu/gcc-9.2.0/include"
+module prepend-path CMAKE_PREFIX_PATH "/apps/gnu/gcc-9.2.0/"
+
+# Load the Intel compilers
+module load intel/${intel_version}
 
 # bats and nccmp are needed for tests
-module load bats/0.4.0
-module load nccmp/1.9.0.1
+module prepend-path PATH /home/Seth.Underwood/opt/bats/0.4.0/bin
+module load nccmp/1.8.5
 
-# Load the GCC compilers
-module load gcc/$gcc_version
-
-# Load the GCC modules required for building
-module load netcdf-c/$ncc_version
-module load netcdf-fortran/$ncf_version
-module load mpich/$mpi_version
+# Load the Intel modules required for building
+module load netcdf/$ncc_version
+module load impi/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
+
+# Include the netcdf-c/netcdf-fortran library paths during linking
+setenv LD_RUN_PATH \$LD_LIBRARY_PATH
