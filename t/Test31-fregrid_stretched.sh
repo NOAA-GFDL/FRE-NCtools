@@ -73,9 +73,10 @@
                 --remap_file fregrid_remap_file_640_by_400_32.0.nc \
                 --output_file out_32.0.nc --check_conserve \
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
-  var_32_0=$output | awk '{ print sprintf("%.9f", $1); }'
+  var_32_0=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  [[ ${var_32_0} < 0.0 ]]
+  expr ${var_32_0} \< 0.00001
+  [ "$status" -eq 0 ] 
 
   run bash -c 'fregrid \
                 --input_mosaic C256_mosaic_34.0.nc \
@@ -88,9 +89,10 @@
                 --remap_file fregrid_remap_file_640_by_400_34.0.nc \
                 --output_file out_34.0.nc --check_conserve \
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
-  var_34_0=$output | awk '{ print sprintf("%.9f", $1); }'
+  var_34_0=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  [[ ${var_34_0} < 0.0 ]]
+  expr ${var_34_0} \< 0.00001  
+  [ "$status" -eq 0 ]
 
   run bash -c 'fregrid \
                 --input_mosaic C256_mosaic_35.4.nc \
@@ -103,9 +105,10 @@
                 --remap_file fregrid_remap_file_640_by_400_35.4.nc \
                 --output_file out_35.4.nc --check_conserve \
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
-  var_35_4=$output | awk '{ print sprintf("%.9f", $1); }'
+  var_35_4=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  [[ ${var_35_4} < 0.0 ]]
+  expr ${var_35_4} \< 0.00001
+  [ "$status" -eq 0 ] 
  
   cd ..
 #  rm -rf Test31
