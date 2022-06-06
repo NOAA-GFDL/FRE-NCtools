@@ -65,27 +65,30 @@ TESTS = Test01-check_programs_exist.sh \
         Test26-reference_fregrid_gcc.sh \
         Test27-multiple_nests.sh \
         Test28-make_hgrid.sh \
-        Test29-make_vgrid.sh
+        Test29-make_vgrid.sh \
+        Test31-fregrid_stretched.sh \
+	Test32-fregrid_no_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
-            Test02-input\
-            Test02-reference \
-            Test03-input \
-            Test06-input \
-            Test07-input \
-            Test08-input \
-            Test10-input \
-            Test12-input \
-            Test15-input \
-            Test16-input \
-            Test17-input \
-            Test18-input \
-            Test20-input \
-            Test17-reference \
-            Test18-reference \
-            Test20-reference \
-            $(test25_data) \
-	           Test30-input
+             Test02-input\
+             Test02-reference \
+             Test03-input \
+             Test06-input \
+             Test07-input \
+             Test08-input \
+             Test10-input \
+             Test12-input \
+             Test15-input \
+             Test16-input \
+             Test17-input \
+             Test18-input \
+             Test20-input \
+	     Test17-reference \
+             Test18-reference \
+             Test20-reference \
+             $(test25_data) \
+             Test31-input \
+	     Test32-input
 
 clean-local:
 	$(RM) *.nc Test*/*
