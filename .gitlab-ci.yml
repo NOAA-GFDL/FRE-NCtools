@@ -19,10 +19,6 @@ variables:
     - ../configure --prefix=${FMS_HOME}/local/opt/fre-nctools/${installLabel}/${FRE_SITE}
     - make
     - make -j check
-  artifacts:
-    expire_in: 1 month
-    paths:
-      - ${CI_PROJECT_DIR}/build.${FRE_SITE}.${CI_COMMIT_REF_SLUG}
 
 .deployScript: &deployScript
   script:
