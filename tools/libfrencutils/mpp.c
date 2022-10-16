@@ -32,7 +32,7 @@
 #include "mpp.h"
 
 //These four fields are defined in the file of mpp_domain.c.
-extern int npes, root_pe, pe; 
+static int npes, root_pe, pe; 
 
 /****************************************************
          global variables
