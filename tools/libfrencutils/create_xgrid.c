@@ -2087,7 +2087,6 @@ double poly_ctrlat(const double x[], const double y[], int n)
 {
   double ctrlat = 0.0;
   int    i;
-
   for (i=0;i<n;i++) {
     int ip = (i+1) % n;
     double dx = (x[ip]-x[i]);
@@ -2100,7 +2099,7 @@ double poly_ctrlat(const double x[], const double y[], int n)
     avg_y = (lat1+lat2)*0.5;
     if      (dx==0.0) continue;
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
-    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
 
     if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
       ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );

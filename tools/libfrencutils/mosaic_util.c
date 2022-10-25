@@ -324,7 +324,7 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
   and apply the Stokes theorem: 
       \integral_surface_S Curl(A).da = \integral_loop_C A.dl 
   where da and dl are the vectorial suface and line elements on sphere:
-      da=(da, 0, 0) and dl=(0, R*d(lon), R*cos(lat)*d(lon)).
+      da=(da, 0, 0) and dl=(0, R*cos(lat)*d(lon), R*d(lat)).
   We get
       \integral_surface_S Curl(A) = \integral_surface_S (da/r**2) = S/R**2
   and
@@ -332,59 +332,77 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
 
   Hence per Stokes formula:
       S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon). 
-  But 
-   \integral_loop_C d(lon)=0 as long as the loop does not go over the South Pole!
-   \integral_loop_C d(lon)=2*pi otherwise
-  Careful, is this true?
+             = I1 - I2
 
-  Now the approximation used for loop integral 
-    \integral_loop_C sin(lat)*d(lon)
-  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lon)
-  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
+  Now the approximation used for the second loop integral
+  I2= \integral_loop_C sin(lat)*d(lon)
+    = sum_over_loop_segments \integral_loop_C sin(lat)*d(lon)
+    = sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
 
-  If d(lon)/d(lat) is assumed contant over a loop segment, given that the segments
+  If d(lon)/d(lat) is assumed constant over a loop segment, given that the segments
   used here are the sides of a grid cell, then we can take it outside the integral
     sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
    =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat) 
-   =sum_over_grid_sides (lon2-lon1)/(lat2-lat1) (-(cos(lat2)-cos(lat1)))
+   =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (-(cos(lat2)-cos(lat1)))
+   =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (2*sin(0.5*(lat2+lat1))*sin(0.5*(lat2-lat1)))
 
-  Finally:
-   S/R**2 = (lon2-lon1)/(lat2-lat1)*(cos(lat2)-cos(lat1))  + 0 or 2pi
+  So, finally:
+   S/R**2 = I1 - I2
+          = I1 - sum_over_grid_cell_sides (lon2-lon1)* sin(0.5*(lat2+lat1))* sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
+  We can prove that the first integral I1 above is zero for grid cells that do not include or cross a pole.
 
   Special cases:
-   As we saw this approximation is based on the assumtion that  d(lon)/d(lat) is
-   almost a constant over each segment of the path. This assumption breaks down 
-   if the path passes through a pole, e.g. along a longitude great circle where
-   lon abruptly changes by 2*pi as it goes through the pole. This actually happens
-   for some of the stretched ATM grids in the mix like this: 
+   In general I1=0, but for the grid cells that have the N Pole as a vertex:
+      I1=- angle at pole vertex
+   Particularly,
+      I1=-pi/2 for regular CS grids (or close to -pi/2 for stregtched CS grids)
+   and
+      I1=-pi for grid cells with a side passing through the N pole
+      I1=+pi for grid cells with a side passing through the S pole
+   You could easily see that for a spherical grid cell bounded by the North pole, two longitude and a lattitude to the south.
+   There are 8 such cells in a CS grids and a few more in the exchange grids.
+
+   Alternatively, we can treat such a pole vertex as the limit of an additional (imagined) grid segment that shrinks
+   as its two end points approach the pole. Such segment contributes pi/2 to the line integral I2.
+   So, as an implementaion trick, if for each pole vertex we insert an additional twin pole vertex with a longitude the same
+   as the next vertex in the cell (which is 90 degrees or close to 90 degrees appart) the contribution to I1 shifts into -I2
+   and we can again assume I1=0. This scheme is implemented in subroutine fix_lon() which is always called before poly_area().
+   That is why in the implementation below I1 is totally absent.
+    
+   In some pathological grid cells that do not have a pole vertex, I1 may not come out zero due to ambiguities in choosing
+   d(lon) mod 2pi and we have to be careful in the implementation to deal with those grid cells.
+   As we saw the approximation for I2 is based on the assumtion that  d(lon)/d(lat) is
+   almost a constant over each segment of the path. This approximation is also equivalent
+   to assuming a linear variation of latitude versus the longitude along the loop segments (grid cell sides)
+   i.e., lat = lat1 + (lon-lon1)*(lat2-lat1)/(lon2-lon1)
+   This assumption breaks down if the segment passes through a pole, e.g. along a longitude great circle where
+   lon abruptly changes by pi as it goes through the pole like in the following two grid cells:
        x----x----x  
        |    |    |
        |   Pole  |
        |    |    |
        |    |    |
        x----x----x  
-    x denotes grid points. In this situation we cannot use the above approximation
-    for the middle vertical path. 
-    To fix this we "assume" that the two loop integrals straddling the pole
-    are equal. Let's set
-      I = - \integral_loop_double_cell sin(lat)*d(lon), S =double_cell area /R**2
-      Il= - \integral_loop_left_cell sin(lat)*d(lon)  , Sl=left_cell area   /R**2
-      Ir= - \integral_loop_right_cell sin(lat)*d(lon) , Sr=right_cell area  /R**2
-    Then assume
-      I = Il+Ir 
+    x denotes the grid points.
+    We can diagnose such situations
+      either via I1=sum(dlons) coming out as 2*pi instead of 0, in that case we can correct the area by 2*pi
+      or via dx=-pi, in that case we can just flip the sign of dx and continue
+    These two turn out to be equivalent and so in the implementation below we add the equal sign inside the if conditional   if(dx <= -M_PI) dx = dx + 2.0*M_PI;
+    The reason for the sign flip is delicate. As we saw above the contribution to I1 from a grid cell side
+    passing through the S pole is +pi regardless of the direction.
 
-    According to Stoke's formula above
-      S =I + 2*pi 
-      Sl=Il
-      Sr=Ir
-      S=Sl+Sr => I+2*pi = (Il+Ir)=2*Ir (assuming Il=Ir if the grid cells are symmetric)
-    But 
-      I=Il_exclude+Ir_exclude =2*Ir_exclude 
-    where Ir_exclude is Ir excluding the common segment in the two grid cells. So:
-      Ir=Il=(2*Ir_exclude+2*pi)/2 =Ir_exclude+pi  
-    or put it another way
-      Ir_thru_pole = Il_thru_pole = pi  
-    where Ir_thru_pole is the integral over the segment passing through the pole.
+  Side note:
+  The above approximation for I2 is not very accurate, patricularly for CS grid cells near the Poles.
+  This will manifest itself in the form of a discontinuity or bump in the calculated area of CS grid cells as the
+  Poles are approached (see fre-nctools issue #44). This is because the sides of these grid cells are
+  great circles but the above approximation ignores that fact and the line integral is calculated
+  along an arbitrary line joining the vertices. This situation can indeed be cured by integrating along
+  the great circle joining the vertices. However the implementation becomes rather tedious. For future
+  reference here is the paramtrized equation of the curves that we should integrate along, that is
+  the great circle passing at (lon0,lat0) closest to the N pole (excluding the pole itself):
+     tan(lat)=-tan(lat0)*cos(lon-lon0).
+  So, I2=\integral dx sin(arctan(tan(lat0)*cos(x-lon0)))  can be shown to give an accurate estimate of grid
+  cell areas surrounding the pole without a bump.
    ----------------------------------------------------------------------------*/
 double poly_area(const double x[], const double y[], int n)
 {
@@ -401,19 +419,11 @@ double poly_area(const double x[], const double y[], int n)
     lat2 = y[i];
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
     if(dx <= -M_PI) dx = dx + 2.0*M_PI;
-    /*When the path goes through a Pole the line integral cannot be
-      approximated by the fomula below. But we can show for these
-      special grid cells the contribution of such paths to the area is pi.
-      We may also apply a fix to fix_lon function by adding a couple
-      of twin poles to the polygon side that crosses the pole (diagnosed by dx=+/-pi).
-      Note in that situation we should extend the if(dx < -M_PI) to if(dx <= -M_PI)
-      so the resulting contribution to area is positive.
+    /*
+     We have to be careful in implementing sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
+     in the limit of lat1=lat2 where it becomes 1. Note that in that limit we get the well known formula
+     for the area of a section of sphere bounded by two longitudes and two latitude circles.
     */
-    if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
-      area += M_PI;
-      continue; //next i
-    }
-
     if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
       area -= dx*sin(0.5*(lat1+lat2));
     else {
@@ -428,12 +438,76 @@ double poly_area(const double x[], const double y[], int n)
       }
     }
   }
+  if(fabs(area) > HPI) {
+    printf("Error: Large values for poly_area: %19.15f\n", area);
+  }
   if(area < 0)
      return -area*RADIUS*RADIUS;
   else
      return area*RADIUS*RADIUS;
 
 }; /* poly_area */
+
+/*An alternate implementation of poly_area for future developments. Under construction.*/
+double poly_area2(const double x[], const double y[], int n)
+{
+  double area = 0.0;
+  double dx,dy,dat,lat1,lat2,da,dxs= 0.0;
+  int    i,j,ip;
+  int hasPole=0, hasBadxm=0, hasBadxp=0;
+  for (i=0;i<n;i++) {
+    ip = (i+1) % n;
+    dx = (x[ip]-x[i]);
+    if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
+    if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
+    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+  }
+  for (i=0;i<n;i++) {
+    ip = (i+1) % n;
+    dx = (x[ip]-x[i]);
+    lat1 = y[ip];
+    lat2 = y[i];
+    if(dx > M_PI)  dx = dx - 2.0*M_PI;
+    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    //if(dx == -M_PI) dx = M_PI;//deals with the case of dx passing through South pole
+    if ( fabs(lat1-lat2) < SMALL_VALUE) // limit to avoid div by 0
+      dat = 1.0;
+    else {
+      dy = 0.5*(lat1-lat2);
+      dat = sin(dy)/dy;
+    }
+    da = -dx*sin(0.5*(lat1+lat2))*dat;
+    area += da;
+    dxs += dx;
+    if(hasBadxm || hasBadxp) printf("%19.15f,%19.15f,%19.15f,%19.15f\n", dx,dxs,da,area);
+  }
+  /*
+  if(hasPole){
+    printf("Pole cell : %19.15f\n", area);
+  }
+  */
+  if(hasBadxm){
+    printf("Trouble dx=-pi cell : %19.15f\n", area);
+    //v_print(x, y, n);
+  }
+  if(hasBadxp){
+    printf("Trouble dx=+pi cell : %19.15f\n", area);
+    //v_print(x, y, n);
+  }
+  if(fabs(dxs)>SMALL_VALUE && fabs(area) > HPI){
+    printf("Error    : Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
+    area = fabs(area) - 2.0*M_PI;  //This is equivalent to replaing dx=-pi to dx=pi after fix_lon inserts twin poles at SP
+    //area = fabs(area) - fabs(dxs);  //This is also equivalent to above since fabs(dxs)=2*pi in the case of side passing through SP.
+    printf("Corrected: Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
+  }
+  if(fabs(area) > HPI) {
+    printf("Error in poly_area: Large values for poly_area: %19.15f\n", area);
+  } 
+  if(area < 0)
+     return -area*RADIUS*RADIUS;
+  else
+     return area*RADIUS*RADIUS;
+}; /* poly_area2 */
 
 double poly_area_no_adjust(const double x[], const double y[], int n)
 {
