@@ -300,6 +300,9 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
       }
     }
   }
+  if(fabs(area) > HPI) {
+    printf("Error in poly_area_dimensionless: Large values for poly_area_dimensionless: %19.15f\n", area); 
+  } 
   if(area < 0)
     return (-area/(4*M_PI));
   else
@@ -418,7 +421,12 @@ double poly_area(const double x[], const double y[], int n)
     lat1 = y[ip];
     lat2 = y[i];
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
-    if(dx <= -M_PI) dx = dx + 2.0*M_PI;
+    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    /*Sides that go through a pole contribute PI regardless of their direction and extent.*/
+    if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
+      area += M_PI;
+      continue; //next i
+    }
     /*
      We have to be careful in implementing sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
      in the limit of lat1=lat2 where it becomes 1. Note that in that limit we get the well known formula
@@ -438,9 +446,7 @@ double poly_area(const double x[], const double y[], int n)
       }
     }
   }
-  if(fabs(area) > HPI) {
-    printf("Error: Large values for poly_area: %19.15f\n", area);
-  }
+  if(fabs(area) > HPI) printf("WARNING poly_area: Large values for area: %19.15f\n", area);
   if(area < 0)
      return -area*RADIUS*RADIUS;
   else
@@ -452,7 +458,7 @@ double poly_area(const double x[], const double y[], int n)
 double poly_area2(const double x[], const double y[], int n)
 {
   double area = 0.0;
-  double dx,dy,dat,lat1,lat2,da,dxs= 0.0;
+  double dx,dy,dat,lat1,lat2,avg_y,hdy,da,dxs= 0.0;
   int    i,j,ip;
   int hasPole=0, hasBadxm=0, hasBadxp=0;
   for (i=0;i<n;i++) {
@@ -467,16 +473,18 @@ double poly_area2(const double x[], const double y[], int n)
     dx = (x[ip]-x[i]);
     lat1 = y[ip];
     lat2 = y[i];
+    dy = lat2 - lat1;
+    hdy = dy*0.5;
+    avg_y = (lat1+lat2)*0.5;
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
     if(dx < -M_PI) dx = dx + 2.0*M_PI;
-    //if(dx == -M_PI) dx = M_PI;//deals with the case of dx passing through South pole
-    if ( fabs(lat1-lat2) < SMALL_VALUE) // limit to avoid div by 0
+
+    if ( fabs(hdy) < SMALL_VALUE) // limit to avoid div by 0
       dat = 1.0;
-    else {
-      dy = 0.5*(lat1-lat2);
-      dat = sin(dy)/dy;
-    }
-    da = -dx*sin(0.5*(lat1+lat2))*dat;
+    else
+      dat = sin(hdy)/hdy;
+
+    da = -dx*sin(avg_y)*dat;
     area += da;
     dxs += dx;
     if(hasBadxm || hasBadxp) printf("%19.15f,%19.15f,%19.15f,%19.15f\n", dx,dxs,da,area);
@@ -485,7 +493,6 @@ double poly_area2(const double x[], const double y[], int n)
   if(hasPole){
     printf("Pole cell : %19.15f\n", area);
   }
-  */
   if(hasBadxm){
     printf("Trouble dx=-pi cell : %19.15f\n", area);
     //v_print(x, y, n);
@@ -494,21 +501,49 @@ double poly_area2(const double x[], const double y[], int n)
     printf("Trouble dx=+pi cell : %19.15f\n", area);
     //v_print(x, y, n);
   }
+  */
   if(fabs(dxs)>SMALL_VALUE && fabs(area) > HPI){
     printf("Error    : Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
-    area = fabs(area) - 2.0*M_PI;  //This is equivalent to replaing dx=-pi to dx=pi after fix_lon inserts twin poles at SP
+    area = fabs(area) - 2.0*M_PI;  //This is equivalent to replacing dx=-pi with dx=pi after fix_lon inserts twin poles at SP
     //area = fabs(area) - fabs(dxs);  //This is also equivalent to above since fabs(dxs)=2*pi in the case of side passing through SP.
     printf("Corrected: Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
   }
   if(fabs(area) > HPI) {
-    printf("Error in poly_area: Large values for poly_area: %19.15f\n", area);
-  } 
+    printf("WARNING poly_area: Large values for poly_area: %19.15f\n", area);
+  }
   if(area < 0)
      return -area*RADIUS*RADIUS;
   else
      return area*RADIUS*RADIUS;
 }; /* poly_area2 */
+/* Note how one of the two cells straddling the SP has a wrong sign for "dx=-pi"
+   producing an excess area of -2pi.
+   Also note how the fix_lon is needed to insert twin poles at SP to correct the
+   contribution of the side passing through the SP to be exactly pi
+  dx                 dx_sum              da                  da_sum
+ -0.891607974235719, -0.891607974235719, -0.891519061449037, -0.891519061449037
+ -1.329985598742566, -2.221593572978286, -1.329938713571685, -2.221457775020722
+  3.141592653589793,  0.919999080611507,  3.141527168815382,  0.920069393794660
+ -0.919999080611507,  0.000000000000000, -0.919927107270490,  0.000142286524170
+Trouble dx=+pi cell :   0.000142286524170
+              209.688               -89.1151
+              158.603                -89.269
+                 82.4               -89.8237
+                262.4               -89.4658
+  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000
+ -3.141592653589793, -3.141592653589793, -3.141592653589793, -3.141592653589793  if there was no twin pole inserted the contribution would have been wrong
+  0.000000000000000, -3.141592653589793,  0.000000000000000, -3.141592653589793
+ -1.329985598742571, -4.471578252332364, -1.329938713571690, -4.471531367161483
+ -0.891607974235693, -5.363186226568057, -0.891519061449011, -5.363050428610494
+ -0.919999080611529, -6.283185307179586, -0.919927107270511, -6.282977535881005
+Trouble dx=-pi cell :  -6.282977535881005
+                262.4               -89.4658
+                262.4                    -90
+                 82.4                    -90
+                 82.4               -89.8237
+              6.19744                -89.269
 
+*/
 double poly_area_no_adjust(const double x[], const double y[], int n)
 {
   double area = 0.0;
@@ -527,6 +562,9 @@ double poly_area_no_adjust(const double x[], const double y[], int n)
       area -= dx*sin(0.5*(lat1+lat2));
     else
       area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
+  }
+  if(fabs(area) > HPI) {
+    printf("WARNING poly_area_no_adjust: Large values for poly_area_no_adjust: %19.15f\n", area);
   }
   if(area < 0)
      return area*RADIUS*RADIUS;
