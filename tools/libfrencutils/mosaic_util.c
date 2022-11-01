@@ -317,7 +317,12 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
   Vertices must be listed counter-clockwise around polygon.
   grid is in radians.
 
-  Derivation of line integrating -sin(lat)d(lon) formula:
+  Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
+             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  The following is an implementation of equation (12) in the above paper:
+     \int dA = \int_c [-sin(lat)] dlon
+  
+  An alternative derivation of line integrating -sin(lat)d(lon) formula:
   Consider a vector function in spherical coordinates (r,lon,lat) 
   with only a lon component :
       A=(0, (1-sin(lat))/cos(lat)/r , 0)  
