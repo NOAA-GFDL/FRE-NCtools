@@ -436,9 +436,7 @@ subroutine parse_command_line()
   logical :: do_interpret_arguments
   integer :: i, iostat
 
-  !integer, external :: iargc
-
-  nargs = iargc()
+  nargs = command_argument_count()
   if(nargs==0) then
      call usage()
      call exit(1)
