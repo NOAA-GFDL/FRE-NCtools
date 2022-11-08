@@ -44,7 +44,7 @@ setup(){
 
 teardown(){
   cd $BASE_TEST_DIR
-  #rm -rf $testDir
+  rm -rf $testDir
 }
 
 skip_test(){
