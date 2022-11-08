@@ -27,6 +27,7 @@
 # to be skipped during make check
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
+# expr subtr not POSIX-safe, this should be however
 testDir=${testDir%-*}
 
 setup(){
