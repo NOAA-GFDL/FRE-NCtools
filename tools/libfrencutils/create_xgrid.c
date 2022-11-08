@@ -2081,13 +2081,19 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
 /*------------------------------------------------------------------------------
   double poly_ctrlat(const double x[], const double y[], int n)
   This routine is used to calculate the latitude of the centroid
+  Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
+             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  The following is an implementation of equation (13) in the above paper:
+     \int lat.dA = \int_c [-cos(lat)-lat sin(lat)] dlon
+  It assumes the sides of the spherical polygons are line segments with tangent
+  (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
+  line integral along the sides of the polygon  \int_c.
    ---------------------------------------------------------------------------*/
 
 double poly_ctrlat(const double x[], const double y[], int n)
 {
   double ctrlat = 0.0;
   int    i;
-
   for (i=0;i<n;i++) {
     int ip = (i+1) % n;
     double dx = (x[ip]-x[i]);
@@ -2100,12 +2106,56 @@ double poly_ctrlat(const double x[], const double y[], int n)
     avg_y = (lat1+lat2)*0.5;
     if      (dx==0.0) continue;
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
-    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
 
     if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
       ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
     else
       ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
+  }
+  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  return (ctrlat*RADIUS*RADIUS);
+}; /* poly_ctrlat */
+/*An alternate implementation of poly_ctrlat for future developments. Under construction.*/
+double poly_ctrlat2(const double x[], const double y[], int n)
+{
+  double ctrlat = 0.0;
+  int    i,ip;
+  double dx,dy,avg_y, hdy,lat1,lat2,da,dat,dxs= 0.0;
+  int hasPole=0, hasBadxm=0, hasBadxp=0;
+  for (i=0;i<n;i++) {
+    ip = (i+1) % n;
+    dx = (x[ip]-x[i]);
+    if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
+    if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
+    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+  }
+
+  for (i=0;i<n;i++) {
+    ip = (i+1) % n;
+    dx = (x[ip]-x[i]);
+    lat1 = y[ip];
+    lat2 = y[i];
+    dy = lat2 - lat1;
+    hdy = dy*0.5;
+    avg_y = (lat1+lat2)*0.5;
+    if(dx > M_PI)  dx = dx - 2.0*M_PI;
+    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+
+    if ( fabs(hdy)< SMALL_VALUE ) // limit to avoid div by 0
+      dat = 1.0;
+    else
+      dat = sin(hdy)/hdy;
+
+    da = -dx*( dat *(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
+    ctrlat += da;
+    dxs += dx;
+    if(hasBadxm || hasBadxp) printf("poly_ctrlat: %19.15f,%19.15f,%19.15f,%19.15f\n", dx,dxs,da,ctrlat);
+  }
+  if(fabs(ctrlat)>M_PI){
+    printf("Error    : Nonzero gridcell dx sum in poly_ctrlat: %19.15f,%19.15f,%19.15f\n",avg_y, dxs,ctrlat);
+    ctrlat = fabs(ctrlat) - M_PI*M_PI;
+    printf("Corrected: Nonzero gridcell dx sum in poly_ctrlat: %19.15f,%19.15f,%19.15f\n",avg_y, dxs,ctrlat);
   }
   return (ctrlat*RADIUS*RADIUS);
 }; /* poly_ctrlat */
@@ -3041,6 +3091,10 @@ int main(int argc, char* argv[])
 
       n_out = clip_2dx2d(lon1_in, lat1_in, n1_in, lon2_in, lat2_in, n2_in, lon_out, lat_out);
 
+      n1_in = fix_lon(lon1_in, lat1_in, n1_in, M_PI);
+      n2_in = fix_lon(lon2_in, lat2_in, n2_in, M_PI);
+      n_out = fix_lon(lon_out, lat_out, n_out, M_PI);
+
       double area1 = poly_area (lon1_in, lat1_in, n1_in );
       double area2 = poly_area (lon2_in, lat2_in, n2_in );
       double area_out = poly_area (lon_out, lat_out, n_out );
@@ -3070,7 +3124,7 @@ int main(int argc, char* argv[])
       if(n==15 || n==17) printf("Must result the second box!\n");
       if(n==18 || n==19) printf("Must result n_out=0!\n");
       if(n==22 || n==23) printf("Same box! area22=area23\n");
-      if(n==24 || n==25 || n==26) printf("Same box! area24=area25=area=26\n");
+      if(n==24 || n==25 || n==26) printf("Same box! area24=area25=area26\n");
     }
     else {
       latlon2xyz(n1_in, lon1_in, lat1_in, x1_in, y1_in, z1_in);
