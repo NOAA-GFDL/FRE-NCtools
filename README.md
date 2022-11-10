@@ -70,20 +70,20 @@ and the ```--enable-venv``` option to build a Python venv containing the
 Ocean Model Grid Generator script and all python dependencies.
 
 ## Contributing to NCTools
-GFDL encourages contributions from external parties. This includes bug fixes,
-enhancements to existing code, and even entire external projects as
-submodules for distribution and installation along with NCTools. Contribution
-requirements include :
+
+The CNTools project encourages contributions from external parties.
+This includes from bug fixes and  enhancements to existing code, to adding
+entire external projects as submodules for distribution and installation
+long with NCTools. Contribution requirements include :
  * The passing of existing unit tests when they are run in the CI system.
  * The (potential) addition of unit tests when adding new functionality.
- * For external projects, their unit tests should be run on the
- * external CI system. 
- Additionally, NCTools is distributable via the Spack package manager,
- and consequently the NCTools team will need to be able to compile and
- distribute via Spack any submodules. To that end the
- dependencies  of the external projects have the same requirement, and
- contributers are encouraged to contribute Spack recipes for their projects.
+ * For external projects, unit tests may be required and the unit tests
+   should be run on the external CI system. 
 
+ Additionally, since NCTools is distributable via the Spack package manager,
+ the NCTools team will need to be able to compile and distribute via Spack any
+ submodules and their dependencies. Contributors are encouraged to provide
+ Spack recipes for their projects.
 
 ## Cloning and submodules
 The NCTools github repository contains Ocean Model Grid Generator's repository
@@ -196,22 +196,21 @@ and upgrading to a sufficiently recent compiler version is recommended in this c
 NCTools has been built and tested with GCC and Intel compilers.
 
 ## Documentation
-
-Documentaion for on using individual applications (tools) may be obtained by running
+Documentation for on using individual applications (tools) may be obtained by running
 the application without arguments or with the `-h` or `--help` options. Generally
 this provides a list of the possible command line arguments, and frequently with
 examples and explanations.
 
-Many of the tools are commonly used in conjuction with other tools or as part of a
+Many of the tools are commonly used in conjunction with other tools or as part of a
 workflow. The directory FRE-NCtools/t has numerous test scripts that exercise
 some possible workflows. As an example, consider the script for CI test #3
 (file Test03-grid_coupled_model.sh) for creating grids and mosaics for a coupled model.
-As a second example, script Test20-fregrid.sh creates a target mosiac
+As a second example, script Test20-fregrid.sh creates a target mosaic
 (file latlon_grid.nc) and then uses fregrid to remap an existing file
 (--input_file ocean_temp_salt.res.nc) of a known mosaic (CM2.1_mosaic.nc)
 to the target mosaic.
 
-Additional documentaion may be found in the documentation directory
+Additional documentation may be found in the documentation directory
 ( FRE-NCtools/docs ) and the
 [FRE-NCTools wiki](https://github.com/NOAA-GFDL/FRE-NCtools/wiki/)
 
