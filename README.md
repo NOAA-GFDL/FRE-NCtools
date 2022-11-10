@@ -1,14 +1,16 @@
 # FRE-NCtools
 
-FRE-NCtools is a collection of tools to help with the creation and
-manipulation of netCDF files used or written by the climate
-models developed at the
-[Geophysical Fluid Dynamics Laboratory](https://www.gfdl.noaa.gov)
-(GFDL).  These tools were primarily written by members of the GFDL
+FRE-NCtools is a collection of tools for creating grids and mosaics
+commonly used in climate and weather models, the remapping of data among grids,
+and the creation and manipulation of netCDF files.
+These tools were largely written by members of the GFDL
 [Modeling Systems Group](https://www.gfdl.noaa.gov/modeling-systems)
-to be used in the
+primarily for use in the
 [Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
-[Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE).
+[Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE) supporting the
+work of the 
+[Geophysical Fluid Dynamics Laboratory](https://www.gfdl.noaa.gov)
+(GFDL).
 
 [![Actions](https://github.com/NOAA-GFDL/FRE-NCtools/workflows/FRE-NCtools%20CI/badge.svg)](https://github.com/NOAA-GFDL/FRE-NCtools/actions)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
@@ -28,14 +30,6 @@ The tools available in FRE-NCtools are:
 * scatter-ncc -- Distribute an unstructured FMS grid netCDF file for initializing a FMS climate model
 * mppncscatter -- Distribute FMS netCDF file for initializing a FMS climate model
 
-### Statistical and Informational Tools
-
-* list_ncvars -- List the variables in a netCDF file
-* plevel -- Interpolates data from model levels to pressure levels
-* split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
-* timavg -- Create a time average netCDF file
-* ncexists -- Checks for variables and attributes in a netCDF file
-* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
 
 ### Grid Tools
 * check_mask -- Configure the processors which contains all land points to be masked out for ocean model
@@ -53,6 +47,16 @@ The tools available in FRE-NCtools are:
 * runoff_regrid -- Regrid land runoff data to the nearest ocean point
 * transfer_to_mosaic_grid -- Convert older style grids to newer mosaic grid
 
+### Statistical and Informational Tools
+
+* list_ncvars -- List the variables in a netCDF file
+* plevel -- Interpolates data from model levels to pressure levels
+* split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
+* timavg -- Create a time average netCDF file
+* ncexists -- Checks for variables and attributes in a netCDF file
+* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
+
+
 ### Other tools
 The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator)
 is a collection of tools for creating finite element spherical tripolar grids for
@@ -64,6 +68,22 @@ autotools configure command may need to be specified. This includes the
 ``--disable-ocean-model-grid-generator`` option (default is enable)
 and the ```--enable-venv``` option to build a Python venv containing the
 Ocean Model Grid Generator script and all python dependencies.
+
+## Contributing to NCTools
+GFDL encourages contributions from external parties. This includes bug fixes,
+enhancements to existing code, and even entire external projects as
+submodules for distribution and installation along with NCTools. Contribution
+requirements include :
+ * The passing of existing unit tests when they are run in the CI system.
+ * The (potential) addition of unit tests when adding new functionality.
+ * For external projects, their unit tests should be run on the
+ * external CI system. 
+ Additionally, NCTools is distributable via the Spack package manager,
+ and consequently the NCTools team will need to be able to compile and
+ distribute via Spack any submodules. To that end the
+ dependencies  of the external projects have the same requirement, and
+ contributers are encouraged to contribute Spack recipes for their projects.
+
 
 ## Cloning and submodules
 The NCTools github repository contains Ocean Model Grid Generator's repository
@@ -177,25 +197,23 @@ NCTools has been built and tested with GCC and Intel compilers.
 
 ## Documentation
 
-An embarrassingly small number of the commands have man pages.  These man pages
-are written using [AsciiDoc](http://asciidoc.org/) format.  If AsciiDoc is found
-on the system, the man pages will be built and installed automatically.
+Documentaion for on using individual applications (tools) may be obtained by running
+the application without arguments or with the `-h` or `--help` options. Generally
+this provides a list of the possible command line arguments, and frequently with
+examples and explanations.
 
-Most commands support either a `-h` or `--help` options.  In some cases, this
-should be enough to get you started using the commands.  We are in the process
-of collecting more information on the tools available in this package.  These
-will be added when available.
+Many of the tools are commonly used in conjuction with other tools or as part of a
+workflow. The directory FRE-NCtools/t has numerous test scripts that exercise
+some possible workflows. As an example, consider the script for CI test #3
+(file Test03-grid_coupled_model.sh) for creating grids and mosaics for a coupled model.
+As a second example, script Test20-fregrid.sh creates a target mosiac
+(file latlon_grid.nc) and then uses fregrid to remap an existing file
+(--input_file ocean_temp_salt.res.nc) of a known mosaic (CM2.1_mosaic.nc)
+to the target mosaic.
 
-Commonly, to combine restart and history files, one should run is-compressed on
-the candidate file first.
-
-If it returns 0, it's land compressed file that needs:
-1. combine-ncc inputfile1 inputfile2 outputfile
-2. decompress-ncc inputfile outputfile
-
-If is-compressed returns non-zero, it's a regular distributed file that gets:
-1. mppnccombine outputfile inputfile1 inputfile2 ...
-
+Additional documentaion may be found in the documentation directory
+( FRE-NCtools/docs ) and the
+[FRE-NCTools wiki](https://github.com/NOAA-GFDL/FRE-NCtools/wiki/)
 
 ## Disclaimer
 

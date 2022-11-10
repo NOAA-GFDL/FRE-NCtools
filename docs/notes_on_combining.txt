@@ -1,0 +1,10 @@
+﻿Commonly, to combine restart and history files, one should run is-compressed on
+the candidate file first.
+
+If it returns 0, it's land compressed file that needs:
+1. combine-ncc inputfile1 inputfile2 outputfile
+2. decompress-ncc inputfile outputfile
+
+If is-compressed returns non-zero, it's a regular distributed file that gets:
+1. mppnccombine outputfile inputfile1 inputfile2 ...
+
