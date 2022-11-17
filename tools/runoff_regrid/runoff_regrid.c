@@ -178,6 +178,7 @@ int main(int argc, char* argv[])
   };
 
   mpp_init(NULL,NULL);
+  mpp_domain_init();
   /*  if(mpp_npes() > 1) mpp_error("runoff_regrid: the tool is supposed to run on single processor"); */
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1) {
     switch (c) {
