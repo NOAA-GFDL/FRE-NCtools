@@ -32,7 +32,7 @@
 /***********************************************************
    global variables
 ***********************************************************/
-int pe, npes, root_pe;
+static int pe, npes, root_pe;
 #define MAX_BUFFER_SIZE 10000000
 double rBuffer[MAX_BUFFER_SIZE];
 double sBuffer[MAX_BUFFER_SIZE];
@@ -823,9 +823,7 @@ void mpp_gather_field_double_root(int lsize, double *ldata, double *gdata)
   /* all other pe except root pe will send data to root pe */
   if( pe != root_pe) {
       mpp_send_int(&lsize, 1, root_pe);
-  }
-
-  else {
+  } else {
     for(p = 0; p<npes; p++) {
        if(root_pe != p) mpp_recv_int(rsize+p, 1, p);
     }
@@ -835,26 +833,24 @@ void mpp_gather_field_double_root(int lsize, double *ldata, double *gdata)
 
   if( pe != root_pe) {
       if(lsize>0) mpp_send_double(ldata, lsize, root_pe);
-  }  
-  else {
+  } else {
     int cur_size;
     n = 0;
     cur_size = 0;
     /* receive from other pe and fill the gdata */
     for(p = 0; p<npes; p++) {
       if(root_pe != p) { /* recv from other pe. */
-	if(rsize[p]>0) {
-	  if( rsize[p] > cur_size ) {
-	    if( rbuffer ) free(rbuffer);
-	    rbuffer = ( double *) malloc(rsize[p]*sizeof(double));
-	    cur_size = rsize[p];
-	  }
-	  mpp_recv_double(rbuffer, rsize[p], p );
-	  for(i=0; i<rsize[p]; i++) gdata[n++] = rbuffer[i];
-	}
-      }
-      else {
-	for(i=0; i<lsize; i++) gdata[n++] = ldata[i];
+	      if(rsize[p]>0) {
+	        if( rsize[p] > cur_size ) {
+	          if( rbuffer ) free(rbuffer);
+	          rbuffer = ( double *) malloc(rsize[p]*sizeof(double));
+	          cur_size = rsize[p];
+	        }
+	        mpp_recv_double(rbuffer, rsize[p], p );
+	        for(i=0; i<rsize[p]; i++) gdata[n++] = rbuffer[i];
+	      }
+      } else {
+	      for(i=0; i<lsize; i++) gdata[n++] = ldata[i];
       }
     }
     if(rbuffer) free(rbuffer);
@@ -862,7 +858,6 @@ void mpp_gather_field_double_root(int lsize, double *ldata, double *gdata)
 
   mpp_sync_self();
   free(rsize);
-  
 }; /* mpp_gather_field_double_root */
 
 

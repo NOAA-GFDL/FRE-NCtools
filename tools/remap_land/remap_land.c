@@ -180,9 +180,9 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
                           const int *mask_src, int npts_dst, const double *lon_dst, const double *lat_dst,
                           const int *mask_dst, const int *idx_map, const int *face_map, const int iface_dst, int *idx_map_sf);
 
-void gather_compressed_double_data(int npts, const double *data, double *data_global);
-void gather_compressed_int_data(int npts, const int *data, int *data_global);
-void gather_sort_compressed_int_data(int npts, const int *data, int npts_global,  int *data_global,  int * ori_pos_global);
+void gather_compressed_double_data(int npts, double *data, double *data_global);
+void gather_compressed_int_data(int npts, int *data, int *data_global);
+void gather_sort_compressed_int_data(int npts, int *data, int npts_global,  int *data_global,  int * ori_pos_global);
 
 void quick_sort(int v[], int v2[], int n);
 bool is_sorted(int v[], int n);
@@ -2683,14 +2683,14 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
     void gather_compressed_data ()
     NOTE: simple function that seems superflous but used in debugging
     ------------------------------------------------------------------------*/
-  void gather_compressed_double_data(int npts, const double *data, double *data_global) {
+  void gather_compressed_double_data(int npts, double *data, double *data_global) {
       mpp_gather_field_double_root(npts, data, data_global);
   }
 
   /*-------------------------------------------------------------------------
     void gather_compressed_int_data ()
    ------------------------------------------------------------------------*/
-  void gather_compressed_int_data(int npts, const int *data, int *data_global) {
+  void gather_compressed_int_data(int npts, int *data, int *data_global) {
     mpp_gather_field_int_root(npts, data, data_global);
   }
 
@@ -2703,7 +2703,7 @@ void search_nearest_sface(const int npts_src, const double *lon_src, const doubl
   is finished, the value orig_pos_global[j] is the original (pre-sort) array position of data_global[j].
   TODO: See if data can be gatherd so that its in order of pe number, then such data does notneed to be sorted?
 */
-void gather_sort_compressed_int_data(int npts, const int *data, int npts_global, int *data_global, int * orig_pos_global) {
+void gather_sort_compressed_int_data(int npts, int *data, int npts_global, int *data_global, int * orig_pos_global) {
     mpp_gather_field_int_root(npts, data, data_global);
      if (mpp_pe() == mpp_root_pe()) {
        for(int i = 0; i< npts_global; i++){
