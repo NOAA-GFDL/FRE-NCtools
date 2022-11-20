@@ -27,11 +27,12 @@
 # to be skipped during make check
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
-testDir="`expr substr $testDir 1 6`"
+# expr subtr not POSIX-safe, this should be however
+testDir=${testDir%-*}
 
 setup(){
   BASE_TEST_DIR=$( pwd )
-  TEST_NUM="`expr substr $(basename $BATS_TEST_FILENAME .sh) 5 2`"
+  TEST_NUM="${testDir:4:2}"
 
   # check if test is to be skipped first
   [[ ! -z $SKIP_TESTS ]] && skip_test $SKIP_TESTS
