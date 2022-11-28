@@ -83,3 +83,36 @@ generate_all_from_ncl(){
     ncgen -o $filename.nc $f
   done
 }
+
+# run the command that is the first argument, and check its status
+# is equal to the expected value (usually 0) and if not, echo the
+# output
+function run_and_check()
+{
+    $1
+    if [ $status -ne $2 ];
+    then
+	echo failed: $cmd
+	echo $output && exit 1
+    fi
+}
+
+
+# make a csv (comma separated value) list of
+# all the file names in dir argument 1 (i.e. dir arg) that
+# have the pattern of argument 2 (i.e. pattern arg) 
+function get_csv_filename_list()
+{
+    local dir=$1
+    local pattern=$2
+    local filelist=""
+    for file in $dir"/"$pattern; do    
+	if [[ $filelist == "" ]]
+	then
+	    filelist="$file" #if this is the first file
+	else
+	    filelist=$filelist",""$file"
+	fi
+    done
+    echo $filelist  #I.e. this return must be capture by a $(...)
+}
