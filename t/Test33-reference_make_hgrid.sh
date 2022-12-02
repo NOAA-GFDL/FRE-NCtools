@@ -24,20 +24,17 @@ load test_utils
 
 @test "Test make_hgrid do_transform vs. FV3 generated grid spec" {
 
-
 fv3_grid_name="fv3_48_grid_spec"   #name prefix for the internal fv3 grid spec files.
 nct_ff_grid_name="C48_ff_grid_spec"   #name prefix for NCTools generated files from fv3 files
 nct_grid_name="C48_grid_spec"   #name prefix for "the common analytic" make_hgrid generated files.
 fv3_grids_filelist=""
 
 
- if [ ! -d "Test33" ] 
+ if [ ! -d "Test33" ]
   then
       mkdir Test33
   fi
  cd Test33
- 
- 
 
 #0) Verify the existance of the FV3 grid spec files
 for i in 1 2 3 4 5 6
@@ -79,15 +76,12 @@ make_hgrid \
 
 # III)  Compare the six tile files generated "analytically" to the corresponding ones
 ##    generated from FV3 grids.
-nccmp -V
 for i in 1 2 3 4 5 6
 do
     fv3_file=$nct_ff_grid_name".tile"$i".nc"
     nct_file=$nct_grid_name".tile"$i".nc"
-    
-    run_and_check 'run command nccmp -d --variable=x,y,dx,dy --Tolerance=1.0e-8'" $fv3_file $nct_file"' ' 0
-    run_and_check 'run command nccmp -d --variable=area --Tolerance=1.0e-8'" $fv3_file $nct_file"' ' 0
-
+    run_and_check nccmp -d --variable=x,y,dx,dy --Tolerance=1.0e-9 $fv3_file $nct_file
+    run_and_check nccmp -d --variable=area --Tolerance=1.0e-8 $fv3_file $nct_file
     # TODO: angle_dx and angle_dy may be done in future.
 done
 
