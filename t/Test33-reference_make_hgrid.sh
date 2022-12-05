@@ -81,7 +81,7 @@ do
     fv3_file=$nct_ff_grid_name".tile"$i".nc"
     nct_file=$nct_grid_name".tile"$i".nc"
     run_and_check nccmp -d --variable=x,y,dx,dy --Tolerance=1.0e-9 $fv3_file $nct_file
-    run_and_check nccmp -d --variable=area --Tolerance=1.0e-8 $fv3_file $nct_file
+    run_and_check nccmp -d --variable=area --Tolerance=1.0e-6 $fv3_file $nct_file
     # TODO: angle_dx and angle_dy may be done in future.
 done
 
