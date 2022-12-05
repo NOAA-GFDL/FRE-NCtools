@@ -75,7 +75,12 @@ make_hgrid \
 
 
 # III)  Compare the six tile files generated "analytically" to the corresponding ones
-##    generated from FV3 grids.
+##    generated from FV3 grids. Note that we are comparing files with origins from
+## two different systems, one Fortran based and another C based, and exact matching
+# will generally not be possible. The two tolerances chosen below were determined
+# by running on hardware, with FV3 origin files generated on Intel Skylake (C4) and
+# the NCTools analytically generated files created on various AMD and Intel hardware
+# (e.g. Intel analysis nodes, AMD T5 nodes, various home computers).
 for i in 1 2 3 4 5 6
 do
     fv3_file=$nct_ff_grid_name".tile"$i".nc"
