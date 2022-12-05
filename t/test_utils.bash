@@ -24,10 +24,9 @@
 # setup and teardown run implicitly at beg and end of tests
 
 # SKIP_TESTS can be set to a space separated list of one or two digit test numbers
-# to be skipped during make check
+# to be skipped during make check, e.g. SKIP_TESTS="1 2 10", etc.
 
 testDir="$( basename $BATS_TEST_FILENAME .sh )"
-# expr subtr not POSIX-safe, this should be however
 testDir=${testDir%-*}
 
 setup(){
