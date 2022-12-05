@@ -497,7 +497,6 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
 
     for(j=0; j<=njl[n]; j++){
       for(i=0; i<=nil[n]; i++) {
-
         n1 = tile_offset_supergrid[n] + j*2*(2*nil[n]+1) + i*2;
         n2 = tile_offset[n] + j*(nil[n]+1)+i;
 
@@ -567,7 +566,6 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
     if (verbose) fprintf(stderr,
                          "[INFO] INDEX tile: %ld min_n1: %ld max_n1: %ld max_n1 - min_n1: %ld sqrt(max_n1 - min_n1 + 1): %f\n",
                          n, min_n1, max_n1, max_n1 - min_n1, sqrt(max_n1 - min_n1 + 1));
-
   }
 
   free(xtmp);
@@ -663,7 +661,12 @@ void create_gnomonic_cubic_grid( char* grid_type, int *nlon, int *nlat, double *
       if (verbose) fprintf(stderr, "[INFO] call calc_cell_area do_schmidt for tile n=%ld\n", n);
       calc_cell_area(nx, ny, x + tile_offset_supergrid[n], y + tile_offset_supergrid[n], area + tile_offset_area[n]);
     }
-  } else {
+  } else if (do_cube_transform) { /* calculate area for each tile */
+    for(n=0; n<ntiles; n++) {
+      if (verbose) fprintf(stderr, "[INFO] call calc_cell_area do_cube_transform for tile n=%ld\n", n);
+      calc_cell_area(nx, ny, x + tile_offset_supergrid[n], y + tile_offset_supergrid[n], area + tile_offset_area[n]);
+    }
+  }  else {
     if (verbose) fprintf(stderr, "[INFO] call calc_cell_area for first tile.\n");
     calc_cell_area(nx, ny, x, y, area);
     for(j=0; j<nx; j++) {
@@ -1094,14 +1097,13 @@ void create_gnomonic_cubic_grid_GR( char* grid_type, int *nlon, int *nlat, doubl
     long pos1, pos2;
     pos1 = 0;
     pos2 = 0;
-    if ( do_schmidt ) {
+    if ( do_schmidt || do_cube_transform) {
       for(n=0; n<ntiles; n++) {
         calc_cell_area(nx, ny, x+pos1, y+pos1, area+pos2);
         pos1 += (nx+1)*(nx+1);
         pos2 += nx*nx;
       }
-    }
-    else {
+    }else {
       calc_cell_area(nx, ny, x, y, area);
       for(j=0; j<nx; j++) {
         long n0, n1, n2, n3, n4, n5;

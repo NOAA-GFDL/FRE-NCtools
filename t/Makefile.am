@@ -67,7 +67,8 @@ TESTS = Test01-check_programs_exist.sh \
         Test28-make_hgrid.sh \
         Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
-	Test32-fregrid_no_stretched.sh
+	Test32-fregrid_no_stretched.sh \
+	Test33-reference_make_hgrid.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
@@ -88,7 +89,8 @@ EXTRA_DIST = $(TESTS) \
              Test20-reference \
              $(test25_data) \
              Test31-input \
-	     Test32-input
+	     Test32-input \
+	     Test33-reference
 
 clean-local:
 	$(RM) *.nc Test*/*
