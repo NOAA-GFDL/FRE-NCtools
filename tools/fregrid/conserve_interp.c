@@ -22,6 +22,7 @@
 #include <string.h>
 #include <netcdf.h>
 #include <math.h>
+#include <time.h>
 #include "constant.h"
 #include "globals.h"
 #include "create_xgrid.h"
@@ -56,6 +57,9 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     double *clat;
   } CellStruct;
   CellStruct *cell_in;
+
+  double time_nxgrid=0;
+  clock_t time_start, time_end;
 
   garea = 4*M_PI*RADIUS*RADIUS;
 
@@ -194,9 +198,14 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	    int    *g_i_in, *g_j_in;
 	    double *g_area, *g_clon, *g_clat;
 
+   time_start = clock();
 	    nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
 					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
 					       mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+   printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
+   time_end = clock();
+   time_nxgrid += 1.0 * (time_end - time_start)/CLOCKS_PER_SEC;
+
 	    for(i=0; i<nxgrid; i++) j_in[i] += jstart;
 
 	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
@@ -316,6 +325,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	}  /* if(nxgrid>0) */
       }
     }
+    print_time("time_nxgrid", time_nxgrid);
+
     if(opcode & CONSERVE_ORDER2) {
       /* subtrack the grid_in clon and clat to get the distance between xgrid and grid_in */
       for(n=0; n<ntiles_in; n++) {
@@ -821,11 +832,11 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
     if ( cell_methods == CELL_METHODS_SUM ) {
       for(i=0; i<nx2*ny2*nz; i++) {
         if(out_area[i] == 0) {
-          if(out_miss[i] == 0)
-            for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
-          else
-            for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
-        }
+	  	  if(out_miss[i] ==0)
+	        for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
+	      else
+	        for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
+		}
       }
     }
     else {

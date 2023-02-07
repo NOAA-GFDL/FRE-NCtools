@@ -21,7 +21,7 @@
 #ifndef NCTOOLS_CONSTANT_H
 #define NCTOOLS_CONSTANT_H
 
-#define RADIUS        (6371000.)
+#define RADIUS        (6371000.d)
 #define STRING        255
 
 #ifndef M_PI

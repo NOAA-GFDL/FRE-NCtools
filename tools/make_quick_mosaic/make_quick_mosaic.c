@@ -206,8 +206,6 @@ int main (int argc, char *argv[])
     }
   }
 
-  if(reproduce_siena) set_reproduce_siena_true();
-
   /* First get land grid information */
 
   mpp_init(&argc, &argv);
