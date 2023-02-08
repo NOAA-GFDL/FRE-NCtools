@@ -70,6 +70,17 @@ GX_C__GENERIC
 AS_IF([test $gx_cv_c__Generic = no],
   AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
 )
+# openacc support, simple check for working (nvc)openacc flag and allows for disabling if desired
+# TODO this should really be added as an m4 macro, surprised there wasn't a existing one in the archives
+AC_ARG_WITH([openacc],
+  [AS_HELP_STRING([--with-openacc],
+    [Builds with openacc flags if available (default yes)])])
+AS_IF([test ${with_openacc:-yes} = yes],
+  [with_openacc=yes],
+  [with_openacc=no])
+AS_IF([test ${with_openacc} = yes],
+  AX_CHECK_COMPILE_FLAG( [-acc], [CFLAGS="-acc -tp haswell -ta=tesla -Minfo -Mbounds -Mnoinline"]))
+
 
 AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O

@@ -491,6 +491,9 @@ int main (int argc, char *argv[])
 
   /*if lmosaic is not specifiied, assign amosaic value to it */
   if(!lmosaic) lmosaic = amosaic;
+  
+  // TODO disabled for gpu work
+  //if(reproduce_siena) set_reproduce_siena_true();
 
   /*mosaic_file can not have the same name as amosaic, lmosaic or omosaic, also the file name of
     amosaic, lmosaic, omosaic can not be "mosaic.nc"

@@ -206,6 +206,9 @@ int main (int argc, char *argv[])
     }
   }
 
+  // TODO disabled for gpu work
+  //if(reproduce_siena) set_reproduce_siena_true();
+
   /* First get land grid information */
 
   mpp_init(&argc, &argv);
