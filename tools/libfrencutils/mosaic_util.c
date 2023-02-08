@@ -42,6 +42,7 @@
     error handler: will print out error message and then abort
 ***********************************************************/
 int reproduce_siena = 0;
+#pragma acc declare copyin(reproduce_siena)
 
 void set_reproduce_siena_true(void)
 {

@@ -29,7 +29,8 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
-
+#define R2D (180/M_PI)
+#define TPI (2.0*M_PI)
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
 			  const double *x2, const double *y2, const double *z2, int n2);
@@ -97,9 +98,8 @@ void get_grid_great_circle_area_(const int *nlon, const int *nlat, const double 
 
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
 {
-  int nx, ny, nxp, nyp, i, j, n_in;
+  int nx, ny, nxp, nyp, i, j;
   int n0, n1, n2, n3;
-  double x_in[20], y_in[20], z_in[20];
   struct Node *grid=NULL;
   double *x=NULL, *y=NULL, *z=NULL;
 
@@ -315,7 +315,7 @@ int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
-  int i1, j1, i2, j2, nxgrid, n;
+  int i1, j1, i2, j2, nxgrid;
   double ll_lon, ll_lat, ur_lon, ur_lat, x_in[MV], y_in[MV], x_out[MV], y_out[MV];
   double *area_in, *area_out, min_area;
   double *tmpx, *tmpy;
@@ -517,7 +517,7 @@ int create_xgrid_2dx1d_order2(const int *nlon_in, const int *nlat_in, const int 
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
-  int i1, j1, i2, j2, nxgrid, n;
+  int i1, j1, i2, j2, nxgrid;
   double ll_lon, ll_lat, ur_lon, ur_lat, x_in[MV], y_in[MV], x_out[MV], y_out[MV];
   double *tmpx, *tmpy;
   double *area_in, *area_out, min_area;
@@ -766,7 +766,7 @@ nxgrid = 0;
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
       for(ij=istart2[m]; ij<=iend2[m]; ij++) {
-	int n_in, n_out, i2, j2, n2_in;
+	int n_out, i2, j2, n2_in;
 	double xarea, dx, lon_out_min, lon_out_max;
 	double x2_in[MAX_V], y2_in[MAX_V];
 
@@ -895,18 +895,12 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 
 #define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
-  double xctrlon, xctrlat;
   double *area_in, *area_out;
-  int nblocks =1;
-  int *istart2=NULL, *iend2=NULL;
-  int npts_left, nblks_left, pos, m, npts_my, ij;
+  int ij, i1, j1;
   double *lon_out_min_list,*lon_out_max_list,*lon_out_avg,*lat_out_min_list,*lat_out_max_list;
   double *lon_out_list, *lat_out_list;
-  int *pnxgrid=NULL, *pstart;
-  int *pi_in=NULL, *pj_in=NULL, *pi_out=NULL, *pj_out=NULL;
-  double *pxgrid_area=NULL, *pxgrid_clon=NULL, *pxgrid_clat=NULL;
   int    *n2_list;
-  int nthreads, nxgrid_block_max;
+  int mxxgrid;
 
   nx1 = *nlon_in;
   ny1 = *nlat_in;
@@ -914,63 +908,12 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   ny2 = *nlat_out;
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
+  mxxgrid = get_maxxgrid();
 
   area_in  = (double *)malloc(nx1*ny1*sizeof(double));
   area_out = (double *)malloc(nx2*ny2*sizeof(double));
   get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in);
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
-
-  nthreads = 1;
-#if defined(_OPENMP)
-#pragma omp parallel
-  nthreads = omp_get_num_threads();
-#endif
-
-  nblocks = nthreads;
-
-  istart2 = (int *)malloc(nblocks*sizeof(int));
-  iend2 = (int *)malloc(nblocks*sizeof(int));
-
-  pstart = (int *)malloc(nblocks*sizeof(int));
-  pnxgrid = (int *)malloc(nblocks*sizeof(int));
-
-  nxgrid_block_max = MAXXGRID/nblocks;
-
-  for(m=0; m<nblocks; m++) {
-    pnxgrid[m] = 0;
-    pstart[m] = m*nxgrid_block_max;
-  }
-
-  if(nblocks == 1) {
-    pi_in = i_in;
-    pj_in = j_in;
-    pi_out = i_out;
-    pj_out = j_out;
-    pxgrid_area = xgrid_area;
-    pxgrid_clon = xgrid_clon;
-    pxgrid_clat = xgrid_clat;
-  }
-  else {
-    pi_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clon = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clat = (double *)malloc(MAXXGRID*sizeof(double));
-  }
-
-  npts_left = nx2*ny2;
-  nblks_left = nblocks;
-  pos = 0;
-  for(m=0; m<nblocks; m++) {
-    istart2[m] = pos;
-    npts_my = npts_left/nblks_left;
-    iend2[m] = istart2[m] + npts_my - 1;
-    pos = iend2[m] + 1;
-    npts_left -= npts_my;
-    nblks_left--;
-  }
 
   lon_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
   lon_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
@@ -985,6 +928,19 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
                                               lat_out_max_list,lon_out_min_list,lon_out_max_list, \
                                               lon_out_avg,n2_list,lon_out_list,lat_out_list)
 #endif
+nxgrid = 0;
+#pragma acc kernels copyin(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)], mask_in[0:nx1*ny1], \
+                           xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+                           i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid], \
+                           area_in[0:nx1*ny1], area_out[0:nx2*ny2], \
+                           lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)]) \
+                   copyout(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2], \
+		          lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2],  \
+		          lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2],  \
+		          lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2]) \
+                   copy (nxgrid)
+{
+#pragma acc loop independent
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
     double x2_in[MV], y2_in[MV];
@@ -1001,18 +957,18 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+//    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
     n2_list[n] = n2_in;
+#pragma acc loop independent
     for(l=0; l<n2_in; l++) {
       lon_out_list[n*MAX_V+l] = x2_in[l];
       lat_out_list[n*MAX_V+l] = y2_in[l];
     }
   }
 
-nxgrid = 0;
 
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
@@ -1022,8 +978,7 @@ nxgrid = 0;
                                               pxgrid_area,pnxgrid,pxgrid_clon,pxgrid_clat,pi_in, \
                                               pj_in,pi_out,pj_out,pstart,nthreads)
 #endif
-  for(m=0; m<nblocks; m++) {
-    int i1, j1, ij;
+#pragma acc loop independent reduction(+:nxgrid) collapse(2)
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
       int n0, n1, n2, n3, l,n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
@@ -1041,8 +996,9 @@ nxgrid = 0;
       lon_in_min = minval_double(n1_in, x1_in);
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
-      for(ij=istart2[m]; ij<=iend2[m]; ij++) {
-	int n_in, n_out, i2, j2, n2_in;
+#pragma acc loop independent reduction(+:nxgrid)
+      for(ij=0; ij<=nx2*ny2; ij++) {
+	int n_out, i2, j2, n2_in;
 	double xarea, dx, lon_out_min, lon_out_max;
 	double x2_in[MAX_V], y2_in[MAX_V];
 
@@ -1052,6 +1008,7 @@ nxgrid = 0;
 	if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
 	/* adjust x2_in according to lon_in_avg*/
 	n2_in = n2_list[ij];
+#pragma acc loop seq
 	for(l=0; l<n2_in; l++) {
 	  x2_in[l] = lon_out_list[ij*MAX_V+l];
 	  y2_in[l] = lat_out_list[ij*MAX_V+l];
@@ -1062,11 +1019,13 @@ nxgrid = 0;
 	if(dx < -M_PI ) {
 	  lon_out_min += TPI;
 	  lon_out_max += TPI;
+#pragma acc loop seq
 	  for (l=0; l<n2_in; l++) x2_in[l] += TPI;
 	}
         else if (dx >  M_PI) {
 	  lon_out_min -= TPI;
 	  lon_out_max -= TPI;
+#pragma acc loop seq
 	  for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
 	}
 
@@ -1074,64 +1033,27 @@ nxgrid = 0;
 	   consider cyclic condition
 	*/
 	if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
+	n_out = 1;
 	if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
           double min_area;
-	  int nn;
 	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
 	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
-	    nn = pstart[m] + pnxgrid[m]-1;
-	    pxgrid_area[nn] = xarea;
-	    pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	    pxgrid_clat[nn] = poly_ctrlat (x_out, y_out, n_out );
-	    pi_in[nn]       = i1;
-	    pj_in[nn]       = j1;
-	    pi_out[nn]      = i2;
-	    pj_out[nn]      = j2;
+//            if(nxgrid>= MAXXGRID/nthreads)
+//	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+	    xgrid_area[nxgrid] = xarea;
+	    xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+	    xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
+	    i_in[nxgrid]       = i1;
+	    j_in[nxgrid]       = j1;
+	    i_out[nxgrid]      = i2;
+	    j_out[nxgrid]      = j2;
+	    nxgrid++;
 	  }
 	}
       }
     }
-  }
-
-  /*copy data if nblocks > 1 */
-  if(nblocks == 1) {
-    nxgrid = pnxgrid[0];
-    pi_in = NULL;
-    pj_in = NULL;
-    pi_out = NULL;
-    pj_out = NULL;
-    pxgrid_area = NULL;
-    pxgrid_clon = NULL;
-    pxgrid_clat = NULL;
-  }
-  else {
-    int nn, i;
-    nxgrid = 0;
-    for(m=0; m<nblocks; m++) {
-      for(i=0; i<pnxgrid[m]; i++) {
-	nn = pstart[m] + i;
-	i_in[nxgrid] = pi_in[nn];
-	j_in[nxgrid] = pj_in[nn];
-	i_out[nxgrid] = pi_out[nn];
-	j_out[nxgrid] = pj_out[nn];
-	xgrid_area[nxgrid] = pxgrid_area[nn];
-	xgrid_clon[nxgrid] = pxgrid_clon[nn];
-	xgrid_clat[nxgrid] = pxgrid_clat[nn];
-	nxgrid++;
-      }
-    }
-    free(pi_in);
-    free(pj_in);
-    free(pi_out);
-    free(pj_out);
-    free(pxgrid_area);
-    free(pxgrid_clon);
-    free(pxgrid_clat);
-  }
+}
 
   free(area_in);
   free(area_out);
@@ -1260,40 +1182,33 @@ int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, 
    between any two grid boxes. It return the number of vertices for the exchange grid.
 *******************************************************************************/
 
+#pragma acc routine seq
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
 	 const double lon2_in[], const double lat2_in[], int n2_in,
 	 double lon_out[], double lat_out[])
 {
   double lon_tmp[MV], lat_tmp[MV];
-  double lon2_tmp[MV], lat2_tmp[MV];
   double x1_0, y1_0, x1_1, y1_1, x2_0, y2_0, x2_1, y2_1;
   double dx1, dy1, dx2, dy2, determ, ds1, ds2;
   int i_out, n_out, inside_last, inside, i1, i2;
-  int gttwopi=0;
+
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
   n_out = n1_in;
+#pragma acc loop seq
   for(i1=0; i1<n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
     lat_tmp[i1] = lat1_in[i1];
-    if(lon_tmp[i1]>TPI || lon_tmp[i1]<0.0) gttwopi = 1;
   }
+  x2_0 = lon2_in[n2_in-1];
+  y2_0 = lat2_in[n2_in-1];
   for(i2=0; i2<n2_in; i2++) {
-    lon2_tmp[i2] = lon2_in[i2];
-    lat2_tmp[i2] = lat2_in[i2];
-  }
-  //Some grid boxes near North Pole are clipped wrong (issue #42 )
-  //The following heuristic fix seems to work. Why?
-  if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);} 
-
-  x2_0 = lon2_tmp[n2_in-1];
-  y2_0 = lat2_tmp[n2_in-1];
-  for(i2=0; i2<n2_in; i2++) {
-    x2_1 = lon2_tmp[i2];
-    y2_1 = lat2_tmp[i2];
+    x2_1 = lon2_in[i2];
+    y2_1 = lat2_in[i2];
     x1_0 = lon_tmp[n_out-1];
     y1_0 = lat_tmp[n_out-1];
     inside_last = inside_edge( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
+#pragma acc loop seq
     for(i1=0, i_out=0; i1<n_out; i1++) {
       x1_1 = lon_tmp[i1];
       y1_1 = lat_tmp[i1];
@@ -1308,10 +1223,10 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
 	ds1 = y1_0*x1_1 - y1_1*x1_0;
 	ds2 = y2_0*x2_1 - y2_1*x2_0;
 	determ = dy2*dx1 - dy1*dx2;
-        if(fabs(determ) < EPSLN30) {
-	  error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
-				     "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
-	}
+//        if(fabs(determ) < EPSLN30) {
+//	  error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
+//				     "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
+//	}
 	lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
 	lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
 
@@ -1326,6 +1241,7 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
       inside_last = inside;
     }
     if(!(n_out=i_out)) return 0;
+#pragma acc loop seq
     for(i1=0; i1<n_out; i1++) {
       lon_tmp[i1] = lon_out[i1];
       lat_tmp[i1] = lat_out[i1];
@@ -1337,13 +1253,6 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   return(n_out);
 }; /* clip */
 
-void pimod(double x[],int nn)
-{
-  for (int i=0;i<nn;i++) {
-    if      (x[i] < -M_PI) x[i] += TPI;
-    else if (x[i] >  M_PI) x[i] -= TPI;
-  }
-}
 /*#define debug_test_create_xgrid*/
 
 #ifndef __AIX
@@ -1367,14 +1276,13 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
 {
 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, ny1p, ny2p, nxgrid, n1_in, n2_in;
-  int n0, n1, n2, n3, i1, j1, i2, j2, l, n;
+  int n0, n1, n2, n3, i1, j1, i2, j2;
   double x1_in[MV], y1_in[MV], z1_in[MV];
   double x2_in[MV], y2_in[MV], z2_in[MV];
   double x_out[MV], y_out[MV], z_out[MV];
   double *x1=NULL, *y1=NULL, *z1=NULL;
   double *x2=NULL, *y2=NULL, *z2=NULL;
 
-  double xctrlon, xctrlat;
   double *area1, *area2, min_area;
 
   nx1 = *nlon_in;
@@ -1415,7 +1323,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
     x1_in[3] = x1[n3]; y1_in[3] = y1[n3]; z1_in[3] = z1[n3];
 
     for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
-      int n_in, n_out;
+      int n_out;
       double xarea;
 
       n0 = j2*nx2p+i2;       n1 = (j2+1)*nx2p+i2;
@@ -1477,8 +1385,6 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
 			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
 			    double x_out[], double y_out[], double z_out[])
 {
-  struct Node *subjList=NULL;
-  struct Node *clipList=NULL;
   struct Node *grid1List=NULL;
   struct Node *grid2List=NULL;
   struct Node *intersectList=NULL;
@@ -1499,7 +1405,6 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
   double u1, u2;
   double min_x1, max_x1, min_y1, max_y1, min_z1, max_z1;
   double min_x2, max_x2, min_y2, max_y2, min_z2, max_z2;
-  static int first_call=1;
 
 
   /* first check the min and max of (x1_in, y1_in, z1_in) with (x2_in, y2_in, z2_in) */
@@ -1619,8 +1524,6 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
       printf("********************************************************************************\n");
 #endif
       if( line_intersect_2D_3D(p1_0, p1_1, p2_0, p2_1, p2_2, intersect, &u1, &u2, &inbound) ) {
-	int n_prev, n_cur;
-	int is_in_subj, is_in_clip;
 
 	/* from the value of u1, u2 and inbound, we can partially decide if a point is inside or outside of polygon */
 
@@ -2108,6 +2011,7 @@ double poly_ctrlat(const double x[], const double y[], int n)
     if(dx > M_PI)  dx = dx - 2.0*M_PI;
     if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
 
+
     if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
       ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
     else
@@ -2196,7 +2100,7 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
-    if(fabs(dphi2 -dphi1) < M_PI) {
+    if(abs(dphi2 -dphi1) < M_PI) {
       ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
     }
     else {
@@ -2204,7 +2108,7 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
 	fac = M_PI;
       else
 	fac = -M_PI;
-      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
+      fint = f1 + (f2-f1)*(fac-dphi1)/abs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
 	+ 0.5*fac*(dphi1+dphi2)*fint;
 	}
@@ -2264,7 +2168,7 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
-    if(fabs(dphi2 -dphi1) < M_PI) {
+    if(abs(dphi2 -dphi1) < M_PI) {
       ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
     }
     else {
@@ -2272,7 +2176,7 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
 	fac = M_PI;
       else
 	fac = -M_PI;
-      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
+      fint = f1 + (f2-f1)*(fac-dphi1)/abs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
 	+ 0.5*fac*(dphi1+dphi2)*fint;
     }
@@ -2785,8 +2689,8 @@ int main(int argc, char* argv[])
     case 14:
       /****************************************************************
        test clip_2dx2d_great_cirle case 14: Cubic sphere grid at tile = 3, point (i=24,j=1)
-         identical grid boxes 
-      ****************************************************************/
+       identical grid boxes 
+       ****************************************************************/
       /*
       nlon1 = 1;
       nlat1 = 1;
@@ -2794,12 +2698,10 @@ int main(int argc, char* argv[])
       nlat2 = 1;
       n1_in = (nlon1+1)*(nlat1+1);
       n2_in = (nlon2+1)*(nlat2+1);
-
       lon1_in[0] = 350.0; lat1_in[0] = 90.00;
       lon1_in[1] = 170.0; lat1_in[1] = 87.92;
       lon1_in[2] = 260.0; lat1_in[2] = 87.92;
       lon1_in[3] = 215.0; lat1_in[3] = 87.06;
-
       lon2_in[0] = 350.0; lat2_in[0] = 90.00;
       lon2_in[1] = 170.0; lat2_in[1] = 87.92;
       lon2_in[2] = 260.0; lat2_in[2] = 87.92;
@@ -2832,7 +2734,6 @@ int main(int argc, char* argv[])
       memcpy(lat2_in,lat2_15,sizeof(lat2_in));
       //Must give the second box
       break;
-
     case 16:
       /*Must give [[-57.748, -30, -30, -97.6, -97.6],
                    [89.876, 89.891, 90, 90, 89.9183]]*/ 
@@ -2951,7 +2852,7 @@ int main(int argc, char* argv[])
       /*Side does not cross SP (Right cell).
 	Must give same box
       */      
-      
+
       n1_in = 4; n2_in = 4;
       double lon1_23[] = {158.60256162113,121.19651597620,82.40000000000,82.40000000000};
       double lat1_23[] = {-89.26896927380,-88.85737639760,-89.10746816044,-89.82370183256};
@@ -3110,7 +3011,7 @@ int main(int argc, char* argv[])
       printf("\n");
       for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
       printf("\n");
-      
+
 
       printf("     output clip grid box longitude, latitude, area= %g \n ",area_out);
       printf("n_out= %d \n",n_out);
@@ -3142,10 +3043,11 @@ int main(int argc, char* argv[])
       printf("\n");
 
       printf("\n     Second input grid box longitude, latitude \n \n");
-      for(i=0; i<n2_in; i++) printf(" %g,", lon2_in[i]*R2D);
+      for(i=0; i<n1_in; i++) printf(" %g,", lon1_in[i]*R2D);
       printf("\n");
-      for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
+      for(i=0; i<n1_in; i++) printf(" %g,", lat1_in[i]*R2D);
       printf("\n");
+
 
       printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
       printf("n_out= %d \n",n_out);
