@@ -79,7 +79,7 @@ AS_IF([test ${with_openacc:-yes} = yes],
   [with_openacc=yes],
   [with_openacc=no])
 AS_IF([test ${with_openacc} = yes],
-  AX_CHECK_COMPILE_FLAG( [-acc], [CFLAGS="-acc -tp haswell -ta=tesla -Minfo -Mbounds -Mnoinline"]))
+  AX_CHECK_COMPILE_FLAG( [-acc], [CFLAGS="-acc -tp haswell -gpu=cc70 -Minfo -Mbounds -Mnoinline"]))
 
 
 AC_PROG_FC([ifort gfortran])

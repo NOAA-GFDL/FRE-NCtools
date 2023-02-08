@@ -33,6 +33,8 @@
 #include "mpp_io.h"
 #include "read_mosaic.h"
 
+#define DEBUG 0
+
 #define  AREA_RATIO (1.e-3)
 #define  MAXVAL (1.e20)
 #define  TOLERANCE  (1.e-10)
@@ -202,7 +204,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	    nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
 					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
 					       mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-   printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
+   if(DEBUG) printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
    time_end = clock();
    time_nxgrid += 1.0 * (time_end - time_start)/CLOCKS_PER_SEC;
 
@@ -325,7 +327,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	}  /* if(nxgrid>0) */
       }
     }
-    print_time("time_nxgrid", time_nxgrid);
+    if(DEBUG) print_time("time_nxgrid", time_nxgrid);
 
     if(opcode & CONSERVE_ORDER2) {
       /* subtrack the grid_in clon and clat to get the distance between xgrid and grid_in */
@@ -832,12 +834,12 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
     if ( cell_methods == CELL_METHODS_SUM ) {
       for(i=0; i<nx2*ny2*nz; i++) {
         if(out_area[i] == 0) {
-	  if(out_miss[i] ==0)
+          if(out_miss[i] ==0)
             for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = missing;
           else
             for(k=0; k<nz; k++) field_out[m].data[k*nx2*ny2+i] = 0.0;
-	}
-     }
+        }
+      }
     }
     else {
       for(i=0; i<nx2*ny2*nz; i++) {
