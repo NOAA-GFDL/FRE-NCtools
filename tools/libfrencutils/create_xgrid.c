@@ -1039,8 +1039,9 @@ nxgrid = 0;
 	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
 	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-//            if(nxgrid>= MAXXGRID/nthreads)
-//	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+            // commented out for gpu work
+            if(nxgrid>= MAXXGRID/nthreads)
+	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
 	    xgrid_area[nxgrid] = xarea;
 	    xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
 	    xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
@@ -1223,10 +1224,11 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
 	ds1 = y1_0*x1_1 - y1_1*x1_0;
 	ds2 = y2_0*x2_1 - y2_1*x2_0;
 	determ = dy2*dx1 - dy1*dx2;
-//        if(fabs(determ) < EPSLN30) {
-//	  error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
-//				     "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
-//	}
+        // commented out for gpu work
+        if(fabs(determ) < EPSLN30) {
+          error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
+                        "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
+	}
 	lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
 	lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
 
@@ -2100,7 +2102,7 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
-    if(abs(dphi2 -dphi1) < M_PI) {
+    if(fabs(dphi2 -dphi1) < M_PI) {
       ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
     }
     else {
@@ -2108,7 +2110,7 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
 	fac = M_PI;
       else
 	fac = -M_PI;
-      fint = f1 + (f2-f1)*(fac-dphi1)/abs(dphi);
+      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
 	+ 0.5*fac*(dphi1+dphi2)*fint;
 	}
@@ -2168,7 +2170,7 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
-    if(abs(dphi2 -dphi1) < M_PI) {
+    if(fabs(dphi2 -dphi1) < M_PI) {
       ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
     }
     else {
@@ -2176,7 +2178,7 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
 	fac = M_PI;
       else
 	fac = -M_PI;
-      fint = f1 + (f2-f1)*(fac-dphi1)/abs(dphi);
+      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
 	+ 0.5*fac*(dphi1+dphi2)*fint;
     }
@@ -2689,8 +2691,8 @@ int main(int argc, char* argv[])
     case 14:
       /****************************************************************
        test clip_2dx2d_great_cirle case 14: Cubic sphere grid at tile = 3, point (i=24,j=1)
-       identical grid boxes 
-       ****************************************************************/
+         identical grid boxes
+      ****************************************************************/
       /*
       nlon1 = 1;
       nlat1 = 1;
@@ -2698,10 +2700,12 @@ int main(int argc, char* argv[])
       nlat2 = 1;
       n1_in = (nlon1+1)*(nlat1+1);
       n2_in = (nlon2+1)*(nlat2+1);
+
       lon1_in[0] = 350.0; lat1_in[0] = 90.00;
       lon1_in[1] = 170.0; lat1_in[1] = 87.92;
       lon1_in[2] = 260.0; lat1_in[2] = 87.92;
       lon1_in[3] = 215.0; lat1_in[3] = 87.06;
+
       lon2_in[0] = 350.0; lat2_in[0] = 90.00;
       lon2_in[1] = 170.0; lat2_in[1] = 87.92;
       lon2_in[2] = 260.0; lat2_in[2] = 87.92;
@@ -2734,9 +2738,10 @@ int main(int argc, char* argv[])
       memcpy(lat2_in,lat2_15,sizeof(lat2_in));
       //Must give the second box
       break;
+
     case 16:
       /*Must give [[-57.748, -30, -30, -97.6, -97.6],
-                   [89.876, 89.891, 90, 90, 89.9183]]*/ 
+                   [89.876, 89.891, 90, 90, 89.9183]]*/
       n1_in = 6; n2_in = 5;
       double lon1_16[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_16[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2778,11 +2783,11 @@ int main(int argc, char* argv[])
       /*Must give nothing*/
     case 19:
       /****************************************************************
-        test clip_2dx2d 2: two boxes that include the North Pole 
+        test clip_2dx2d 2: two boxes that include the North Pole
                            one has vertices on the tripolar fold
                            the other is totally outside the first
                            This actually happens for some stretched grid
-                           configurations  mosaic_c256r25tlat32.0_om4p25 
+                           configurations  mosaic_c256r25tlat32.0_om4p25
         The test gives wrong answers!
       ****************************************************************/
       n1_in = 6; n2_in = 5;
@@ -2799,7 +2804,7 @@ int main(int argc, char* argv[])
 
     case 20:
       /*Must give
- n_out= 5 
+ n_out= 5
  122.176, 150, 150, 82.4, 82.4,
  89.761, 89.789, 90, 90, 89.8429,
        */      n1_in = 6; n2_in = 5;
@@ -2816,10 +2821,10 @@ int main(int argc, char* argv[])
 
     case 21:
       /*Must give
- n_out= 5 
+ n_out= 5
  60.000,  82.400,  82.400,  60.000],
  89.889,  89.843,  90.000,  90.000]
-       */      
+       */
       n1_in = 6; n2_in = 5;
       double lon1_21[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_21[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2835,7 +2840,7 @@ int main(int argc, char* argv[])
     case 26:
       /*Side crosses SP (Right cell).
 	Must give same box
-      */      
+      */
       n1_in = 4; n2_in = 4;
       double lon1_22[] = {209.68793552504,158.60256162113,82.40000000000,262.40000000000};
       double lat1_22[] = {-89.11514201451,-89.26896927380,-89.82370183256, -89.46584623220};
@@ -2851,7 +2856,7 @@ int main(int argc, char* argv[])
     case 23:
       /*Side does not cross SP (Right cell).
 	Must give same box
-      */      
+      */
 
       n1_in = 4; n2_in = 4;
       double lon1_23[] = {158.60256162113,121.19651597620,82.40000000000,82.40000000000};
@@ -2868,7 +2873,7 @@ int main(int argc, char* argv[])
     case 24:
       /*Side crosses SP (Left cell). Added twin poles.
 	Must give the same box
-      */      
+      */
       n1_in = 6; n2_in = 6;
       double lon1_24[] = {262.40000000000,262.40000000000,82.4,82.4,6.19743837887,-44.88793552504};
       double lat1_24[] = {-89.46584623220,-90.0,         -90.0,-89.82370183256, -89.26896927380, -89.11514201451};
@@ -2881,9 +2886,9 @@ int main(int argc, char* argv[])
       memcpy(lat2_in,lat2_24,sizeof(lat2_in));
       break;
     case 25:
-      /*Side crosses SP (Left cell). 
+      /*Side crosses SP (Left cell).
 	Must givethe same box
-      */      
+      */
       n1_in = 4; n2_in = 4;
       double lon1_25[] = {262.40000000000,82.4,6.19743837887,-44.88793552504};
       double lat1_25[] = {-89.46584623220, -89.82370183256, -89.26896927380, -89.11514201451};
@@ -2898,7 +2903,7 @@ int main(int argc, char* argv[])
     case 22:
       /*Side does not cross SP (Left cell).
 	Must give same box
-      */       
+      */
       n1_in = 4; n2_in = 4;
       double lon1_26[] = {82.4,82.4,43.60348402380,6.19743837887};
       double lat1_26[] = {-89.82370183256, -89.10746816044, -88.85737639760, -89.26896927380};
@@ -3019,7 +3024,7 @@ int main(int argc, char* argv[])
       printf("\n");
       for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);
       printf("\n");
-      if(area1>1.0e14 || area2>1.0e14 || area_out>1.0e14) printf("Error in calculating area !\n");  
+      if(area1>1.0e14 || area2>1.0e14 || area_out>1.0e14) printf("Error in calculating area !\n");
       if(n==16 || n==20) printf("Must result n_out=5!\n");
       if(n==21) printf("Must result n_out=4!\n");
       if(n==15 || n==17) printf("Must result the second box!\n");
