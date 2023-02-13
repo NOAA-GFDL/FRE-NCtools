@@ -74,12 +74,14 @@ AS_IF([test $gx_cv_c__Generic = no],
 # TODO this should really be added as an m4 macro, surprised there wasn't a existing one in the archives
 AC_ARG_WITH([openacc],
   [AS_HELP_STRING([--with-openacc],
-    [Builds with openacc flags if available (default yes)])])
-AS_IF([test ${with_openacc:-yes} = yes],
+    [Builds with openacc flags if available (default no)])])
+AS_IF([test ${with_openacc:-no} = yes],
   [with_openacc=yes],
   [with_openacc=no])
 AS_IF([test ${with_openacc} = yes],
-  [AX_CHECK_COMPILE_FLAG( [-acc], [CFLAGS="-acc -tp haswell -gpu=cc70 -Minfo -Mbounds -Mnoinline"])])
+  [AX_CHECK_COMPILE_FLAG( [-acc],
+       [CFLAGS="-acc -tp haswell -gpu=cc70 -Minfo -Mnoinline"],
+        AC_MSG_ERROR([OpenACC option specified but -acc flag not accepted by compiler]) )])
 
 
 AC_PROG_FC([ifort gfortran])
