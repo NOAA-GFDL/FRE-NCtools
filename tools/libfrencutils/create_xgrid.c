@@ -1445,13 +1445,13 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   }
 #pragma acc loop seq
   for(i2=0; i2<n2_in; i2++) {
-     lon2_tmp[i2] = lon2_in[i2];
-     lat2_tmp[i2] = lat2_in[i2];
+    lon2_tmp[i2] = lon2_in[i2];
+    lat2_tmp[i2] = lat2_in[i2];
   }
   //Some grid boxes near North Pole are clipped wrong (issue #42 )
   //The following heuristic fix seems to work. Why?
   if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);} 
- 
+
   x2_0 = lon2_tmp[n2_in-1];
   y2_0 = lat2_tmp[n2_in-1];
   for(i2=0; i2<n2_in; i2++) {
@@ -3306,11 +3306,10 @@ int main(int argc, char* argv[])
       printf("\n");
 
       printf("\n     Second input grid box longitude, latitude \n \n");
-      for(i=0; i<n1_in; i++) printf(" %g,", lon1_in[i]*R2D);
+      for(i=0; i<n2_in; i++) printf(" %g,", lon2_in[i]*R2D);
       printf("\n");
-      for(i=0; i<n1_in; i++) printf(" %g,", lat1_in[i]*R2D);
+      for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
       printf("\n");
-
 
       printf("\n     output clip grid box longitude, latitude for case %d \n \n",n);
       printf("n_out= %d \n",n_out);
