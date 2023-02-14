@@ -29,8 +29,6 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
-#define R2D (180/M_PI)
-#define TPI (2.0*M_PI)
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
 			  const double *x2, const double *y2, const double *z2, int n2);
@@ -1432,9 +1430,9 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   double x1_0, y1_0, x1_1, y1_1, x2_0, y2_0, x2_1, y2_1;
   double dx1, dy1, dx2, dy2, determ, ds1, ds2;
   int i_out, n_out, inside_last, inside, i1, i2;
-  // TODO used by pimod update
-  // double lon_tmp[MV], lat2_tmp[MV];
-  // int gtwopi=0 
+  // used by pimod update
+  double lon2_tmp[MV], lat2_tmp[MV];
+  int gttwopi=0; 
 
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
@@ -1443,26 +1441,22 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   for(i1=0; i1<n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
     lat_tmp[i1] = lat1_in[i1];
+    if(lon_tmp[i1]>TPI || lon_tmp[i1]<0.0) gttwopi = 1;
   }
-  x2_0 = lon2_in[n2_in-1];
-  y2_0 = lat2_in[n2_in-1];
+#pragma acc loop seq
   for(i2=0; i2<n2_in; i2++) {
-/* TODO updates diverge (pimod added)
- *    lon2_tmp[i2] = lon2_in[i2];
- *    lat2_tmp[i2] = lat2_in[i2];
- * }
- * //Some grid boxes near North Pole are clipped wrong (issue #42 )
- * //The following heuristic fix seems to work. Why?
- * if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);} 
- *
- * x2_0 = lon2_tmp[n2_in-1];
- * y2_0 = lat2_tmp[n2_in-1];
- * for(i2=0; i2<n2_in; i2++) {
- * x2_1 = lon2_tmp[i2];
- * y2_1 = lat2_tmp[i2];
- */
-    x2_1 = lon2_in[i2];
-    y2_1 = lat2_in[i2];
+     lon2_tmp[i2] = lon2_in[i2];
+     lat2_tmp[i2] = lat2_in[i2];
+  }
+  //Some grid boxes near North Pole are clipped wrong (issue #42 )
+  //The following heuristic fix seems to work. Why?
+  if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);} 
+ 
+  x2_0 = lon2_tmp[n2_in-1];
+  y2_0 = lat2_tmp[n2_in-1];
+  for(i2=0; i2<n2_in; i2++) {
+    x2_1 = lon2_tmp[i2];
+    y2_1 = lat2_tmp[i2];
     x1_0 = lon_tmp[n_out-1];
     y1_0 = lat_tmp[n_out-1];
     inside_last = inside_edge( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
