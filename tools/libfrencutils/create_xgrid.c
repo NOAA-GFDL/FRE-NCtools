@@ -1087,8 +1087,10 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
 
   nthreads = 1;
+#if defined(_OPENMP)
 #pragma omp parallel
   nthreads = omp_get_num_threads();
+#endif
 
   nblocks = nthreads;
 
