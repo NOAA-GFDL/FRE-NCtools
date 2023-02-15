@@ -982,7 +982,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
 #pragma acc loop independent reduction(+:nxgrid)
-      for(ij=0; ij<=nx2*ny2; ij++) {
+      for(ij=0; ij<nx2*ny2; ij++) {
 	int n_out, i2, j2, n2_in;
 	double xarea, dx, lon_out_min, lon_out_max;
 	double x2_in[MAX_V], y2_in[MAX_V];
