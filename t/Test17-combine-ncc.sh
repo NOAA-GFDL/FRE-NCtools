@@ -29,7 +29,7 @@ load test_utils
   combine-ncc \
       combine-ncc.atmos_daily.nc.copy \
       combine-ncc_output.nc
-  [ -e combine-ncc_output.nc ]
-  ncdump -h combine-ncc_output.nc
+  run_and_check [ -e combine-ncc_output.nc ]
+  run_and_check ncdump -h combine-ncc_output.nc
 
 }

@@ -1,55 +1,72 @@
 #!/usr/bin/env bats
-# test no stretched grid 
+
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
+load test_utils
+
+# test no stretched grid
 
 @test "Test no stretched grid data lats 32.0 34.0 35.4" {
 
-  if [ ! -d "Test32" ] 
+  if [ ! -d "Test32" ]
   then
   		mkdir Test32
   fi
 
   cd Test32
-  cp $top_srcdir/t/Test32-input/ocean_hgrid.nc . 
+  cp $top_srcdir/t/Test32-input/ocean_hgrid.nc .
   cp $top_srcdir/t/Test32-input/ocean_mosaic.nc .
   cp $top_srcdir/t/Test32-input/topog.nc .
 
-#Make no stretched grid 
-  run command make_hgrid \
+#Make no stretched grid
+  run_and_check  make_hgrid \
                --grid_type gnomonic_ed \
                --nlon 512 \
                --grid_name C256_grid_32.0
-  [ "$status" -eq 0 ]
 
-  run command make_hgrid \
+  run_and_check  make_hgrid \
                --grid_type gnomonic_ed \
                --nlon 512 \
                --grid_name C256_grid_34.0
-  [ "$status" -eq 0 ]
 
-  run command make_hgrid \
+  run_and_check  make_hgrid \
                --grid_type gnomonic_ed \
                --nlon 512 \
                --grid_name C256_grid_35.4
-  [ "$status" -eq 0 ]
 
 #Create no stretched grid mosaic
-  run command make_solo_mosaic \
+  run_and_check  make_solo_mosaic \
                 --num_tiles 6 \
                 --dir ./ \
                 --mosaic_name C256_mosaic_32.0 --tile_file C256_grid_32.0.tile1.nc,C256_grid_32.0.tile2.nc,C256_grid_32.0.tile3.nc,C256_grid_32.0.tile4.nc,C256_grid_32.0.tile5.nc,C256_grid_32.0.tile6.nc
-  [ "$status" -eq 0 ]
 
-  run command make_solo_mosaic \
+  run_and_check  make_solo_mosaic \
                 --num_tiles 6 \
                 --dir ./ \
                 --mosaic_name C256_mosaic_34.0 --tile_file C256_grid_34.0.tile1.nc,C256_grid_34.0.tile2.nc,C256_grid_34.0.tile3.nc,C256_grid_34.0.tile4.nc,C256_grid_34.0.tile5.nc,C256_grid_34.0.tile6.nc
-  [ "$status" -eq 0 ]
 
-  run command make_solo_mosaic \
+  run_and_check  make_solo_mosaic \
                 --num_tiles 6 \
                 --dir ./ \
                 --mosaic_name C256_mosaic_35.4 --tile_file C256_grid_35.4.tile1.nc,C256_grid_35.4.tile2.nc,C256_grid_35.4.tile3.nc,C256_grid_35.4.tile4.nc,C256_grid_35.4.tile5.nc,C256_grid_35.4.tile6.nc
-  [ "$status" -eq 0 ]
 
 # no stretched grid lats 32.0 34.0 35.4
   run bash -c 'fregrid \
@@ -65,8 +82,7 @@
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_32_0=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  expr ${var_32_0} \< 0.00001 
-  [ "$status" -eq 0 ]
+  run_and_check expr ${var_32_0} \< 0.00001
 
   run bash -c 'fregrid \
                 --input_mosaic C256_mosaic_34.0.nc \
@@ -81,8 +97,9 @@
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_34_0=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  expr ${var_34_0} \< 0.00001
-  [ "$status" -eq 0 ]
+ run_and_check expr ${var_34_0} \< 0
+  #run_and_check expr ${var_34_0} \< 0.00001
+
 
   run bash -c 'fregrid \
                 --input_mosaic C256_mosaic_35.4.nc \
@@ -97,8 +114,7 @@
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_35_4=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
-  expr ${var_35_4} \< 0.00001
-  [ "$status" -eq 0 ] 
+  run_and_check expr ${var_35_4} \< 0.00001
 
   cd ..
  # rm -rf Test32
