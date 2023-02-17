@@ -97,8 +97,7 @@ load test_utils
                 | awk 'NR==4' | rev | cut -c39-49 | rev'
   var_34_0=$(echo $output | awk '{ print sprintf("%.9f", $1); }')
   echo $output
- run_and_check expr ${var_34_0} \< 0
-  #run_and_check expr ${var_34_0} \< 0.00001
+  run_and_check expr ${var_34_0} \< 0.00001
 
 
   run bash -c 'fregrid \
