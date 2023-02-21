@@ -922,9 +922,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
   lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-
   nxgrid = 0;
-
 #pragma acc kernels copyin(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)], mask_in[0:nx1*ny1], \
 			area_in[0:nx1*ny1], area_out[0:nx2*ny2],	\
 			lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)], \
@@ -933,7 +931,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 	 lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2],	\
 	 lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2],	\
 	 lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])			\
-  copy(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+  copyout(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
 	 i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])\
   copy(nxgrid)
 {
@@ -972,11 +970,6 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
       int n0, n1, n2, n3, n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
       double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
-
-      double xgrid_area_ij[nx2*ny2],xgrid_clon_ij[nx2*ny2],xgrid_clat_ij[nx2*ny2];
-      int i_in_ij[nx2*ny2], j_in_ij[nx2*ny2];
-      int i_out_ij[nx2*ny2],j_out_ij[nx2*ny2];
-      
       n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
       n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
       x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
@@ -1032,37 +1025,21 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
 	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-	    //#pragma atomic update
-	    xgrid_area_ij[ij] = xarea;
-	    xgrid_clon_ij[ij] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	    xgrid_clat_ij[ij] = poly_ctrlat (x_out, y_out, n_out );
-	    i_in_ij[ij]  = i1;
-	    j_in_ij[ij]  = j1;
-	    i_out_ij[ij] = i2;
-	    j_out_ij[ij] = j2;	    
-	  }
-	  else {
-	    i_in_ij[ij] = -999;
-	  }
-	}
-      }//nx2ny2
+	    xgrid_area[nxgrid] = xarea;
+	    xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+	    xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
+	    i_in[nxgrid]       = i1;
+	    j_in[nxgrid]       = j1;
+	    i_out[nxgrid]      = i2;
+	    j_out[nxgrid]      = j2;
 #pragma atomic update
-      for( ij=0 ; ij<nx2*ny2; ij++) {
-	if (i_in_ij[ij] != -999) {
-	  xgrid_area[nxgrid] = xgrid_area_ij[ij];
-	  xgrid_clon[nxgrid] = xgrid_clon_ij[ij];
-	  xgrid_clat[nxgrid] = xgrid_clat_ij[ij];
-	  i_in[nxgrid]       = i_in_ij[ij];
-	  j_in[nxgrid]       = j_in_ij[ij];
-	  i_out[nxgrid]      = i_out_ij[ij];
-	  j_out[nxgrid]      = j_out_ij[ij];
-	  nxgrid++;	    
+	    nxgrid++;	    
+	  }
 	}
       }
-   }//if
- }//nx1*ny1
+    }
+ }
 
-	    //printf("%d\n", nxgrid);
 
   free(area_in);
   free(area_out);
