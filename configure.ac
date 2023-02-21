@@ -80,8 +80,9 @@ AS_IF([test ${with_openacc:-no} = yes],
   [with_openacc=no])
 AS_IF([test ${with_openacc} = yes],
   [AX_CHECK_COMPILE_FLAG( [-acc],
-       [CFLAGS="-acc -tp haswell -gpu=cc70 -Minfo -Mnoinline"],
+       [ AC_SUBST(OPENACC_CFLAGS, "-acc -O2 -g -tp haswell -gpu=cc70 -Minfo=accel -Mnoinline")],
         AC_MSG_ERROR([OpenACC option specified but -acc flag not accepted by compiler]) )])
+AM_CONDITIONAL([WITH_OPENACC], [test "$with_openacc" = "yes"])
 
 
 AC_PROG_FC([ifort gfortran])
