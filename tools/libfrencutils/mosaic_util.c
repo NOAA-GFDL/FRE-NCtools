@@ -42,12 +42,16 @@
     error handler: will print out error message and then abort
 ***********************************************************/
 int reproduce_siena = 0;
+#pragma acc declare copyin(reproduce_siena)
 
 void set_reproduce_siena_true(void)
 {
   reproduce_siena = 1;
 }
 
+// TODO openacc support
+// acc_set_error_routine could be used to set a gpu fallback error routine
+// otherwise this might stop region parallelization where used
 void error_handler(const char *msg)
 {
   fprintf(stderr, "FATAL Error: %s\n", msg );

@@ -17,6 +17,8 @@ jobs:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
+    - name: install autoconf dependency
+      run: apt update && apt install autoconf-archive
     - name: Checkout
       uses: actions/checkout@v2
       with:
