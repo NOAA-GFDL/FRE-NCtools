@@ -74,14 +74,15 @@ AS_IF([test $gx_cv_c__Generic = no],
 # TODO this should really be added as an m4 macro, surprised there wasn't a existing one in the archives
 AC_ARG_WITH([openacc],
   [AS_HELP_STRING([--with-openacc],
-    [Builds with openacc flags if available (default no)])])
+    [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu. Flags added: -acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline (default no)])])
 AS_IF([test ${with_openacc:-no} = yes],
   [with_openacc=yes],
   [with_openacc=no])
 AS_IF([test ${with_openacc} = yes],
   [AX_CHECK_COMPILE_FLAG( [-acc],
-       [CFLAGS="-acc -tp haswell -gpu=cc70 -Minfo -Mnoinline"],
+       [ AC_SUBST(OPENACC_CFLAGS, "-acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline")],
         AC_MSG_ERROR([OpenACC option specified but -acc flag not accepted by compiler]) )])
+AM_CONDITIONAL([WITH_OPENACC], [test "$with_openacc" = "yes"])
 
 
 AC_PROG_FC([ifort gfortran])

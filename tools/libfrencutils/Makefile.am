@@ -21,6 +21,9 @@ noinst_LIBRARIES = libfrencutils.a
 if WITH_MPI
   noinst_LIBRARIES += libfrencutils_mpi.a
 endif
+if WITH_OPENACC
+  noinst_LIBRARIES += libfrencutils_gpu.a
+endif
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
 
@@ -47,3 +50,6 @@ libfrencutils_a_SOURCES = affinity.c \
 
 libfrencutils_mpi_a_SOURCES = $(libfrencutils_a_SOURCES)
 libfrencutils_mpi_a_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
+
+libfrencutils_gpu_a_SOURCES = $(libfrencutils_a_SOURCES)
+libfrencutils_gpu_a_CFLAGS = $(OPENACC_CFLAGS) $(AM_CFLAGS)
