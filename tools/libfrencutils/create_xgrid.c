@@ -924,15 +924,16 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
   nxgrid = 0;
 #pragma acc kernels copyin(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)], mask_in[0:nx1*ny1], \
-                           xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
-                           i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid], \
-                           area_in[0:nx1*ny1], area_out[0:nx2*ny2], \
-                           lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)]) \
-                   copyout(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2], \
-		          lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2],  \
-		          lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2],  \
-		          lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2]) \
-                   copy (nxgrid)
+			area_in[0:nx1*ny1], area_out[0:nx2*ny2],	\
+			lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)], \
+			nx1, ny1, nx2, ny2, nx1p, nx2p)	\
+  create(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2],	\
+	 lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2],	\
+	 lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2],	\
+	 lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])			\
+  copyout(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+	 i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])\
+  copy(nxgrid)
 {
 #pragma acc loop independent
   for(ij=0; ij<nx2*ny2; ij++){
@@ -951,7 +952,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-//    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    //if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
@@ -963,12 +964,11 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     }
   }
 
-#pragma acc loop independent reduction(+:nxgrid) collapse(2)
+#pragma acc loop independent collapse(2) //reduction(+:nxgrid)
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n0, n1, n2, n3, l,n1_in;
+      int n0, n1, n2, n3, n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
       double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
-
       n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
       n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
       x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
@@ -981,9 +981,9 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
       lon_in_min = minval_double(n1_in, x1_in);
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
-#pragma acc loop independent reduction(+:nxgrid)
-      for(ij=0; ij<=nx2*ny2; ij++) {
-	int n_out, i2, j2, n2_in;
+#pragma acc loop independent //reduction(+:nxgrid) 
+      for(ij=0; ij<nx2*ny2; ij++) {
+	int n_out, i2, j2, n2_in, l;
 	double xarea, dx, lon_out_min, lon_out_max;
 	double x2_in[MAX_V], y2_in[MAX_V];
 
@@ -1031,12 +1031,14 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 	    j_in[nxgrid]       = j1;
 	    i_out[nxgrid]      = i2;
 	    j_out[nxgrid]      = j2;
-	    nxgrid++;
+#pragma atomic update
+	    nxgrid++;	    
 	  }
 	}
       }
     }
-}
+ }
+
 
   free(area_in);
   free(area_out);
