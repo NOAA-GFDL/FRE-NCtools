@@ -235,6 +235,8 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
     tmpy[j1*nx1p+i1] = lat_in[j1];
   }
   /* This is just a temporary fix to solve the issue that there is one point in zonal direction */
+  //TODO: Finish this "temporary fix"
+  exit(-1);
   if(nx1 > 1)
      get_grid_area(nlon_in, nlat_in, tmpx, tmpy, area_in);
   else
@@ -1284,7 +1286,7 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   }
   //Some grid boxes near North Pole are clipped wrong (issue #42 )
   //The following heuristic fix seems to work. Why?
-  if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);} 
+  if(gttwopi){pimod(lon_tmp,n1_in);pimod(lon2_tmp,n2_in);}
 
   x2_0 = lon2_tmp[n2_in-1];
   y2_0 = lat2_tmp[n2_in-1];
@@ -2785,7 +2787,7 @@ int main(int argc, char* argv[])
     case 14:
       /****************************************************************
        test clip_2dx2d_great_cirle case 14: Cubic sphere grid at tile = 3, point (i=24,j=1)
-         identical grid boxes 
+         identical grid boxes
       ****************************************************************/
       /*
       nlon1 = 1;
@@ -2835,7 +2837,7 @@ int main(int argc, char* argv[])
 
     case 16:
       /*Must give [[-57.748, -30, -30, -97.6, -97.6],
-                   [89.876, 89.891, 90, 90, 89.9183]]*/ 
+                   [89.876, 89.891, 90, 90, 89.9183]]*/
       n1_in = 6; n2_in = 5;
       double lon1_16[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_16[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2877,11 +2879,11 @@ int main(int argc, char* argv[])
       /*Must give nothing*/
     case 19:
       /****************************************************************
-        test clip_2dx2d 2: two boxes that include the North Pole 
+        test clip_2dx2d 2: two boxes that include the North Pole
                            one has vertices on the tripolar fold
                            the other is totally outside the first
                            This actually happens for some stretched grid
-                           configurations  mosaic_c256r25tlat32.0_om4p25 
+                           configurations  mosaic_c256r25tlat32.0_om4p25
         The test gives wrong answers!
       ****************************************************************/
       n1_in = 6; n2_in = 5;
@@ -2898,7 +2900,7 @@ int main(int argc, char* argv[])
 
     case 20:
       /*Must give
- n_out= 5 
+ n_out= 5
  122.176, 150, 150, 82.4, 82.4,
  89.761, 89.789, 90, 90, 89.8429,
        */      n1_in = 6; n2_in = 5;
@@ -2915,10 +2917,10 @@ int main(int argc, char* argv[])
 
     case 21:
       /*Must give
- n_out= 5 
+ n_out= 5
  60.000,  82.400,  82.400,  60.000],
  89.889,  89.843,  90.000,  90.000]
-       */      
+       */
       n1_in = 6; n2_in = 5;
       double lon1_21[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_21[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2934,7 +2936,7 @@ int main(int argc, char* argv[])
     case 26:
       /*Side crosses SP (Right cell).
 	Must give same box
-      */      
+      */
       n1_in = 4; n2_in = 4;
       double lon1_22[] = {209.68793552504,158.60256162113,82.40000000000,262.40000000000};
       double lat1_22[] = {-89.11514201451,-89.26896927380,-89.82370183256, -89.46584623220};
@@ -2950,8 +2952,8 @@ int main(int argc, char* argv[])
     case 23:
       /*Side does not cross SP (Right cell).
 	Must give same box
-      */      
-      
+      */
+
       n1_in = 4; n2_in = 4;
       double lon1_23[] = {158.60256162113,121.19651597620,82.40000000000,82.40000000000};
       double lat1_23[] = {-89.26896927380,-88.85737639760,-89.10746816044,-89.82370183256};
@@ -2967,7 +2969,7 @@ int main(int argc, char* argv[])
     case 24:
       /*Side crosses SP (Left cell). Added twin poles.
 	Must give the same box
-      */      
+      */
       n1_in = 6; n2_in = 6;
       double lon1_24[] = {262.40000000000,262.40000000000,82.4,82.4,6.19743837887,-44.88793552504};
       double lat1_24[] = {-89.46584623220,-90.0,         -90.0,-89.82370183256, -89.26896927380, -89.11514201451};
@@ -2980,9 +2982,9 @@ int main(int argc, char* argv[])
       memcpy(lat2_in,lat2_24,sizeof(lat2_in));
       break;
     case 25:
-      /*Side crosses SP (Left cell). 
+      /*Side crosses SP (Left cell).
 	Must givethe same box
-      */      
+      */
       n1_in = 4; n2_in = 4;
       double lon1_25[] = {262.40000000000,82.4,6.19743837887,-44.88793552504};
       double lat1_25[] = {-89.46584623220, -89.82370183256, -89.26896927380, -89.11514201451};
@@ -2997,7 +2999,7 @@ int main(int argc, char* argv[])
     case 22:
       /*Side does not cross SP (Left cell).
 	Must give same box
-      */       
+      */
       n1_in = 4; n2_in = 4;
       double lon1_26[] = {82.4,82.4,43.60348402380,6.19743837887};
       double lat1_26[] = {-89.82370183256, -89.10746816044, -88.85737639760, -89.26896927380};
@@ -3110,7 +3112,7 @@ int main(int argc, char* argv[])
       printf("\n");
       for(i=0; i<n2_in; i++) printf(" %g,", lat2_in[i]*R2D);
       printf("\n");
-      
+
 
       printf("     output clip grid box longitude, latitude, area= %g \n ",area_out);
       printf("n_out= %d \n",n_out);
@@ -3118,7 +3120,7 @@ int main(int argc, char* argv[])
       printf("\n");
       for(i=0; i<n_out; i++) printf(" %g,", lat_out[i]*R2D);
       printf("\n");
-      if(area1>1.0e14 || area2>1.0e14 || area_out>1.0e14) printf("Error in calculating area !\n");  
+      if(area1>1.0e14 || area2>1.0e14 || area_out>1.0e14) printf("Error in calculating area !\n");
       if(n==16 || n==20) printf("Must result n_out=5!\n");
       if(n==21) printf("Must result n_out=4!\n");
       if(n==15 || n==17) printf("Must result the second box!\n");
