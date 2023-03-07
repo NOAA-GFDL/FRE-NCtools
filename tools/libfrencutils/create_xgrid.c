@@ -235,8 +235,7 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
     tmpy[j1*nx1p+i1] = lat_in[j1];
   }
   /* This is just a temporary fix to solve the issue that there is one point in zonal direction */
-  //TODO: Finish this "temporary fix"
-  exit(-1);
+  // TODO: Finish this "temporary fix"
   if(nx1 > 1)
      get_grid_area(nlon_in, nlat_in, tmpx, tmpy, area_in);
   else
