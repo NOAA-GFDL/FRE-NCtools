@@ -968,7 +968,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
       int n0, n1, n2, n3, n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
-      double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
+      double x1_in[MV], y1_in[MV];
       n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
       n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
       x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
@@ -985,7 +985,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
       for(ij=0; ij<nx2*ny2; ij++) {
 	int n_out, i2, j2, n2_in, l;
 	double xarea, dx, lon_out_min, lon_out_max;
-	double x2_in[MAX_V], y2_in[MAX_V];
+	double x2_in[MAX_V], y2_in[MAX_V],  x_out[MV], y_out[MV];;
 
 	i2 = ij%nx2;
 	j2 = ij/nx2;
