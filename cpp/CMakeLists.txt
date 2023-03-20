@@ -11,5 +11,5 @@ add_subdirectory(search)
 
 #add_subdirectory(vendor/edlib EXCLUDE_FROM_ALL)
 
-add_dependencies(fregrid libSearch)
+add_dependencies(searchtest libSearch)
 #add_dependencies(libSearch libCommon)

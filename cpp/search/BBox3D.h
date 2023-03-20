@@ -46,7 +46,8 @@ namespace nct {
 #endif
         }
 
-        //
+        //TODO: investigate using sum of bools. e.g. int r= bool(A.lo[0] > B.hi[0])
+        // + bool(A.lo[1] > B.hi[1]) ... check for branch misses w perf stat
         inline static bool intersect(const BBox3D &A, const BBox3D &B) {
             if (A.lo[0] > B.hi[0] || A.lo[1] > B.hi[1] || A.lo[2] > B.hi[2] ||
                 A.hi[0] < B.lo[0] || A.hi[1] < B.lo[1] || A.hi[2] < B.lo[2]) {
