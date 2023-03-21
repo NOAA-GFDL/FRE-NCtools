@@ -17,8 +17,8 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include "constant.h"
 #include "mosaic_util.h"
 #include "gradient_c2l.h"

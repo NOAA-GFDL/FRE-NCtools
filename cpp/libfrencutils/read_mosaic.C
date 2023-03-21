@@ -17,10 +17,12 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+//#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include "read_mosaic.h"
 #include "constant.h"
 #include "mosaic_util.h"
@@ -51,7 +53,7 @@ void get_file_dir(const char *file, char *dir)
 
   /* get the diretory */
 
-  strptr = strrchr(file, '/');
+  strptr = strrchr(const_cast<char*>(file), '/');
   if(strptr) {
     len = strptr - file;
     strncpy(dir, file, len);
@@ -230,11 +232,11 @@ void get_var_data(const char *file, const char *name, void *data)
 #ifdef OVERLOAD_R4
   status = nc_get_var_float(ncid, varid, data);
 #else
-  status = nc_get_var_double(ncid, varid, data);
+  status = nc_get_var_double(ncid, varid, static_cast<double*>(data));
 #endif
   break;
   case NC_INT:
-    status = nc_get_var_int(ncid, varid, data);
+    status = nc_get_var_int(ncid, varid, static_cast<int*>(data));
     break;
   default:
     sprintf(msg, "get_var_data: field %s in file %s has an invalid type, "
@@ -285,11 +287,11 @@ void get_var_data_region(const char *file, const char *name, const size_t *start
 #ifdef OVERLOAD_R4
     status = nc_get_vara_float(ncid, varid, start, nread, data);
 #else
-    status = nc_get_vara_double(ncid, varid, start, nread, data);
+    status = nc_get_vara_double(ncid, varid, start, nread, static_cast<double*>(data));
 #endif
     break;
   case NC_INT:
-    status = nc_get_vara_int(ncid, varid, start, nread, data);
+    status = nc_get_vara_int(ncid, varid, start, nread, static_cast<int*> (data));
     break;
   default:
     sprintf(msg, "get_var_data_region: field %s in file %s has an invalid type, "

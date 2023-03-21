@@ -29,7 +29,7 @@
 ****************************************************************/
 #ifndef MPP_DOMAIN_H_
 #define MPP_DOMAIN_H_
-#define max(a,b) (a>b ? a:b)
+
 typedef struct{
   int start, end;           /* starting and ending index of compute domain */
   int size;                 /* compute domain size */

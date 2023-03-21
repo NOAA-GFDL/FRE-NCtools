@@ -17,11 +17,13 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
+
 #include <netcdf.h>
-#include <math.h>
+
 #include "constant.h"
 #include "globals.h"
 #include "create_xgrid.h"
@@ -179,8 +181,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             }
 
 	  }
-	  jstart = max(0, jstart-1);
-	  jend   = min(ny_in-1, jend+1);
+	  jstart = std::max(0, jstart-1);
+	  jend   = std::min(ny_in-1, jend+1);
 	  ny_now = jend-jstart+1;
 
 	  if(opcode & CONSERVE_ORDER1) {

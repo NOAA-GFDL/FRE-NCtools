@@ -24,8 +24,8 @@
       will be added on in the future.
       Contact: Zhi.Liang@noaa.gov
 */
-#include <stdlib.h>
-#include <math.h>
+
+#include <cmath>
 #include "mpp.h"
 #include "mpp_domain.h"
 
@@ -132,8 +132,8 @@ void mpp_compute_extent(int npts, int ndivs, int *ibegin, int *iend)
       ndmirror = (ndivs-1) - ndiv; /* mirror domain */
       if( ndmirror > ndiv && symmetrize ) { /* only for domains over the midpoint */
 	/*mirror extents, the max(,) is to eliminate overlaps */
-	ibegin[ndmirror] = max( isg+ieg-ie, ie+1 );
-	iend[ndmirror]   = max( isg+ieg-is, ie+1 );
+	ibegin[ndmirror] = std::max( isg+ieg-ie, ie+1 );
+	iend[ndmirror]   = std::max( isg+ieg-is, ie+1 );
 	imax = ibegin[ndmirror] - 1;
 	ndmax --;
       }

@@ -20,9 +20,7 @@
 /*
   Copyright (C) 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+
 #include "mosaic_util.h"
 #include "interp.h"
 #include "create_xgrid.h"

@@ -39,12 +39,12 @@
             675 Mass Ave, Cambridge, MA 02139, USA.  
 -----------------------------------------------------------------------
 */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <ctime>
 #include <getopt.h>
-#include <math.h>
-#include <time.h>
 #include "globals.h"
 #include "constant.h"
 #include "read_mosaic.h"

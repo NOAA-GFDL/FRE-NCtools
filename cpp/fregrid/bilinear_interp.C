@@ -17,18 +17,17 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstdlib>
+#include <iostream>
+#include <cmath>
 #include "globals.h"
 #include "mosaic_util.h"
 #include "bilinear_interp.h"
 #include "mpp_io.h"
 #include "mpp.h"
 
-#define min(a,b) (a<b ? a:b)
-#define max(a,b) (a>b ? a:b)
-#define sign(a,b)(b<0 ? -fabs(a):fabs(a))
+
+#define sign(a,b)(b<0 ? -fabs(a):fabs(a))  //TODO: replace for C++
 
 
 int max_weight_index( double *var, int nvar);
@@ -46,6 +45,10 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
 	       int i_in, int j_in, int l_in, int i_out, int j_out);
 int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, int *index,
 		      int i_in, int j_in, int l_in, int i_out, int j_out);
+
+
+using std::max;
+using std::min;
 
 /*******************************************************************************
   void setup_bilinear_interp( )
@@ -83,6 +86,9 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   double v0[3], v1[3], v2[3], v3[3], v4[3];
   int    all_done;
   int    *found, *index;
+
+  using std::min;
+  using std::max;
 
   /* ntiles_in must be six and ntiles_out must be one */
   if(ntiles_in != 6) mpp_error("Error from bilinear_interp: source mosaic should be cubic mosaic "
@@ -151,15 +157,15 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	v2[1] = grid_in[l].yt[n2];
 	v2[2] = grid_in[l].zt[n2];
 	dcub=iter*normalize_great_circle_distance(v1, v2);
-	j_min=max(   1,  floor((grid_in[l].latt[n1]-dcub-latbegin)/dlat)-iter+1);
-	j_max=min(ny_out,ceil((grid_in[l].latt[n1]+dcub-latbegin)/dlat)+iter-1);
+	j_min=max( 1,  static_cast<int>(floor((grid_in[l].latt[n1]-dcub-latbegin)/dlat)-iter+1)); //TODO: possible error
+	j_max=min(ny_out,static_cast<int>(ceil((grid_in[l].latt[n1]+dcub-latbegin)/dlat)+iter-1));//TODO: possible error
 	if (j_min==1 || j_max==ny_out) {
 	  i_min=1;
 	  i_max=nx_out;
 	}
         else {
-	  i_min=max(   1,  floor((grid_in[l].lont[n1]-dcub-lonbegin)/dlon-iter+1));
-	  i_max=min(nx_out,ceil((grid_in[l].lont[n1]+dcub-lonbegin)/dlon+iter-1));
+	  i_min=max(   1, static_cast<int>( floor((grid_in[l].lont[n1]-dcub-lonbegin)/dlon-iter+1)));
+	  i_max=min(nx_out,static_cast<int>(ceil((grid_in[l].lont[n1]+dcub-lonbegin)/dlon+iter-1)));
 	}
 	for(j=j_min-1; j<j_max; j++) for(i=i_min-1; i<i_max; i++) {
 	  n0 = j*nx_out + i;
@@ -662,6 +668,8 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
   double angle_1, angle_1a, angle_1b, angle_2, angle_2a, angle_2b;
   double angle_3, angle_3a, angle_3b, angle_4, angle_4a, angle_4b;
 
+  using std::max;
+
   ok=1;
   nx_in  = grid_in->nx_fine;
   ny_in  = grid_in->nx_fine;
@@ -757,6 +765,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
   int    n0, n1, n2, n3, n4, n5, n6, n7, n8;
   int    nx_in, ny_in, nx_out, ny_out, nxd;
   double v0[3], v1[3], v2[3], v3[3], v4[3], v5[3], v6[3], v7[3], v8[3];
+
 
   found = 0;
   nx_in  = grid_in->nx;

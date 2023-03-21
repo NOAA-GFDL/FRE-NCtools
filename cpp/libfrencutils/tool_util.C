@@ -17,12 +17,14 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+
+#include <cmath>
+#include <ctime>
+#include <cstring>
+#include <cstdio>
+
 #include <unistd.h>
-#include <time.h>
+
 #include "config.h"
 #include "constant.h"
 #include "mosaic_util.h"
@@ -59,7 +61,7 @@ void get_file_path(const char *file, char *dir)
 
   /* get the diretory */
 
-  strptr = strrchr(file, '/');
+  strptr = const_cast<char*>(strrchr(file, '/'));
   if(strptr) {
     len = strptr - file;
     strncpy(dir, file, len);
@@ -265,7 +267,7 @@ double bipolar_area(double x1, double y1, double x2, double y2,
  ********************************************************************/
   double lat_dist(double x1, double x2)
 {
-  return min(fmod(x1-x2+720,360.),fmod(x2-x1+720,360.));
+  return std::min(fmod(x1-x2+720,360.),fmod(x2-x1+720,360.));
 }
 
 

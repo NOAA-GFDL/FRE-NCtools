@@ -21,9 +21,11 @@
 /**
  * \author Zhi Liang
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+#include <cstddef>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
 #include <sys/time.h>
 #include <sys/resource.h>
 #ifdef use_libMPI

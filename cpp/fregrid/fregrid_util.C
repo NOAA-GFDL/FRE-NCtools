@@ -17,10 +17,10 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <cstdio>
 #include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
@@ -1451,7 +1451,7 @@ int parse_string(const char *str1, const char *str2, char *strOut, char *errmsg)
   int len2, len, istart, attlen, i;
 
   len2 = strlen(str2);
-  str = strstr(str1, str2);
+  str = strstr(const_cast<char*>(str1), str2);
   if( str ) { /* str2 is found */
     str = str+len2;
     len = strlen(str);
@@ -2492,6 +2492,9 @@ void setup_boundary(const char *mosaic_file, int ntiles, Grid_config *grid, Boun
   int *tile, *dir;
   int *istart, *iend, *jstart, *jend;
 
+  using std::min;
+  using std::max;
+
   ncontacts = read_mosaic_ncontacts(mosaic_file);
   if(ncontacts == 0) {
     for(n=0; n<ntiles; n++) bound[n].nbound = 0;
@@ -2751,9 +2754,9 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
     for(i=0; i<ni; i++) {
       n = j*ni+i;
       cfn[n] = csj*cstr/(dyt[j]*dyu[j]);
-      cfs[n] = csm*cstr/(dyt[j]*dyu[max(j-1,0)]);
+      cfs[n] = csm*cstr/(dyt[j]*dyu[std::max(j-1,0)]);
       cfe[n] = cstr*cstr/(dxu[i]*dxt[i]);
-      cfw[n] = cstr*cstr/(dxu[max(i-1,0)]*dxt[i]);
+      cfw[n] = cstr*cstr/(dxu[std::max(i-1,0)]*dxt[i]);
       cfc    = 1.0/(cfn[n]+cfs[n]+cfe[n]+cfw[n]);
       cfn[n] = cfn[n]*cfc;
       cfs[n] = cfs[n]*cfc;
@@ -2806,7 +2809,7 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
 	n2 = (j+1)*(ni+2) + i+1;
 	res[n1] *= sor[n1];
 	tmp[n2] += res[n1];
-	resmax = max(fabs(res[n1]), resmax);
+	resmax = std::max(fabs(res[n1]), resmax);
       }
 
       if(resmax <= stop_crit || n == MAX_ITER-1) {

@@ -21,10 +21,11 @@
 /**
  * \author Zhi Liang
 */
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include "mosaic_util.h"
 #include "constant.h"
 

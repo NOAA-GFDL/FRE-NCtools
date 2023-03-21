@@ -26,17 +26,12 @@
 #endif
 
 #ifndef _MATH_H
-#include <math.h>
+#include <cmath>
 #endif
 
-/* override the `fabs` function based on the type */
-#define fabs(X) _Generic((X), \
-     long double: fabsl, \
-          double: fabs)(X)
 
-#define min(a,b) (a<b ? a:b)
-#define max(a,b) (a>b ? a:b)
-#define SMALL_VALUE ( 1.e-10 )
+inline constexpr int SMALL_VALUE = 1.e-10 ;
+
 struct Node{
   double x, y, z, u, u_clip;
   int intersect; /* indicate if this point is an intersection, 0 = no, 1= yes, 2=both intersect and vertices */

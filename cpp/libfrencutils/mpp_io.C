@@ -17,10 +17,11 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <cstdarg>
+
 #include <netcdf.h>
 #include "mpp.h"
 #include "mpp_domain.h"
@@ -408,16 +409,16 @@ void mpp_get_var_value(int fid, int vid, void *data)
 
   switch(files[fid].var[vid].type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_get_var_double(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_get_var_double(files[fid].ncid, files[fid].var[vid].fldid, static_cast<double*>(data));
     break;
   case NC_INT:
-    status = nc_get_var_int(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_get_var_int(files[fid].ncid, files[fid].var[vid].fldid, static_cast<int*>(data));
     break;
   case NC_SHORT:
-    status = nc_get_var_short(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_get_var_short(files[fid].ncid, files[fid].var[vid].fldid, static_cast<short*>(data));
     break;
   case NC_CHAR:
-    status = nc_get_var_text(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_get_var_text(files[fid].ncid, files[fid].var[vid].fldid, static_cast<char*>(data));
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_get_var_value): field %s in file %s has an invalid type, "
@@ -449,16 +450,16 @@ void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t
 
   switch(files[fid].var[vid].type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_get_vara_double(files[fid].ncid, files[fid].var[vid].fldid, start, nread, data);
+    status = nc_get_vara_double(files[fid].ncid, files[fid].var[vid].fldid, start, nread, static_cast<double*>(data));
     break;
   case NC_INT:
-    status = nc_get_vara_int(files[fid].ncid, files[fid].var[vid].fldid, start, nread, data);
+    status = nc_get_vara_int(files[fid].ncid, files[fid].var[vid].fldid, start, nread, static_cast<int*>(data));
     break;
   case NC_SHORT:
-    status = nc_get_vara_short(files[fid].ncid, files[fid].var[vid].fldid, start, nread, data);
+    status = nc_get_vara_short(files[fid].ncid, files[fid].var[vid].fldid, start, nread, static_cast<short*>(data));
     break;
   case NC_CHAR:
-    status = nc_get_vara_text(files[fid].ncid, files[fid].var[vid].fldid, start, nread, data);
+    status = nc_get_vara_text(files[fid].ncid, files[fid].var[vid].fldid, start, nread, static_cast<char*>(data));
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_get_var_value_block): field %s in file %s has an invalid type, "
@@ -499,16 +500,16 @@ void mpp_get_var_att(int fid, int vid, const char *name, void *val)
 
   switch(type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_get_att_double(files[fid].ncid, files[fid].var[vid].fldid, name, val);
+    status = nc_get_att_double(files[fid].ncid, files[fid].var[vid].fldid, name, static_cast<double*>(val));
     break;
   case NC_INT:
-    status = nc_get_att_int(files[fid].ncid, files[fid].var[vid].fldid, name, val);
+    status = nc_get_att_int(files[fid].ncid, files[fid].var[vid].fldid, name, static_cast<int*>(val));
     break;
   case NC_SHORT:
-    status = nc_get_att_short(files[fid].ncid, files[fid].var[vid].fldid, name, val);
+    status = nc_get_att_short(files[fid].ncid, files[fid].var[vid].fldid, name, static_cast<short*>(val));
     break;
   case NC_CHAR:
-    status = nc_get_att_text(files[fid].ncid, files[fid].var[vid].fldid, name, val);
+    status = nc_get_att_text(files[fid].ncid, files[fid].var[vid].fldid, name, static_cast<char*>(val));
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_get_var_att): attribute %s of field %s in file %s has an invalid type, "
@@ -597,13 +598,13 @@ void mpp_get_global_att(int fid, const char *name, void *val)
 
   switch(type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_get_att_double(files[fid].ncid, NC_GLOBAL, name, val);
+    status = nc_get_att_double(files[fid].ncid, NC_GLOBAL, name, static_cast<double*>(val));
     break;
   case NC_INT:
-    status = nc_get_att_int(files[fid].ncid, NC_GLOBAL, name, val);
+    status = nc_get_att_int(files[fid].ncid, NC_GLOBAL, name, static_cast<int*>(val));
     break;
   case NC_SHORT:
-    status = nc_get_att_short(files[fid].ncid, NC_GLOBAL, name, val);
+    status = nc_get_att_short(files[fid].ncid, NC_GLOBAL, name, static_cast<short*>(val));
     break;
   case NC_CHAR:
     status = nc_inq_attlen(files[fid].ncid, NC_GLOBAL, name, &attlen);
@@ -614,7 +615,7 @@ void mpp_get_global_att(int fid, const char *name, void *val)
     }
     status = nc_get_att_text(files[fid].ncid, NC_GLOBAL, name, attval);
     attval[attlen] = '\0';
-    strncpy(val, attval, attlen+1);
+    strncpy(static_cast<char*>(val), attval, attlen+1);
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_get_global_att): global attribute %s in file %s has an invalid type, "
@@ -1157,7 +1158,7 @@ void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
     dsize *= size;
   }
 
-  data = (void *)malloc(dsize*sizeof(double));
+  data = (double*) malloc(dsize*sizeof(double));//TODO: use reinterpret cast?
 
   mpp_get_var_value(fid_in, vid_in, data);
   mpp_put_var_value(fid_out, vid_out, data);
@@ -1294,16 +1295,16 @@ void mpp_put_var_value(int fid, int vid, const void* data)
 
   switch(files[fid].var[vid].type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_put_var_double(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_put_var_double(files[fid].ncid, files[fid].var[vid].fldid, static_cast<const double*>(data));
     break;
   case NC_INT:
-    status = nc_put_var_int(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_put_var_int(files[fid].ncid, files[fid].var[vid].fldid, static_cast<const int*>(data));
     break;
   case NC_SHORT:
-    status = nc_put_var_short(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_put_var_short(files[fid].ncid, files[fid].var[vid].fldid, static_cast<const short*>(data));
     break;
   case NC_CHAR:
-    status = nc_put_var_text(files[fid].ncid, files[fid].var[vid].fldid, data);
+    status = nc_put_var_text(files[fid].ncid, files[fid].var[vid].fldid,static_cast<const char*>(data));
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_put_var_value): field %s in file %s has an invalid type, "
@@ -1338,16 +1339,20 @@ void mpp_put_var_value_block(int fid, int vid, const size_t *start, const size_t
 
   switch(files[fid].var[vid].type) {
   case NC_DOUBLE:case NC_FLOAT:
-    status = nc_put_vara_double(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite, data);
+    status = nc_put_vara_double(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite,
+                                static_cast<const double *>(data));
     break;
   case NC_INT:
-    status = nc_put_vara_int(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite, data);
+    status = nc_put_vara_int(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite,
+                             static_cast<const int*>(data));
     break;
   case NC_SHORT:
-    status = nc_put_vara_short(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite, data);
+    status = nc_put_vara_short(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite,
+                               static_cast<const short*>(data));
     break;
   case NC_CHAR:
-    status = nc_put_vara_text(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite, data);
+    status = nc_put_vara_text(files[fid].ncid, files[fid].var[vid].fldid, start, nwrite,
+                              static_cast<const char*>(data));
     break;
   default:
     sprintf(errmsg, "mpp_io(mpp_put_var_value_block): field %s in file %s has an invalid type, "

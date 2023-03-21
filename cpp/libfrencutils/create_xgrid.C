@@ -17,9 +17,9 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
+#include <cstdio>
 #include "mosaic_util.h"
 #include "create_xgrid.h"
 #include "constant.h"
@@ -269,7 +269,7 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
 
       if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
 	Xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+	min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	if( Xarea/min_area > AREA_RATIO_THRESH ) {
       	  xgrid_area[nxgrid] = Xarea;
 	  i_in[nxgrid]    = i1;
@@ -368,7 +368,7 @@ int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 
       if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
 	xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-        min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+        min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	if(xarea/min_area > AREA_RATIO_THRESH ) {
 	  xgrid_area[nxgrid] = xarea;
 	  xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
@@ -469,7 +469,7 @@ int create_xgrid_2dx1d_order1(const int *nlon_in, const int *nlat_in, const int 
 
       if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
 	Xarea = poly_area ( x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+	min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	if( Xarea/min_area > AREA_RATIO_THRESH ) {
       	  xgrid_area[nxgrid] = Xarea;
 	  i_in[nxgrid]    = i1;
@@ -573,7 +573,7 @@ int create_xgrid_2dx1d_order2(const int *nlon_in, const int *nlat_in, const int 
 
       if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
 	xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+	min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	if(xarea/min_area > AREA_RATIO_THRESH ) {
 	  xgrid_area[nxgrid] = xarea;
 	  xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
@@ -802,7 +802,7 @@ nxgrid = 0;
           double min_area;
 	  int    nn;
 	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+	  min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
             if(pnxgrid[m]>= MAXXGRID/nthreads)
@@ -1078,7 +1078,7 @@ nxgrid = 0;
           double min_area;
 	  int nn;
 	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+	  min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
             if(pnxgrid[m]>= MAXXGRID/nthreads)
@@ -1428,7 +1428,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
       if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
 					      x_out, y_out, z_out)) > 0) {
 	xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
+	min_area = std::min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
 	if( xarea/min_area > AREA_RATIO_THRESH ) {
 #ifdef debug_test_create_xgrid
 	  printf("(i2,j2)=(%d,%d), (i1,j1)=(%d,%d), xarea=%g\n", i2, j2, i1, j1, xarea);
@@ -2293,7 +2293,7 @@ double grid_box_radius(const double *x, const double *y, const double *z, int n)
   radius = 0;
   for(i=0; i<n-1; i++) {
     for(j=i+1; j<n; j++) {
-      radius = max(radius, pow(x[i]-x[j],2.)+pow(y[i]-y[j],2.)+pow(z[i]-z[j],2.));
+      radius = std::max(radius, pow(x[i]-x[j],2.)+pow(y[i]-y[j],2.)+pow(z[i]-z[j],2.));
     }
   }
 
@@ -2318,7 +2318,7 @@ double dist_between_boxes(const double *x1, const double *y1, const double *z1, 
   dist = 0.0;
   for(i=0; i<n1; i++) {
     for(j=0; j<n2; j++) {
-      dist = max(dist, pow(x1[i]-x2[j],2.)+pow(y1[i]-y2[j],2.)+pow(z1[i]-z2[j],2.));
+      dist = std::max(dist, pow(x1[i]-x2[j],2.)+pow(y1[i]-y2[j],2.)+pow(z1[i]-z2[j],2.));
     }
   }
 

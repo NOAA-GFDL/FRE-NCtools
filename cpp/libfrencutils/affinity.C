@@ -20,12 +20,13 @@
 
 #define _GNU_SOURCE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstring>
+#include <errno>
+
 #include <unistd.h>
 #include <sched.h>
-#include <errno.h>
+
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
