@@ -37,7 +37,7 @@ void mpp_send_double(const double* data, int size, int to_pe); /* send data */
 void mpp_send_int(const int* data, int size, int to_pe); /* send data */
 void mpp_recv_double(double* data, int size, int from_pe); /* recv data */
 void mpp_recv_int(int* data, int size, int from_pe); /* recv data */
-void mpp_error(char *str);
+void mpp_error(const char *str);
 void mpp_sum_int(int count, int *data);
 void mpp_sum_double(int count, double *data);
 void mpp_min_double(int count, double *data);

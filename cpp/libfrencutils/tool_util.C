@@ -61,7 +61,7 @@ void get_file_path(const char *file, char *dir)
 
   /* get the diretory */
 
-  strptr = const_cast<char*>(strrchr(file, '/'));
+  strptr = strrchr(const_cast<char*>(file), '/');
   if(strptr) {
     len = strptr - file;
     strncpy(dir, file, len);

@@ -285,7 +285,7 @@ void mpp_max_double(int count, double *data)
     error handler: will print out error message and then abort
 ***********************************************************/
 
-void mpp_error(char *str)
+void mpp_error(const char * str)
 {
   fprintf(stderr, "Error from pe %d: %s\n", pe, str );
 #ifdef use_libMPI
