@@ -30,7 +30,7 @@
 #endif
 
 
-inline constexpr int SMALL_VALUE = 1.e-10 ;
+const double SMALL_VALUE {1.0E-10};
 
 struct Node{
   double x, y, z, u, u_clip;
