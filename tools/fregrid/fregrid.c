@@ -409,6 +409,10 @@ int main(int argc, char* argv[])
   /* start parallel */
   mpp_init(&argc, &argv);
   mpp_domain_init();
+
+#ifdef _OPENACC
+  acc_set_error_routine(&error_handler);
+#endif
   
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1) {
     switch (c) {
