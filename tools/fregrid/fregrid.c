@@ -79,7 +79,7 @@ char *usage[] = {
   "regridding and AGRID vector regridding is available. Vector fields can be mapped      ",
   "as vectors only from the cubic grid to the lat-lon grid, and while using bilinear     ",
   "interpolation; but users can instead specify the vector components as (independent)   ",
-  "scalar components and thereby choose conservative a interpolation. The interpolation  ",
+  "scalar components and thereby choose a conservative interpolation. The interpolation  ",
   "algorithm used is controled by --interp_method with default 'conserve_order1'.        ",
   " Currently the implemented remapping schemes are 'conserve_order1', 'conserve_order2' ",
   "and 'bilinear'. Alternative schemes can be added if needed. fregrid expects NetCDF    ",
@@ -861,11 +861,11 @@ int main(int argc, char* argv[])
       else{
         if (!(opcode & BILINEAR)){
           mpp_error("fregrid: For vector fields, the interpolation method must be bilinear interpolation.\n");
-          u_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
-          u_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
-          v_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
-          v_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
         }
+        u_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
+        u_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
+        v_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
+        v_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
       }
     }
 
