@@ -856,12 +856,15 @@ int main(int argc, char* argv[])
     }
     if(nvector > 0) {
       if ((opcode & CONSERVE_ORDER1) || (opcode & CONSERVE_ORDER2  )){
-          mpp_error("fregrid: conservative interpolation of vector fields is not supported. Use bilinear interpolation.\n");
+          mpp_error("fregrid: conservative interpolation of vector fields is not supported. \n"
+          "Use bilinear interpolation or independent (scalar) vector components.\n");
       }
-      else{
+      else if{
         if (!(opcode & BILINEAR)){
           mpp_error("fregrid: For vector fields, the interpolation method must be bilinear interpolation.\n");
         }
+      }
+      else{
         u_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
         u_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
         v_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
