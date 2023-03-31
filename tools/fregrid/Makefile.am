@@ -45,5 +45,5 @@ fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
 fregrid_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
 
 fregrid_gpu_SOURCES = $(fregrid_SOURCES)
-fregrid_gpu_CFLAGS = $(OPENACC_CFLAGS) $(AM_CFLAGS)
+fregrid_gpu_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
 fregrid_gpu_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_gpu.a $(LDADD)
