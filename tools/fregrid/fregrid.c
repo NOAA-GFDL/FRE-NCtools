@@ -76,7 +76,8 @@ char *usage[] = {
   "fregrid remaps data (scalar or vector) from an input_mosaic onto an output_mosaic,    ",
   "but the output (or target) grid can also be specified through the inputs              ",
   "lonBegin, lonEnd, latBegin, latEnd, nlon and nlat. Currently only T-cell scalar       ",
-  "regridding and AGRID vector regridding is available. Vector fields can be mapped      ",
+  "regridding and AGRID vector regridding ( where the vector field is expressed in       ",
+  "spherical coordinates ) is available.  Vector fields can be mapped                    ",
   "as vectors only from the cubic grid to the lat-lon grid, and while using bilinear     ",
   "interpolation; but users can instead specify the vector components as (independent)   ",
   "scalar components and thereby choose a conservative interpolation. The interpolation  ",
@@ -109,10 +110,14 @@ char *usage[] = {
   "--u_field         u_fld       specify the vector field u-componentname to be          ",
   "                              regridded. The multiple entry field names are seperated ",
   "                              by comma. u_field must be paired together with v_field. ",
+  "                              u_field corresponds to the zonal component of the       ",
+  "                              vector field                                            ",
   "                                                                                      ",
   "--v_field         v_fld       specify the vector field v-componentname to be          ",
   "                              regridded. The multiple entry field names are seperated ",
   "                              by comma. v_field must be paired together with u_field. ",
+  "                              v_field corresponds to the meridional component of the  ",
+  "                              vector field.                                           ",
   "                                                                                      ",
   "--output_mosaic output_mosaic specify the output mosaic information. This file        ",
   "                              contains list of tile files which specify the grid      ",
@@ -857,7 +862,7 @@ int main(int argc, char* argv[])
     if(nvector > 0) {
       if ((opcode & CONSERVE_ORDER1) || (opcode & CONSERVE_ORDER2  )){
           mpp_error("fregrid: conservative interpolation of vector fields is not supported. \n"
-          "Use bilinear interpolation or independent (scalar) vector components.\n");
+          "Use bilinear interpolation or regrid the vector components independently as scalars.\n");
       }
       else if (!(opcode & BILINEAR)){
           mpp_error("fregrid: For vector fields, the interpolation method must be bilinear interpolation.\n");
