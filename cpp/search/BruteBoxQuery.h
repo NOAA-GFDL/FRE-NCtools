@@ -1,9 +1,10 @@
-
 #ifndef FREGRID_BRUTEBOXQUERY_H
 #define FREGRID_BRUTEBOXQUERY_H
 
 #include <vector>
 #include "BBox3D.h"
+#include "BoxedObj.h"
+
 namespace nct{
 using  std::vector;
 using nct::BBox3D;
@@ -15,10 +16,10 @@ using nct::BBox3D;
 // its just the id index into bpairs.
 class BruteBoxQuery {
     private:
-        vector<BoxPair> & bpairs;
+        vector<BoxAndId> & bpairs;
         vector<BBox3D> & boxes;
     public:
-    BruteBoxQuery(vector <BoxPair> &bpairs, vector<BBox3D> &boxes)
+    BruteBoxQuery(vector <BoxAndId> &bpairs, vector<BBox3D> &boxes)
     : bpairs(bpairs), boxes(boxes) {}
 
     void search(vector<BBox3D>  & qboxes,  vector<vector<size_t>> & results) {

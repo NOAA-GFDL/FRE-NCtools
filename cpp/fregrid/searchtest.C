@@ -5,9 +5,11 @@
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BruteBoxQuery.h"
+#include "BoxedObj.h"
+#include "DITree.h"
 
 using BBox_t = nct::BBox3D;
-using BPair_t  = nct::BoxPair;
+using BPair_t  = nct::BoxAndId;
 using Poly_t = nct::MeshPolygon<double>;
 using Point_t = nct::Point3D<double>;
 using nct::BruteBoxQuery;
@@ -69,10 +71,11 @@ int main() {
         }
     }
 
+
     //Make the boxes and pairs from the polygons
     for(auto i = 0; i< polys.size(); ++i){
         boxes.emplace_back(polys[i]);
-        bpairs.emplace_back(i, boxes[i]);
+        bpairs.emplace_back(i, &boxes[i]);
     }
 
     //Make the search data structure
@@ -92,6 +95,8 @@ int main() {
         results.push_back(v);
     }
     bbq.search(qBoxes, results);
+
+    DITree<BoxAndId> tree (bpairs);
 
     cout <<" Bye Bye" << endl;
 

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "DistanceInterval.h"
 #include "Point3D.h"
 #include "Polygon.h"
 
@@ -18,6 +19,7 @@ namespace nct {
     using std::vector;
 
     class BBox3D {
+        //friend class BoxMedLessThan;
     private:
         //bounding boxes are always made up of floats.
         std::array<float, 3> lo;
@@ -45,6 +47,9 @@ namespace nct {
             }
 #endif
         }
+
+        inline float getLo(int dim){return lo[dim];}
+        inline float getHi(int dim){return hi[dim];}
 
         //TODO: investigate using sum of bools. e.g. int r= bool(A.lo[0] > B.hi[0])
         // + bool(A.lo[1] > B.hi[1]) ... check for branch misses w perf stat
@@ -74,14 +79,17 @@ namespace nct {
             if (B.hi[d] > A.hi[d])
                 A.hi[d] = B.hi[d];
         }
+
+        inline static bool intersect(const BBox3D &A, DistanceInterval<float>& di, const int dim) {
+            if (A.lo[dim] > di.getFar() || A.hi[dim] < di.getNear() ){
+                return false;
+            } else {
+                return true;
+            }
+        }
     };
 
-    class BoxPair {
-    public:
-        int id;
-        BBox3D& bb;
-        BoxPair(int id, BBox3D &bb) : id(id), bb(bb) {}
-    };
+
 } // nct
 
 #endif //FREGRID_BBOX3D_H
