@@ -4,6 +4,7 @@
 
 #include <vector>
 #include "BBox3D.h"
+
 namespace nct {
 /*
  This MeshPolygon intented for use with the "loose" polygon representation of three vectors
