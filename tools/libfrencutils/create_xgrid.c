@@ -1424,8 +1424,9 @@ int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, 
    Revise Sutherland-Hodgeman algorithm to find the vertices of the overlapping
    between any two grid boxes. It return the number of vertices for the exchange grid.
 *******************************************************************************/
-
+#ifndef __GNUC__
 #pragma acc routine seq
+#endif
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
 	 const double lon2_in[], const double lat2_in[], int n2_in,
 	 double lon_out[], double lat_out[])
@@ -1441,13 +1442,17 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
   n_out = n1_in;
+#ifndef __GNUC__
 #pragma acc loop seq
+#endif
   for(i1=0; i1<n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
     lat_tmp[i1] = lat1_in[i1];
     if(lon_tmp[i1]>TPI || lon_tmp[i1]<0.0) gttwopi = 1;
   }
+#ifndef __GNUC__
 #pragma acc loop seq
+#endif
   for(i2=0; i2<n2_in; i2++) {
     lon2_tmp[i2] = lon2_in[i2];
     lat2_tmp[i2] = lat2_in[i2];
@@ -1464,7 +1469,9 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
     x1_0 = lon_tmp[n_out-1];
     y1_0 = lat_tmp[n_out-1];
     inside_last = inside_edge( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
+#ifndef __GNUC__
 #pragma acc loop seq
+#endif
     for(i1=0, i_out=0; i1<n_out; i1++) {
       x1_1 = lon_tmp[i1];
       y1_1 = lat_tmp[i1];
@@ -1498,7 +1505,9 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
       inside_last = inside;
     }
     if(!(n_out=i_out)) return 0;
+#ifndef __GNUC__
 #pragma acc loop seq
+#endif
     for(i1=0; i1<n_out; i1++) {
       lon_tmp[i1] = lon_out[i1];
       lat_tmp[i1] = lat_out[i1];

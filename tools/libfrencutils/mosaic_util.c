@@ -37,11 +37,9 @@
 #define EPSLN10 (1.e-10)
 #define EPSLN15 (1.e-15)
 #define EPSLN30 (1.e-30)
-/***********************************************************
-    void error_handler(char *str)
-    error handler: will print out error message and then abort
-***********************************************************/
+
 int reproduce_siena = 0;
+
 #pragma acc declare copyin(reproduce_siena)
 
 void set_reproduce_siena_true(void)
@@ -49,9 +47,10 @@ void set_reproduce_siena_true(void)
   reproduce_siena = 1;
 }
 
-// TODO openacc support
-// acc_set_error_routine could be used to set a gpu fallback error routine
-// otherwise this might stop region parallelization where used
+/***********************************************************
+    void error_handler(char *str)
+    error handler: will print out error message and then abort
+***********************************************************/
 void error_handler(const char *msg)
 {
   fprintf(stderr, "FATAL Error: %s\n", msg );

@@ -409,6 +409,13 @@ int main(int argc, char* argv[])
   /* start parallel */
   mpp_init(&argc, &argv);
   mpp_domain_init();
+
+// current gcc(12.1) doesn't support this routine yet
+#ifndef __GNUC__
+#ifdef _OPENACC
+  acc_set_error_routine(&error_handler);
+#endif
+#endif
   
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1) {
     switch (c) {

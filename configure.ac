@@ -70,18 +70,17 @@ GX_C__GENERIC
 AS_IF([test $gx_cv_c__Generic = no],
   AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
 )
-# openacc support, simple check for working (nvc)openacc flag and allows for disabling if desired
-# TODO this should really be added as an m4 macro, surprised there wasn't a existing one in the archives
+
+# --with-openacc
 AC_ARG_WITH([openacc],
-  [AS_HELP_STRING([--with-openacc],
-    [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu. Flags added: -acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline (default no)])])
+            [AS_HELP_STRING([--with-openacc],
+                            [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu. Flags added: -acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline (default no)])])
 AS_IF([test ${with_openacc:-no} = yes],
-  [with_openacc=yes],
-  [with_openacc=no])
+      [with_openacc=yes],
+      [with_openacc=no])
+# check compile flags
 AS_IF([test ${with_openacc} = yes],
-  [AX_CHECK_COMPILE_FLAG( [-acc],
-       [ AC_SUBST(OPENACC_CFLAGS, "-acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline")],
-        AC_MSG_ERROR([OpenACC option specified but -acc flag not accepted by compiler]) )])
+      [GX_CC_OPENACC_FLAGS()])
 AM_CONDITIONAL([WITH_OPENACC], [test "$with_openacc" = "yes"])
 
 

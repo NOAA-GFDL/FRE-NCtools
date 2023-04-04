@@ -119,4 +119,10 @@ int isInside(struct Node *node);
 void set_reproduce_siena_true(void);
 
 
+#ifdef _OPENACC
+typedef void (*exitroutinetype)(char *err_msg);
+extern void acc_set_error_routine(exitroutinetype callback_routine);
+#endif
+
+
 #endif
