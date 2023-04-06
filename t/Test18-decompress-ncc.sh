@@ -29,6 +29,6 @@ load test_utils
    decompress-ncc \
       decompress-ncc.atmos_daily.nc.copy \
       decompress-ncc_output.nc
-  [ -e decompress-ncc_output.nc ]
-  ncdump -h decompress-ncc_output.nc
+  run_and_check  [ -e decompress-ncc_output.nc ]
+  run_and_check ncdump -h decompress-ncc_output.nc
 }

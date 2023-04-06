@@ -22,42 +22,37 @@
 load test_utils
 
 @test "Check make_hgrid exists and is executable" {
-  run command -v make_hgrid
-  [ "$status" -eq 0 ]
+  run_and_check -v make_hgrid
   run make_hgrid -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check make_vgrid exists and is executable" {
-  run command -v make_vgrid
-  [ "$status" -eq 0 ]
+  run_and_check -v make_vgrid
   run make_vgrid -h
   [ "$status" -eq 1 ]
 }
 
 @test "Check make_solo_mosaic exists and is executable" {
-  run command -v make_solo_mosaic
-  [ "$status" -eq 0 ]
+  run_and_check -v make_solo_mosaic
   run make_solo_mosaic -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check make_topog exists and is executable" {
-  run command -v make_topog
-  [ "$status" -eq 0 ]
+  run_and_check -v make_topog
   run make_topog -h
   [ "$status" -eq 1 ]
 }
 # only run with mpi
 @test "Check make_topog_parallel exists and is executable" {
   [ ! -z $skip_mpi ] && skip "not built with MPI"
-  run command -v make_topog_parallel
-  [ "$status" -eq 0 ]
+  run_and_check -v make_topog_parallel
+
 }
 
 @test "Check coupler_mosaic exists and is executable" {
-  run command -v make_coupler_mosaic
-  [ "$status" -eq 0 ]
+  run_and_check -v make_coupler_mosaic
   run make_coupler_mosaic -h
   [ "$status" -eq 2 ]
 }
@@ -65,13 +60,12 @@ load test_utils
 # only run with mpi
 @test "Check coupler_mosaic_parallel exists and is executable" {
   [ ! -z $skip_mpi ] && skip "not built with MPI"
-  run command -v make_coupler_mosaic_parallel
-  [ "$status" -eq 0 ]
+  run_and_check -v make_coupler_mosaic_parallel
+
 }
 
 @test "Check fregrid exists and is executable" {
-  run command -v fregrid
-  [ "$status" -eq 0 ]
+  run_and_check -v fregrid
   run fregrid -h
   [ "$status" -eq 2 ]
 }
@@ -79,34 +73,30 @@ load test_utils
 # only run with mpi
 @test "Check fregrid_parallel exists and is executable" {
   [ ! -z $skip_mpi ] && skip "not built with MPI"
-  run command -v fregrid_parallel
-  [ "$status" -eq 0 ]
+  run_and_check -v fregrid_parallel
+
 }
 
 @test "Check runoff_regrid exists and is executable" {
-  run command -v runoff_regrid
-  [ "$status" -eq 0 ]
+  run_and_check -v runoff_regrid
   run runoff_regrid -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check river_regrid exists and is executable" {
-  run command -v river_regrid
-  [ "$status" -eq 0 ]
+  run_and_check -v river_regrid
   run river_regrid -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check check_mask exists and is executable" {
-  run command -v check_mask
-  [ "$status" -eq 0 ]
+  run_and_check -v check_mask
   run check_mask -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check remap_land exists and is executable" {
-  run command -v remap_land
-  [ "$status" -eq 0 ]
+  run_and_check -v remap_land
   run remap_land -h
   [ "$status" -eq 1 ]
 }
@@ -114,51 +104,44 @@ load test_utils
 # only run with mpi
 @test "Check remap_land_parallel exists and is executable" {
   [ ! -z $skip_mpi ] && skip "not built with MPI"
-  run command -v remap_land_parallel
-  [ "$status" -eq 0 ]
+  run_and_check -v remap_land_parallel
+
 }
 
 @test "Check make_regional_mosaic exists and is executable" {
-  run command -v make_regional_mosaic
-  [ "$status" -eq 0 ]
+  run_and_check -v make_regional_mosaic
   run make_regional_mosaic -h
   [ "$status" -eq 2 ]
 }
 
 @test "Check mppncscatter exists and is executable" {
-  run command -v mppncscatter
-  [ "$status" -eq 0 ]
+  run_and_check -v mppncscatter
 }
 
 @test "Check mppnccombine exists and is executable" {
-  run command -v mppnccombine
-  [ "$status" -eq 0 ]
+  run_and_check -v mppnccombine
   run mppnccombine -h
   [ "$status" -eq 1 ]
 }
 
 @test "Check combine-ncc exists and is executable" {
-  run command -v combine-ncc
-  [ "$status" -eq 0 ]
+  run_and_check -v combine-ncc
 }
 
 @test "Check decompress-ncc exists and is executable" {
-  run command -v decompress-ncc
-  [ "$status" -eq 0 ]
+  run_and_check -v decompress-ncc
 }
 
 @test "Check cr_lake_files exists and is executable" {
-     run command -v cr_lake_files
-     [ "$status" -eq 0 ]
+     run_and_check -v cr_lake_files
+
 }
 
 @test "Check cp_river_vars exists and is executable" {
-     run command -v cp_river_vars
-     [ "$status" -eq 0 ]
+     run_and_check -v cp_river_vars
 }
 
 @test "Check rmv_parallel_rivers exists and is executable" {
-     run command -v rmv_parallel_rivers
-     [ "$status" -eq 0 ]
+     run_and_check -v rmv_parallel_rivers
 }
 
