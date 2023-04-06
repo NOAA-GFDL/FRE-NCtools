@@ -22,12 +22,12 @@ class BruteBoxQuery {
     BruteBoxQuery(vector <BoxAndId> &bpairs, vector<BBox3D> &boxes)
     : bpairs(bpairs), boxes(boxes) {}
 
-    void search(vector<BBox3D>  & qboxes,  vector<vector<size_t>> & results) {
+    void search(vector<BBox3D>  & qboxes,  vector<vector<unsigned int>> & results) {
             for (auto iq = 0; iq<qboxes.size(); iq++){
                 //TODO: experiment with iterating directly over bpairs instead.
                 for(auto jb = 0; jb < boxes.size(); jb++){
                     if(BBox3D::intersect(qboxes[iq], boxes[jb])) {
-                        //atomic here
+                        //atomic here ?
                         results[iq].push_back(bpairs[jb].id);
                     }
             }
