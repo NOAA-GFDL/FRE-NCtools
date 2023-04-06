@@ -42,9 +42,13 @@ namespace nct {
 
             //The hi of the boxes normally need to increased do to casting of double to float.
 #ifndef USE_NEXTAFTER
-            for (auto &v: hi) {
-                v = std::nextafter(v, std::numeric_limits<float>::max());
-            }
+           // for (auto &v: hi) {
+                //v = std::nextafter(v, std::numeric_limits<float>::max());
+           // }
+
+           for(int i = 0; i<3; i++){
+               hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+           }
 #endif
         }
 

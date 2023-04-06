@@ -43,6 +43,7 @@ namespace nct {
 
             if (size == 1) {
                 (*begin)->setLeaf();
+                calculateDI(begin, begin, end, end, dim);
                 return *begin;
             }
 
@@ -84,6 +85,7 @@ namespace nct {
             if (begin == end) {
                 return; //TODO: dont do anything?
             }
+            (*(ndItr))->dim = dim;
             calculateDI((*(ndItr))->diL, begin, median, dim);
             calculateDI((*(ndItr))->diR, median, end, dim);
         }
@@ -95,25 +97,25 @@ namespace nct {
             auto minElem = std::min_element(begin, end, LessThanBoxLo<Node>(dim));
             auto min = (*(minElem))->obj->getBox()->getLo(dim);
             auto maxElem = std::max_element(begin, end, LessThanBoxHi<Node>(dim));
-            auto max = (*(minElem))->obj->getBox()->getHi(dim);
+            auto max = (*(maxElem))->obj->getBox()->getHi(dim);
             di = DistanceInterval(min, max);
         }
 
         void search (NodePtr node, BoxAndId& idBox, std::vector<unsigned int>& results) {
-            processObj(node->obj, idBox, results);
+            idBox.addResultIf(node->obj, results);
             if(node->isLeaf() ){
                 return;
             }
             BBox3D* box = node->obj->getBox();
-            if(node->left != nullptr && intresects (node->diL, idBox.getBox() ,node->dim)) {
+            if(node->left != nullptr && BBox3D::intersect (*(idBox.getBox()), node->diL,node->dim)) {
                 search(node->left, idBox, results);
             }
-            if(node->right != nullptr && intresects (node->diR, idBox.getBox() ,node->dim)) {
+            if(node->right != nullptr && BBox3D:: intersect ((*idBox.getBox()) , node->diR, node->dim)) {
                 search(node->right, idBox, results);
             }
         }
     public:
-        DITree(std::vector < T >& objects, PartType partT = PartType::DMR) {
+        explicit DITree(std::vector < T >& objects, PartType partT = PartType::DMR) {
             unsigned int nofDIExpected = objects.size();
             nodes.reserve(objects.size());
             for (auto& object : objects) {
@@ -138,6 +140,12 @@ namespace nct {
 
         void search (BoxAndId& idBox, std::vector<unsigned int>& results){
           search (root, idBox,results) ;
+        }
+
+        void search (std::vector<BoxAndId>& idBoxes, std::vector<std::vector<unsigned int>>& results) {
+            for (int i= 0; i< idBoxes.size(); ++i){
+                search(idBoxes[i], results[i]);
+            }
         }
     };
 

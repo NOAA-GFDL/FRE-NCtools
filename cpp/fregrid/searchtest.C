@@ -2,6 +2,7 @@
 #include <vector>
 //#include <mdspan> //not yet avail w/ gcc!
 #include <array>
+#include <algorithm>
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BruteBoxQuery.h"
@@ -14,13 +15,18 @@ using Poly_t = nct::MeshPolygon<double>;
 using Point_t = nct::Point3D<double>;
 using nct::BruteBoxQuery;
 
-const size_t NX{4};
-const size_t NY{3};
-const size_t NZ{2};
+const size_t NX{100};
+const size_t NY{100};
+const size_t NZ{10};
+
+void compare_results(std::vector<std::vector<unsigned int>> &v1,  std::vector<std::vector<unsigned int>> &v2);
 
 size_t pt_idx(int i, int j, int k) {
     return (k * (NX+1) * (NY+1)  + j * (NX+1)  + i);
 }
+
+extern void compare_results(const std::vector<std::vector<unsigned int>> &v1,
+                     const std::vector<std::vector<unsigned int>> &v2);
 
 int main() {
     using namespace std;
@@ -29,7 +35,9 @@ int main() {
     vector<Poly_t> polys;
     vector<BBox_t> boxes;
     vector<BBox_t> qBoxes;
-    vector<BPair_t> bpairs;
+    vector<BPair_t> bPairs;
+    vector<BPair_t> qbPairs;//box pairs  that are used as query boxes
+
 
     const size_t NCells{NX * NY* NZ};
     const size_t NPoints{(NX + 1)* (NY + 1) * (NZ + 1)};//does not wrap around.
@@ -71,34 +79,68 @@ int main() {
         }
     }
 
-
-    //Make the boxes and pairs from the polygons
-    for(auto i = 0; i< polys.size(); ++i){
-        boxes.emplace_back(polys[i]);
-        bpairs.emplace_back(i, &boxes[i]);
+    // Make the boxes and pairs to be searched.
+    //Boxes will b made from the polygons.
+    //Note we require the size to be reserved
+    boxes.reserve(polys.size());
+    bPairs.reserve(polys.size());
+    for(unsigned int  i = 0; i< polys.size(); ++i){
+       boxes.emplace_back(polys[i]);
+       bPairs.emplace_back(i, &boxes[i]);
     }
 
-    //Make the search data structure
-    BruteBoxQuery bbq{bpairs, boxes};
-
-    //make some query boxes:
-    // In this first test they are just copies of those in boxes.
-    for(auto i = 0; i<boxes.size(); ++i) {
-        qBoxes.push_back(boxes[i]);
+    //Make the boxes and pairs that are going to be used
+    // as query boxes. In this case just copy those that
+    // are to be searched.
+    for (const auto & abox : boxes) {
+        qBoxes.push_back(abox);
+    }
+    qbPairs.reserve(bPairs.size());
+    for(size_t i = 0; i< bPairs.size(); ++i){
+        qbPairs[i] =  bPairs [i];
     }
 
-    //query the boxes with the query boxes
-    vector<vector<size_t>> results;
-    results.reserve(qBoxes.size());
-    for(int i = 0; i< qBoxes.size(); i++) {
-        vector<size_t> v;
-        results.push_back(v);
+
+  //Make some results vectors
+    vector<vector<unsigned int>> results_b;
+    vector<vector<unsigned int>> results_t;
+    results_b.reserve(qBoxes.size());
+    results_t.reserve(qBoxes.size());
+     for(int i = 0; i< qBoxes.size(); i++) {
+      vector<unsigned int> vb;
+      vector<unsigned int> vt;
+         results_b.push_back(vb);
+         results_t.push_back(vt);
+      }
+
+    //Make the tree data structure.
+    DITree<BoxAndId> tree (bPairs);
+
+    //std::vector<unsigned int> stResult;
+    //BPair_t bp(0, &(boxes[0]));
+    //tree.search(bp, stResult);
+
+    tree.search(bPairs, results_t );
+
+    //Make the BF search data structure
+    BruteBoxQuery bbq{bPairs, boxes};
+    bbq.search(qBoxes, results_b);
+
+    //check tree awnsers against brute force.
+    compare_results(results_b, results_t);
+}
+
+void compare_results(std::vector<std::vector<unsigned int>> &v1,
+          std::vector<std::vector<unsigned int>> &v2) {
+    for (int i = 0; i< v1.size() ; ++i){
+        std::sort(v1[i].begin(), v1[i].end());
+        std::sort(v2[i].begin(), v2[i].end());
+        std::vector<int> intersection;
+        intersection.clear();
+        std::set_intersection(v1[i].begin(), v1[i].end(), v2[i].begin(), v2[i].end(),
+                              std::back_inserter(intersection));
+        if((intersection.size() != v1[i].size()) || (v1[i].size() != v2[i].size())){
+            std::cout << "answer diff for i = " << i << std::endl;
+        }
     }
-    bbq.search(qBoxes, results);
-
-    DITree<BoxAndId> tree (bpairs);
-
-    cout <<" Bye Bye" << endl;
-
-    //Check the results.
 }
