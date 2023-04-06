@@ -23,20 +23,20 @@
 
  AUTHOR: Zhi Liang (Zhi.Liang@noaa.gov)
           NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
- 
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
- 
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   For the full text of the GNU General Public License,
   write to: Free Software Foundation, Inc.,
-            675 Mass Ave, Cambridge, MA 02139, USA.  
+            675 Mass Ave, Cambridge, MA 02139, USA.
 -----------------------------------------------------------------------
 */
 #include <stdlib.h>
@@ -73,20 +73,20 @@ char *usage[] = {
   "          [--associated_file_dir dir] [--format format]                               ",
   "          [--deflation #] [--shuffle 1|0]                                             ",
   "                                                                                      ",
-  "fregrid remaps data (scalar or vector) from input_mosaic onto                         ",
-  "output_mosaic.  Note that the target grid also could be specified                     ",
-  "through lonBegin, lonEnd, latBegin, latEnd, nlon and nlat. Currently                  ",
-  "only T-cell scalar regridding and AGRID vector regridding is                          ",
-  "available.  Bilinear interpolation is implemented only for cubic grid                 ",
-  "vector interpolation. The interpolation algorithm used is controlled                  ",
-  "by --interp_method with default 'conserve_order1'. Currently the                      ",
-  "'conserve_order1', 'conserve_order2' and 'bilinear' remapping schemes                 ",
-  "are implemented. 'bilinear' is only used to remap data from cubic grid                ",
-  "to latlon grid. Alternative schemes can be added if needed. fregrid                   ",
-  "expects NetCDF format input. scalar_field and/or u_field/v_field must                 ",
-  "be specified. u_fld and v_fld must be paired together.                                ",
-  "If using NetCDF4, output will have the same deflation and shuffle settings            ",
-  "unless specified.                                                                     ",
+  "fregrid remaps data (scalar or vector) from an input_mosaic onto an output_mosaic,    ",
+  "but the output (or target) grid can also be specified through the inputs              ",
+  "lonBegin, lonEnd, latBegin, latEnd, nlon and nlat. Currently only T-cell scalar       ",
+  "regridding and AGRID vector regridding (where the vector field is expressed in       ",
+  "spherical coordinates) is available.  Vector fields can be mapped                    ",
+  "as vectors only from the cubic grid to the lat-lon grid, and while using bilinear     ",
+  "interpolation; but users can instead specify the vector components as (independent)   ",
+  "scalar components and thereby choose a conservative interpolation. The interpolation  ",
+  "algorithm used is controled by --interp_method with default 'conserve_order1'.        ",
+  " Currently the implemented remapping schemes are 'conserve_order1', 'conserve_order2' ",
+  "and 'bilinear'. Alternative schemes can be added if needed. fregrid expects NetCDF    ",
+  "format input. scalar_field and/or u_field/v_field must be specified. u_fld and v_fld  ",
+  "must be paired together. If using NetCDF4, output will have the same deflation and    ",
+  "shuffle settings unless specified.                                                    ",
   "                                                                                      ",
   "fregrid takes the following flags:                                                    ",
   "                                                                                      ",
@@ -97,7 +97,7 @@ char *usage[] = {
   "                              information for each tile.                              ",
   "                                                                                      ",
   "OPTIONAL FLAGS                                                                        ",
-  "                                                                                      ",  
+  "                                                                                      ",
   "--input_file    input_file    specify the input file name. The suffix '.nc' can be    ",
   "                              omitted. The suffix 'tile#' should not present for      ",
   "                              multiple-tile files. The number of files must be 1 for  ",
@@ -106,15 +106,19 @@ char *usage[] = {
   "                                                                                      ",
   "--scalar_field    scalar_fld  specify the scalar field name to be regridded. The      ",
   "                              multiple entry field names are seperated by comma.      ",
-  "                                                                                      ",    
+  "                                                                                      ",
   "--u_field         u_fld       specify the vector field u-componentname to be          ",
   "                              regridded. The multiple entry field names are seperated ",
   "                              by comma. u_field must be paired together with v_field. ",
-  "                                                                                      ",    
+  "                              u_field corresponds to the zonal component of the       ",
+  "                              vector field                                            ",
+  "                                                                                      ",
   "--v_field         v_fld       specify the vector field v-componentname to be          ",
   "                              regridded. The multiple entry field names are seperated ",
   "                              by comma. v_field must be paired together with u_field. ",
-  "                                                                                      ",  
+  "                              v_field corresponds to the meridional component of the  ",
+  "                              vector field.                                           ",
+  "                                                                                      ",
   "--output_mosaic output_mosaic specify the output mosaic information. This file        ",
   "                              contains list of tile files which specify the grid      ",
   "                              information for each tile. If output_mosaic is not      ",
@@ -134,32 +138,32 @@ char *usage[] = {
   "                                                                                      ",
   "--latEnd   #decimal           specify the ending latitude(in degree) of the           ",
   "                              geographical region of the target grid on which the     ",
-  "                              output is desired. The default value is 90.             ",  
+  "                              output is desired. The default value is 90.             ",
   "                                                                                      ",
   "--nlon #integer               specify number of grid box cells in x-direction for a   ",
   "                              regular lat-lon grid.                                   ",
   "                                                                                      ",
   "--nlat #integer               specify number of grid box cells in y-direction for a   ",
   "                              regular lat-lon grid.                                   ",
-  "                                                                                      ",  
+  "                                                                                      ",
   "--KlevelBegin #integer        specify begin index of the k-level (depth axis) that    ",
   "                              to be regridded.                                        ",
   "                                                                                      ",
   "--KlevelEnd #integer          specify end index of the k-level (depth axis) that      ",
-  "                              to be regridded.                                        ",  
+  "                              to be regridded.                                        ",
   "                                                                                      ",
   "--LstepBegin #integer         specify the begin index of L-step (time axis) that      ",
   "                              to be regridded.                                        ",
   "                                                                                      ",
   "--LstepEnd #integer           specify the end index of L-step (time axis) that        ",
-  "                              to be regridded.                                        ",  
-  "                                                                                      ",  
+  "                              to be regridded.                                        ",
+  "                                                                                      ",
   "--output_file   output_file   specify the output file name. If not presented,         ",
   "                              output_file will take the value of input_file. The      ",
   "                              suffix '.nc' can be omitted. The suffix 'tile#' should  ",
   "                              not present for multiple-tile files. The number of      ",
   "                              files must be 1 for scalar regridding and can be 1 or 2 ",
-  "                              for vector regridding. File path should not be includes.",  
+  "                              for vector regridding. File path should not be includes.",
   "                                                                                      ",
   "--input_dir     input_dir     specify the path that stores input_file. If not         ",
   "                              presented, the input file is assumed to be stored in    ",
@@ -262,7 +266,7 @@ char *usage[] = {
   "--shuffle #                   If using NetCDF4 , use shuffle if 1 and don't use if 0  ",
   "                              Defaults to input file settings.                        ",
   "                                                                                      ",
-  "  Example 1: Remap C48 data onto N45 grid.                                            ",          
+  "  Example 1: Remap C48 data onto N45 grid.                                            ",
   "             (use GFDL-CM3 data as example)                                           ",
   "   fregrid --input_mosaic C48_mosaic.nc --input_dir input_dir --input_file input_file ",
   "           --scalar_field temp,salt --nlon 144 --nlat 90                              ",
@@ -303,9 +307,9 @@ int main(int argc, char* argv[])
   char    *associated_file_dir = NULL;
   int     check_conserve = 0; /* 0 means no check */
   double  lonbegin = 0, lonend = 360;
-  double  latbegin = -90, latend = 90;			  
+  double  latbegin = -90, latend = 90;
   int     nlon = 0, nlat = 0;
-  int     kbegin = 0, kend = -1; 
+  int     kbegin = 0, kend = -1;
   int     lbegin = 0, lend = -1;
   char    *remap_file = NULL;
   char    interp_method[STRING] = "conserve_order1";
@@ -328,7 +332,7 @@ int main(int argc, char* argv[])
   int     deflation = -1;
   int     shuffle = -1;
   char    *format=NULL;
-  
+
   char          wt_file_obj[512];
   char          *weight_file=NULL;
   char          *weight_field = NULL;
@@ -351,14 +355,14 @@ int main(int argc, char* argv[])
   Interp_config *interp     = NULL;   /* store remapping information */
   int save_weight_only      = 0;
   int nthreads = 1;
-  
+
   double time_get_in_grid=0, time_get_out_grid=0, time_get_input=0;
   double time_setup_interp=0, time_do_interp=0, time_write=0;
   clock_t time_start, time_end;
-  
+
   int errflg = (argc == 1);
   int fid;
-  
+
   static struct option long_options[] = {
     {"input_mosaic",     required_argument, NULL, 'a'},
     {"output_mosaic",    required_argument, NULL, 'b'},
@@ -404,12 +408,12 @@ int main(int argc, char* argv[])
     {"format",           required_argument, NULL, 'U'},
     {"help",             no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
-  };  
-  
+  };
+
   /* start parallel */
   mpp_init(&argc, &argv);
   mpp_domain_init();
-  
+
   while ((c = getopt_long(argc, argv, "", long_options, &option_index)) != -1) {
     switch (c) {
     case 'a':
@@ -430,7 +434,7 @@ int main(int argc, char* argv[])
       tokenize(entry, ",", STRING, NFILE, (char *)input_file, &nfiles);
       break;
     case 'f':
-      if(strlen(optarg) >= MAXSTRING)  mpp_error("fregrid: the entry is not long for option -f");      
+      if(strlen(optarg) >= MAXSTRING)  mpp_error("fregrid: the entry is not long for option -f");
       strcpy(entry, optarg);
       tokenize(entry, ",", STRING, NFILE, (char *)output_file, &nfiles_out);
       break;
@@ -438,20 +442,20 @@ int main(int argc, char* argv[])
       remap_file = optarg;
       break;
     case 's':
-      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -s");      
+      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -s");
       strcpy(entry, optarg);
       tokenize(entry, ",", STRING, NVAR, (char *)scalar_name, &nscalar);
       break;
     case 'u':
-      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -u");      
+      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -u");
       strcpy(entry, optarg);
       tokenize(entry, ",", STRING, NVAR, (char *)u_name, &nvector);
-      break;        
+      break;
     case 'v':
-      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -v");      
+      if(strlen(optarg) >= MAXSTRING) mpp_error("fregrid: the entry is not long for option -v");
       strcpy(entry, optarg);
       tokenize(entry, ",", STRING, NVAR, (char *)v_name, &nvector2);
-      break;      
+      break;
     case 'j':
       strcpy(interp_method, optarg);
       break;
@@ -460,7 +464,7 @@ int main(int argc, char* argv[])
       break;
     case 'k':
       test_param = atof(optarg);
-      break;      
+      break;
     case 'l':
       opcode |= SYMMETRY;
       break;
@@ -538,7 +542,7 @@ int main(int argc, char* argv[])
       break;
     case 'P':
       debug = 1;
-      break;  
+      break;
     case 'Q':
       nthreads = atoi(optarg);
       break;
@@ -564,7 +568,7 @@ int main(int argc, char* argv[])
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
     exit(2);
-  }      
+  }
   /* check the arguments */
   if( !mosaic_in  ) mpp_error("fregrid: input_mosaic is not specified");
   if( !mosaic_out ) {
@@ -590,7 +594,7 @@ int main(int argc, char* argv[])
     opcode |= MONOTONIC;
   }
   else if(!strcmp(interp_method, "bilinear") ) {
-    if(mpp_pe() == mpp_root_pe())printf("****fregrid: bilinear remapping scheme will be used for regridding.\n");  
+    if(mpp_pe() == mpp_root_pe())printf("****fregrid: bilinear remapping scheme will be used for regridding.\n");
     opcode |= BILINEAR;
   }
   else
@@ -632,7 +636,7 @@ int main(int argc, char* argv[])
   if(weight_field) {
     if(nvector >0) mpp_error("fregrid: weight_field should not be specified for vector interpolation, contact developer");
     if(!weight_file) {
-      
+
       if(nfiles==0) mpp_error("fregrid: weight_field is specified, but both weight_file and input_file are not specified");
       if(dir_in)
 	sprintf(wt_file_obj, "%s/%s", dir_in, input_file[0]);
@@ -654,7 +658,7 @@ int main(int argc, char* argv[])
     mpp_error("fregrid: shuffle must be 0 (off) or 1 (on)");
   if (deflation < -1 || deflation > 9)
     mpp_error("fregrid: deflation must be between 0 (off) and 9");
-  
+
   /* define history to be the history in the grid file */
   strcpy(history,argv[0]);
 
@@ -669,7 +673,7 @@ int main(int argc, char* argv[])
     else
       strcat(history, argv[i]);
   }
-  
+
 {
   int base_cpu;
 
@@ -688,7 +692,7 @@ int main(int argc, char* argv[])
   mpp_close(fid);
 
   /* second order conservative interpolation is only avail for the cubic sphere input grid */
-  if( ntiles_in != 6 && (opcode & CONSERVE_ORDER2) ) 
+  if( ntiles_in != 6 && (opcode & CONSERVE_ORDER2) )
     mpp_error("fregrid: when the input grid is not cubic sphere grid, interp_method can not be conserve_order2");
 
   if(mosaic_out) {
@@ -707,7 +711,7 @@ int main(int argc, char* argv[])
   if(check_conserve) opcode |= CHECK_CONSERVE;
 
   if( opcode & STANDARD_DIMENSION ) printf("fregrid: --standard_dimension is set\n");
-  
+
   if( opcode & BILINEAR ) {
     int ncontact;
     ncontact = read_mosaic_ncontacts(mosaic_in);
@@ -716,11 +720,11 @@ int main(int argc, char* argv[])
     if(ncontact !=12)  mpp_error("fregrid: when interp_method is bilinear, the input mosaic should be 12 contact cubic grid");
     if(mpp_npes() > 1) mpp_error("fregrid: parallel is not implemented for bilinear remapping");
   }
-  else 
+  else
     y_at_center = 1;
 
   if(extrapolate) opcode |= EXTRAPOLATE;
-  
+
   /* memory allocation for data structure */
   grid_in   = (Grid_config *)malloc(ntiles_in *sizeof(Grid_config));
   grid_out  = (Grid_config *)malloc(ntiles_out*sizeof(Grid_config));
@@ -738,7 +742,7 @@ int main(int argc, char* argv[])
     print_mem_usage("After calling get_input_grid");
     time_start = clock();
   }
-  if(mosaic_out) 
+  if(mosaic_out)
     get_output_grid_from_mosaic( ntiles_out, grid_out, mosaic_out, opcode, &great_circle_algorithm_out );
   else {
     great_circle_algorithm_out = 0;
@@ -751,7 +755,7 @@ int main(int argc, char* argv[])
     print_mem_usage("After calling get_output_grid");
   }
   /* find out if great_circle algorithm is used in the input grid or output grid */
-  
+
   if( great_circle_algorithm_in == 0 && great_circle_algorithm_out == 0 )
     opcode |= LEGACY_CLIP;
   else {
@@ -763,7 +767,7 @@ int main(int argc, char* argv[])
 
   /* get the grid cell_area */
   get_input_output_cell_area(ntiles_in, grid_in, ntiles_out, grid_out, opcode);
-  if(debug) print_mem_usage("After get_input_output_cell_area");  
+  if(debug) print_mem_usage("After get_input_output_cell_area");
   /* currently extrapolate are limited to ntiles = 1. extrapolate are limited to lat-lon input grid */
   if( extrapolate ) {
     int i, j, ind0, ind1, ind2;
@@ -777,7 +781,7 @@ int main(int argc, char* argv[])
       if(fabs( grid_in[0].lont[ind0]-grid_in[0].lont[ind2] ) > EPSLN10 ||
 	 fabs( grid_in[0].latt[ind0]-grid_in[0].latt[ind1] ) > EPSLN10 )
 	mpp_error("fregrid: extrapolate is limited to lat-lon grid");
-	  
+
     }
   }
 
@@ -788,13 +792,13 @@ int main(int argc, char* argv[])
     if(vertical_interp) mpp_error("fregrid: vertical_interp is not supported for vector fields");
     if(extrapolate) mpp_error("fregrid: extrapolate is not supported for vector fields");
   }
-  
-  if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, interp, &opcode, save_weight_only);  
+
+  if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, interp, &opcode, save_weight_only);
 
   if(!save_weight_only) {
     file_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
     file_out  = (File_config *)malloc(ntiles_out*sizeof(File_config));
- 
+
     if(nfiles == 2) {
       file2_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
       file2_out  = (File_config *)malloc(ntiles_out*sizeof(File_config));
@@ -810,10 +814,10 @@ int main(int argc, char* argv[])
       get_input_vgrid(&vgrid_in, file_in[0].name, scalar_name[0]);
       setup_vertical_interp(&vgrid_in, &vgrid_out);
     }
-  
+
     if(nfiles == 2) {
       set_mosaic_data_file(ntiles_in, mosaic_in, dir_in, file2_in,  input_file[1]);
-      set_mosaic_data_file(ntiles_out, mosaic_out, dir_out, file2_out, output_file[1]);    
+      set_mosaic_data_file(ntiles_out, mosaic_out, dir_out, file2_out, output_file[1]);
     }
 
     //Open the input files. Save the nc format of the first one.
@@ -848,21 +852,29 @@ int main(int argc, char* argv[])
     if(nscalar == 0 && nvector == 0) {
       if(mpp_pe() == mpp_root_pe()) printf("NOTE from fregrid: no scalar and vector field need to be regridded.\n");
       mpp_end();
-      return 0;   
+      return 0;
     }
-    
+
     if(nscalar > 0) {
       scalar_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
       scalar_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
     }
     if(nvector > 0) {
-      mpp_error("fregrid: currently does not support vertical interpolation, contact developer");
-      u_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
-      u_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));    
-      v_in  = (Field_config *)malloc(ntiles_in *sizeof(Field_config));
-      v_out = (Field_config *)malloc(ntiles_out *sizeof(Field_config));
+      if ((opcode & CONSERVE_ORDER1) || (opcode & CONSERVE_ORDER2  )){
+          mpp_error("fregrid: conservative interpolation of vector fields is not supported. \n"
+          "Use bilinear interpolation or regrid the vector components independently as scalars.\n");
+      }
+      else if (!(opcode & BILINEAR)){
+          mpp_error("fregrid: For vector fields, the interpolation method must be bilinear interpolation.\n");
+      }
+      else{
+        u_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
+        u_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
+        v_in = (Field_config *)malloc(ntiles_in * sizeof(Field_config));
+        v_out = (Field_config *)malloc(ntiles_out * sizeof(Field_config));
+      }
     }
-  
+
     set_field_struct ( ntiles_in,   scalar_in,   nscalar, scalar_name_remap[0], file_in);
     set_field_struct ( ntiles_out,  scalar_out,  nscalar, scalar_name_remap[0], file_out);
     set_field_struct ( ntiles_in,   u_in,        nvector, u_name[0], file_in);
@@ -890,7 +902,7 @@ int main(int argc, char* argv[])
     }else{
       printf("WARNING: fregrid could not set in_format");
     }
-    
+
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
 			ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
 			deflation, shuffle);
@@ -921,7 +933,7 @@ int main(int argc, char* argv[])
 	  break;
 	}
       }
-    }    
+    }
   }
 
   /* preparing for the interpolation, if remapping information exist, read it from remap_file,
@@ -949,7 +961,7 @@ int main(int argc, char* argv[])
       latbegin_in = -0.5*M_PI;
     else
       latbegin_in = latbegin*D2R;
-    
+
     setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
   }
    else
@@ -972,14 +984,14 @@ int main(int argc, char* argv[])
        }
      }
      mpp_end();
-     return 0;     
+     return 0;
    }
-  
+
    if(nscalar > 0) {
      get_field_attribute(ntiles_in, scalar_in);
      copy_field_attribute(ntiles_out, scalar_in, scalar_out);
    }
-   
+
    if(nvector > 0) {
      get_field_attribute(ntiles_in, u_in);
      get_field_attribute(ntiles_in, v_in);
@@ -988,7 +1000,7 @@ int main(int argc, char* argv[])
    }
 
 
-  
+
    /* set time step to 1, only test scalar field now, nz need to be 1 */
    if(test_case) {
      if(nscalar != 1 || nvector != 0) mpp_error("fregrid: when test_case is specified, nscalar must be 1 and nvector must be 0");
@@ -996,14 +1008,14 @@ int main(int argc, char* argv[])
      file_in->nt = 1;
      file_out->nt = 1;
    }
-   
+
   /* Then doing the regridding */
   for(m=0; m<file_in->nt; m++) {
     int memsize, level_z, level_n, level_t;
 
     write_output_time(ntiles_out, file_out, m);
     if(nfiles > 1) write_output_time(ntiles_out, file2_out, m);
-    
+
     /* first interp scalar variable */
     for(l=0; l<nscalar; l++) {
       if( !scalar_in->var[l].has_taxis && m>0) continue;
@@ -1014,7 +1026,7 @@ int main(int argc, char* argv[])
 	if(extrapolate) {
 	  get_input_data(ntiles_in, scalar_in, grid_in, bound_T, l, -1, level_n, level_t, extrapolate, stop_crit);
 	  allocate_field_data(ntiles_out, scalar_out, grid_out, scalar_in->var[l].nz);
-	  if( opcode & BILINEAR ) 
+	  if( opcode & BILINEAR )
 	    do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
 	  else
 	    do_scalar_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
@@ -1031,7 +1043,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 	  for(level_z=scalar_in->var[l].kstart; level_z <= scalar_in->var[l].kend; level_z++)
-	    {	    
+	    {
               if(debug) time_start = clock();
               if(test_case)
 		get_test_input_data(test_case, test_param, ntiles_in, scalar_in, grid_in, bound_T, opcode);
@@ -1044,7 +1056,7 @@ int main(int argc, char* argv[])
 
 	      allocate_field_data(ntiles_out, scalar_out, grid_out, 1);
 	      if(debug) time_start = clock();
-	      if( opcode & BILINEAR ) 
+	      if( opcode & BILINEAR )
 		do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
 	      else
 		do_scalar_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
@@ -1085,7 +1097,7 @@ int main(int argc, char* argv[])
 	do_vector_bilinear_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, finer_step, fill_missing);
       else
 	do_vector_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
-      
+
       write_field_data(ntiles_out, u_out, grid_out, l, level_z, level_n, m);
       write_field_data(ntiles_out, v_out, grid_out, l, level_z, level_n, m);
       for(n=0; n<ntiles_in; n++) {
@@ -1095,7 +1107,7 @@ int main(int argc, char* argv[])
       for(n=0; n<ntiles_out; n++) {
 	free(u_out[n].data);
 	free(v_out[n].data);
-      }      
+      }
     }
   }
 
@@ -1104,7 +1116,7 @@ int main(int argc, char* argv[])
     print_time("do_interp", time_do_interp);
     print_time("write_data", time_write);
   }
-  
+
   if(mpp_pe() == mpp_root_pe() ) {
     printf("Successfully running fregrid and the following output file are generated.\n");
     for(n=0; n<ntiles_out; n++) {
@@ -1116,12 +1128,12 @@ int main(int argc, char* argv[])
       }
     }
   }
-      
+
   mpp_end();
   return 0;
-  
-} /* end of main */
-  
 
-  
-  
+} /* end of main */
+
+
+
+
