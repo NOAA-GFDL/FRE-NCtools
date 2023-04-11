@@ -1,28 +1,32 @@
+/** \cond
+ */
 /***********************************************************************
  *                   GNU Lesser General Public License
  *
- * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ * This file is part of the GFDL Flexible Modeling System (FMS).
  *
- * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * FMS is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * FMS is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with FRE-NCTools.  If not, see
- * <http://www.gnu.org/licenses/>.
+ * License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sched.h>
 #include <errno.h>
@@ -30,23 +34,42 @@
 #include <sys/syscall.h>
 
 #include "config.h"
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+/** \endcond
+ */
+// skips doc parsing for includes and license
 
+/**
+ * \addtogroup affinity
+ * \@{
+ */
+
+/**
+ * gettid function for systems that do not have this function (e.g. on Mac OS.)
+ */
 #ifndef HAVE_GETTID
-#ifndef __APPLE__
 static pid_t gettid(void)
 {
-  return syscall(__NR_gettid);
+#if defined(__APPLE__)
+  uint64_t tid64;
+  pthread_threadid_np(NULL, &tid64);
+  pid_t tid = (pid_t)tid64;
+#else
+  pid_t tid = syscall(__NR_gettid);
+#endif
+  return tid;
 }
 #endif
-#endif
 
-/*
+/**
  * Returns this thread's CPU affinity, if bound to a single core,
  * or else -1.
  */
 int get_cpu_affinity(void)
 {
-#if defined(use_libMPI) && !defined(__APPLE__)
+#ifdef HAVE_SCHED_GETAFFINITY
   cpu_set_t coremask;           /* core affinity mask */
 
   CPU_ZERO(&coremask);
@@ -64,17 +87,14 @@ int get_cpu_affinity(void)
   return -1;
 }
 
-int get_cpu_affinity_(void) { return get_cpu_affinity(); }      /* Fortran interface */
-
-
-/*
+/**
  * Returns this groups CPUSET
  * and also the CPUSET size or -1 (in case of a storage error)
  */
 int get_cpuset(int fsz, int *output, int pe, _Bool debug)
 {
-#ifndef __APPLE__
-  cpu_set_t coremask;		/* core affinity mask */
+#ifdef HAVE_SCHED_GETAFFINITY
+  cpu_set_t coremask; /* core affinity mask */
 
   CPU_ZERO(&coremask);
   if (sched_getaffinity(gettid(),sizeof(cpu_set_t),&coremask) != 0) {
@@ -108,16 +128,13 @@ int get_cpuset(int fsz, int *output, int pe, _Bool debug)
 #endif
 }
 
-int get_cpuset_(int *fsz, int *output, int *pe, _Bool *debug) { return get_cpuset(*fsz, output, *pe, *debug); } /* Fortran interface */
-
-
-/*
+/**
  * Set CPU affinity to one core.
  */
 int set_cpu_affinity(int cpu)
 {
-#ifndef __APPLE__
-  cpu_set_t coremask;		/* core affinity mask */
+#ifdef HAVE_SCHED_GETAFFINITY
+  cpu_set_t coremask; /* core affinity mask */
 
   CPU_ZERO(&coremask);
   CPU_SET(cpu,&coremask);
@@ -127,5 +144,4 @@ int set_cpu_affinity(int cpu)
 #endif
   return 0;
 }
-
-int set_cpu_affinity_(int *cpu) { return set_cpu_affinity(*cpu); }	/* Fortran interface */
+///@}
