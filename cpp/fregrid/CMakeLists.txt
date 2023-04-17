@@ -1,6 +1,7 @@
 
 include_directories(${CMAKE_SOURCE_DIR}/../include)
 include_directories(${CMAKE_SOURCE_DIR}/libfrencutils)
+include_directories(${CMAKE_SOURCE_DIR}/libSearch)
 
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
