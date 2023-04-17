@@ -11,25 +11,25 @@
 // function addResult
 
 namespace nct {
-    using ResultIds = std::vector<unsigned int>;
+    using ResultIds = std::vector<size_t>;
     class BoxAndId {
         friend class BruteBoxQuery;
     private:
-        unsigned int id;
+        size_t id;
         BBox3D *box;
     public:
-        BoxAndId(unsigned int id, BBox3D*box ) : id(id), box(box) {}
+        BoxAndId(size_t id, BBox3D*box ) : id(id), box(box) {}
         BBox3D *getBox() {
             return box;
         }
-        unsigned int getId() const {
+        size_t getId() const {
             return id;
         }
         /*
          * Check the candidate object cn and add it (add its id) to the results if it intersects
          * this objects box.
          */
-        void addResultIf(BoxAndId* cn, std::vector<unsigned int>& results){
+        void addResultIf(BoxAndId* cn, std::vector<size_t>& results){
             if(BBox3D::intersect( *(this->getBox()), *(cn->getBox()))){
                 results.push_back( cn->getId());
             }

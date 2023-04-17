@@ -38,7 +38,6 @@ int main() {
     vector<BPair_t> bPairs;
     vector<BPair_t> qbPairs;//box pairs  that are used as query boxes
 
-
     const size_t NCells{NX * NY* NZ};
     const size_t NPoints{(NX + 1)* (NY + 1) * (NZ + 1)};//does not wrap around.
     const size_t NPoly {NCells};

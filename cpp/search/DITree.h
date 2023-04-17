@@ -101,7 +101,7 @@ namespace nct {
             di = DistanceInterval(min, max);
         }
 
-        void search (NodePtr node, BoxAndId& idBox, std::vector<unsigned int>& results) {
+        void search (NodePtr node, BoxAndId& idBox, std::vector<size_t>& results) {
             idBox.addResultIf(node->obj, results);
             if(node->isLeaf() ){
                 return;
@@ -116,7 +116,7 @@ namespace nct {
         }
     public:
         explicit DITree(std::vector < T >& objects, PartType partT = PartType::DMR) {
-            unsigned int nofDIExpected = objects.size();
+            size_t nofDIExpected = objects.size();
             nodes.reserve(objects.size());
             for (auto& object : objects) {
                 nodes.push_back(new Node(&object));
@@ -138,11 +138,11 @@ namespace nct {
             //delete pFunction;
         }
 
-        void search (BoxAndId& idBox, std::vector<unsigned int>& results){
+        void search (BoxAndId& idBox, std::vector<size_t>& results){
           search (root, idBox,results) ;
         }
 
-        void search (std::vector<BoxAndId>& idBoxes, std::vector<std::vector<unsigned int>>& results) {
+        void search (std::vector<BoxAndId>& idBoxes, std::vector<std::vector<size_t>>& results) {
             for (int i= 0; i< idBoxes.size(); ++i){
                 search(idBoxes[i], results[i]);
             }
