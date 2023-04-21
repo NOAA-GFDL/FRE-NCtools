@@ -20,13 +20,10 @@
 
 #ifndef _MOSAIC_UTIL_H
 #define _MOSAIC_UTIL_H 1
+#endif
 
 #ifndef RANGE_CHECK_CRITERIA
 #define RANGE_CHECK_CRITERIA 0.05
-#endif
-
-#ifndef _MATH_H
-#include <math.h>
 #endif
 
 /* override the `fabs` function based on the type */
@@ -113,5 +110,12 @@ void setInbound(struct Node *interList, struct Node *list);
 int isInside(struct Node *node);
 void set_reproduce_siena_true(void);
 
+void set_rotate_poly_true(void);
+int is_near_pole(const double y[], int n);
+int crosses_pole(const double x[], int n);
+void rotate_point( double rv[], double rmat [][3]);
+void rotate_poly(const double x[], const double y[], const int n,
+  double xr[], double yr[]);
+void set_the_rotation_matrix();
 
-#endif
+
