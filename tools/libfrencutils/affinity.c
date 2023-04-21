@@ -1,9 +1,7 @@
-/** \cond
- */
 /***********************************************************************
  *                   GNU Lesser General Public License
  *
- * This file is part of the GFDL Flexible Modeling System (FMS).
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
  *
  * FMS is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by
@@ -37,14 +35,6 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-/** \endcond
- */
-// skips doc parsing for includes and license
-
-/**
- * \addtogroup affinity
- * \@{
- */
 
 /**
  * gettid function for systems that do not have this function (e.g. on Mac OS.)
@@ -144,4 +134,4 @@ int set_cpu_affinity(int cpu)
 #endif
   return 0;
 }
-///@}
+
