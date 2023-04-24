@@ -19,7 +19,6 @@ namespace nct {
     using std::vector;
 
     class BBox3D {
-        //friend class BoxMedLessThan;
     private:
         //bounding boxes are always made up of floats.
         std::array<float, 3> lo;
@@ -28,72 +27,80 @@ namespace nct {
         //Constructor from a mesh of polygons, which in turn is really
         //  just a vector of pointers to points.
         //  This is the constructor for use with legacy nctools, where
-        explicit BBox3D(MeshPolygon<double> &poly)  {
-            unsigned int dim;
-            auto comp {
-                    [&dim](const Point3D<double> *a, const Point3D<double> *b) {
-                return (a->p[dim] < b->p[dim]);}};
+        explicit BBox3D(MeshPolygon<double> &poly) {
+          unsigned int dim;
+          auto comp{
+                  [&dim](const Point3D<double> *a, const Point3D<double> *b) {
+                      return (a->p[dim] < b->p[dim]);
+                  }};
 
-            for (dim = 0; dim < 3; ++dim) {
-                auto [min, max] = minmax_element(poly.points, comp);
-                lo[dim] = static_cast<float>((*min)->p[dim]);
-                hi[dim] = static_cast<float>((*max)->p[dim]);
-            }
+          //TODO: Can this be improved such that the box augmentation is smaller that +- 2e4 ?
+          // TThe augmentation was added for reproducibility - otherwise missing bout 0.1% of
+          //  what the 2D polygon clipping algorithm was determining to be polygons.
+          for (dim = 0; dim < 3; ++dim) {
+            auto [min, max] = minmax_element(poly.points, comp);
+            lo[dim] = static_cast<float>((*min)->p[dim]) - 2.0e4;
+            hi[dim] = static_cast<float>((*max)->p[dim]) + 2.0e4;
+          }
 
-            //The hi of the boxes normally need to increased do to casting of double to float.
+          //The hi of the boxes normally need to increased do to casting of double to float.
 #ifndef USE_NEXTAFTER
-           // for (auto &v: hi) {
-                //v = std::nextafter(v, std::numeric_limits<float>::max());
-           // }
-
-           for(int i = 0; i<3; i++){
-               hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
-           }
+          // for (auto &v: hi) { v = std::nextafter(v, std::numeric_limits<float>::max());}
+          //for (int i = 0; i < 3; i++) {
+           // hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+          //}
+        }
 #endif
+
+        friend std::ostream &operator<<(std::ostream &os, const BBox3D &b) {
+          for (int i = 0; i < 3; i++) {
+            os << "[ " << b.lo[i] << ", " << b.hi[i] << " ]" << std::endl;
+          }
+          return os;
         }
 
-        inline float getLo(int dim){return lo[dim];}
-        inline float getHi(int dim){return hi[dim];}
+        inline float getLo(int dim) { return lo[dim]; }
+
+        inline float getHi(int dim) { return hi[dim]; }
 
         //TODO: investigate using sum of bools. e.g. int r= bool(A.lo[0] > B.hi[0])
         // + bool(A.lo[1] > B.hi[1]) ... check for branch misses w perf stat
         inline static bool intersect(const BBox3D &A, const BBox3D &B) {
-            if (A.lo[0] > B.hi[0] || A.lo[1] > B.hi[1] || A.lo[2] > B.hi[2] ||
-                A.hi[0] < B.lo[0] || A.hi[1] < B.lo[1] || A.hi[2] < B.lo[2]) {
-                return false;
-            } else {
-                return true;
-            }
+          //return true; //TODO:
+          if (A.lo[0] > B.hi[0] || A.lo[1] > B.hi[1] || A.lo[2] > B.hi[2] ||
+              A.hi[0] < B.lo[0] || A.hi[1] < B.lo[1] || A.hi[2] < B.lo[2]) {
+            return false;
+          } else {
+            return true;
+          }
         }
 
         //augment box a with extents of box B
         static void augment(BBox3D &A, BBox3D &B) {
-            for (int i = 0; i < 3; i++) {
-                if (B.lo[i] < A.lo[i])
-                    A.lo[i] = B.lo[i];
-                if (B.hi[i] > A.hi[i])
-                    A.hi[i] = B.hi[i];
-            }
+          for (int i = 0; i < 3; i++) {
+            if (B.lo[i] < A.lo[i])
+              A.lo[i] = B.lo[i];
+            if (B.hi[i] > A.hi[i])
+              A.hi[i] = B.hi[i];
+          }
         }
 
         //augment box A with extents of box B in dimension d
         static void augment(BBox3D &A, BBox3D &B, const int d) {
-            if (B.lo[d] < A.lo[d])
-                A.lo[d] = B.lo[d];
-            if (B.hi[d] > A.hi[d])
-                A.hi[d] = B.hi[d];
+          if (B.lo[d] < A.lo[d])
+            A.lo[d] = B.lo[d];
+          if (B.hi[d] > A.hi[d])
+            A.hi[d] = B.hi[d];
         }
 
-        inline static bool intersect(const BBox3D &A, DistanceInterval<float>& di, const int dim) {
-            if (A.lo[dim] > di.getFar() || A.hi[dim] < di.getNear() ){
-                return false;
-            } else {
-                return true;
-            }
+        inline static bool intersect(const BBox3D &A, DistanceInterval<float> &di, const int dim) {
+          if (A.lo[dim] > di.getFar() || A.hi[dim] < di.getNear()) {
+            return false;
+          } else {
+            return true;
+          }
         }
     };
-
-
 } // nct
 
 #endif //FREGRID_BBOX3D_H

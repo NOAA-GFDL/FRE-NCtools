@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <cstring>
 #include <cassert>
+#include <set>
+//#include <format>
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BruteBoxQuery.h"
@@ -33,6 +35,7 @@
 #include "mosaic_util.h"
 #include "create_xgrid.h"
 #include "constant.h"
+
 
 #define AREA_RATIO_THRESH (1.e-6)
 #define MASK_THRESH       (0.5)
@@ -931,6 +934,13 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
 
   nthreads = 1;
+  //TODO: remove/crean this up after initial testing.
+  nxgrid = create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                                        lon_in, lat_in, lon_out, lat_out,
+                                        mask_in, i_in, j_in, i_out, j_out,
+                                        xgrid_area, xgrid_clon, xgrid_clat);
+  return nxgrid;
+
 #if defined(_OPENMP)
 #pragma omp parallel
   nthreads = omp_get_num_threads();
@@ -1153,6 +1163,15 @@ nxgrid = 0;
   free(n2_list);
   free(lon_out_list);
   free(lat_out_list);
+
+  std::cout << "legacy returning nxgrid = " << nxgrid << std::endl;
+
+/*
+   create_xgrid_2dx2d_order2_ws_check(nlon_in, nlat_in, nlon_out, nlat_out,
+                                        lon_in, lat_in, lon_out, lat_out,
+                                        mask_in, i_in, j_in, i_out, j_out,
+                                        xgrid_area, xgrid_clon, xgrid_clat, nxgrid);
+*/
 
   return nxgrid;
 
@@ -2356,7 +2375,6 @@ int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
 
  } /* inside_edge */
 
-
 // Code below for using search algorithms in create_xgrid_...
 
 using namespace std;
@@ -2367,8 +2385,8 @@ using Poly_t = nct::MeshPolygon<double>;
 using Point_t = nct::Point3D<double>;
 
 inline
-size_t pt_idx(const size_t i, const size_t j,  const size_t NX) {
-    return ( j * NX + i);
+size_t pt_idx(const size_t i, const size_t j,  const size_t nx) {
+  return ( j * nx + i);
 }
 
 /**
@@ -2383,18 +2401,67 @@ size_t pt_idx(const size_t i, const size_t j,  const size_t NX) {
  */
 std::array<size_t, 4>
 get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx) {
-    std::array<size_t, 4> ids;
-    ids[0] = pt_idx(i, j, nx); //ll
-    ids[1] = pt_idx(i + 1,j , nx); //lr
-    ids[2] = pt_idx(i + 1,j + 1, nx); //ur
-    ids[3] = pt_idx(i,j + 1, nx);//ul
-    return ids;
+  std::array<size_t, 4> ids;
+  ids[0] = pt_idx(i, j, nx); //ll
+  ids[1] = pt_idx(i + 1,j , nx); //lr
+  ids[2] = pt_idx(i + 1,j + 1, nx); //ur
+  ids[3] = pt_idx(i,j + 1, nx);//ul
+  return ids;
 }
 
 void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
-    v[0] = RADIUS * cos(lat)*cos(lon);
-    v[1] = RADIUS * cos(lat)*sin(lon);
-    v[2] = RADIUS * sin(lat);
+  v[0] = RADIUS * cos(lat) * cos(lon );
+  v[1] = RADIUS * cos(lat) * sin(lon);
+  v[2] = RADIUS * sin(lat);
+}
+
+
+Poly_t getPolygonFromPoints(vector<Point_t> &points, const array<size_t, 4> &ip) {
+  Poly_t p;
+  //Note: going counterclockwise in grid space points_b, starting from ll
+  p.push_back(&points[ip[0]]); //ll
+  p.push_back(&points[ip[1]]); //lr
+  p.push_back(&points[ip[2]]); //ur
+  p.push_back(&points[ip[3]]); //ul
+  return p;
+}
+
+
+BBox_t getBoxFromLatLons( const double lat[], const double lon[],
+                          const array<size_t, 4> &is, bool debugf  = false) {
+  vector<Point_t> points;
+  std::array<double, 3> v{};
+  double x1[MV], y1[MV];
+  //The polygon lat-lon representation: (it's used later)
+  x1[0] = lon[is[0]];
+  y1[0] = lat[is[0]];
+  x1[1] = lon[is[1]];
+  y1[1] = lat[is[1]];
+  x1[2] = lon[is[2]];
+  y1[2] = lat[is[2]];
+  x1[3] = lon[is[3]];
+  y1[3] = lat[is[3]];
+
+  if (debugf) {
+    std::cout << "lon ,   lat:" << std::endl;
+    for (int i = 0; i < 4; i++) {
+      std::cout << x1[i] << ", " << y1[i] << std::endl;
+    }
+  }
+
+  auto n1 = fix_lon(x1, y1, 4, M_PI);
+
+  //Note: going counterclockwise in grid space points_b, starting from ll
+  Poly_t p;
+  points.reserve( n1);
+  for (int i = 0; i < n1; i++) {
+    latlon2xyz(y1[i], x1[i], v);
+    points.emplace_back(v);
+    p.push_back( &points[i] );
+  }
+
+  BBox_t box{p};
+  return box;
 }
 
 /**
@@ -2423,139 +2490,161 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
                                    const double *mask_in,  vector<size_t>& i_in, vector<size_t>& j_in,
                                    vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
                                    vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
-#define MAX_V 8
-    int nx1, nx2, ny1, ny2, nx1p, nx2p;
 
-    //Set "b" is to be inserted in the tree; set "a" will be used to make query
-    //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of
-    // the algorithm) and "a" corresponds to "1" and "in".
-    vector<Point_t> points_b;
-    vector<Point_t> points_a;
-    vector<Poly_t> polys_b;
-    vector<BBox_t> boxes_b;
-    vector<BPair_t> bPairs_b;
+  int nx1 {*nlon_in}, nx2{*nlon_out}, ny1{*nlat_in}, ny2{*nlat_out};
+  int nx1p{nx1 + 1};
+  int nx2p{nx2 + 1};
 
-    //std::vector<std::vector<size_t>> results_t;
-    //auto sr = search_grids(*nlon_in, *nlat_in, *nlon_out, *nlat_out,
-                          // lon_in, lat_in, lon_out, lat_out, mask_in, results_t);
+  //Set "b" is to be inserted in the tree; set "a" will be used to make query
+  //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of
+  // the algorithm) and "a" corresponds to "1" and "in".
+  vector<Point_t> points_b;
+  vector<Point_t> points_a;
+  vector<Poly_t> polys_b;
+  vector<BBox_t> boxes_b;
+  vector<BPair_t> bPairs_b;
 
-    std::vector<double> area_in(nx1 * ny1);
-    std::vector<double> area_out(nx2 * ny2);
-    get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in.data());
-    get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out.data());
+  //std::vector<std::vector<size_t>> results_t;
+  //auto sr = search_grids(*nlon_in, *nlat_in, *nlon_out, *nlat_out,
+  // lon_in, lat_in, lon_out, lat_out, mask_in, results_t);
 
-    points_b.reserve(nx2p * ny2);
-    polys_b.reserve(nx2 * ny2);
+  std::vector<double> area_in(nx1 * ny1);
+  std::vector<double> area_out(nx2 * ny2);
+  get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in.data());
+  get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out.data());
 
-    //Make all the 3D points_b from the 2D lat-lon;
-    //The 3D points_b should be in the same positional order as their corresponding
-    // lat-lon sre in their own arrays. Note that in principle one can instead
-    // convert on the fly the lat-lons to temporary 3D points_b and calculate boxes_b that way,
-    // and the cost is about 4X as many conversions.
-    points_b.reserve(nx2p * (ny2 + 1));
-    for (size_t ij = 0; ij < nx2p * (ny2 + 1); ++ij) {
-        std::array<double, 3> v{};
-        latlon2xyz(lat_out[ij], lon_out[ij], v);
-        points_b.emplace_back(v);
-    }
+  points_b.reserve(nx2p * ny2);
+  polys_b.reserve(nx2 * ny2);
 
-    points_a.reserve(nx1p * (ny1 + 1));
-    for (size_t ij = 0; ij < nx1p * (ny1 + 1); ++ij) {
-        std::array<double, 3> v{};
-        latlon2xyz(lat_out[ij], lon_out[ij], v);
-        points_a.emplace_back(v);
-    }
+  //Make all the 3D points_b from the 2D lat-lon;
+  //The 3D points_b should be in the same positional order as their corresponding
+  // lat-lon sre in their own arrays. Note that in principle one can instead
+  // convert on the fly the lat-lons to temporary 3D points_b and calculate boxes_b that way,
+  // and the cost is about 4X as many conversions.
+  points_b.reserve(nx2p * (ny2 + 1));
+  for (size_t ij = 0; ij < nx2p * (ny2 + 1); ++ij) {
+    std::array<double, 3> v{};
+    latlon2xyz(lat_out[ij], lon_out[ij], v);
+    points_b.emplace_back(v);
+  }
 
-    //Create polygons from the 3D points_b.
-    polys_b.reserve(nx2 * ny2);
-    boxes_b.reserve(nx2 * ny2);
-    bPairs_b.reserve(nx2 * ny2);
-    for (size_t ij = 0; ij < nx2 * ny2; ij++) {
-        auto i2 = ij % nx2;
-        auto j2 = ij / nx2;
-        auto n = j2 * nx2 + i2;  //TODO: NOTE: using nx2; not nx2p
-        assert (n == ij);
-        //Note: going counterclockwise in grid space points_b, starting from ll
-        Poly_t p;
-        auto ip = get_cell_idxs_ccw_4(i2, j2, nx2p);
-        p.push_back(&points_b[ip[0]]); //ll
-        p.push_back(&points_b[ip[1]]); //lr
-        p.push_back(&points_b[ip[2]]); //ur
-        p.push_back(&points_b[ip[3]]); //ul
-        polys_b.emplace_back(p);
-        assert (n == polys_b.size() - 1);
-        boxes_b.emplace_back(polys_b[n]);
-        bPairs_b.emplace_back(ij, &boxes_b[n]);
-    }
+  points_a.reserve(nx1p * (ny1 + 1));
+  for (size_t ij = 0; ij < nx1p * (ny1 + 1); ++ij) {
+    std::array<double, 3> v{};
+    latlon2xyz(lat_in[ij], lon_in[ij], v);
+    points_a.emplace_back(v);
+  }
 
-    //Make the search tree; to keep the answers in the same order as the original code
-    //we will make the search structure from lat_out and lon_out (instead of in)
-    DITree<BoxAndId> tree(bPairs_b);
+  //Create polygons from the 3D points_b.
+  polys_b.reserve(nx2 * ny2);
+  boxes_b.reserve(nx2 * ny2);
+  bPairs_b.reserve(nx2 * ny2);
+  for (size_t ij = 0; ij < nx2 * ny2; ij++) {
+    auto i2 = ij % nx2;
+    auto j2 = ij / nx2;
+    auto n = j2 * nx2 + i2;  //TODO: NOTE: using nx2; not nx2p
+    assert (n == ij);
+    auto ip = get_cell_idxs_ccw_4(i2, j2, nx2p);
 
-    //loop over the query polygons;
-    for (size_t j1 = 0; j1 < ny1; j1++) {
-        for (size_t i1 = 0; i1 < nx1; i1++) {
-            if (mask_in[j1 * nx1 + i1] <= MASK_THRESH) continue; //to next inner loop
-            double x1_in[MV], y1_in[MV];
-            auto is = get_cell_idxs_ccw_4(i1, j1, nx1p);
-            //The polygon lat-lon representation: (it's used later)
-            //TODO: this can be refactored into a function:
-            x1_in[0] = lon_in[is[0]]; y1_in[0] = lat_in[is[0]];
-            x1_in[1] = lon_in[is[1]]; y1_in[1] = lat_in[is[1]];
-            x1_in[2] = lon_in[is[2]]; y1_in[2] = lat_in[is[2]];
-            x1_in[3] = lon_in[is[3]]; y1_in[3] = lat_in[is[3]];
 
-            //The 3D query polygon and box:
-            Poly_t p;
-            //TODO: this can be refactored into a function:
-            p.push_back(&points_b[is[0]]); //ll
-            p.push_back(&points_b[is[1]]); //lr
-            p.push_back(&points_b[is[2]]); //ur
-            p.push_back(&points_b[is[3]]); //ul
-            BBox_t qBox{p};
-            BPair_t qPair(is[0], &qBox);
+    /*Poly_t p = getPolygonFromPoints(points_b, ip);
+    polys_b.emplace_back(p);
+    assert (n == polys_b.size() - 1);
+    boxes_b.emplace_back(polys_b[n]);
+    bPairs_b.emplace_back(ij, &boxes_b[n] );
+     */
 
-            vector<size_t> results;
-            results.clear();
-            tree.search(qPair, results);
-            //TODO: May need to sort the results for reproducibility?
+    boxes_b.emplace_back(getBoxFromLatLons( lat_out, lon_out, ip));
+    bPairs_b.emplace_back(ij, &boxes_b[n] );
 
-            //Some polys require "fixing" before calling area (and clipping?) functions
-            auto n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-            auto lon_in_avg = avgval_double(n1_in, x1_in);
+  }
 
-            for (size_t rid: results) {
-                double x2_in[MV], y2_in[MV], x_out[MV], y_out[MV];
-                size_t i2 = rid % nx2;
-                size_t j2 = rid / nx2;
-                auto ir = get_cell_idxs_ccw_4(i2, j2, nx2p);
-                //The legacy polygon lat-lon representation:
-                x2_in[0] = lon_in[ir[0]];  y2_in[0] = lat_in[ir[0]];
-                x2_in[1] = lon_in[ir[1]];  y2_in[1] = lat_in[ir[1]];
-                x2_in[2] = lon_in[ir[2]];  y2_in[2] = lat_in[ir[2]];
-                x2_in[3] = lon_in[ir[3]];  y2_in[3] = lat_in[ir[3]];
+  //Make the search tree; to keep the answers in the same order as the original code
+  //we will make the search structure from lat_out and lon_out (instead of in)
+  DITree<BoxAndId> tree(bPairs_b);
+  //BruteBoxQuery bbq{bPairs_b, boxes_b};
 
-                //Some polys require "fixing" before calling area (and clipping?) functions
-                auto n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
+  //loop over the query polygons;
+  for (size_t j1 = 0; j1 < ny1; j1++) {
+    for (size_t i1 = 0; i1 < nx1; i1++) {
+      if (mask_in[j1 * nx1 + i1] <= MASK_THRESH) continue; //to next inner loop
+      double x1_in[MV], y1_in[MV];
+      auto is = get_cell_idxs_ccw_4(i1, j1, nx1p);
+      //The polygon lat-lon representation: (it's used later)
+      //TODO: this can be refactored into a function:
+      x1_in[0] = lon_in[is[0]]; y1_in[0] = lat_in[is[0]];
+      x1_in[1] = lon_in[is[1]]; y1_in[1] = lat_in[is[1]];
+      x1_in[2] = lon_in[is[2]]; y1_in[2] = lat_in[is[2]];
+      x1_in[3] = lon_in[is[3]]; y1_in[3] = lat_in[is[3]];
 
-                auto n_out = clip_2dx2d(x1_in, y1_in, n1_in, x2_in,
-                                        y2_in, n2_in, x_out, y_out);
-                if (n_out > 0) {
-                    auto xarea = poly_area(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
-                    auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
-                    if (xarea / min_area > AREA_RATIO_THRESH) {
-                        xgrid_area.push_back(xarea);
-                        xgrid_clon.push_back(poly_ctrlon(x_out, y_out, n_out, lon_in_avg));
-                        xgrid_clat.push_back(poly_ctrlat(x_out, y_out, n_out));
-                        i_in.push_back(i1); //stores the lower corner of poly
-                        j_in.push_back(j1);
-                        i_out.push_back(i2);
-                        j_out.push_back(j2);
-                    }
-                }
-            }
+      //The 3D query polygon and box:
+      /* Poly_t p;
+      //TODO: this can be refactored into a function:
+      p.push_back(&points_a[is[0]]); //ll
+      p.push_back(&points_a[is[1]]); //lr
+      p.push_back(&points_a[is[2]]); //ur
+      p.push_back(&points_a[is[3]]); //ul
+      BBox_t qBox{p};
+      BPair_t qPair(is[0], &qBox);
+       */
+
+      BBox_t qBox = getBoxFromLatLons( lat_in, lon_in, is);
+      BPair_t qPair(is[0], &qBox);
+      vector<size_t> results;
+      results.clear();
+      tree.search(qPair, results);
+
+      //bbq.search(qBox, results);
+      //Results sorted for reproducibility? Need result by increasing ij
+      sort(results.begin(), results.end(),
+           [](auto x, auto y) {return (x<y);});
+
+      //Some polys require "fixing" before calling area (and clipping?) functions
+      //Part 1 of fixing:
+      auto n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
+      auto lon_in_avg = avgval_double(n1_in, x1_in);
+
+      for (size_t rid: results) {
+        double x2_in[MV], y2_in[MV], x_out[MV], y_out[MV];
+        size_t i2 = rid % nx2;
+        size_t j2 = rid / nx2;
+        auto ir = get_cell_idxs_ccw_4(i2, j2, nx2p);
+        //The legacy polygon lat-lon representation:
+        x2_in[0] = lon_out[ir[0]];  y2_in[0] = lat_out[ir[0]];
+        x2_in[1] = lon_out[ir[1]];  y2_in[1] = lat_out[ir[1]];
+        x2_in[2] = lon_out[ir[2]];  y2_in[2] = lat_out[ir[2]];
+        x2_in[3] = lon_out[ir[3]];  y2_in[3] = lat_out[ir[3]];
+
+        //Some polys require "fixing" before calling area (and clipping?) functions.
+        //Part 2 of fixing:
+        auto n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
+        auto lon_out_avg = avgval_double(n2_in, x2_in);
+        auto dx = lon_out_avg - lon_in_avg;
+        if (dx < -M_PI) {
+          for (auto l = 0; l < n2_in; l++) x2_in[l] += TPI;
+        }else if (dx > M_PI) {
+          for (auto l = 0; l < n2_in; l++) x2_in[l] -= TPI;
         }
+
+        auto n_out = clip_2dx2d(x1_in, y1_in, n1_in, x2_in,
+                                y2_in, n2_in, x_out, y_out);
+        if (n_out > 0) {
+          auto xarea = poly_area(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
+          auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
+          if (xarea / min_area > AREA_RATIO_THRESH) {
+            xgrid_area.push_back(xarea);
+            xgrid_clon.push_back(poly_ctrlon(x_out, y_out, n_out, lon_in_avg));
+            xgrid_clat.push_back(poly_ctrlat(x_out, y_out, n_out));
+            i_in.push_back(i1); //stores the lower corner of poly
+            j_in.push_back(j1);
+            i_out.push_back(i2);
+            j_out.push_back(j2);
+          }
+        }
+      }
     }
+  }
+  std::cout <<"new1 end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
 /*
@@ -2564,39 +2653,93 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
 int create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                 double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
-{
-    vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
-    vector<size_t> i_in_r, j_in_r, i_out_r,  j_out_r;
+                                 double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
+  vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
+  vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
-    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                                 lon_in, lat_in, lon_out, lat_out, mask_in,
-                                 i_in_r,  j_in_r, i_out_r,  j_out_r,
-                                 xgrid_area_r, xgrid_clon_r,  xgrid_clat_r);
+  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                               lon_in, lat_in, lon_out, lat_out, mask_in,
+                               i_in_r, j_in_r, i_out_r, j_out_r,
+                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
 
-    int nxgrid =  static_cast<int> ( xgrid_area_r.size() ); //TODO: return as size_t
-    //Copy the results in the way original code expects.
-    if( !xgrid_area_r.empty()) {
-        xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
-        std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
-        xgrid_clon = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
-        std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
-        xgrid_clat = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
-        std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
+  int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
+  //Copy the results in the way original code expects.
+  if (!xgrid_area_r.empty()) {
+    //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
+    std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
+    std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
+    std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
 
-        i_in = reinterpret_cast<int *>(std::malloc(nxgrid * sizeof(int)));
-        std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
-        j_in = reinterpret_cast<int *>(std::malloc(nxgrid * sizeof(int)));
-        std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
-
-        i_out = reinterpret_cast<int *>(std::malloc(nxgrid * sizeof(int)));
-        std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
-        j_out = reinterpret_cast<int *>(std::malloc(nxgrid * sizeof(int)));
-        std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
+    //TODO: eventually replace assignment with memcpy below:
+    //For the mean time its not possible fast memcpy as above since the caller expects
+    // arrays of ints instead of arrays of size_t for these four:
+    /*
+    std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
+    std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
+    std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
+    std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
+    */
+    //And so ...
+    for (int i = 0; i < nxgrid; i++) {
+      i_in[i] = static_cast<int>(i_in_r[i]);
+      j_in[i] = static_cast<int>(j_in_r[i]);
+      i_out[i] = static_cast<int>(i_out_r[i]);
+      j_out[i] = static_cast<int>(j_out_r[i]);
     }
-    return nxgrid;
+  }
+  std::cout << "new2 returning nxgrid = " << nxgrid << std::endl;
+  return nxgrid;
 }
 
+
+
+void
+create_xgrid_2dx2d_order2_ws_check(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+                                   const double *lon_in, const double *lat_in, const double *lon_out,
+                                   const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat, int nxgrid1) {
+  int nx1 {*nlon_in}, nx2{*nlon_out}, ny1{*nlat_in}, ny2{*nlat_out};
+  int nx1p{nx1 + 1};
+  int nx2p{nx2 + 1};
+
+  vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
+  vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
+
+  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                               lon_in, lat_in, lon_out, lat_out, mask_in,
+                               i_in_r, j_in_r, i_out_r, j_out_r,
+                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+
+  int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
+  //Copy the results in the way original code expects.
+  set <string> sv;
+  if (nxgrid != nxgrid1) {
+    for (int i = 0; i < nxgrid; ++i) {
+      string str = to_string(j_in_r[i]) + "_" + to_string(i_in_r[i]) +
+                   "_" + to_string(j_out_r[i]) + "_" + to_string(i_out_r[i]);
+      sv.insert(str);
+    }
+
+    for (int i = 0; i < nxgrid1; ++i) {
+      string str = to_string(j_in[i]) + "_" + to_string(i_in[i]) +
+                   "_" + to_string(j_out[i]) + "_" + to_string(i_out[i]);
+      if (sv.find(str) == sv.end()) {
+        std::cout << "missing: " << str << endl;
+
+        //for 1
+        auto is1 = get_cell_idxs_ccw_4(i_in[i], j_in[i], nx1p);
+        auto is2 = get_cell_idxs_ccw_4(i_out[i], j_out[i], nx2p);
+        auto box = getBoxFromLatLons( lat_in, lon_in, is1, true);
+        cout << "box1\n" << box << endl;
+        box = getBoxFromLatLons( lat_out, lon_out, is2, true);
+        cout << "box2\n" << box << endl;
+
+
+      }
+    }
+  }
+}
 
 
 /* The following is a test program to test subroutines in create_xgrid.c */

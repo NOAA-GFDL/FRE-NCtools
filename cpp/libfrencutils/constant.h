@@ -21,6 +21,8 @@
 #ifndef NCTOOLS_CONSTANT_H
 #define NCTOOLS_CONSTANT_H
 
+//TODO: redefine constants without using macros.
+
 #define RADIUS        (6371000.)
 #define STRING        255
 
