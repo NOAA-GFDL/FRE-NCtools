@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "BBox3D.h"
 #include "Polygon.h"
-#include "BruteBoxQuery.h"
+
 #include "BoxedObj.h"
 #include "DITree.h"
 

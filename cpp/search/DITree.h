@@ -10,16 +10,23 @@
 
 using DI=nct::DistanceInterval<float>;
 
-/* The DITree is a version of the bounding volume hierarchy where the nodes store
- * one dimensional bounding (interval) information of instead of 3D bounding box
- * information. The dimension of the node is the partitioning dimention - the one
- * which was used to partition the node during tree construction, which partitioned
- * (or divided) the elements under that node into two sets - one for the left
- * child and one for the right child, that are not significantly overlapping in that
- * dimension. In this first version:
- *  1. the bounding intervals of both the left and child nodes are stored at each node.
- *  2. each node (both internal and leaf) has a reference to one object (with a bounding
- *  volume)
+/* The DITree is a version of the DETree presented in "Ray Queries with Wide Object
+ * Isolation and the DE-Tree" M. Zuniga and J. Uhlmann, JGT, 2006. It was chosen for
+ * use because it was shown to be as optimal as the BSP tree for ray queries, and yet
+ * with a faster setup overhead. It can be seen as a form of the bounding volume hierarchy
+ * with these features:
+ * a) Nodes store one dimensional extents (or bounding intervals)  instead of 3D bounding boxes.
+ * b) A node has a partitioning  dimension  - the one which was used to partition the node
+ * during tree construction.
+ * c) Each node has a bounding interval for each child, and in the partitioning dimension.
+ * d) Node partitioning is designed such that a nodes interval do not significantly overlap.
+ * In this version, we also have these features:
+ * e) partitioning dimensions are cyclically rotated at ech level of the tree (as introduced in
+ * "Multidimensional Binary Search Trees Used for Associative Searching", Jon Louis Bentley, 1975)
+ * f) Spatial media (or distance mid-range) is used in partitioning. Other partitioning schemes are possible.
+ * g) There is a box (or object) associated with each node - not just the leaf nodes. A leaf-oriented
+ *  tree is a possible variation which would be slightly simpler and easier to parallelize if
+ *  ever needed - but it is not done here.
  * */
 
 namespace nct {
@@ -48,15 +55,25 @@ namespace nct {
             }
 
             // partition all objects into two sets
+            float min = 1.0e10;
+            float max = -1.0e10;
+            for(auto itr = begin; itr != end; itr++){
+              auto boxp = (*itr)->obj->getBox();
+              if (boxp->getLo(dim) < min) min = boxp->getLo(dim);
+              if (boxp->getHi(dim) > max) max = boxp->getHi(dim);
+            }
             auto median = partition(begin, end, dim);
 
             //Make the begin iterator now point to the max elem from the LHS;
             // this one becomes the nodes element
-            auto maxElemLHS = std::max_element(begin, median, LessThanBoxLo<Node>(dim));
+            auto maxElemLHS = std::max_element(begin, median, LessThanBoxHi<Node>(dim)); //TODO:
             std::iter_swap(begin, maxElemLHS); //swaps the objects pointed to by two iterators
 
             auto firstC = begin + 1;
             calculateDI(begin, firstC, median, end, dim);
+            auto nl = median - firstC;
+            auto nr = end - median;
+            assert(nl + nr +1 == size);
             (*begin)->left = this->buildTree(firstC, median, (dim + 1) % 3);
             (*begin)->right = this->buildTree(median, end, (dim + 1) % 3);
 
@@ -70,7 +87,10 @@ namespace nct {
             double medDist = 0.5 * ((*minElem)->obj->getBox()->getLo(dim) +
                     (*maxElem)->obj->getBox()->getHi(dim));
 
-            LessThanValBoxMed<Node> ltm(dim, medDist);
+            float  min2 = (*minElem)->obj->getBox()->getLo(dim);
+            float max2 =  (*maxElem)->obj->getBox()->getHi(dim);
+
+            LessThanValBoxMed<Node> ltm(dim, medDist);//TODO: experiemnt w/ boxHi .LT. med.
             auto median = std::stable_partition(firstC, end, ltm);
             // One way to take care of degenerate case:
             if (median == firstC || median == end) {
@@ -81,7 +101,7 @@ namespace nct {
 
 
         void calculateDI(NodeItr ndItr, const NodeItr begin, const NodeItr median,
-                         const NodeItr end, int dim ){
+                         const NodeItr end, const int dim ){
             if (begin == end) {
                 return; //TODO: dont do anything?
             }
@@ -90,7 +110,7 @@ namespace nct {
             calculateDI((*(ndItr))->diR, median, end, dim);
         }
         // calculate one distance interval
-        void calculateDI(DI & di ,const NodeItr begin, const NodeItr end, int dim ){
+        void calculateDI(DI & di ,const NodeItr begin, const NodeItr end, const int dim ){
             if (begin == end) {
                 return; //TODO: dont do anything?
             }
@@ -135,7 +155,6 @@ namespace nct {
                 delete nd;
             }
             nodes.clear();
-            //delete pFunction;
         }
 
         void search (BoxAndId& idBox, std::vector<size_t>& results){
