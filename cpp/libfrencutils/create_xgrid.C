@@ -934,12 +934,14 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
 
   nthreads = 1;
-  //TODO: remove/crean this up after initial testing.
+  //TODO: remove/clean this up after initial testing.
+
   nxgrid = create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                         lon_in, lat_in, lon_out, lat_out,
                                         mask_in, i_in, j_in, i_out, j_out,
                                         xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
+
 
 #if defined(_OPENMP)
 #pragma omp parallel
@@ -1166,16 +1168,17 @@ nxgrid = 0;
 
   std::cout << "legacy returning nxgrid = " << nxgrid << std::endl;
 
-/*
-   create_xgrid_2dx2d_order2_ws_check(nlon_in, nlat_in, nlon_out, nlat_out,
+
+   /*
+    create_xgrid_2dx2d_order2_ws_check(nlon_in, nlat_in, nlon_out, nlat_out,
                                         lon_in, lat_in, lon_out, lat_out,
                                         mask_in, i_in, j_in, i_out, j_out,
                                         xgrid_area, xgrid_clon, xgrid_clat, nxgrid);
-*/
 
+*/
   return nxgrid;
 
-};/* get_xgrid_2Dx2D_order2 */
+}/* get_xgrid_2Dx2D_order2 */
 
 
 /*******************************************************************************
@@ -2644,6 +2647,7 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
       }
     }
   }
+  std::cout << "tree search stats:" << std::endl << tree.perfs << std::endl;
   std::cout <<"new1 end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 

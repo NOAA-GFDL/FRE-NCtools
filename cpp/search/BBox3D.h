@@ -34,23 +34,28 @@ namespace nct {
                       return (a->p[dim] < b->p[dim]);
                   }};
 
-          //TODO: Can this be improved such that the box augmentation is smaller that +- 2e4 ?
-          // TThe augmentation was added for reproducibility - otherwise missing bout 0.1% of
-          //  what the 2D polygon clipping algorithm was determining to be polygons.
           for (dim = 0; dim < 3; ++dim) {
             auto [min, max] = minmax_element(poly.points, comp);
-            lo[dim] = static_cast<float>((*min)->p[dim]) - 2.0e4;
-            hi[dim] = static_cast<float>((*max)->p[dim]) + 2.0e4;
+            lo[dim] = static_cast<float>((*min)->p[dim]);
+            hi[dim] = static_cast<float>((*max)->p[dim]);
           }
-
-          //The hi of the boxes normally need to increased do to casting of double to float.
+          //Augment the box since the doubles were stored as floats.
 #ifndef USE_NEXTAFTER
-          // for (auto &v: hi) { v = std::nextafter(v, std::numeric_limits<float>::max());}
-          //for (int i = 0; i < 3; i++) {
-           // hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
-          //}
-        }
+          for (int i = 0; i < 3; i++) {
+            hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+          }
 #endif
+          //TODO: Box augmentation do to Fregrid working with 2D polygons, but box in 3D:
+          // Can this be improved such that the box augmentation is smaller that +- 1e4 ?
+          // TThe augmentation was added for reproducibility - otherwise missing bout 0.1% of
+          //  what the 2D polygon clipping algorithm was determining to be polygons.
+
+          if (std::abs(hi[1]) > 3e6 || std::abs(lo[1]) > 3e6  ){
+            hi[1] += 1e4;
+            lo[1] -= 1e4;
+          }
+        }
+
 
         friend std::ostream &operator<<(std::ostream &os, const BBox3D &b) {
           for (int i = 0; i < 3; i++) {

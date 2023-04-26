@@ -7,6 +7,7 @@
 #include "DITreeNode.h"
 #include "Comparators.h"
 #include "Partition.h"
+#include "TreePerfStats.h"
 
 using DI=nct::DistanceInterval<float>;
 
@@ -122,6 +123,7 @@ namespace nct {
         }
 
         void search (NodePtr node, BoxAndId& idBox, std::vector<size_t>& results) {
+            perfs.incNodesVisited();
             idBox.addResultIf(node->obj, results);
             if(node->isLeaf() ){
                 return;
@@ -135,6 +137,7 @@ namespace nct {
             }
         }
     public:
+        TreePerfStats perfs;
         explicit DITree(std::vector < T >& objects, PartType partT = PartType::DMR) {
             size_t nofDIExpected = objects.size();
             nodes.reserve(objects.size());
@@ -147,6 +150,7 @@ namespace nct {
                  //this->pFunction = getPartitionFunctor<Node,NodeItr,T,M>( this->partitionType );
                 root = buildTree(nodes.begin(), nodes.end(), 0);
             }
+            perfs.incObjectsCount( objects.size());
             std::cout << "DITree buildTree finished" << std::endl;
         }
         ~DITree() {
@@ -158,11 +162,13 @@ namespace nct {
         }
 
         void search (BoxAndId& idBox, std::vector<size_t>& results){
+          perfs.incQueriesCount();
           search (root, idBox,results) ;
         }
 
         void search (std::vector<BoxAndId>& idBoxes, std::vector<std::vector<size_t>>& results) {
             for (int i= 0; i< idBoxes.size(); ++i){
+                perfs.incQueriesCount();
                 search(idBoxes[i], results[i]);
             }
         }
