@@ -6,7 +6,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
-#include <ranges>
+//#include <ranges>
 #include <algorithm>
 #include <cmath>
 
@@ -15,7 +15,8 @@
 #include "Polygon.h"
 
 namespace nct {
-    using std::ranges::minmax_element;
+//using namespace oneapi::dpl::experimental::ranges;
+    //using std::ranges::minmax_element; //cannot find using oneapi
     using std::vector;
 
     class BBox3D {
@@ -35,7 +36,8 @@ namespace nct {
                   }};
 
           for (dim = 0; dim < 3; ++dim) {
-            auto [min, max] = minmax_element(poly.points, comp);
+            //auto [min, max] = minmax_element(poly.points, comp); version used by ranges lib
+            auto [min, max] = std::minmax_element(poly.points.begin(), poly.points.end(), comp);
             lo[dim] = static_cast<float>((*min)->p[dim]);
             hi[dim] = static_cast<float>((*max)->p[dim]);
           }

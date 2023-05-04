@@ -8,6 +8,7 @@
 
 #include "BoxedObj.h"
 #include "DITree.h"
+#include "BruteBoxQuery.h"
 
 using BBox_t = nct::BBox3D;
 using BPair_t  = nct::BoxAndId;
@@ -19,14 +20,15 @@ const size_t NX{100};
 const size_t NY{100};
 const size_t NZ{10};
 
-void compare_results(std::vector<std::vector<unsigned int>> &v1,  std::vector<std::vector<unsigned int>> &v2);
+void compare_results(std::vector<std::vector<size_t>> &v1,
+                     std::vector<std::vector<size_t>> &v2);
 
 size_t pt_idx(int i, int j, int k) {
     return (k * (NX+1) * (NY+1)  + j * (NX+1)  + i);
 }
 
-extern void compare_results(const std::vector<std::vector<unsigned int>> &v1,
-                     const std::vector<std::vector<unsigned int>> &v2);
+extern void compare_results(const std::vector<std::vector<size_t>> &v1,
+                     const std::vector<std::vector<size_t>> &v2);
 
 int main() {
     using namespace std;
@@ -99,38 +101,52 @@ int main() {
         qbPairs[i] =  bPairs [i];
     }
 
-
   //Make some results vectors
-    vector<vector<unsigned int>> results_b;
-    vector<vector<unsigned int>> results_t;
+    vector<vector<size_t>> results_b;
+    vector<vector<size_t>> results_t;
     results_b.reserve(qBoxes.size());
     results_t.reserve(qBoxes.size());
      for(int i = 0; i< qBoxes.size(); i++) {
-      vector<unsigned int> vb;
-      vector<unsigned int> vt;
+      vector<size_t> vb;
+      vector<size_t> vt;
          results_b.push_back(vb);
          results_t.push_back(vt);
       }
 
-    //Make the tree data structure.
+  //Make the BF search data structure
+  std::cout<< "starting box query"<<std::endl;
+  BruteBoxQuery bbq{bPairs, boxes};
+
+  std::vector<size_t> mdresults;
+  std::vector<size_t> res_count;
+  bbq.search_sycl(qBoxes, mdresults,  res_count, 10);
+  std::cout<< "finished box query"<<std::endl;
+
+  //put results in the old form
+  for(int i = 0; i< qBoxes.size(); i++) {
+    for (int j = 0; j < res_count[i]; j++) {
+      auto idx_md = BruteBoxQuery::qr_idx(j, i, 10);
+      results_b[i].push_back(mdresults[idx_md]);
+    }
+  }
+
+  //Make the tree data structure.
     DITree<BoxAndId> tree (bPairs);
 
-    //std::vector<unsigned int> stResult;
+    //std::vector<size_t> stResult;
     //BPair_t bp(0, &(boxes[0]));
     //tree.search(bp, stResult);
 
     tree.search(bPairs, results_t );
+    std::cout<< "Finished tree search "<<std::endl;
 
-    //Make the BF search data structure
-    BruteBoxQuery bbq{bPairs, boxes};
-    bbq.search(qBoxes, results_b);
 
     //check tree awnsers against brute force.
     compare_results(results_b, results_t);
 }
 
-void compare_results(std::vector<std::vector<unsigned int>> &v1,
-          std::vector<std::vector<unsigned int>> &v2) {
+void compare_results(std::vector<std::vector<size_t>> &v1,
+          std::vector<std::vector<size_t>> &v2) {
     for (int i = 0; i< v1.size() ; ++i){
         std::sort(v1[i].begin(), v1[i].end());
         std::sort(v2[i].begin(), v2[i].end());

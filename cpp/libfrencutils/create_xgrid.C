@@ -26,6 +26,7 @@
 #include <cstring>
 #include <cassert>
 #include <set>
+
 //#include <format>
 #include "BBox3D.h"
 #include "Polygon.h"
@@ -2145,7 +2146,7 @@ double poly_ctrlat(const double x[], const double y[], int n)
     else
       ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
   }
-  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  if(fabs(ctrlat) > M_PI_2) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
   return (ctrlat*RADIUS*RADIUS);
 }; /* poly_ctrlat */
 /*An alternate implementation of poly_ctrlat for future developments. Under construction.*/
@@ -2160,7 +2161,7 @@ double poly_ctrlat2(const double x[], const double y[], int n)
     dx = (x[ip]-x[i]);
     if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
     if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
-    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+    if(y[i]==-M_PI_2 || y[i] == M_PI_2) hasPole=1;
   }
 
   for (i=0;i<n;i++) {

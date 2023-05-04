@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 project(fregrid)
 
+#TODO: C++20 or C++23?
 set(CMAKE_CXX_STANDARD 23)
+
+find_package(IntelSYCL REQUIRED)
 
 option(USE_NEXTAFTER "Use nextafter expanded bounding intervals" OFF)
 
@@ -27,6 +30,7 @@ add_subdirectory(common)
 add_subdirectory(search)
 add_subdirectory(libfrencutils)
 add_subdirectory(fregrid)
+add_subdirectory(sycl_tests)
 
 #add_subdirectory(vendor/edlib EXCLUDE_FROM_ALL)
 
