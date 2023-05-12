@@ -116,8 +116,8 @@ remap_sizes="c96->288x180 c192->576x360 c384->1152x720 c768->2304x1440 c1536->46
 for remap_spec in $remap_sizes
 do
   cSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==1'`"
-  lonSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==2'`"
-  latSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==3'`"
+  latSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==2'`"
+  lonSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==3'`"
 
   mkdir c${cSize}_files && pushd c${cSize}_files
 
@@ -125,7 +125,7 @@ do
   make_input_mosaic $cSize
 
   echo "Regridding $remap_spec"
-  run_fregrid $lonSize $latSize $cSize |& tee ${remap_sizes}.log
+  run_fregrid $lonSize $latSize $cSize |& tee ${remap_spec}.log
 
   check_output $cSize
   popd
