@@ -301,7 +301,7 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
       }
     }
   }
-  if(fabs(area) > HPI) {
+  if(fabs(area) > M_PI_2) {
     printf("Error in poly_area_dimensionless: Large values for poly_area_dimensionless: %19.15f\n", area); 
   } 
   if(area < 0)
@@ -452,7 +452,7 @@ double poly_area(const double x[], const double y[], int n)
       }
     }
   }
-  if(fabs(area) > HPI) printf("WARNING poly_area: Large values for area: %19.15f\n", area);
+  if(fabs(area) > M_PI_2) printf("WARNING poly_area: Large values for area: %19.15f\n", area);
   if(area < 0)
      return -area*RADIUS*RADIUS;
   else
@@ -472,7 +472,7 @@ double poly_area2(const double x[], const double y[], int n)
     dx = (x[ip]-x[i]);
     if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
     if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
-    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+    if(y[i]==-M_PI_2 || y[i] == M_PI_2) hasPole=1;
   }
   for (i=0;i<n;i++) {
     ip = (i+1) % n;
@@ -508,13 +508,13 @@ double poly_area2(const double x[], const double y[], int n)
     //v_print(x, y, n);
   }
   */
-  if(fabs(dxs)>SMALL_VALUE && fabs(area) > HPI){
+  if(fabs(dxs)>SMALL_VALUE && fabs(area) > M_PI_2){
     printf("Error    : Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
     area = fabs(area) - 2.0*M_PI;  //This is equivalent to replacing dx=-pi with dx=pi after fix_lon inserts twin poles at SP
     //area = fabs(area) - fabs(dxs);  //This is also equivalent to above since fabs(dxs)=2*pi in the case of side passing through SP.
     printf("Corrected: Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
   }
-  if(fabs(area) > HPI) {
+  if(fabs(area) > M_PI_2) {
     printf("WARNING poly_area: Large values for poly_area: %19.15f\n", area);
   }
   if(area < 0)
@@ -569,7 +569,7 @@ double poly_area_no_adjust(const double x[], const double y[], int n)
     else
       area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
   }
-  if(fabs(area) > HPI) {
+  if(fabs(area) > M_PI_2) {
     printf("WARNING poly_area_no_adjust: Large values for poly_area_no_adjust: %19.15f\n", area);
   }
   if(area < 0)
@@ -614,7 +614,7 @@ int fix_lon(double x[], double y[], int n, double tlon)
   double x_sum, dx;
   int i, nn = n, pole = 0;
 
-  for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) pole = 1;
+  for (i=0;i<nn;i++) if (fabs(y[i]) >= M_PI_2 - TOLORENCE) pole = 1;
   if (0&&pole) {
     printf("fixing pole cell\n");
     v_print(x, y, nn);
@@ -624,7 +624,7 @@ int fix_lon(double x[], double y[], int n, double tlon)
   /* all pole points must be paired */
   /* The reason is poly_area() function needs a contribution equal to the angle (in radians) 
      between the sides that connect to the pole. */
-  for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) {
+  for (i=0;i<nn;i++) if (fabs(y[i]) >= M_PI_2 - TOLORENCE) {
     int im=(i+nn-1)%nn, ip=(i+1)%nn;
 
     if (y[im]==y[i] && y[ip]==y[i]) {
@@ -637,7 +637,7 @@ int fix_lon(double x[], double y[], int n, double tlon)
   }
   /* first of pole pair has longitude of previous vertex */
   /* second of pole pair has longitude of subsequent vertex */
-  for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) {
+  for (i=0;i<nn;i++) if (fabs(y[i]) >= M_PI_2 - TOLORENCE) {
     int im=(i+nn-1)%nn, ip=(i+1)%nn;
 
     if (y[im]!=y[i]) x[i] = x[im];
@@ -652,8 +652,8 @@ int fix_lon(double x[], double y[], int n, double tlon)
     if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
       double x1=x[im];
       double x2=x[i];
-      double ypole= HPI;
-      if(y[i]<0.0) ypole = -HPI ;
+      double ypole= M_PI_2;
+      if(y[i]<0.0) ypole = -M_PI_2 ;
       nn = insert_vtx(x, y, nn, i, x2, ypole);
       nn = insert_vtx(x, y, nn, i, x1, ypole);
       break;

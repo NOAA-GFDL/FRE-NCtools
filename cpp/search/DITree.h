@@ -1,6 +1,7 @@
 #ifndef FREGRID_DITREE_H
 #define FREGRID_DITREE_H
 
+#include <cassert>
 #include "BBox3D.h"
 #include "BoxedObj.h"
 #include "DistanceInterval.h"
