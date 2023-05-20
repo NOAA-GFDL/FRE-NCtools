@@ -2,7 +2,6 @@
 #define FREGRID_BOXEDOBJ_H
 
 #include "BBox3D.h"
-#include "BruteBoxQuery.h"
 
 //This file defines the objects we can put in the DITree.
 //Version 1.0: The DITree will contain (the nodes point to) only
@@ -12,6 +11,7 @@
 
 namespace nct {
     using ResultIds = std::vector<size_t>;
+
     class BoxAndId {
         friend class BruteBoxQuery;
     private:

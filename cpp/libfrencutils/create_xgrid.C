@@ -26,6 +26,8 @@
 #include <cstring>
 #include <cassert>
 #include <set>
+#include <span>
+
 //#include <format>
 #include "BBox3D.h"
 #include "Polygon.h"
@@ -900,7 +902,7 @@ int create_xgrid_2dx2d_order2_(const int *nlon_in, const int *nlat_in, const int
 
 };
 #endif
-int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+int create_xgrid_2dx2d_order2_legacy(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
 			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
 			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
@@ -936,12 +938,12 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   nthreads = 1;
   //TODO: remove/clean this up after initial testing.
 
-  nxgrid = create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+  /* nxgrid = create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                         lon_in, lat_in, lon_out, lat_out,
                                         mask_in, i_in, j_in, i_out, j_out,
                                         xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
-
+*/
 
 #if defined(_OPENMP)
 #pragma omp parallel
@@ -1166,19 +1168,17 @@ nxgrid = 0;
   free(lon_out_list);
   free(lat_out_list);
 
+  /*
   std::cout << "legacy returning nxgrid = " << nxgrid << std::endl;
-
-
-   /*
     create_xgrid_2dx2d_order2_ws_check(nlon_in, nlat_in, nlon_out, nlat_out,
                                         lon_in, lat_in, lon_out, lat_out,
                                         mask_in, i_in, j_in, i_out, j_out,
                                         xgrid_area, xgrid_clon, xgrid_clat, nxgrid);
-
 */
+
   return nxgrid;
 
-}/* get_xgrid_2Dx2D_order2 */
+}
 
 
 /*******************************************************************************
@@ -2145,7 +2145,7 @@ double poly_ctrlat(const double x[], const double y[], int n)
     else
       ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
   }
-  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  if(fabs(ctrlat) > M_PI_2) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
   return (ctrlat*RADIUS*RADIUS);
 }; /* poly_ctrlat */
 /*An alternate implementation of poly_ctrlat for future developments. Under construction.*/
@@ -2160,7 +2160,7 @@ double poly_ctrlat2(const double x[], const double y[], int n)
     dx = (x[ip]-x[i]);
     if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
     if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
-    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+    if(y[i]==-M_PI_2 || y[i] == M_PI_2) hasPole=1;
   }
 
   for (i=0;i<n;i++) {
@@ -2394,22 +2394,22 @@ size_t pt_idx(const size_t i, const size_t j,  const size_t nx) {
 
 /**
  *  Generate four indices into a 1D array of points; such that the data of these
- *  four points represent a counter-clockwise grid cell. Generally the 1D array of points
- *  is used to store a 2D grid (lat-lon ?)
+ *  four points represent a counter-clockwise grid cell. The 1D array of points
+ *  can be though of as a mesh of 2D (lat-long) grid points.
  *  array.
  * @param i  i lon index of the lower left cell
  * @param j  j or lat index of the lower left cell
  * @param NX  With in number of points in the 2D grid.
- * @return an array of the indecies
+ * @return an array of the indices
  */
 std::array<size_t, 4>
 get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx) {
-  std::array<size_t, 4> ids;
-  ids[0] = pt_idx(i, j, nx); //ll
-  ids[1] = pt_idx(i + 1,j , nx); //lr
-  ids[2] = pt_idx(i + 1,j + 1, nx); //ur
-  ids[3] = pt_idx(i,j + 1, nx);//ul
-  return ids;
+  std::array<size_t, 4> idxs;
+  idxs[0] = pt_idx(i, j, nx); //ll
+  idxs[1] = pt_idx(i + 1, j , nx); //lr
+  idxs[2] = pt_idx(i + 1, j + 1, nx); //ur
+  idxs[3] = pt_idx(i, j + 1, nx);//ul
+  return idxs;
 }
 
 void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
@@ -2418,58 +2418,132 @@ void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
   v[2] = RADIUS * sin(lat);
 }
 
-
-Poly_t getPolygonFromPoints(vector<Point_t> &points, const array<size_t, 4> &ip) {
-  Poly_t p;
-  //Note: going counterclockwise in grid space points_b, starting from ll
-  p.push_back(&points[ip[0]]); //ll
-  p.push_back(&points[ip[1]]); //lr
-  p.push_back(&points[ip[2]]); //ur
-  p.push_back(&points[ip[3]]); //ul
-  return p;
+template<class T>
+void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
+  std::cout << "lon ,   lat:" << std::endl;
+  for (int i = 0; i < lonv.size(); i++) {
+    std::cout << lonv[i] * R2D << ", " << latv[i] * R2D << std::endl;
+  }
 }
 
-
-BBox_t getBoxFromLatLons( const double lat[], const double lon[],
-                          const array<size_t, 4> &is, bool debugf  = false) {
-  vector<Point_t> points;
-  std::array<double, 3> v{};
-  double x1[MV], y1[MV];
-  //The polygon lat-lon representation: (it's used later)
-  x1[0] = lon[is[0]];
-  y1[0] = lat[is[0]];
-  x1[1] = lon[is[1]];
-  y1[1] = lat[is[1]];
-  x1[2] = lon[is[2]];
-  y1[2] = lat[is[2]];
-  x1[3] = lon[is[3]];
-  y1[3] = lat[is[3]];
+/**
+ * Find the 3D (XYZ) axis-aligned bounding box of a spherical polygon.
+ * The six values that define the bounding box are the extremas on the
+ * Y,Y, and Z axis of nay point of the polygon, which may or may not be the vertices
+ * of the polygon, or even lie on the edges - i.e some bay be in the interior.
+ * If a tight bounding box is preferred, but a larger one is acceptable though
+ * when used for nearest neighbor search, th search time will go up.
+ *
+ * In this algorithm below we start with the bounding
+ * box that includes the vertices, and then we add these possible extrema points:
+ * a) if the polygon contains a pole, expand the box by the point (<x,y,z>) that is
+ *    the pole.
+ * b) if an edge crosses the equator (lat = 0), expand the box by extrema by points
+ * at the equator .
+ * c) if an edge crosses any plane defined be the prime meridian or its perpendicular
+ * (longitudes 0, pi/2, pi, 3 pi/2 ) then we add extrema point(s) that are on that
+ * plane). Note that a polygon may intersect with both a meridian plane and the equator.
+ *
+ * NOTE: there may be a more mathematical (calculus based) alternative to find the extrema
+ * points (in x ,y, and z) for the function ll2xyz (the spherical polygon or surface in
+ * lat-lon) , given the boundary (the edges of the polygon ).
+ *
+ * //TODO: This function needs unit tests.
+ *
+ * @param lat_m The array of latitudes that define the polygon mesh.
+ * @param lon_m The array of longitudes that define the polygon mesh.
+ * @param is The indcies into the mesh that define the polygon in question.
+ * @param debugf
+ * @return
+ */
+BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
+                                  const array<size_t, 4> &is, bool debugf  = false) {
+  // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
+  // where its possible to have an extrema in X or Y when the edge crosses them.
+  // there is an extra +- 90 degrees on the ends because of the way fix lon can adjust lons.
+  bool crosses_equator = false;
+  constexpr static array<double, 7> xlons {-M_PI_2, 0, M_PI_2, M_PI, 3. * M_PI_2, 2. * M_PI, 5. * M_PI_2};
+  std::array<double, 3> pt{}; // a 3D point.
+  //TODO: Place xv and yv together in a class( allows avoiding use fo normal for loops below).
+  double yv[MV], xv[MV];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
+  for (auto i = 0; i< 4; i++) { //NOTE: four vertices per polygon
+    xv[i] = lon_m[is[i]];
+    yv[i] = lat_m[is[i]];
+  }
 
   if (debugf) {
-    std::cout << "lon ,   lat:" << std::endl;
-    for (int i = 0; i < 4; i++) {
-      std::cout << x1[i] << ", " << y1[i] << std::endl;
+    printPolygon<double>(cout, {xv,4}, {yv,4});
+  }
+
+  // inherited from the old code: Is this really necessary for getting the bbox?
+  auto n1 = fix_lon(xv, yv, 4, M_PI);
+
+  BBox_t box;
+
+  //Augment/expand the box to include the polygon vertices:
+  for (auto i = 0; i < n1; i++) {
+    latlon2xyz(yv[i], xv[i], pt);
+    box.expand(pt);
+  }
+
+  // Augment the bbox if the polygon contains a pole:
+  //Note that any Z=k plane of the bbox calculated from the vertices
+  //in the step above is sufficient to determine this:
+  latlon2xyz(M_PI_2, 0.0, pt); //the north pole
+  if (BBox_t::contains_zk(box, pt) && (yv[0] >=  0)){
+    cout <<" *** Augmenting for the north pole. ***" << endl;
+    printPolygon<double>(cout, {xv,4}, {yv,4});
+    box.expand(pt);
+  }
+  latlon2xyz(-M_PI_2, 0.0, pt); //the south pole
+  if (BBox_t::contains_zk(box, pt) && (yv[0] < 0)){
+    cout << "*** Augmenting for the south pole. *** " << endl;
+    printPolygon<double>(cout, {xv,4}, {yv,4});
+    box.expand(pt);
+  }
+
+  //Augment the box for coordinate value extrema when edge crosses the equator:
+  for (auto i = 0; i < n1; i++) {
+    auto equator_lat = 0.;
+    auto t1 = yv[i];
+    auto t2 = yv[(i + 1) % n1];
+    if (std::signbit(t1) != std::signbit(t2 )) {
+      crosses_equator = true;
+      latlon2xyz(equator_lat, xv[i], pt);
+      box.expand(pt);
+      latlon2xyz(equator_lat,  xv[(i + 1) % n1], pt);
+      box.expand(pt);
     }
   }
 
-  auto n1 = fix_lon(x1, y1, 4, M_PI);
-
-  //Note: going counterclockwise in grid space points_b, starting from ll
-  Poly_t p;
-  points.reserve( n1);
-  for (int i = 0; i < n1; i++) {
-    latlon2xyz(y1[i], x1[i], v);
-    points.emplace_back(v);
-    p.push_back( &points[i] );
+  //Augment the box for coordinate value extrema when edge crosses meridian plane (
+  // or the meridian plane's perpendicular) :
+  for (auto i = 0; i < n1; i++) {
+    auto t1 = xv[i];
+    auto t2 = xv[(i + 1) % n1];
+    for (const auto &xang: xlons) {
+      if (std::signbit(t1 - xang) != std::signbit(t2 - xang)) {
+        latlon2xyz(yv[i], xang, pt);
+        box.expand(pt);
+        latlon2xyz(yv[(i + 1) % n1], xang, pt);
+        box.expand(pt);
+        if(crosses_equator) {
+          latlon2xyz(0.0, xang, pt);
+          box.expand(pt);
+        }
+      }
+    }
   }
 
-  BBox_t box{p};
+  box.expand_for_doubles_if();
   return box;
 }
 
 /**
  * Generate the exchange grid between two grids for the 2nd order
-  * conservative interpolation.
+  * conservative interpolation. This version explicitly uses a search
+  * data structure for faster finding of potentially overlapping grid cells
+  * between the two grids.
 
  * @param nlon_in number of longitudes for the "in" grid cell
  * @param nlat_in number of latitudes for the "in" grid cell
@@ -2493,7 +2567,6 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
                                    const double *mask_in,  vector<size_t>& i_in, vector<size_t>& j_in,
                                    vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
                                    vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
-
   int nx1 {*nlon_in}, nx2{*nlon_out}, ny1{*nlat_in}, ny2{*nlat_out};
   int nx1p{nx1 + 1};
   int nx2p{nx2 + 1};
@@ -2501,109 +2574,55 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
   //Set "b" is to be inserted in the tree; set "a" will be used to make query
   //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of
   // the algorithm) and "a" corresponds to "1" and "in".
-  vector<Point_t> points_b;
-  vector<Point_t> points_a;
   vector<Poly_t> polys_b;
   vector<BBox_t> boxes_b;
   vector<BPair_t> bPairs_b;
-
-  //std::vector<std::vector<size_t>> results_t;
-  //auto sr = search_grids(*nlon_in, *nlat_in, *nlon_out, *nlat_out,
-  // lon_in, lat_in, lon_out, lat_out, mask_in, results_t);
 
   std::vector<double> area_in(nx1 * ny1);
   std::vector<double> area_out(nx2 * ny2);
   get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in.data());
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out.data());
 
-  points_b.reserve(nx2p * ny2);
-  polys_b.reserve(nx2 * ny2);
-
-  //Make all the 3D points_b from the 2D lat-lon;
-  //The 3D points_b should be in the same positional order as their corresponding
-  // lat-lon sre in their own arrays. Note that in principle one can instead
-  // convert on the fly the lat-lons to temporary 3D points_b and calculate boxes_b that way,
-  // and the cost is about 4X as many conversions.
-  points_b.reserve(nx2p * (ny2 + 1));
-  for (size_t ij = 0; ij < nx2p * (ny2 + 1); ++ij) {
-    std::array<double, 3> v{};
-    latlon2xyz(lat_out[ij], lon_out[ij], v);
-    points_b.emplace_back(v);
-  }
-
-  points_a.reserve(nx1p * (ny1 + 1));
-  for (size_t ij = 0; ij < nx1p * (ny1 + 1); ++ij) {
-    std::array<double, 3> v{};
-    latlon2xyz(lat_in[ij], lon_in[ij], v);
-    points_a.emplace_back(v);
-  }
-
-  //Create polygons from the 3D points_b.
-  polys_b.reserve(nx2 * ny2);
   boxes_b.reserve(nx2 * ny2);
   bPairs_b.reserve(nx2 * ny2);
   for (size_t ij = 0; ij < nx2 * ny2; ij++) {
     auto i2 = ij % nx2;
     auto j2 = ij / nx2;
-    auto n = j2 * nx2 + i2;  //TODO: NOTE: using nx2; not nx2p
+    auto n = j2 * nx2 + i2;  //NOTE: using nx2; not nx2p
     assert (n == ij);
     auto ip = get_cell_idxs_ccw_4(i2, j2, nx2p);
-
-
-    /*Poly_t p = getPolygonFromPoints(points_b, ip);
-    polys_b.emplace_back(p);
-    assert (n == polys_b.size() - 1);
-    boxes_b.emplace_back(polys_b[n]);
+    boxes_b.emplace_back(getBoxForSphericalPolygon( lat_out, lon_out, ip));
     bPairs_b.emplace_back(ij, &boxes_b[n] );
-     */
-
-    boxes_b.emplace_back(getBoxFromLatLons( lat_out, lon_out, ip));
-    bPairs_b.emplace_back(ij, &boxes_b[n] );
-
   }
 
-  //Make the search tree; to keep the answers in the same order as the original code
-  //we will make the search structure from lat_out and lon_out (instead of in)
-  DITree<BoxAndId> tree(bPairs_b);
-  //BruteBoxQuery bbq{bPairs_b, boxes_b};
+  //Make the search tree from the boxes of the lat_out+lon_out grid cells.
+  DITree<BoxAndId> tree(bPairs_b);  //BruteBoxQuery bbq{bPairs_b, boxes_b};
 
-  //loop over the query polygons;
+  //Loop over the query polygons;
   for (size_t j1 = 0; j1 < ny1; j1++) {
     for (size_t i1 = 0; i1 < nx1; i1++) {
       if (mask_in[j1 * nx1 + i1] <= MASK_THRESH) continue; //to next inner loop
       double x1_in[MV], y1_in[MV];
-      auto is = get_cell_idxs_ccw_4(i1, j1, nx1p);
-      //The polygon lat-lon representation: (it's used later)
-      //TODO: this can be refactored into a function:
-      x1_in[0] = lon_in[is[0]]; y1_in[0] = lat_in[is[0]];
-      x1_in[1] = lon_in[is[1]]; y1_in[1] = lat_in[is[1]];
-      x1_in[2] = lon_in[is[2]]; y1_in[2] = lat_in[is[2]];
-      x1_in[3] = lon_in[is[3]]; y1_in[3] = lat_in[is[3]];
+      auto idxs_q = get_cell_idxs_ccw_4(i1, j1, nx1p);
 
-      //The 3D query polygon and box:
-      /* Poly_t p;
-      //TODO: this can be refactored into a function:
-      p.push_back(&points_a[is[0]]); //ll
-      p.push_back(&points_a[is[1]]); //lr
-      p.push_back(&points_a[is[2]]); //ur
-      p.push_back(&points_a[is[3]]); //ul
-      BBox_t qBox{p};
-      BPair_t qPair(is[0], &qBox);
-       */
-
-      BBox_t qBox = getBoxFromLatLons( lat_in, lon_in, is);
-      BPair_t qPair(is[0], &qBox);
+      //Get the query box for the polygon:
+      BBox_t qBox = getBoxForSphericalPolygon(lat_in, lon_in, idxs_q);
+      //Then search for its neighbors:
+      BPair_t qPair(idxs_q[0], &qBox);
       vector<size_t> results;
       results.clear();
-      tree.search(qPair, results);
+      tree.search(qPair, results);  //bbq.search(qBox, results);
 
-      //bbq.search(qBox, results);
-      //Results sorted for reproducibility? Need result by increasing ij
+      //For reproducibility, results are ordered by increasing ij value:
       sort(results.begin(), results.end(),
            [](auto x, auto y) {return (x<y);});
 
-      //Some polys require "fixing" before calling area (and clipping?) functions
-      //Part 1 of fixing:
+      //TODO: refactor into a function ?
+      for (int i = 0; i < 4; i++){
+        x1_in[i] = lon_in[idxs_q[i]];
+        y1_in[i] = lat_in[idxs_q[i]];
+      }
+      //Some polys require "fixing" before calling area (and clipping?) function.
       auto n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
       auto lon_in_avg = avgval_double(n1_in, x1_in);
 
@@ -2611,15 +2630,14 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
         double x2_in[MV], y2_in[MV], x_out[MV], y_out[MV];
         size_t i2 = rid % nx2;
         size_t j2 = rid / nx2;
-        auto ir = get_cell_idxs_ccw_4(i2, j2, nx2p);
+        auto idxs_r = get_cell_idxs_ccw_4(i2, j2, nx2p);
         //The legacy polygon lat-lon representation:
-        x2_in[0] = lon_out[ir[0]];  y2_in[0] = lat_out[ir[0]];
-        x2_in[1] = lon_out[ir[1]];  y2_in[1] = lat_out[ir[1]];
-        x2_in[2] = lon_out[ir[2]];  y2_in[2] = lat_out[ir[2]];
-        x2_in[3] = lon_out[ir[3]];  y2_in[3] = lat_out[ir[3]];
+        for (int i = 0; i < 4; i++) {
+          x2_in[i] = lon_out[idxs_r[i]];
+          y2_in[i] = lat_out[idxs_r[i]];
+        }
 
         //Some polys require "fixing" before calling area (and clipping?) functions.
-        //Part 2 of fixing:
         auto n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
         auto lon_out_avg = avgval_double(n2_in, x2_in);
         auto dx = lon_out_avg - lon_in_avg;
@@ -2648,13 +2666,13 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
     }
   }
   std::cout << "tree search stats:" << std::endl << tree.perfs << std::endl;
-  std::cout <<"new1 end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
+  std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2_ws
  */
-int create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
@@ -2691,7 +2709,7 @@ int create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const i
       j_out[i] = static_cast<int>(j_out_r[i]);
     }
   }
-  std::cout << "new2 returning nxgrid = " << nxgrid << std::endl;
+  std::cout << "create_xgrid_2dx2d_order2_ws wrapper returning nxgrid = " << nxgrid << std::endl;
   return nxgrid;
 }
 
@@ -2734,12 +2752,10 @@ create_xgrid_2dx2d_order2_ws_check(const int *nlon_in, const int *nlat_in, const
         //for 1
         auto is1 = get_cell_idxs_ccw_4(i_in[i], j_in[i], nx1p);
         auto is2 = get_cell_idxs_ccw_4(i_out[i], j_out[i], nx2p);
-        auto box = getBoxFromLatLons( lat_in, lon_in, is1, true);
+        auto box = getBoxForSphericalPolygon( lat_in, lon_in, is1, true);
         cout << "box1\n" << box << endl;
-        box = getBoxFromLatLons( lat_out, lon_out, is2, true);
+        box = getBoxForSphericalPolygon( lat_out, lon_out, is2, true);
         cout << "box2\n" << box << endl;
-
-
       }
     }
   }
