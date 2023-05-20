@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include <CL/sycl.hpp>
+//include <CL/sycl.hpp>
 #include "BBox3D.h"
 #include "BoxedObj.h"
 
@@ -38,7 +38,7 @@ class BruteBoxQuery {
             }
         }
     }
-
+/*
     void
     search_sycl(vector<BBox3D>  & qboxes,  vector<vector<size_t>> & results) {
       using namespace cl::sycl;
@@ -71,8 +71,8 @@ class BruteBoxQuery {
               } ; });//end of inner lambda
       }); //end of q.submit lambda
     }
-
-
+*/
+/*
     void
     search_sycl(vector<BBox3D>  & qboxes,  vector<size_t>  & results,
                 vector<size_t>  & res_count ,size_t max_res) {
@@ -119,7 +119,7 @@ class BruteBoxQuery {
               } ; });//end of inner lambda
       }); //end of q.submit lambda
     }
-
+*/
 
 
     void search(BBox3D & qBox, vector<size_t> & results) {

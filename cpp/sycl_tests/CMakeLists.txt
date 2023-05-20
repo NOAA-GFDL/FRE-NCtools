@@ -9,8 +9,8 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 add_executable(sycltest.x sycltest.C)
 add_executable(synchro.x synchro.C)
-add_sycl_to_target(TARGET sycltest.x SOURCES  sycltest.C)
-add_sycl_to_target(TARGET synchro.x SOURCES  synchro.C)
+#add_sycl_to_target(TARGET sycltest.x SOURCES  sycltest.C)
+#add_sycl_to_target(TARGET synchro.x SOURCES  synchro.C)
 
 
 #target_link_libraries(fregrid libCommon)

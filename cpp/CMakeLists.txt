@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.24)
 project(fregrid)
 
-#TODO: C++20 or C++23?
-set(CMAKE_CXX_STANDARD 23)
+project(fregrid LANGUAGES CXX)
 
-find_package(IntelSYCL REQUIRED)
+#TODO: C++20 or C++23?
+set(CMAKE_CXX_STANDARD 20)
+
+#find_package(IntelSYCL REQUIRED)
+
+#--gcc-toolchain=<path_to_base_gcc_install>
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
 
 option(USE_NEXTAFTER "Use nextafter expanded bounding intervals" OFF)
 

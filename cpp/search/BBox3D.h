@@ -21,13 +21,18 @@ namespace nct {
 
     class BBox3D {
     private:
-        //bounding boxes are always made up of floats.
+        //bounding boxes are always made up of floats (i.e. double
+        // precision is not needed. See function  expand_for_doubles_if()).
         std::array<float, 3> lo;
         std::array<float, 3> hi;
+
     public:
+        inline float getLo(int dim) { return lo[dim]; }
+        inline float getHi(int dim) { return hi[dim]; }
+
         //Constructor from a mesh of polygons, which in turn is really
         //  just a vector of pointers to points.
-        //  This is the constructor for use with legacy nctools, where
+        //  This is the constructor for use with legacy nctools
         explicit BBox3D(MeshPolygon<double> &poly) {
           unsigned int dim;
           auto comp{
@@ -41,23 +46,29 @@ namespace nct {
             lo[dim] = static_cast<float>((*min)->p[dim]);
             hi[dim] = static_cast<float>((*max)->p[dim]);
           }
-          //Augment the box since the doubles were stored as floats.
-#ifndef USE_NEXTAFTER
-          for (int i = 0; i < 3; i++) {
-            hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
-          }
-#endif
-          //TODO: Box augmentation do to Fregrid working with 2D polygons, but box in 3D:
-          // Can this be improved such that the box augmentation is smaller that +- 1e4 ?
-          // TThe augmentation was added for reproducibility - otherwise missing bout 0.1% of
-          //  what the 2D polygon clipping algorithm was determining to be polygons.
+          expand_for_doubles_if();
+        }
 
-          if (std::abs(hi[1]) > 3e6 || std::abs(lo[1]) > 3e6  ){
-            hi[1] += 1e4;
-            lo[1] -= 1e4;
+        /**
+         * Constructor from no polygons. User is expected to incrementally expand the box
+         * with the expand method.
+         */
+        explicit BBox3D() {
+          for (auto i = 0; i < 3; ++i) {
+            lo[i] = std::numeric_limits<float>::max();
+            hi[i] = -std::numeric_limits<float>::max();
           }
         }
 
+
+        //Expand box so that it contain point p
+        template <class T>
+        void expand(const std::array<T, 3>& p) {
+          for (auto i = 0; i < 3; i++) {
+            if (p[i] < lo[i]) lo[i] = p[i];
+            if (p[i] > hi[i]) hi[i] = p[i];
+          }
+        }
 
         friend std::ostream &operator<<(std::ostream &os, const BBox3D &b) {
           for (int i = 0; i < 3; i++) {
@@ -66,14 +77,9 @@ namespace nct {
           return os;
         }
 
-        inline float getLo(int dim) { return lo[dim]; }
-
-        inline float getHi(int dim) { return hi[dim]; }
-
         //TODO: investigate using sum of bools. e.g. int r= bool(A.lo[0] > B.hi[0])
         // + bool(A.lo[1] > B.hi[1]) ... check for branch misses w perf stat
         inline static bool intersect(const BBox3D &A, const BBox3D &B) {
-          //return true; //TODO:
           if (A.lo[0] > B.hi[0] || A.lo[1] > B.hi[1] || A.lo[2] > B.hi[2] ||
               A.hi[0] < B.lo[0] || A.hi[1] < B.lo[1] || A.hi[2] < B.lo[2]) {
             return false;
@@ -82,8 +88,8 @@ namespace nct {
           }
         }
 
-        //augment box a with extents of box B
-        static void augment(BBox3D &A, BBox3D &B) {
+        //Expand box a with extents of box B
+        static void expand(BBox3D &A, BBox3D &B) {
           for (int i = 0; i < 3; i++) {
             if (B.lo[i] < A.lo[i])
               A.lo[i] = B.lo[i];
@@ -92,8 +98,8 @@ namespace nct {
           }
         }
 
-        //augment box A with extents of box B in dimension d
-        static void augment(BBox3D &A, BBox3D &B, const int d) {
+        //Expand box A with extents of box B in dimension d
+        static void expand(BBox3D &A, BBox3D &B, const int d) {
           if (B.lo[d] < A.lo[d])
             A.lo[d] = B.lo[d];
           if (B.hi[d] > A.hi[d])
@@ -107,6 +113,34 @@ namespace nct {
             return true;
           }
         }
+
+        /**
+         * Returns true if the  projection of BBOX onto a Z=const plane contains
+         * the projection of the point. In this test, containment is strict and
+         * points just on boundaries are not considered contained.
+         * @param bb the bounding box
+         * @param p the point
+         * @return
+         */
+        template<class T>
+        inline static bool contains_zk(const BBox3D &bb, const std::array<T, 3> &p) {
+          if (bb.lo[0] < p[0] && p[0] < bb.hi[0] &&
+              bb.lo[1] < p[1] && p[1] < bb.hi[1]) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+
+        //Augment the box in case of doubles stored as floats.
+        void expand_for_doubles_if(){
+#ifndef USE_NEXTAFTER
+          for (int i = 0; i < 3; i++) {
+            hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+          }
+#endif
+        }
+
     };
 } // nct
 

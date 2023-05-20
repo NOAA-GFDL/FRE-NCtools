@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
 //#include <mdspan> //not yet avail w/ gcc!
 #include <array>
 #include <algorithm>
@@ -32,6 +33,7 @@ extern void compare_results(const std::vector<std::vector<size_t>> &v1,
 
 int main() {
     using namespace std;
+    using namespace std::chrono;
     using namespace nct;
     vector<Point_t> points;
     vector<Poly_t> polys;
@@ -119,7 +121,12 @@ int main() {
 
   std::vector<size_t> mdresults;
   std::vector<size_t> res_count;
+  auto start =  high_resolution_clock::now();
   bbq.search_sycl(qBoxes, mdresults,  res_count, 10);
+  auto stop =  high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop - start);
+  cout << "BBox search_sycl time"
+       << duration.count() / 1.0e6 << " seconds" << endl;
   std::cout<< "finished box query"<<std::endl;
 
   //put results in the old form
@@ -137,7 +144,12 @@ int main() {
     //BPair_t bp(0, &(boxes[0]));
     //tree.search(bp, stResult);
 
+    start =  high_resolution_clock::now();
     tree.search(bPairs, results_t );
+    stop =  high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    cout << "Tree search time"
+       << duration.count() / 1.0e6 << " seconds" << endl;
     std::cout<< "Finished tree search "<<std::endl;
 
 
