@@ -139,6 +139,9 @@ if test "$with_netcdf_fortran" = "no"; then
 fi
 AC_LANG_POP([Fortran])
 
+# Check if Linux sched_getaffinity is available
+AC_CHECK_FUNCS([sched_getaffinity], [], [])
+
 # Check for typedefs, structures, and compiler characteristics
 # Check if the C compiler supports a working `long double` with more range
 # or precision than `double`.
