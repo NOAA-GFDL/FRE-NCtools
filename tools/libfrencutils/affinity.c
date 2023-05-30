@@ -37,14 +37,7 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-/** \endcond
- */
-// skips doc parsing for includes and license
 
-/**
- * \addtogroup affinity
- * \@{
- */
 
 /**
  * gettid function for systems that do not have this function (e.g. on Mac OS.)
@@ -144,4 +137,3 @@ int set_cpu_affinity(int cpu)
 #endif
   return 0;
 }
-///@}
