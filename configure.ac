@@ -233,5 +233,6 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
+                 t/Test-fregrid_scaling.sh
 ])
 AC_OUTPUT
