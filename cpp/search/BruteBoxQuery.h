@@ -4,7 +4,10 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-//include <CL/sycl.hpp>
+
+#include <CL/sycl.hpp>
+//#include <cartesian_product.hpp>
+
 #include "BBox3D.h"
 #include "BoxedObj.h"
 
@@ -38,10 +41,10 @@ class BruteBoxQuery {
             }
         }
     }
-/*
+
     void
     search_sycl(vector<BBox3D>  & qboxes,  vector<vector<size_t>> & results) {
-      using namespace cl::sycl;
+      using namespace sycl;
       queue q;
       for(auto & elem : results){
         elem.reserve( 10);
@@ -71,12 +74,40 @@ class BruteBoxQuery {
               } ; });//end of inner lambda
       }); //end of q.submit lambda
     }
-*/
-/*
+
+ static int custom_device_selector(const sycl::device &d) {
+       using namespace cl::sycl;
+      int rating = 0;
+      if (d.is_gpu() && (d.get_info<info::device::name>().find("Nvidia") != std::string::npos)) {
+        rating = 3;
+      } else if (d.is_gpu()) {
+        rating = 2;
+      } else if (d.is_cpu()) {
+        rating = 1;
+      }
+      return rating;
+   }
+
+  static void list_devices(){
+    for (auto platform : sycl::platform::get_platforms())
+    {
+        std::cout << "Platform: "
+                  << platform.get_info<sycl::info::platform::name>()
+                  << std::endl;
+
+        for (auto device : platform.get_devices())
+        {
+            std::cout << "\tDevice: "
+                      << device.get_info<sycl::info::device::name>()
+                      << std::endl;
+        }
+    }
+  }
+
     void
     search_sycl(vector<BBox3D>  & qboxes,  vector<size_t>  & results,
                 vector<size_t>  & res_count ,size_t max_res) {
-      using namespace cl::sycl;
+      using namespace sycl;
 
       size_t NQB = qboxes.size();
       size_t NDB = boxes.size();
@@ -91,11 +122,16 @@ class BruteBoxQuery {
         res_count.push_back(0);
       }
 
+      list_devices();
 
-      queue q;
+      sycl::device preferred_device { custom_device_selector };
+
+      //queue q;
+      queue q(preferred_device);
       std::cout << "Using device: "
                 << q.get_device().get_info<sycl::info::device::name>()
-                << std::endl;;
+                << std::endl;
+
       buffer dboxes_buf(boxes);
       buffer qboxes_buf(qboxes);
       buffer bpairs_buf(bpairs);
@@ -119,7 +155,7 @@ class BruteBoxQuery {
               } ; });//end of inner lambda
       }); //end of q.submit lambda
     }
-*/
+
 
 
     void search(BBox3D & qBox, vector<size_t> & results) {

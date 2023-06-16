@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "clean",
+			"command": "mkdir -p build && cmake  -S . -B build && cmake --build build && cmake --build build --target clean",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/mzuniga/nct_search/FRE-NCtools/cpp"
+			}
+		},
+		{
+			"label": "all",
+			"command": "mkdir -p build && cmake  -S . -B build && cmake --build build && cmake --build build --target all",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/mzuniga/nct_search/FRE-NCtools/cpp"
+			}
+		}
+	]
+}

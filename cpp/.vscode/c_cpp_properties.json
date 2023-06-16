@@ -1,0 +1,50 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "Linux_CLANG_SYCL_CUDA",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/mzuniga/llvm/build/install/include/**",
+                "/home/mzuniga/llvm/build/install/include/sycl/**"
+            ],
+            "defines": [],
+            "compilerPath": "/home/mzuniga/llvm/build/install/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerArgs": [
+                "-fsycl",
+                 "-fsycl-targets=nvptx64-nvidia-cuda"
+            ]
+        },
+        {
+            "name": "Nvidia",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/nvidia/hpc_sdk/Linux_x86_64/2023/compilers/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/nvidia/hpc_sdk/Linux_x86_64/2023/compilers/bin/nvc++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerArgs": [
+                "-stdpar=gpu",
+                 "-std=c++20"
+            ]
+        }
+    ],
+    "version": 4
+}

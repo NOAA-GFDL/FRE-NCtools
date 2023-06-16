@@ -4,6 +4,8 @@
 //#include <mdspan> //not yet avail w/ gcc!
 #include <array>
 #include <algorithm>
+#include <CL/sycl.hpp>
+
 #include "BBox3D.h"
 #include "Polygon.h"
 
@@ -17,9 +19,9 @@ using Poly_t = nct::MeshPolygon<double>;
 using Point_t = nct::Point3D<double>;
 using nct::BruteBoxQuery;
 
-const size_t NX{100};
-const size_t NY{100};
-const size_t NZ{10};
+const size_t NX{1000};
+const size_t NY{1000};
+const size_t NZ{4};
 
 void compare_results(std::vector<std::vector<size_t>> &v1,
                      std::vector<std::vector<size_t>> &v2);
