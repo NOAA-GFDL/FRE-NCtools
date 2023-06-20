@@ -33,7 +33,9 @@ add_subdirectory(common)
 add_subdirectory(search)
 add_subdirectory(libfrencutils)
 add_subdirectory(fregrid)
-#add_subdirectory(sycl_tests)
+if(USE_SYCL)
+    add_subdirectory(sycl_tests)
+endif(USE_SYCL)
 
 #add_subdirectory(vendor/edlib EXCLUDE_FROM_ALL)
 
