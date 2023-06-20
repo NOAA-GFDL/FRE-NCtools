@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #find_package(IntelSYCL REQUIRED)
 
-
+option(USE_SYCL "Use SYCL compiling search and other components" OFF)
 option(USE_NEXTAFTER "Use nextafter expanded bounding intervals" OFF)
 
 ##Location of some libs is external to this project.
@@ -33,7 +33,7 @@ add_subdirectory(common)
 add_subdirectory(search)
 add_subdirectory(libfrencutils)
 add_subdirectory(fregrid)
-add_subdirectory(sycl_tests)
+#add_subdirectory(sycl_tests)
 
 #add_subdirectory(vendor/edlib EXCLUDE_FROM_ALL)
 

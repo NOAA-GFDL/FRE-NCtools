@@ -4,7 +4,10 @@
 //#include <mdspan> //not yet avail w/ gcc!
 #include <array>
 #include <algorithm>
+
+#ifdef USE_SYCL
 #include <CL/sycl.hpp>
+#endif
 
 #include "BBox3D.h"
 #include "Polygon.h"
@@ -124,7 +127,13 @@ int main() {
   std::vector<size_t> mdresults;
   std::vector<size_t> res_count;
   auto start =  high_resolution_clock::now();
+  #ifdef USE_SYCL
   bbq.search_sycl(qBoxes, mdresults,  res_count, 10);
+  #else
+  //bbq.search(qBoxes, mdresults,  res_count, 10);
+  bbq.search_std_partition(qBoxes[0],results_b[0]);
+  #endif
+
   auto stop =  high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
   cout << "BBox search_sycl time"
