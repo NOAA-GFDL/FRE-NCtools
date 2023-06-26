@@ -1704,15 +1704,15 @@ int crosses_pole(const double x[] , int n) {
   Graphics Using OpenGL, @nd ed., Chapter 5.3.
 */
 void set_the_rotation_matrix() {
-  static const double is2 = 1.0 /M_SQRT2;
+  const double is2 = 1.0 /M_SQRT2;
 
-  static const double m00 = 0;
-  static const double m01 = - is2;
-  static const double m02 = is2;
-  static const double m11 = 1.0/2;
-  static const double m12 = 0.5;
+  const double m00 = 0;
+  const double m01 = - is2;
+  const double m02 = is2;
+  const double m11 = 1.0/2;
+  const double m12 = 0.5;
 
-  static const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
+  const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
