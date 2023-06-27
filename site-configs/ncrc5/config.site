@@ -21,9 +21,8 @@
 #
 # configure options
 test -z "$with_mpi" && with_mpi=yes
-test -z "$enable_venv" && enable_venv=yes
 # Standard prefix location for FRE distribution
-test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc
+test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc5
 
 # Compilers
 test -z "$CC" && CC=cc

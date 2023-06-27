@@ -33,10 +33,10 @@
 
 module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
 module load PrgEnv-gnu/6.0.10
-module swap gcc/10.3.0
-module load cray-netcdf/4.7.4.4
-module load cray-hdf5/1.12.0.4
-module load nccmp/1.8.8.0
+module load gcc/12.1.0
+module load cray-hdf5/1.12.1.3
+module load cray-netcdf/4.8.1.3
+module load nccmp
 
 # Add bats to PATH
 # Needed for testing

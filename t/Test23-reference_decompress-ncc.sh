@@ -29,12 +29,12 @@ load test_utils
    decompress-ncc \
       decompress-ncc.atmos_daily.nc.copy \
       decompress-ncc_output.nc
-  [ -e decompress-ncc_output.nc ]
+  run_and_check [ -e decompress-ncc_output.nc ]
   ncdump -h decompress-ncc_output.nc
 
-  [ -e $top_srcdir/t/Test18-reference/decompress-ncc_output.nc ]
+  run_and_check [ -e $top_srcdir/t/Test18-reference/decompress-ncc_output.nc ]
 
-  nccmp -V
+  run_and_check nccmp -V
 
-  nccmp -d decompress-ncc_output.nc  $top_srcdir/t/Test18-reference/decompress-ncc_output.nc
+  run_and_check nccmp -d decompress-ncc_output.nc  $top_srcdir/t/Test18-reference/decompress-ncc_output.nc
 }

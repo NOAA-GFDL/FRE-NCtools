@@ -1,3 +1,0 @@
-[submodule "tools/ocean_model_grid_generator"]
-	path = tools/ocean_model_grid_generator
-	url = https://github.com/NOAA-GFDL/ocean_model_grid_generator.git

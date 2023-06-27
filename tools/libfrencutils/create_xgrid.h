@@ -35,7 +35,7 @@ double box_ctrlat(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
 int get_maxxgrid(void);
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+//void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 void get_grid_area_no_adjust(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
 	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);

@@ -83,8 +83,8 @@ generate_all_from_ncl(){
   done
 }
 
-# run the command (the argument list; 1st in list is the command) using the bats "run command"
-#  its status function, and theck the status is 0
+# run the command (the argument list; 1st in list is the command) using the bats "run command",
+# theck the status is 0, and echo the output if not.
 function run_and_check()
 {
     local cmd="$*" #Expands the list into a single string; spearating parms with space.

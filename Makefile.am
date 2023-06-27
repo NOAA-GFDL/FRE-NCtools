@@ -52,10 +52,6 @@ SUBDIRS = postprocessing/combine_restarts \
           tools/simple_hydrog/rmvpr \
           tools/nc_null_check
 
-if ENABLE_OCEAN_MODEL_GRID_GENERATOR
-SUBDIRS += tools/ocean_model_grid_generator
-endif
-
 if WITH_CHECK_PROGS
 SUBDIRS += t
 endif

@@ -38,13 +38,21 @@
 #define EPSLN15 (1.e-15)
 #define EPSLN30 (1.e-30)
 
-int reproduce_siena = 0;
-
 #pragma acc declare copyin(reproduce_siena)
 
-void set_reproduce_siena_true(void)
-{
+const double from_pole_threshold_rad = 0.0174533;  // 1.0 deg
+
+int reproduce_siena = 0;
+int rotate_poly_flag = 0;
+double the_rotation_matrix[3][3] = { 0 };
+
+void set_reproduce_siena_true(void){
   reproduce_siena = 1;
+}
+
+void set_rotate_poly_true(void){
+  rotate_poly_flag = 1;
+  set_the_rotation_matrix();
 }
 
 /***********************************************************
@@ -59,7 +67,7 @@ void error_handler(const char *msg)
 #else
   exit(1);
 #endif
-}; /* error_handler */
+} /* error_handler */
 
 /*********************************************************************
 
@@ -103,15 +111,15 @@ int nearest_index(double value, const double *array, int ia)
     }
   return index;
 
-};
+}
 
 /******************************************************************/
 
 void tokenize(const char * const string, const char *tokens, unsigned int varlen,
          unsigned int maxvar, char * pstring, unsigned int * const nstr)
 {
-  size_t i, j, nvar, len, ntoken;
-  int found, n;
+  size_t i, j, nvar, len, ntoken, n;
+  int found;
 
   nvar = 0; j = 0;
   len = strlen(string);
@@ -163,7 +171,7 @@ double maxval_double(int size, const double *data)
 
   return maxval;
 
-}; /* maxval_double */
+} /* maxval_double */
 
 
 /*******************************************************************************
@@ -182,7 +190,7 @@ double minval_double(int size, const double *data)
 
   return minval;
 
-}; /* minval_double */
+} /* minval_double */
 
 /*******************************************************************************
   double avgval_double(int size, double *data)
@@ -199,7 +207,7 @@ double avgval_double(int size, const double *data)
 
   return avgval;
 
-}; /* avgval_double */
+} /* avgval_double */
 
 
 /*******************************************************************************
@@ -226,7 +234,7 @@ void xyz2latlon( int np, const double *x, const double *y, const double *z, doub
 {
 
   double xx, yy, zz;
-  double dist, sinp;
+  double dist;
   int i;
 
   for(i=0; i<np; i++) {
@@ -256,16 +264,18 @@ void xyz2latlon( int np, const double *x, const double *y, const double *z, doub
 double box_area(double ll_lon, double ll_lat, double ur_lon, double ur_lat)
 {
   double dx = ur_lon-ll_lon;
-  double area;
 
   if(dx > M_PI)  dx = dx - 2.0*M_PI;
   if(dx < -M_PI) dx = dx + 2.0*M_PI;
 
   return (dx*(sin(ur_lat)-sin(ll_lat))*RADIUS*RADIUS ) ;
 
-}; /* box_area */
+} /* box_area */
 
 
+//TODO: Determine if poly_area_dimensionless can be deleted.
+//  Possibly functions that call it (e.g. get_grid_area_dimensionless)
+// can also be deleted.
 /*------------------------------------------------------------------------------
   double poly_area(const x[], const y[], int n)
   obtains area of input polygon by line integrating -sin(lat)d(lon)
@@ -290,7 +300,7 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
     if(dx < -M_PI) dx = dx + 2.0*M_PI;
     if (dx==0.0) continue;
 
-    if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
+    if ( fabs(lat1-lat2) < SMALL_VALUE) // cheap area calculation along latitude
       area -= dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
@@ -304,14 +314,13 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
     }
   }
   if(fabs(area) > HPI) {
-    printf("Error in poly_area_dimensionless: Large values for poly_area_dimensionless: %19.15f\n", area); 
-  } 
+    printf("Error in poly_area_dimensionless: Large values for poly_area_dimensionless: %19.15f\n", area);
+  }
   if(area < 0)
     return (-area/(4*M_PI));
   else
     return (area/(4*M_PI));
-
-}; /* poly_area */
+}
 
 /*------------------------------------------------------------------------------
   double poly_area(const x[], const y[], int n)
@@ -324,25 +333,25 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
              Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
   The following is an implementation of equation (12) in the above paper:
      \int dA = \int_c [-sin(lat)] dlon
-  
+
   An alternative derivation of line integrating -sin(lat)d(lon) formula:
-  Consider a vector function in spherical coordinates (r,lon,lat) 
+  Consider a vector function in spherical coordinates (r,lon,lat)
   with only a lon component :
-      A=(0, (1-sin(lat))/cos(lat)/r , 0)  
-  Then  
-      Curl(A)=(1/r**2 , 0, 0) .  
-  Now consider any loop C on the suface of the sphere enclosing an area S 
-  and apply the Stokes theorem: 
-      \integral_surface_S Curl(A).da = \integral_loop_C A.dl 
+      A=(0, (1-sin(lat))/cos(lat)/r , 0)
+  Then
+      Curl(A)=(1/r**2 , 0, 0) .
+  Now consider any loop C on the suface of the sphere enclosing an area S
+  and apply the Stokes theorem:
+      \integral_surface_S Curl(A).da = \integral_loop_C A.dl
   where da and dl are the vectorial suface and line elements on sphere:
       da=(da, 0, 0) and dl=(0, R*cos(lat)*d(lon), R*d(lat)).
   We get
       \integral_surface_S Curl(A) = \integral_surface_S (da/r**2) = S/R**2
   and
-      \integral_loop_C A.dl = \integral_loop_C (1-sin(lat))*d(lon) 
+      \integral_loop_C A.dl = \integral_loop_C (1-sin(lat))*d(lon)
 
   Hence per Stokes formula:
-      S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon). 
+      S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon).
              = I1 - I2
 
   Now the approximation used for the second loop integral
@@ -353,7 +362,7 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
   If d(lon)/d(lat) is assumed constant over a loop segment, given that the segments
   used here are the sides of a grid cell, then we can take it outside the integral
     sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
-   =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat) 
+   =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat)
    =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (-(cos(lat2)-cos(lat1)))
    =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (2*sin(0.5*(lat2+lat1))*sin(0.5*(lat2-lat1)))
 
@@ -379,7 +388,7 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
    as the next vertex in the cell (which is 90 degrees or close to 90 degrees appart) the contribution to I1 shifts into -I2
    and we can again assume I1=0. This scheme is implemented in subroutine fix_lon() which is always called before poly_area().
    That is why in the implementation below I1 is totally absent.
-    
+
    In some pathological grid cells that do not have a pole vertex, I1 may not come out zero due to ambiguities in choosing
    d(lon) mod 2pi and we have to be careful in the implementation to deal with those grid cells.
    As we saw the approximation for I2 is based on the assumtion that  d(lon)/d(lat) is
@@ -388,12 +397,12 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
    i.e., lat = lat1 + (lon-lon1)*(lat2-lat1)/(lon2-lon1)
    This assumption breaks down if the segment passes through a pole, e.g. along a longitude great circle where
    lon abruptly changes by pi as it goes through the pole like in the following two grid cells:
-       x----x----x  
+       x----x----x
        |    |    |
        |   Pole  |
        |    |    |
        |    |    |
-       x----x----x  
+       x----x----x
     x denotes the grid points.
     We can diagnose such situations
       either via I1=sum(dlons) coming out as 2*pi instead of 0, in that case we can correct the area by 2*pi
@@ -415,66 +424,125 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
   So, I2=\integral dx sin(arctan(tan(lat0)*cos(x-lon0)))  can be shown to give an accurate estimate of grid
   cell areas surrounding the pole without a bump.
    ----------------------------------------------------------------------------*/
-double poly_area(const double x[], const double y[], int n)
-{
+double poly_area_main(const double x[], const double y[], int n) {
   double area = 0.0;
-  int    i;
+  int i;
 
-  for (i=0;i<n;i++) {
-    int ip = (i+1) % n;
-    double dx = (x[ip]-x[i]);
+  for (i = 0; i < n; i++) {
+    int ip = (i + 1) % n;
+    double dx = (x[ip] - x[i]);
     double lat1, lat2;
     double dy, dat;
 
     lat1 = y[ip];
     lat2 = y[i];
-    if(dx > M_PI)  dx = dx - 2.0*M_PI;
-    if(dx < -M_PI) dx = dx + 2.0*M_PI;
+    if (dx > M_PI)
+      dx = dx - 2.0 * M_PI;
+    if (dx < -M_PI)
+      dx = dx + 2.0 * M_PI;
     /*Sides that go through a pole contribute PI regardless of their direction and extent.*/
-    if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
+    if (fabs(dx + M_PI) < SMALL_VALUE || fabs(dx - M_PI) < SMALL_VALUE) {
       area += M_PI;
-      continue; //next i
+      continue;  // next i
     }
     /*
      We have to be careful in implementing sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
      in the limit of lat1=lat2 where it becomes 1. Note that in that limit we get the well known formula
      for the area of a section of sphere bounded by two longitudes and two latitude circles.
     */
-    if ( fabs(lat1-lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
-      area -= dx*sin(0.5*(lat1+lat2));
+    if (fabs(lat1 - lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
+      area -= dx * sin(0.5 * (lat1 + lat2));
     else {
-      if(reproduce_siena) {
-	area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
-      }
-      else {
-	//This expression is a trig identity with the above reproduce_siena case
-	dy = 0.5*(lat1-lat2);
-	dat = sin(dy)/dy;
-	area -= dx*sin(0.5*(lat1+lat2))*dat; 
+      if (reproduce_siena) {
+        area += dx * (cos(lat1) - cos(lat2)) / (lat1 - lat2);
+      } else {
+        // This expression is a trig identity with the above reproduce_siena case
+        dy = 0.5 * (lat1 - lat2);
+        dat = sin(dy) / dy;
+        area -= dx * sin(0.5 * (lat1 + lat2)) * dat;
       }
     }
   }
-  if(fabs(area) > HPI) printf("WARNING poly_area: Large values for area: %19.15f\n", area);
-  if(area < 0)
-     return -area*RADIUS*RADIUS;
-  else
-     return area*RADIUS*RADIUS;
 
-}; /* poly_area */
+
+  if (fabs(area) > HPI)
+    printf("WARNING poly_area: Large values for area: %19.15f\n", area);
+  if (area < 0)
+    return -area * RADIUS * RADIUS;
+  else
+    return area * RADIUS * RADIUS;
+} /* poly_area_main */
+
+/*
+  Calculate the area of a polygon with the original poly_area function,
+  exept that for those polygons that are polar, if the global poly_are_flag
+  is set, the area is calculated by first rotating a copy of the polygon away
+  from the pole and calculating the area of the rotated polygon instead.
+  Polar means having any of its verices cloase to a pole, or an edge crossing
+  a pole.
+
+  This routine is here merely for improving the accuracy of the are calculation
+  in the given conditions.
+  TODO: The tiling error reported by make_coupler mosaic may be non-zero when
+  using this feature. This may be developped in the future.
+*/
+double poly_area(const double xo[], const double yo[], int n) {
+  double area_pa = 0.0;
+  double area_par = 0.0;
+  int pole = 0;
+  int crosses = 0;
+
+  double xr[8];  // rotated lon
+  double yr[8];  // rotated lat
+
+  if (rotate_poly_flag == 0) {
+    area_pa = poly_area_main(xo, yo, n);
+    return area_pa;
+  } else {
+    // anything near enough to the pole gets rotated
+    pole = is_near_pole(yo, n);
+    crosses = crosses_pole(xo, n);
+    if (crosses == 1 && pole == 0) {
+      error_handler("crosses == 1 && pole == 0");
+    }
+
+    if (pole == 1) {
+      if (n > 8) {
+        error_handler("poly_area: n > 8. n=%d,n");
+      }
+      rotate_poly(xo, yo, n, xr, yr);
+
+      int pole2 = is_near_pole(yr, n);
+      if (pole2 == 1) {
+        error_handler("poly_area: pole2 == 1");
+      }
+      area_par = poly_area_main(xr, yr, n);
+    } else {
+      area_pa = poly_area_main(xo, yo, n);
+    }
+
+    if (pole == 1) {
+      return area_par;
+    } else {
+      return area_pa;
+    }
+  }
+}
 
 /*An alternate implementation of poly_area for future developments. Under construction.*/
+//TODO:
 double poly_area2(const double x[], const double y[], int n)
 {
   double area = 0.0;
   double dx,dy,dat,lat1,lat2,avg_y,hdy,da,dxs= 0.0;
-  int    i,j,ip;
-  int hasPole=0, hasBadxm=0, hasBadxp=0;
+  int    i, ip;
+  int hasBadxm=0, hasBadxp=0;
   for (i=0;i<n;i++) {
     ip = (i+1) % n;
     dx = (x[ip]-x[i]);
     if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
     if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
-    if(y[i]==-HPI || y[i]==HPI) hasPole=1;
+    // if(y[i]==-HPI || y[i]==HPI) hasPole=1;
   }
   for (i=0;i<n;i++) {
     ip = (i+1) % n;
@@ -523,7 +591,7 @@ double poly_area2(const double x[], const double y[], int n)
      return -area*RADIUS*RADIUS;
   else
      return area*RADIUS*RADIUS;
-}; /* poly_area2 */
+} /* poly_area2 */
 /* Note how one of the two cells straddling the SP has a wrong sign for "dx=-pi"
    producing an excess area of -2pi.
    Also note how the fix_lon is needed to insert twin poles at SP to correct the
@@ -578,7 +646,7 @@ double poly_area_no_adjust(const double x[], const double y[], int n)
      return area*RADIUS*RADIUS;
   else
      return area*RADIUS*RADIUS;
-}; /* poly_area_no_adjust */
+} /* poly_area_no_adjust */
 
 int delete_vtx(double x[], double y[], int n, int n_del)
 {
@@ -624,7 +692,7 @@ int fix_lon(double x[], double y[], int n, double tlon)
   }
 
   /* all pole points must be paired */
-  /* The reason is poly_area() function needs a contribution equal to the angle (in radians) 
+  /* The reason is poly_area() function needs a contribution equal to the angle (in radians)
      between the sides that connect to the pole. */
   for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) {
     int im=(i+nn-1)%nn, ip=(i+1)%nn;
@@ -649,7 +717,8 @@ int fix_lon(double x[], double y[], int n, double tlon)
   /*If a polygon side passes through a Pole insert twin vertices at the Pole*/
   /*A fix is also directly applied to poly_area to handle this case.*/
   for (i=0;i<nn;i++) {
-    int im=(i+nn-1)%nn, ip=(i+1)%nn;
+    int im=(i+nn-1)%nn;
+    // ip=(i+1)%nn;
     double dx = x[i]-x[im];
     if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
       double x1=x[im];
@@ -702,7 +771,7 @@ double great_circle_distance(double *p1, double *p2)
   dist = RADIUS*beta;
   return dist;
 
-}; /* great_circle_distance */
+} /* great_circle_distance */
 
 
 /* Compute the great circle area of a polygon on a sphere */
@@ -781,7 +850,7 @@ double spherical_angle(const double *v1, const double *v2, const double *v3)
   }
 
   return angle;
-}; /* spherical_angle */
+} /* spherical_angle */
 
 /*------------------------------------------------------------------------------
   double spherical_excess_area(p_lL, p_uL, p_lR, p_uR)
@@ -823,7 +892,7 @@ double spherical_excess_area(const double* p_ll, const double* p_ul,
 
   return area;
 
-}; /* spherical_excess_area */
+} /* spherical_excess_area */
 
 
 /*----------------------------------------------------------------------
@@ -838,7 +907,7 @@ void vect_cross(const double *p1, const double *p2, double *e )
   e[1] = p1[2]*p2[0] - p1[0]*p2[2];
   e[2] = p1[0]*p2[1] - p1[1]*p2[0];
 
-}; /* vect_cross */
+} /* vect_cross */
 
 
 /*----------------------------------------------------------------------
@@ -871,7 +940,7 @@ void normalize_vect(double *e)
   pdot = sqrt( pdot );
 
   for(k=0; k<3; k++) e[k] /= pdot;
-};
+}
 
 
 /*------------------------------------------------------------------
@@ -899,7 +968,7 @@ void unit_vect_latlon(int size, const double *lon, const double *lat, double *vl
     vlat[3*n+1] = -sin_lat*sin_lon;
     vlat[3*n+2] =  cos_lat;
   }
-}; /* unit_vect_latlon */
+} /* unit_vect_latlon */
 
 
 /* Intersect a line and a plane
@@ -1590,3 +1659,93 @@ int inside_a_polygon_(double *lon1, double *lat1, int *npts, double *lon2, doubl
 
 }
 #endif
+
+/*
+  is_near_pole() reuturns 1 if a polygon has any point with a latitude
+  within a threshold from the CGS poles (i.e. near +- Pi/2).
+   Otherwise returns 0.
+*/
+int is_near_pole(const double y[], int n) {
+  int pole = 0;
+  for (int i = 0; i < n; i++) {
+    if ((fabs(y[i]) + from_pole_threshold_rad) > M_PI_2 ) {
+      pole = 1;
+      break;
+    }
+  }
+  return pole;
+}
+
+/*
+  crosses_pole() returns 1 iff one line segment of the polygon has its end at opposit
+  sides of a pole. i.e. if the longitudes are seperated by about Pi. Note, for realistic
+  data (not huge polygons), if crosses_pole() reutrns 1, so should is_near_pole().
+*/
+int crosses_pole(const double x[] , int n) {
+  int has_cl = 0;
+  for (int i = 0; i < n; i++) {
+    int im = (i + n - 1) % n;
+    //int  ip = (i + 1) % n;
+    double dx = x[i] - x[im];
+    if (fabs(dx + M_PI) < SMALL_VALUE || fabs(dx - M_PI) < SMALL_VALUE) {
+      has_cl = 1;
+      break;
+    }
+  }
+  return has_cl;
+}
+
+/*
+  Set the_rotation_matrix  global variable.
+  The rotation is 45 degrees and about the vector with orign at
+  earths center and the direction <0,1,1>/SQRT(2).  I.e. a big
+  rotation away from the pole if what is being rotaed is near a pole.
+  For rotation matricies formulas and examples, see F.S.Hill, Computer
+  Graphics Using OpenGL, @nd ed., Chapter 5.3.
+*/
+void set_the_rotation_matrix() {
+  static const double is2 = 1.0 /M_SQRT2;
+
+  static const double m00 = 0;
+  static const double m01 = - is2;
+  static const double m02 = is2;
+  static const double m11 = 1.0/2;
+  static const double m12 = 0.5;
+
+  static const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      the_rotation_matrix[i][j] = m[i][j];
+    }
+  }
+}
+
+/* Rotate point given the passed in rotation matrix  */
+void rotate_point(double rv[], double rmat [][3]) {
+  double v[3];
+
+  for (int i = 0; i < 3; i++) {
+    v[i] = 0.0;
+    for (int j = 0; j < 3; j++) {
+      v[i] += rmat[i][j] * rv[j];
+    }
+  }
+  for (int i = 0; i < 3; i++) {
+    rv[i] = v[i];
+  }
+}
+
+/*
+  Rotate polygon defined by x[], y[] points and store in xr[], yr[]*/
+void rotate_poly(const double x[], const double y[], const int n, double xr[], double yr[]) {
+  double sv[2]; //a rotated lat/lon
+  double rv[3]; //rotated xyz point
+  for (int i = 0; i < n; i++) {
+    latlon2xyz(1, &x[i], &y[i], &rv[0], &rv[1], &rv[2]);
+    rotate_point(rv, the_rotation_matrix);
+    xyz2latlon(1, &rv[0], &rv[1], &rv[2], &sv[0], &sv[1]);
+    xr[i] = sv[0];
+    yr[i] = sv[1];
+  }
+}
