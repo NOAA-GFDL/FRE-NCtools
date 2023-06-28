@@ -22,7 +22,7 @@
 AC_PREREQ([2.63])
 AC_INIT(
   [FRE NC Tools],
-  [2022.02],
+  [2023.01],
   [oar.gfdl.help@noaa.gov],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
@@ -52,15 +52,6 @@ AC_ARG_ENABLE([quad-precision],
     [build using higher (quad) precision])],
     [],
     [enable_quad_precision=no])
-
-AC_ARG_ENABLE([ocean-model-grid-generator],
-  [AS_HELP_STRING([--enable-ocean-model-grid-generator],
-    [build and install the ocean model grid generator tool])])
-AS_IF([test ${enable_ocean_model_grid_generator:-yes} = yes],
-  [enable_ocean_model_grid_generator=yes],
-  [enable_ocean_model_grid_generator=no])
-AM_CONDITIONAL([ENABLE_OCEAN_MODEL_GRID_GENERATOR],
-  [test $enable_ocean_model_grid_generator = yes])
 
 AC_PROG_CC([icc gcc])
 AM_PROG_CC_C_O
@@ -152,6 +143,9 @@ if test "$with_netcdf_fortran" = "no"; then
 fi
 AC_LANG_POP([Fortran])
 
+# Check if Linux sched_getaffinity is available
+AC_CHECK_FUNCS([sched_getaffinity], [], [])
+
 # Check for typedefs, structures, and compiler characteristics
 # Check if the C compiler supports a working `long double` with more range
 # or precision than `double`.
@@ -173,9 +167,6 @@ AC_DEFINE([GIT_REVISION], "git_revision",
 AC_DEFINE([GIT_HEADHASH], "git_hashval",
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 
-AS_IF([test $enable_ocean_model_grid_generator = yes],
-  AC_CONFIG_SUBDIRS([tools/ocean_model_grid_generator])
-)
 
 #Code for setting rpath based ncview's configure.in code.
 echo "ac_computer_gnu: $ac_compiler_gnu"

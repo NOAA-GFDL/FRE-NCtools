@@ -125,11 +125,14 @@ char *usage[] = {
   "                               The default value is 1.e-6                                      ",
   "                                                                                              ",
   "--check                        check the tiling error",
-  "",
+  " ",
   "--print_memory                 debug memory usage when it is set                       ",
-  "  ",
+  " ",
   "--reproduce_siena              Set to reproduce siena shared codes results              ",
   "    ",
+  "--rotate_poly                  Set to calculate polar polygon areas by caculating the area of a copy ",
+  "                               of the polygon, with the copy being rotated far away from the pole. ",
+  " ",
   "--verbose                      Set --verbose to print out messages during running.        ",
   "",
 
@@ -405,6 +408,7 @@ int main (int argc, char *argv[])
   int    tile_parent, is_parent, ie_parent, js_parent, je_parent;
   int    print_memory=0;
   int    reproduce_siena=0;
+  int    rotate_poly=0;
 
   static struct option long_options[] = {
     {"atmos_mosaic",         required_argument, NULL, 'a'},
@@ -420,6 +424,7 @@ int main (int argc, char *argv[])
     {"verbose",              no_argument,       NULL, 'v'},
     {"print_memory",         no_argument,       NULL, 'p'},
     {"reproduce_siena",      no_argument,       NULL, 'q'},
+    {"rotate_poly",          no_argument,       NULL, 'u'},
     {NULL, 0, NULL, 0}
   };
 
@@ -470,6 +475,9 @@ int main (int argc, char *argv[])
     case 'q':
       reproduce_siena = 1;
       break;
+    case 'u':
+      rotate_poly = 1;
+      break;
     case '?':
       errflg++;
     }
@@ -493,6 +501,8 @@ int main (int argc, char *argv[])
   if(!lmosaic) lmosaic = amosaic;
 
   if(reproduce_siena) set_reproduce_siena_true();
+
+  if(rotate_poly) set_rotate_poly_true();
 
   /*mosaic_file can not have the same name as amosaic, lmosaic or omosaic, also the file name of
     amosaic, lmosaic, omosaic can not be "mosaic.nc"

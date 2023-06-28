@@ -40,7 +40,7 @@ fv3_grids_filelist=""
 for i in 1 2 3 4 5 6
 do
     fv3_file=$fv3_grid_name".tile"$i".nc"
-   [ -e $top_srcdir/t/Test33-reference/$fv3_file ]
+   run_and_check [ -e $top_srcdir/t/Test33-reference/$fv3_file ]
 done
 
 cp $top_srcdir/t/Test33-reference/*.nc .

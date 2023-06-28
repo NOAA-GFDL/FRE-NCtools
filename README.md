@@ -8,7 +8,7 @@ These tools were largely written by members of the GFDL
 primarily for use in the
 [Flexible Modeling System](https://www.gfdl.noaa.gov/fms) (FMS)
 [Runtime Environment](https://www.gfdl.noaa.gov/fre) (FRE) supporting the
-work of the 
+work of the
 [Geophysical Fluid Dynamics Laboratory](https://www.gfdl.noaa.gov)
 (GFDL).
 
@@ -58,16 +58,8 @@ The tools available in FRE-NCtools are:
 
 
 ### Other Tools
-The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator)
-is a collection of tools for creating finite element spherical tripolar grids for
-GFDL's MOM based ocean models. Unlike the other tools, NCTools includes it as a submodule,
-and also it is a Python3 project. Because of the former attribute, recursive
-cloning (see below) is recommended. Because of the latter attribute,
-the users python environment may need modification and/or options to the
-autotools configure command may need to be specified. This includes the
-``--disable-ocean-model-grid-generator`` option (default is enable)
-and the ```--enable-venv``` option to build a Python venv containing the
-Ocean Model Grid Generator script and all python dependencies.
+The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator) can be copied or cloned from its GFDL homepage.
+
 
 ### User Documentation
 Documentation on using individual tools may be obtained by running
@@ -98,23 +90,12 @@ Contribution requirements include :
  * The passing of existing unit tests when they are run in the CI system.
  * The (potential) addition of unit tests when adding new functionality.
  * For external projects, unit tests may be required and the unit tests
-   should be run on the external CI system. 
+   should be run on the external CI system.
 
  Additionally, since NCTools is distributable via the Spack package manager,
  the NCTools team will need to be able to compile and distribute via Spack any
  submodules and their dependencies. Contributors are encouraged to provide
  Spack recipes for their projects.
-
-## Cloning and submodules
-The NCTools github repository contains Ocean Model Grid Generator's repository
-as a submodule. After cloning NCTools, it must be initialized and updated for
-its submodules:
-
-```
-git clone --recursive https://github.com/NOAA-GFDL/FRE-NCtools
-cd FRE-NCtools
-git submodule update --init --recursive
-```
 
 ## Building and Installation - General Information
 FRE-NCtools has a collection of C and Fortran sources. Within GFDL, FRE-NCtools
@@ -164,26 +145,13 @@ configure --help=recursive
 
 It is common to compile into a build directory (e.g. named `build`) and
 install into an installation directory (e.g. with full path `<install path>`).
-If the ocean_model_grid_generator is desired, it may be convenient to allow
-the build system to set up a Python venv. These three choices can be
-done with these steps:
-```
-cd FRE-NCtools
-autoreconf -i
-mkdir build && cd build
-../configure --prefix=<install path> --enable-venv
-make
-make install
-```
-
-If the ocean_model_grid_generator is not desired, a similar configuration would
-be achieved by :
+For example:
 
 ```
 cd FRE-NCtools
 autoreconf -i
 mkdir build && cd build
-../configure --prefix=<install path> --disable-ocean-model-grid-generator
+../configure --prefix=<install path>
 make
 make install
 ```
