@@ -35,6 +35,14 @@ if HAVE_TEST25_INPUT
 test25_data = Test25-input
 endif
 
+# builds C program to test xgrid creation
+# rest of the tests do not require executables outside of what is already built via make
+AM_CPPFLAGS = -L$(top_builddir)/tools/libfrencutils -lfrencutils -I$(abs_top_srcdir)/tools/libfrencutils
+LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a
+
+check_PROGRAMS = test_create_xgrid
+test_create_xgrid_SOURCES = test_create_xgrid.c
+
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
              $(top_srcdir)/tap-driver.sh
 
@@ -68,7 +76,8 @@ TESTS = Test01-check_programs_exist.sh \
         Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
 	Test32-fregrid_no_stretched.sh \
-	Test33-reference_make_hgrid.sh
+	Test33-reference_make_hgrid.sh \
+	Test34-create_xgrid.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
