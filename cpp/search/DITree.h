@@ -168,7 +168,7 @@ namespace nct {
         }
 
         void search (std::vector<BoxAndId>& idBoxes, std::vector<std::vector<size_t>>& results) {
-            for (int i= 0; i< idBoxes.size(); ++i){
+            for (size_t i= 0; i< idBoxes.size(); ++i){
                 perfs.incQueriesCount();
                 search(idBoxes[i], results[i]);
             }

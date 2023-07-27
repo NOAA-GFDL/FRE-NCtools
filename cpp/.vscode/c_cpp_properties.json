@@ -30,6 +30,18 @@
             ]
         },
         {
+            "name": "ICPX",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/intel/oneapi/compiler/2023.1.0/linux/bin/icpx",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
             "name": "Nvidia",
             "includePath": [
                 "${workspaceFolder}/**",
@@ -44,6 +56,18 @@
                 "-stdpar=gpu",
                  "-std=c++20"
             ]
+        },
+        {
+            "name": "GCC_20",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

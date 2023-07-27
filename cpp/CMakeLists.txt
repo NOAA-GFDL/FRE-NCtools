@@ -6,6 +6,8 @@ project(fregrid LANGUAGES CXX)
 #TODO: C++20 or C++23?
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 #find_package(IntelSYCL REQUIRED)
 
 option(USE_SYCL "Use SYCL compiling search and other components" OFF)

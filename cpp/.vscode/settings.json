@@ -1,12 +1,9 @@
 {
     "cmake.configureOnOpen": true,
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
     "files.associations": {
-        "searchtest.C": "cpp",
-        "fregrid.C": "cpp",
-        "sycltest.C": "cpp",
-        "create_xgrid.C": "cpp",
-        "synchro.C": "cpp",
-        "stdpartest.C": "cpp",
-        "conserve_interp.C": "cpp"
+        "*.fh": "FortranFreeForm",
+        "*.C": "cpp",
+        "*.cpp": "cpp",
     }
 }

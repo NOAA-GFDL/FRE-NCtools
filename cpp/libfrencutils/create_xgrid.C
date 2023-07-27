@@ -27,8 +27,8 @@
 #include <cassert>
 #include <set>
 #include <span>
-
-//#include <format>
+#include <format>
+#include <source_location>
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BruteBoxQuery.h"
@@ -2570,6 +2570,9 @@ void  create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const
   int nx1 {*nlon_in}, nx2{*nlon_out}, ny1{*nlat_in}, ny2{*nlat_out};
   int nx1p{nx1 + 1};
   int nx2p{nx2 + 1};
+
+  const std::source_location location = std::source_location::current();
+  std::cout << format("Entered {}", location.function_name()) << std::endl;
 
   //Set "b" is to be inserted in the tree; set "a" will be used to make query
   //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of

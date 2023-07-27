@@ -9,6 +9,7 @@
 #include <execution>
 #include <numeric>
 #include <cmath>
+#include <string>
 
 #include <mutex>
 #include <thread>
@@ -21,12 +22,15 @@
 #include "BBox3D.h"
 #include "BoxedObj.h"
 
-constexpr int MAX_NN=20;
+constexpr int MAX_NN=10;
 constexpr int MAX_NNP = MAX_NN + 1;
 
-namespace nct{
-using  std::vector;
+namespace nct {
+
 using std::array;
+using std::string;
+using std::vector;
+constexpr size_t fill_value_size_t = std::numeric_limits<size_t>::max();
 
 /**
  *  A box query class whos search method is the simple brute (exhaustive) search.
@@ -36,80 +40,127 @@ using std::array;
  * usually its just the id index into bpairs.
  **/
 class BruteBoxQuery {
-    private:
-        vector<BoxAndId> & bpairs;
-        vector<BBox3D> & boxes;
-    public:
-    BruteBoxQuery(vector <BoxAndId> &bpairs, vector<BBox3D> &boxes)
-    : bpairs(bpairs), boxes(boxes) {}
+ private:
+  vector<BoxAndId> &bpairs;
+  vector<BBox3D> &boxes;
+ public:
+  enum class search_subtype
+   { simple = 0, parittion, for_each, copy_if,sycl };
+   constexpr static std::array  search_subtype_str = 
+   {"simple", "parittion", "for_each", "copy_if", "sycl" };
 
-     void search(BBox3D & qBox, vector<size_t> & results) {
-        //TODO: experiment with iterating directly over bpairs instead.
-        for(auto jb = 0; jb < boxes.size(); jb++){
-          if(BBox3D::intersect(qBox, boxes[jb])) {
-            //atomic here ?
-            results.push_back(bpairs[jb].id);
-          }
+  BruteBoxQuery(vector<BoxAndId> &bpairs, vector<BBox3D> &boxes)
+      : bpairs(bpairs), boxes(boxes) {}
 
+  void search(BBox3D &qBox, vector<size_t> &results) {
+    // TODO: experiment with iterating directly over bpairs instead.
+    for (size_t jb = 0; jb < boxes.size(); jb++) {
+      if (BBox3D::intersect(qBox, boxes[jb])) {
+        // atomic here ?
+        results.push_back(bpairs[jb].id);
       }
     }
+  }
 
-    void search(vector<BBox3D>  & qboxes,  vector<vector<size_t>> & results) {
-            for (auto iq = 0; iq<qboxes.size(); iq++){
-                //TODO: experiment with iterating directly over bpairs instead.
-                for(auto jb = 0; jb < boxes.size(); jb++){
-                    if(BBox3D::intersect(qboxes[iq], boxes[jb])) {
-                        //atomic here ?
-                        results[iq].push_back(bpairs[jb].id);
-                    }
-            }
+  void search(vector<BBox3D> &qboxes, vector<vector<size_t>> &results, search_subtype sstype) {
+    switch (sstype) {
+      case search_subtype::simple:
+        search_simple(qboxes, results);
+        break;
+      case search_subtype::parittion:
+        for (size_t i = 0; i < qboxes.size(); i++) {
+          search_std_partition(qboxes[i], results[i]);
         }
+        break;
+      case search_subtype::for_each:
+        for (size_t i = 0; i < qboxes.size(); i++) {
+          search_std_for_each(qboxes[i], results[i]);
+        }
+        break;
+      case search_subtype::copy_if:
+        search_copy_if(qboxes, results);
+        break;
+      default:
+        std::cout << "Error invalid bute force search subtype" << std::endl;
     }
+  }
 
-void search_std_partition( BBox3D & qBox, vector<size_t> & results) {
-        //TODO: make copy of bpairs ( vector<BoxAndId> bps) to hav one the perserves
-        // origal order
-        auto it = std::partition(std::execution::par,
-          bpairs.begin(), bpairs.end(), 
-          [&qBox]( BoxAndId bp) {return BBox3D::intersect( *(bp.getBox()), qBox);}
-        );
-
-        results.clear();
-        while(it != bpairs.end()){
-          results.push_back( (*it).getId());
-          it++;
+  void search_simple(vector<BBox3D> &qboxes, vector<vector<size_t>> &results) {
+    for (size_t iq = 0; iq < qboxes.size(); iq++) {
+      // TODO: experiment with iterating directly over bpairs instead.
+      for (size_t jb = 0; jb < boxes.size(); jb++) {
+        if (BBox3D::intersect(qboxes[iq], boxes[jb])) {
+          // atomic here ?
+          results[iq].push_back(bpairs[jb].id);
         }
+      }
+    }
+  }
+
+
+void search_std_partition(BBox3D &qBox, vector<size_t> &results) {
+  // TODO: make copy of bpairs ( vector<BoxAndId> bps) to hav one the perserves
+  //  origal order
+  auto it = std::partition(
+      std::execution::par,
+      bpairs.begin(), bpairs.end(),
+      [&qBox](BoxAndId bp) { return BBox3D::intersect(*(bp.getBox()), qBox);
+  });
+
+  results.clear();
+  while (it != bpairs.end()) {
+     results.push_back((*it).getId());
+     it++;
+  }
 }
 
+void search_copy_if(vector<BBox3D> &qboxes, vector<vector<size_t>> &results) {
+  auto ints = std::views::iota((int)0, (int)boxes.size());
+  std::cout << "capacity and size: " << results[0].capacity() << ", " << results[0].size() << std::endl;
+  for (int i = 0; i < (int)qboxes.size(); i++) {
+     auto nn_iter = results[i].begin();
+     std::copy_if(
+         std::execution::par,
+         // NOTE: nvc++ w/ GPU requires random_access iterators for 3r darg  (result) .
+         ints.begin(), ints.end(), nn_iter,
+         [=, qboxes = qboxes.data(), boxes = boxes.data()](int j) {
+           return BBox3D::intersect(qboxes[i], boxes[j]);
+         });
+  }
 
-void search_std_for_each( BBox3D & qBox, array<int, MAX_NNP> & results) {
+ std::cout << "capacity and size: " << results[0].capacity() << ", " << results[0].size() << std::endl;;
+  // remove the fill values at the end of the results vector.
+  for (int i = 0; i < (int)qboxes.size(); i++) {
+     while ((results[i].size() > 0) &&
+            (results[i].end()[-1] == fill_value_size_t)) {
+        results[i].pop_back();
+     }
+  }
+}
+
+void search_std_for_each(BBox3D &qBox, vector<size_t> &results) {
+  /*
+  array<int, MAX_NNP> nns;
+  nns[MAX_NN] = 0;
   auto ints = std::views::iota(0, (int)bpairs.size());
   std::mutex r_mutex;
-  std::for_each_n(std::execution::par, 
-    ints.begin(), bpairs.size(), [&](int i) {
-         if(BBox3D::intersect( boxes[i], qBox )){
-            std::lock_guard<std::mutex> guard(r_mutex);
-            assert(results[MAX_NN] < MAX_NN);
-            results[ results[MAX_NN] ] = i;
-            ++results[MAX_NN];
-          }
-        });
-  }
+  std::for_each_n(
+      std::execution::par,
+      ints.begin(), bpairs.size(), [&](int i) {
+        if (BBox3D::intersect(boxes[i], qBox)) {
+          std::lock_guard<std::mutex> guard(r_mutex);
+          assert(nns[MAX_NN] < MAX_NN);
+          nns[nns[MAX_NN]] = i;
+          ++nns[MAX_NN];
+        }
+      });
 
-  void search_par(std::vector<BoxAndId> &idBoxes, std::vector<std::vector<size_t>> &results){
-  array<int, MAX_NNP> nn;
-  for (int i = 0; i < idBoxes.size(); ++i){
-      for (int j = 0; j < MAX_NN; j++){
-          nn[j] = MAX_NN;
-      }
-      nn[MAX_NN] = 0;
-      search_std_for_each(*(idBoxes[i].getBox()), nn);
-      for (int j = 0; j < nn[MAX_NN]; j++){
-          results[i].push_back(nn[j]);
-      }
+  results.clear();
+  for (int i = 0; i < nns[MAX_NN]; i++) {
+     results.push_back(nns[i]);
   }
-  }
-
+  */
+}
 
 #ifdef USE_SYCL
     void
@@ -235,5 +286,5 @@ void search_std_for_each( BBox3D & qBox, array<int, MAX_NNP> & results) {
       return (iq * RSIZE + ir);
     }
   };
-} // nct
+  }    // namespace nct
 #endif //FREGRID_BRUTEBOXQUERY_H
