@@ -62,6 +62,19 @@ AS_IF([test $gx_cv_c__Generic = no],
   AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
 )
 
+# --with-openacc
+AC_ARG_WITH([openacc],
+            [AS_HELP_STRING([--with-openacc],
+                            [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu. Flags added: -acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline (default no)])])
+AS_IF([test ${with_openacc:-no} = yes],
+      [with_openacc=yes],
+      [with_openacc=no])
+# check compile flags
+AS_IF([test ${with_openacc} = yes],
+      [GX_CC_OPENACC_FLAGS()])
+AM_CONDITIONAL([WITH_OPENACC], [test "$with_openacc" = "yes"])
+
+
 AC_PROG_FC([ifort gfortran])
 AC_PROG_FC_C_O
 AC_FC_SRCEXT([f90])
@@ -211,5 +224,6 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
+                 t/Test-fregrid_scaling.sh
 ])
 AC_OUTPUT

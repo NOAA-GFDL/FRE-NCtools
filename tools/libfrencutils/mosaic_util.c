@@ -38,6 +38,8 @@
 #define EPSLN15 (1.e-15)
 #define EPSLN30 (1.e-30)
 
+#pragma acc declare copyin(reproduce_siena)
+
 const double from_pole_threshold_rad = 0.0174533;  // 1.0 deg
 
 int reproduce_siena = 0;
@@ -52,8 +54,6 @@ void set_rotate_poly_true(void){
   rotate_poly_flag = 1;
   set_the_rotation_matrix();
 }
-
-
 
 /***********************************************************
     void error_handler(char *str)

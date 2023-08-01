@@ -156,9 +156,14 @@ make
 make install
 ```
 
-### Parallel NCTools applications
+### NCTools applications
 The option  `--with-mpi` to the `configure` command will configure for building
 parallel running versions of certain FRE-NCtools applications.
+
+### OpenACC NCTools applications
+The option `--with-openacc` to `configure` command will configure for building
+the GPU accelerated version of fregrid. This will result in a separate executable,
+`fregrid_gpu`.
 
 
 ## Building on a GFDL-managed system

@@ -22,6 +22,10 @@ if WITH_MPI
   bin_PROGRAMS += fregrid_parallel
 endif
 
+if WITH_OPENACC
+  bin_PROGRAMS += fregrid_gpu
+endif
+
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
             $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
@@ -39,3 +43,7 @@ fregrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
 fregrid_parallel_SOURCES = $(fregrid_SOURCES)
 fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
 fregrid_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
+
+fregrid_gpu_SOURCES = $(fregrid_SOURCES)
+fregrid_gpu_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
+fregrid_gpu_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_gpu.a $(LDADD)

@@ -26,7 +26,9 @@
 #define MV 50
 /* this value is small compare to earth area */
 
+#pragma acc routine seq
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
+#pragma acc routine seq
 double poly_ctrlat(const double lon[], const double lat[], int n);
 double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon);
 double box_ctrlat(double ll_lon, double ll_lat, double ur_lon, double ur_lat);

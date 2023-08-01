@@ -21,6 +21,11 @@ noinst_LIBRARIES = libfrencutils.a
 if WITH_MPI
   noinst_LIBRARIES += libfrencutils_mpi.a
 endif
+if WITH_OPENACC
+  noinst_LIBRARIES += libfrencutils_gpu.a
+  libfrencutils_gpu_a_SOURCES = $(libfrencutils_a_SOURCES)
+  libfrencutils_gpu_a_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
+endif
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
 

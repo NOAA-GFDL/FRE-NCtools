@@ -55,3 +55,8 @@ SUBDIRS = postprocessing/combine_restarts \
 if WITH_CHECK_PROGS
 SUBDIRS += t
 endif
+
+if WITH_OPENACC
+check-scaling:
+	cd t/ && chmod +x Test-fregrid_scaling.sh && ./Test-fregrid_scaling.sh
+endif
