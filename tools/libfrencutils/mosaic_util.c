@@ -62,6 +62,7 @@ void set_rotate_poly_true(void){
     void error_handler(char *str)
     error handler: will print out error message and then abort
 ***********************************************************/
+#pragma acc routine seq
 void error_handler(const char *msg)
 {
 
