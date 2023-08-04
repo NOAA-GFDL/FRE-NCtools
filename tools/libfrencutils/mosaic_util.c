@@ -38,13 +38,16 @@
 #define EPSLN15 (1.e-15)
 #define EPSLN30 (1.e-30)
 
-#pragma acc declare copyin(reproduce_siena)
-
 const double from_pole_threshold_rad = 0.0174533;  // 1.0 deg
 
 int reproduce_siena = 0;
 int rotate_poly_flag = 0;
 double the_rotation_matrix[3][3] = { 0 };
+
+#pragma acc declare copyin(reproduce_siena)
+#pragma acc declare copyin(the_rotation_matrix)
+#pragma acc declare copyin(from_pole_threshold_rad)
+#pragma acc declare copyin(rotate_poly_flag)
 
 void set_reproduce_siena_true(void){
   reproduce_siena = 1;
@@ -61,12 +64,29 @@ void set_rotate_poly_true(void){
 ***********************************************************/
 void error_handler(const char *msg)
 {
+
+#ifndef _OPENACC
+
   fprintf(stderr, "FATAL Error: %s\n", msg );
 #ifdef use_libMPI
   MPI_Abort(MPI_COMM_WORLD, -1);
 #else
   exit(1);
+#endif //ifdef use_libMPI
+
+#else 
+
+  printf("Fatal Error: %s\n", msg);
+#ifdef use_libMPI
+  MPI_Abort(MPI_COMM_WORLD, -1);
+#else
+  //exit statements do not exist for OpenACC yet.
 #endif
+
+#endif //ifndef _OPENACC
+
+
+
 } /* error_handler */
 
 /*********************************************************************
@@ -159,6 +179,7 @@ void tokenize(const char * const string, const char *tokens, unsigned int varlen
   double maxval_double(int size, double *data)
   get the maximum value of double array
 *******************************************************************************/
+#pragma acc  routine seq
 double maxval_double(int size, const double *data)
 {
   int n;
@@ -178,6 +199,7 @@ double maxval_double(int size, const double *data)
   double minval_double(int size, double *data)
   get the minimum value of double array
 *******************************************************************************/
+#pragma acc routine seq
 double minval_double(int size, const double *data)
 {
   int n;
@@ -196,6 +218,7 @@ double minval_double(int size, const double *data)
   double avgval_double(int size, double *data)
   get the average value of double array
 *******************************************************************************/
+#pragma acc routine seq 
 double avgval_double(int size, const double *data)
 {
   int n;
@@ -486,6 +509,7 @@ double poly_area_main(const double x[], const double y[], int n) {
   TODO: The tiling error reported by make_coupler mosaic may be non-zero when
   using this feature. This may be developped in the future.
 */
+#pragma acc routine seq
 double poly_area(const double xo[], const double yo[], int n) {
   double area_pa = 0.0;
   double area_par = 0.0;
@@ -679,6 +703,7 @@ void v_print(double x[], double y[], int n)
   for (i=0;i<n;i++) printf(" %20g   %20g\n", x[i]*R2D, y[i]*R2D);
 } /* v_print */
 
+#pragma acc routine seq
 int fix_lon(double x[], double y[], int n, double tlon)
 {
   double x_sum, dx;
@@ -1704,15 +1729,15 @@ int crosses_pole(const double x[] , int n) {
   Graphics Using OpenGL, @nd ed., Chapter 5.3.
 */
 void set_the_rotation_matrix() {
-  static const double is2 = 1.0 /M_SQRT2;
+  const double is2 = 1.0 /M_SQRT2;
 
-  static const double m00 = 0;
-  static const double m01 = - is2;
-  static const double m02 = is2;
-  static const double m11 = 1.0/2;
-  static const double m12 = 0.5;
+  const double m00 = 0;
+  const double m01 = - is2;
+  const double m02 = is2;
+  const double m11 = 1.0/2;
+  const double m12 = 0.5;
 
-  static const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
+  const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
