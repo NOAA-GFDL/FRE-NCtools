@@ -224,7 +224,7 @@ void xyz2latlon( int np, const double *x, const double *y, const double *z, doub
 {
 
   double xx, yy, zz;
-  double dist, sinp;
+  double dist;
   int i;
 
   for(i=0; i<np; i++) {
@@ -254,7 +254,6 @@ void xyz2latlon( int np, const double *x, const double *y, const double *z, doub
 double box_area(double ll_lon, double ll_lat, double ur_lon, double ur_lat)
 {
   double dx = ur_lon-ll_lon;
-  double area;
 
   if(dx > M_PI)  dx = dx - 2.0*M_PI;
   if(dx < -M_PI) dx = dx + 2.0*M_PI;
@@ -465,14 +464,14 @@ double poly_area2(const double x[], const double y[], int n)
 {
   double area = 0.0;
   double dx,dy,dat,lat1,lat2,avg_y,hdy,da,dxs= 0.0;
-  int    i,j,ip;
-  int hasPole=0, hasBadxm=0, hasBadxp=0;
+  int    i,ip;
+  int hasBadxm=0, hasBadxp=0;
   for (i=0;i<n;i++) {
     ip = (i+1) % n;
     dx = (x[ip]-x[i]);
     if(fabs(dx+M_PI) < SMALL_VALUE) hasBadxm=1;
     if(fabs(dx-M_PI) < SMALL_VALUE) hasBadxp=1;
-    if(y[i]==-M_PI_2 || y[i] == M_PI_2) hasPole=1;
+    //if(y[i]==-M_PI_2 || y[i] == M_PI_2) hasPole=1;
   }
   for (i=0;i<n;i++) {
     ip = (i+1) % n;
@@ -647,7 +646,8 @@ int fix_lon(double x[], double y[], int n, double tlon)
   /*If a polygon side passes through a Pole insert twin vertices at the Pole*/
   /*A fix is also directly applied to poly_area to handle this case.*/
   for (i=0;i<nn;i++) {
-    int im=(i+nn-1)%nn, ip=(i+1)%nn;
+    int im=(i+nn-1)%nn;
+    //int ip=(i+1)%nn;
     double dx = x[i]-x[im];
     if(fabs(dx+M_PI)< SMALL_VALUE || fabs(dx-M_PI)< SMALL_VALUE){
       double x1=x[im];
@@ -1442,7 +1442,6 @@ void setInbound(struct Node *interList, struct Node *list)
 
   struct Node *temp1=NULL, *temp=NULL;
   struct Node *temp1_prev=NULL, *temp1_next=NULL;
-  int prev_is_inside, next_is_inside;
 
   /* for each point in interList, search through list to decide the inbound value the interList point */
   /* For each inbound point, the prev node should be outside and the next is inside. */
@@ -1489,7 +1488,7 @@ int isInside(struct Node *node) {
 /* check if node is inside polygon list or not */
  int insidePolygon( struct Node *node, struct Node *list)
 {
-  int i, ip, is_inside;
+  int is_inside;
   double pnt0[3], pnt1[3], pnt2[3];
   double anglesum;
   struct Node *p1=NULL, *p2=NULL;

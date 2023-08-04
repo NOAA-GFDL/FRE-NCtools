@@ -21,6 +21,8 @@
 #include <cmath>
 #include <cstring>
 #include <cstdio>
+#include <string>
+#include <format>
 #include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
@@ -54,11 +56,14 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
   This routine will setup the data file name for each tile.
 *******************************************************************************/
 
+using std::string;
+using std::format;
+
 void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, File_config *file,
 			  const char *filename)
 {
   char   str1[STRING]="", str2[STRING]="", tilename[STRING]="";
-  int    i, n, len, fid, vid;
+  int    i, len, fid, vid;
   size_t start[4], nread[4];
 
   len = strlen(filename);
@@ -158,7 +163,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 		    unsigned int opcode, int *great_circle_algorithm, int save_weight_only)
 {
   int         n, m1, m2, i, j, l, ind1, ind2, nlon, nlat;
-  int         ts, tw, tn, te, halo, nbound;
+  int         halo, nbound;
   int         m_fid, g_fid, vid;
   int         *nx, *ny;
   double      *x, *y;
@@ -328,8 +333,6 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     }
   }
   else if(opcode & CONSERVE_ORDER2 && (!save_weight_only) ) {
-    double p1[3], p2[3], p3[3], p4[3];
-
     for(n=0; n<ntiles; n++) {
       int is_true = 1;
       nlon = grid[n].nx;
@@ -385,7 +388,7 @@ void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_
     if( opcode & GREAT_CIRCLE )
       get_grid_great_circle_area(&nx, &ny, lonc, latc, grid_in[n].cell_area);
     else
-      get_grid_area(&nx, &ny, lonc, latc, grid_in[n].cell_area);
+      get_grid_area(nx, ny, lonc, latc, grid_in[n].cell_area);
 
     free(lonc);
     free(latc);
@@ -401,7 +404,7 @@ void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_
     if( opcode & GREAT_CIRCLE )
       get_grid_great_circle_area(&nx, &ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
     else
-      get_grid_area(&nx, &ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
+      get_grid_area(nx, ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
 
   }
 
@@ -564,7 +567,7 @@ void get_output_grid_from_mosaic(int ntiles, Grid_config *grid, const char *mosa
 void get_output_grid_by_size(int ntiles, Grid_config *grid, double lonbegin, double lonend, double latbegin, double latend,
 			     int nlon, int nlat, int finer_steps, int center_y, unsigned int opcode)
 {
-  double      dlon, dlat, lon_fine, lat_fine, lon_range, lat_range;
+  double      dlon, dlat, lon_fine, lon_range, lat_range;
   int         nx_fine, ny_fine, i, j, layout[2];
   int nxc, nyc, ii, jj;
 
@@ -825,7 +828,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                         Field_config *u_comp, Field_config *v_comp, const Grid_config *grid, int kbegin, int kend,
                         int lbegin, int lend, unsigned int opcode, char *associated_file_dir) {
   int n, m, i, l, ll, nscalar, nvector, nfield;
-  int ndim, dimsize[5], nz;
+  int ndim, dimsize[5];
   nc_type type[5];
   char cart[5];
   char dimname[5][STRING], bndname[5][STRING], errmsg[STRING];
@@ -833,7 +836,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
   Field_config *field = NULL;
   size_t start[4], nread[4];
   int interp_method, use_bilinear, use_conserve;
-  int len, found, standard_dimension;
+  int len, standard_dimension;
 
   standard_dimension = opcode & STANDARD_DIMENSION;
   use_bilinear = 0;
@@ -992,7 +995,6 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
         /* check if exist attribute "cell_measures" and get the name of area */
         if (mpp_var_att_exist(file[n].fid, field[n].var[ll].vid, "cell_measures")) {
           char attval[STRING] = "";
-          char *str2 = NULL;
           char errout[STRING];
           int status;
 
@@ -1143,11 +1145,10 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
               if (field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
                 if (ndim == 3 && field[n].var[ll].area_has_taxis) {
-                  sprintf(errmsg,
-                          "fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field "
-                          "%s in file %s",
-                          field[n].var[ll].area_name, associated_file);
-                  mpp_error(errmsg);
+                  string errmsg =
+                          format("fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field {} in file {}",
+                               field[n].var[ll].area_name, associated_file);
+                  mpp_error(errmsg.c_str());
                 } else if (ndim == 4 && !field[n].var[ll].area_has_taxis) {
                   sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
                           field[n].var[ll].area_name, associated_file);
@@ -1258,11 +1259,14 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           if (cart[0] == 'T') {
             field[n].var[ll].has_taxis = 1;
             if (lend > dimsize[0]) {
+              string errMsg0 = format ("get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
+                             "number of time levels of field {} in file {}.",
+                                       field[n].var[ll].name, file[n].name);
               sprintf(errmsg,
                       "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
                       "number of time levels of field %s in file %s.",
                       field[n].var[ll].name, file[n].name);
-              mpp_error(errmsg);
+              mpp_error(errMsg0.c_str());
             }
             if (lbegin > 0) {
               field[n].var[ll].lstart = lbegin - 1;
@@ -1985,7 +1989,6 @@ void set_remap_file( int ntiles, const char *mosaic_file, const char *remap_file
   int    i, len, m, fid, vid;
   size_t start[4], nread[4];
   char str1[STRING], tilename[STRING];
-  int file_exist;
 
   if(!remap_file) return;
 
@@ -2244,7 +2247,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	}
 	/* where there is missing and using second order conservative interpolation, need to calculate mask for gradient */
 	if( field[n].var[varid].has_missing ) {
-	  int ip1, im1, jp1, jm1,kk,ii,jj;
+	  int ip1, im1, jp1, jm1,ii,jj;
 	  double missing;
 	  missing = field[n].var[varid].missing;
 	  for(k=0; k<nz; k++) for(j=0; j<ny; j++) for(i=0; i<nx; i++) {

@@ -89,8 +89,8 @@ namespace nct {
             double medDist = 0.5 * ((*minElem)->obj->getBox()->getLo(dim) +
                     (*maxElem)->obj->getBox()->getHi(dim));
 
-            float  min2 = (*minElem)->obj->getBox()->getLo(dim);
-            float max2 =  (*maxElem)->obj->getBox()->getHi(dim);
+            //float  min2 = (*minElem)->obj->getBox()->getLo(dim);
+            //float max2 =  (*maxElem)->obj->getBox()->getHi(dim);
 
             LessThanValBoxMed<Node> ltm(dim, medDist);//TODO: experiemnt w/ boxHi .LT. med.
             auto median = std::stable_partition(firstC, end, ltm);
@@ -129,7 +129,7 @@ namespace nct {
             if(node->isLeaf() ){
                 return;
             }
-            BBox3D* box = node->obj->getBox();
+            //BBox3D* box = node->obj->getBox();
             if(node->left != nullptr && BBox3D::intersect (*(idBox.getBox()), node->diL,node->dim)) {
                 search(node->left, idBox, results);
             }
