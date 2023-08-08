@@ -28,6 +28,7 @@
 #include "create_xgrid.h"
 #include "mosaic_util.h"
 #include "conserve_interp.h"
+#include "conserve_interp_util.h"
 #include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
@@ -66,69 +67,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   garea = 4*M_PI*RADIUS*RADIUS;
 
   if( opcode & READ) {
-    for(n=0; n<ntiles_out; n++) {
-      if( interp[n].file_exist ) { /* reading from file */
-	int *t_in, *ind;
-	int fid, vid;
-
-	nxgrid     = read_mosaic_xgrid_size(interp[n].remap_file);
-	i_in       = (int    *)malloc(nxgrid   * sizeof(int   ));
-	j_in       = (int    *)malloc(nxgrid   * sizeof(int   ));
-	i_out      = (int    *)malloc(nxgrid   * sizeof(int   ));
-	j_out      = (int    *)malloc(nxgrid   * sizeof(int   ));
-	xgrid_area = (double *)malloc(nxgrid   * sizeof(double));
-	if(opcode & CONSERVE_ORDER2) {
-	  xgrid_clon = (double *)malloc(nxgrid   * sizeof(double));
-	  xgrid_clat = (double *)malloc(nxgrid   * sizeof(double));
-	}
-	t_in       = (int    *)malloc(nxgrid*sizeof(int   ));
-	ind        = (int    *)malloc(nxgrid*sizeof(int   ));
-	if(opcode & CONSERVE_ORDER1)
-	  read_mosaic_xgrid_order1(interp[n].remap_file, i_in, j_in, i_out, j_out, xgrid_area);
-	else
-	  read_mosaic_xgrid_order2(interp[n].remap_file, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-
-	/*--- rescale the xgrid area */
-	for(i=0; i<nxgrid; i++) xgrid_area[i] *= garea;
-	fid = mpp_open(interp[n].remap_file, MPP_READ);
-	vid = mpp_get_varid(fid, "tile1");
-      	mpp_get_var_value(fid, vid, t_in);
-	mpp_close(fid);
-	/*distribute the exchange grid on each pe according to target grid index*/
-	interp[n].nxgrid = 0;
-	for(i=0; i<nxgrid; i++) {
-	  if( i_out[i] <= grid_out[n].iec && i_out[i] >= grid_out[n].isc &&
-	      j_out[i] <= grid_out[n].jec && j_out[i] >= grid_out[n].jsc )
-	    ind[interp[n].nxgrid++] = i;
-	}
-	interp[n].i_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	interp[n].j_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	interp[n].i_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	interp[n].j_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	interp[n].area   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	interp[n].t_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-
-	for(i=0; i< interp[n].nxgrid; i++) {
-	  interp[n].i_in [i] = i_in [ind[i]];
-	  interp[n].j_in [i] = j_in [ind[i]];
-	  interp[n].t_in [i] = t_in [ind[i]] - 1;
-	  interp[n].i_out[i] = i_out[ind[i]] - grid_out[n].isc;
-	  interp[n].j_out[i] = j_out[ind[i]] - grid_out[n].jsc;
-	  interp[n].area [i] = xgrid_area[ind[i]];
-     	}
-	if(opcode & CONSERVE_ORDER2) {
-	  interp[n].di_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	  interp[n].dj_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	  for(i=0; i< interp[n].nxgrid; i++) {
-	    interp[n].di_in[i] = xgrid_clon[ind[i]];
-	    interp[n].dj_in[i] = xgrid_clat[ind[i]];
-	  }
-	}
-	free(t_in);
-	free(ind);
-      }
-    }
-    if(mpp_pe() == mpp_root_pe())printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
+    read_regrid_weights(ntiles_in,ntiles_out, grid_out, interp, opcode);
   }
   else {
     i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
