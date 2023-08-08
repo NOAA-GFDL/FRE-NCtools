@@ -753,10 +753,6 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   double *pxgrid_area=NULL, *pxgrid_clon=NULL, *pxgrid_clat=NULL;
   int    *n2_list;
   int nthreads, nxgrid_block_max;
-  int MV_local, MAX_V_local;
-
-  MV_local = MV;
-  MAX_V_local = MAX_V;
   
   nx1 = *nlon_in;
   ny1 = *nlat_in;
@@ -830,17 +826,12 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
   lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-#pragma acc enter data create(lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2], \
-			      lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2], \
-			      lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2], \
-			      lon_out_list[0:MAX_V_local*nx2*ny2], lat_out_list[0:MAX_V_local*nx2*ny2])
 #pragma omp parallel for default(none) shared(nx2,ny2,nx2p,lon_out,lat_out,lat_out_min_list, \
                                               lat_out_max_list,lon_out_min_list,lon_out_max_list, \
                                               lon_out_avg,n2_list,lon_out_list,lat_out_list)
-#pragma acc parallel loop
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
-    double x2_in[MV_local], y2_in[MV_local];
+    double x2_in[MV], y2_in[MV];
     i2 = ij%nx2;
     j2 = ij/nx2;
     n = j2*nx2+i2;
@@ -854,14 +845,14 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-    if(n2_in > MAX_V_local) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
     n2_list[n] = n2_in;
     for(l=0; l<n2_in; l++) {
-      lon_out_list[n*MAX_V_local+l] = x2_in[l];
-      lat_out_list[n*MAX_V_local+l] = y2_in[l];
+      lon_out_list[n*MAX_V+l] = x2_in[l];
+      lat_out_list[n*MAX_V+l] = y2_in[l];
     }
   }
 
@@ -878,7 +869,7 @@ nxgrid = 0;
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
       int n0, n1, n2, n3, l,n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
-      double x1_in[MV_local], y1_in[MV_local], x_out[MV_local], y_out[MV_local];
+      double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
       n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
       n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
