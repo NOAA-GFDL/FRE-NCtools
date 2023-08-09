@@ -28,6 +28,7 @@ will be written out from root pe.
 #ifndef MPP_IO_H_
 #define MPP_IO_H_
 #include <netcdf.h>
+#include <string>
 
 #define MPP_WRITE 100
 #define MPP_READ  200

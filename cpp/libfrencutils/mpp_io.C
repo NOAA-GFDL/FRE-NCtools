@@ -21,15 +21,20 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>
+#include <string>
 
 #include <netcdf.h>
 #include "mpp.h"
 #include "mpp_domain.h"
 #include "mpp_io.h"
 
+#include <format>
+
 #define  MAXFILE 200
 #define  MAXVAR  1024
 #define  STRING 255
+
+using std::string;
 
 typedef struct {
   int fldid;
@@ -64,6 +69,12 @@ void netcdf_error(const char *msg, int status )
   mpp_error(errmsg);
 
 }; /* netcdf_error */
+
+void netcdf_error(const string& msg, int status )
+{
+  std::string errmsg = std::format( "{}: {}", msg, nc_strerror(status) );
+  mpp_error(errmsg);
+}
 
 
 /*************************************************************
@@ -209,8 +220,6 @@ int mpp_open(const char *file, int action) {
 void mpp_close(int fid)
 {
   int status;
-  char errmsg[512];
-
   if(fid == -1 && mpp_pe() != mpp_root_pe() ) return;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_close): invalid id number, id should be "
@@ -218,7 +227,7 @@ void mpp_close(int fid)
 
   status = nc_close(files[fid].ncid);
   if(status != NC_NOERR) {
-    sprintf( errmsg, "mpp_io(mpp_close): error in closing files %s ", files[fid].name);
+    string errmsg = std::format("mpp_io(mpp_close): error in closing files {} ", files[fid].name);
     netcdf_error(errmsg, status);
   }
   files[fid].ncid = 0;
@@ -230,30 +239,27 @@ void mpp_close(int fid)
 int mpp_get_nvars(int fid)
 {
   int nvars, status;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_nvars): invalid id number, id should be "
 				    "a nonnegative integer that less than nfiles");
   status = nc_inq_nvars(files[fid].ncid, &nvars);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_nvars): error in get nvars from file %s", files[fid].name);
+    string errmsg = std::format("mpp_io(mpp_get_nvars): error in get nvars from file {}", files[fid].name);
     netcdf_error(errmsg, status);
   }
 
   return nvars;
 }
 
-void mpp_get_varname(int fid, int varid, char *name)
-{
+void mpp_get_varname(int fid, int varid, char *name) {
+  int status;
 
-  int  status;
-  char errmsg[512];
-
-  if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_varname): invalid id number, id should be "
-				    "a nonnegative integer that less than nfiles");
+  if (fid < 0 || fid >= nfiles)
+    mpp_error("mpp_io(mpp_get_varname): invalid id number, id should be "
+              "a nonnegative integer that less than nfiles");
   status = nc_inq_varname(files[fid].ncid, varid, name);
-  if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_varname): error in get varname from file %s", files[fid].name);
+  if (status != NC_NOERR) {
+    string errmsg = std::format("mpp_io(mpp_get_varname): error in get varname from file {}", files[fid].name);
     netcdf_error(errmsg, status);
   }
 
@@ -262,20 +268,19 @@ void mpp_get_varname(int fid, int varid, char *name)
 int mpp_get_record_name(int fid, char *name)
 {
   int dimid, status;
-  char errmsg[512];
   int record_exist;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_record_name): invalid id number, id should be "
 				    "a nonnegative integer that less than nfiles");
   status = nc_inq_unlimdim(files[fid].ncid, &dimid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_record_name): error in get record id from file %s", files[fid].name);
+    string errmsg =  std::format("mpp_io(mpp_get_record_name): error in get record id from file {}", files[fid].name);
     netcdf_error(errmsg, status);
   }
   if(dimid >=0) {
     record_exist = 1;
     status = nc_inq_dimname(files[fid].ncid, dimid, name);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_get_record_name): error in get record name from file %s", files[fid].name);
+      string errmsg = std::format("mpp_io(mpp_get_record_name): error in get record name from file {}", files[fid].name);
       netcdf_error(errmsg, status);
     }
   }
@@ -300,7 +305,6 @@ int mpp_get_record_name(int fid, char *name)
 int mpp_get_dimid(int fid, const char *dimname)
 {
   int status, dimid;
-  char errmsg[512];
 
   /* First look through existing variables to see
      if the fldid of varname is already retrieved. */
@@ -309,13 +313,11 @@ int mpp_get_dimid(int fid, const char *dimname)
 
   status =  nc_inq_dimid(files[fid].ncid, dimname, &dimid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_dimid): error in get dimension id of %s from file %s", dimname, files[fid].name);
+     string errmsg = std::format("mpp_io(mpp_get_dimid): error in get dimension id of {} from file {}", dimname, files[fid].name);
     netcdf_error(errmsg, status);
   }
-
   return dimid;
-
-};/* mpp_get_dimid */
+};
 
 
 /*********************************************************************
@@ -326,7 +328,6 @@ int mpp_get_dimid(int fid, const char *dimname)
 int mpp_get_varid(int fid, const char *varname)
 {
   int status, fldid, vid, n;
-  char errmsg[512];
 
   /* First look through existing variables to see
      if the fldid of varname is already retrieved. */
@@ -345,13 +346,14 @@ int mpp_get_varid(int fid, const char *varname)
 
   status =  nc_inq_varid(files[fid].ncid, varname, &fldid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_varid): error in get field_id of variable %s from file %s", varname, files[fid].name);
+    string errmsg = std::format( "mpp_io(mpp_get_varid): error in get field_id of variable {} from file {}",
+                                 varname, files[fid].name);
     netcdf_error(errmsg, status);
   }
 
   status = nc_inq_vartype(files[fid].ncid, fldid, &(files[fid].var[vid].type));
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_varid): Error in getting type of of field %s in file %s ",
+    string errmsg = std::format("mpp_io(mpp_get_varid): Error in getting type of of field {} in file {} ",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -370,19 +372,18 @@ int mpp_get_dimlen(int fid, const char *name)
 {
   int ncid, dimid, status, len;
   size_t size;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_dimlen): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
   ncid = files[fid].ncid;
   status = nc_inq_dimid(ncid, name, &dimid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_dimlen): error in inquiring dimid of %s from file %s", name, files[fid].name);
+    string errmsg = std::format( "mpp_io(mpp_get_dimlen): error in inquiring dimid of {} from file {}", name, files[fid].name);
     netcdf_error(errmsg, status);
   }
   status = nc_inq_dimlen(ncid, dimid, &size);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_dimlen): error in inquiring dimlen of %s from file %s", name, files[fid].name);
+    string errmsg = std::format("mpp_io(mpp_get_dimlen): error in inquiring dimlen of {} from file {}", name, files[fid].name);
     netcdf_error(errmsg, status);
   }
   len = size;
@@ -421,18 +422,18 @@ void mpp_get_var_value(int fid, int vid, void *data)
     status = nc_get_var_text(files[fid].ncid, files[fid].var[vid].fldid, static_cast<char*>(data));
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_get_var_value): field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_get_var_value): field {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_value): Error in getting value of variable %s from file %s",
+     string errmsg = std::format("mpp_io(mpp_get_var_value): Error in getting value of variable {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
 
-}; /* mpp_get_var_value */
+};
 
 /*********************************************************************
   void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t *nread, void *data)
@@ -441,7 +442,6 @@ void mpp_get_var_value(int fid, int vid, void *data)
 void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t *nread, void *data)
 {
   int status;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_value_block): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -462,17 +462,16 @@ void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t
     status = nc_get_vara_text(files[fid].ncid, files[fid].var[vid].fldid, start, nread, static_cast<char*>(data));
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_get_var_value_block): field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_get_var_value_block): field {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_value_block): Error in getting value of variable %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var_value_block): Error in getting value of variable {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
-
 }; /* mpp_get_var_value_block */
 
 /*******************************************************************
@@ -482,9 +481,7 @@ void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t
 void mpp_get_var_att(int fid, int vid, const char *name, void *val)
 {
   int status;
-  char errmsg[512];
   nc_type type;
-
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_att): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -493,7 +490,7 @@ void mpp_get_var_att(int fid, int vid, const char *name, void *val)
 
   status = nc_inq_atttype(files[fid].ncid, files[fid].var[vid].fldid, name, &type);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): Error in getting type of attribute %s of field %s in file %s ",
+    string  errmsg = std::format( "mpp_io(mpp_get_var_att): Error in getting type of attribute %s of field {} in file {} ",
 	    name, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -512,14 +509,14 @@ void mpp_get_var_att(int fid, int vid, const char *name, void *val)
     status = nc_get_att_text(files[fid].ncid, files[fid].var[vid].fldid, name, static_cast<char*>(val));
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): attribute %s of field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_get_var_att): attribute %s of field {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    name, files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): Error in getting value of attribute %s of variable %s from file %s",
+    string errmsg =  std::format("mpp_io(mpp_get_var_att): Error in getting value of attribute {} of variable {} from file {}",
 	    name, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -532,7 +529,6 @@ void mpp_get_var_att(int fid, int vid, const char *name, void *val)
 void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
 {
   int status;
-  char errmsg[512];
   nc_type type;
   short sval;
   int   ival;
@@ -544,7 +540,7 @@ void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
 
   status = nc_inq_atttype(files[fid].ncid, files[fid].var[vid].fldid, name, &type);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): Error in getting type of attribute %s of field %s in file %s ",
+    string errmsg = std::format( "mpp_io(mpp_get_var_att): Error in getting type of attribute {} of field %s in file {} ",
 	    name, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -562,14 +558,14 @@ void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
     *val = sval;
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): attribute %s of field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_get_var_att): attribute {} of field {} in file %s has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    name, files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_att): Error in getting value of attribute %s of variable %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var_att): Error in getting value of attribute {} of variable {} from file {}",
 	    name, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -582,7 +578,7 @@ void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
 void mpp_get_global_att(int fid, const char *name, void *val)
 {
   int status;
-  char errmsg[512], attval[4096];
+  char attval[4096];
   nc_type type;
   size_t attlen;
 
@@ -590,7 +586,7 @@ void mpp_get_global_att(int fid, const char *name, void *val)
 				    "a nonnegative integer that less than nfiles");
   status = nc_inq_atttype(files[fid].ncid, NC_GLOBAL, name, &type);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_global_att): Error in getting type of global attribute %s in file %s ",
+    string errmsg = std::format("mpp_io(mpp_get_global_att): Error in getting type of global attribute {} in file {} ",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -609,7 +605,7 @@ void mpp_get_global_att(int fid, const char *name, void *val)
   case NC_CHAR:
     status = nc_inq_attlen(files[fid].ncid, NC_GLOBAL, name, &attlen);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_get_global_att): Error in getting length of global attribute %s from file %s",
+      string errmsg = std::format( "mpp_io(mpp_get_global_att): Error in getting length of global attribute {} from file {}",
 	      name, files[fid].name );
       netcdf_error(errmsg, status);
     }
@@ -618,13 +614,13 @@ void mpp_get_global_att(int fid, const char *name, void *val)
     strncpy(static_cast<char*>(val), attval, attlen+1);
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_get_global_att): global attribute %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_get_global_att): global attribute {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR", name, files[fid].name );
     mpp_error(errmsg);
   }
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_global_att): Error in getting value of global attribute %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_global_att): Error in getting value of global attribute {} from file {}",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -637,7 +633,6 @@ void mpp_get_global_att(int fid, const char *name, void *val)
 int mpp_get_var_ndim(int fid, int vid)
 {
   int status, ndim;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_ndim): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -646,7 +641,7 @@ int mpp_get_var_ndim(int fid, int vid)
 
   status = nc_inq_varndims(files[fid].ncid, files[fid].var[vid].fldid, &ndim);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_ndim): Error in getting ndims of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var_ndim): Error in getting ndims of var {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -672,7 +667,7 @@ nc_type mpp_get_var_type(int fid, int vid)
 
   status = nc_inq_vartype(files[fid].ncid, files[fid].var[vid].fldid, &vartype);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_type): Error in getting type of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var_type): Error in getting type of var {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -688,7 +683,6 @@ For each dimension we are assuming there is a 1-d field have the same name as th
 void mpp_get_var_dimname(int fid, int vid, int ind, char *name)
 {
   int status, ncid, fldid, ndims, dims[4];
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_dimname): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -699,7 +693,7 @@ void mpp_get_var_dimname(int fid, int vid, int ind, char *name)
 
   status = nc_inq_varndims(ncid, fldid, &ndims);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var2D_dimname): Error in getting ndims of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var2D_dimname): Error in getting ndims of var {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -708,13 +702,13 @@ void mpp_get_var_dimname(int fid, int vid, int ind, char *name)
 
   status = nc_inq_vardimid(ncid,fldid,dims);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var2D_dimname): Error in getting dimid of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var2D_dimname): Error in getting dimid of var {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
   status = nc_inq_dimname(ncid, dims[ind], name);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var2D_dimname): Error in getting %d dimension name of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var2D_dimname): Error in getting %d dimension name of var {} from file {}",
 	    ind, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -760,7 +754,7 @@ char mpp_get_var_cart(int fid, int vid)
 void mpp_get_var_bndname(int fid, int vid, char *bndname)
 {
   int ncid, fldid, status;
-  char errmsg[512], name[32];
+  char name[32];
   size_t siz;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_cart): invalid fid number, fid should be "
@@ -786,8 +780,8 @@ void mpp_get_var_bndname(int fid, int vid, char *bndname)
     status = nc_get_att_text(ncid, fldid, name, bndname);
     bndname[siz] = '\0';
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_get_var_bndname): Error in getting attribute %s of "
-	      "dimension variable %s from file %s", name, files[fid].var[vid].name, files[fid].name );
+      string errmsg = std::format("mpp_io(mpp_get_var_bndname): Error in getting attribute {} of "
+	      "dimension variable {} from file {}", name, files[fid].var[vid].name, files[fid].name );
       netcdf_error(errmsg, status);
     }
   }
@@ -858,7 +852,7 @@ int mpp_def_dim(int fid, const char* name, int size) {
 
   status = nc_def_dim(files[fid].ncid, name, size, &dimid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_def_dim): Error in defining dimension %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_dim): Error in defining dimension {} of file {}",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -872,7 +866,6 @@ int mpp_def_dim(int fid, const char* name, int size) {
 int mpp_def_var(int fid, const char* name, nc_type type, int ndim, const int *dims, int natts, ...) {
   int fldid, status, i, vid, ncid;
   va_list ap;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return 0;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_var): invalid fid number, fid should be "
@@ -881,7 +874,7 @@ int mpp_def_var(int fid, const char* name, nc_type type, int ndim, const int *di
   ncid = files[fid].ncid;
   status = nc_def_var(ncid, name, type, ndim, dims, &fldid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_def_var): Error in defining var %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_var): Error in defining var {} of file {}",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -901,7 +894,7 @@ int mpp_def_var(int fid, const char* name, nc_type type, int ndim, const int *di
     }
     status = nc_put_att_text(ncid,fldid,attname,strlen(attval),attval);
     if(status != NC_NOERR ) {
-      sprintf(errmsg, "mpp_io(mpp_def_var): Error in put attribute %s of var %s of file %s",
+      string errmsg = std::format("mpp_io(mpp_def_var): Error in put attribute {} of var {} of file {}",
 	      attname, name, files[fid].name );
       netcdf_error(errmsg, status);
     }
@@ -920,7 +913,6 @@ int mpp_def_var(int fid, const char* name, nc_type type, int ndim, const int *di
 void mpp_def_global_att(int fid, const char *name, const char *val)
 {
   size_t status;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -928,7 +920,7 @@ void mpp_def_global_att(int fid, const char *name, const char *val)
 				      "a nonnegative integer that less than nfiles");
   status = nc_put_att_text(files[fid].ncid, NC_GLOBAL, name, strlen(val), val);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_def_global_att): Error in put glboal attribute %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_global_att): Error in put glboal attribute {} of file {}",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -942,16 +934,13 @@ void mpp_def_global_att(int fid, const char *name, const char *val)
  ********************************************************************/
 void mpp_def_global_att_double(int fid, const char *name, size_t len, const double *val)
 {
-  size_t status;
-  char errmsg[512];
-
   if( mpp_pe() != mpp_root_pe() ) return;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_global_att_double): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
-  status = nc_put_att_double(files[fid].ncid, NC_GLOBAL, name, NC_DOUBLE, len, val);
+  auto status = nc_put_att_double(files[fid].ncid, NC_GLOBAL, name, NC_DOUBLE, len, val);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_def_global_att_double): Error in put glboal attribute %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_global_att_double): Error in put global attribute {} of file {}",
 	    name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -965,20 +954,17 @@ void mpp_def_var_att(int fid, int vid, const char *attname, const char *attval)
 *********************************************************************/
 void mpp_def_var_att(int fid, int vid, const char *attname, const char *attval)
 {
-  int ncid, fldid, status;
-  char errmsg[512];
-
   if( mpp_pe() != mpp_root_pe() ) return;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_var_att): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
   if(vid<0 || vid >=files[fid].nvar) mpp_error("mpp_io(mpp_def_var_att): invalid vid number, vid should be "
 					       "a nonnegative integer that less than nvar");
-  ncid  = files[fid].ncid;
-  fldid = files[fid].var[vid].fldid;
-  status = nc_put_att_text(ncid,fldid,attname,strlen(attval),attval);
+  auto ncid  = files[fid].ncid;
+  auto fldid = files[fid].var[vid].fldid;
+  auto status = nc_put_att_text(ncid,fldid,attname,strlen(attval),attval);
   if(status != NC_NOERR ) {
-    sprintf(errmsg, "mpp_io(mpp_def_var_att): Error in put attribute %s of var %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_var_att): Error in put attribute {} of var {} of file {}",
 	    attname, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -993,24 +979,20 @@ void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval
 *********************************************************************/
 void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval)
 {
-  int ncid, fldid, status;
-  char errmsg[512];
-
   if( mpp_pe() != mpp_root_pe() ) return;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_var_att): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
   if(vid<0 || vid >=files[fid].nvar) mpp_error("mpp_io(mpp_def_var_att): invalid vid number, vid should be "
 					       "a nonnegative integer that less than nvar");
-  ncid  = files[fid].ncid;
-  fldid = files[fid].var[vid].fldid;
-  status = nc_put_att_double(ncid,fldid,attname,NC_DOUBLE,1,&attval);
+  auto ncid  = files[fid].ncid;
+  auto fldid = files[fid].var[vid].fldid;
+  auto status = nc_put_att_double(ncid,fldid,attname,NC_DOUBLE,1,&attval);
   if(status != NC_NOERR ) {
-    sprintf(errmsg, "mpp_io(mpp_def_var_att_double): Error in put attribute %s of var %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_def_var_att_double): Error in put attribute {} of var {} of file {}",
 	    attname, files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
-
 } /* mpp_def_var_att_double */
 
 
@@ -1080,7 +1062,6 @@ void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out)
 {
   int natt, status, i, ncid_in, ncid_out, fldid_in, fldid_out;
   char name[256];
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1096,7 +1077,7 @@ void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out)
 
   status = nc_inq_varnatts(ncid_in, fldid_in, &natt);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_copy_var_att): Error in inquiring natts of var %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_copy_var_att): Error in inquiring natts of var {} of file {}",
 	    files[fid_in].var[vid_in].name, files[fid_in].name );
     netcdf_error(errmsg, status);
   }
@@ -1104,13 +1085,13 @@ void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out)
   for(i=0; i<natt; i++) {
     status = nc_inq_attname(ncid_in, fldid_in, i, name);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_copy_var_att): Error in inquiring %d attname of var %s of file %s", i,
+      string errmsg = std::format("mpp_io(mpp_copy_var_att): Error in inquiring %d attname of var {} of file {}", i,
 	      files[fid_in].var[vid_in].name, files[fid_in].name );
       netcdf_error(errmsg, status);
     }
     status = nc_copy_att(ncid_in, fldid_in, name, ncid_out, fldid_out);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_copy_var_att): Error in copying att %s of var %s of file %s", name,
+      string errmsg = std::format("mpp_io(mpp_copy_var_att): Error in copying att {} of var {} of file {}", name,
 	      files[fid_in].var[vid_in].name, files[fid_in].name );
       netcdf_error(errmsg, status);
     }
@@ -1127,7 +1108,6 @@ void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
   int status;
   int ndim, dims[5], i;
   size_t dsize, size;
-  char errmsg[512];
   double *data=NULL;
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1144,7 +1124,7 @@ void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
   ndim = mpp_get_var_ndim(fid_in, vid_in);
   status = nc_inq_vardimid(files[fid_in].ncid, files[fid_in].var[vid_in].fldid,dims);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_copy_data): Error in getting dimid of var %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_copy_data): Error in getting dimid of var {} from file {}",
 	    files[fid_in].var[vid_in].name, files[vid_in].name );
     netcdf_error(errmsg, status);
   }
@@ -1152,7 +1132,7 @@ void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
   for(i=0; i<ndim; i++) {
     status = nc_inq_dimlen(files[fid_in].ncid, dims[i], &size);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_copy_data): error in inquiring dimlen from file %s", files[fid_in].name);
+      string errmsg = std::format("mpp_io(mpp_copy_data): error in inquiring dimlen from file {}", files[fid_in].name);
       netcdf_error(errmsg, status);
     }
     dsize *= size;
@@ -1168,7 +1148,6 @@ void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
 int mpp_get_var_natts(int fid, int vid)
 {
   int natts, ncid, fldid, status;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_natts): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
@@ -1177,7 +1156,7 @@ int mpp_get_var_natts(int fid, int vid)
   fldid  = files[fid].var[vid].fldid;
   status = nc_inq_varnatts(ncid, fldid, &natts);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_natts): Error in inquiring natts of var %s of file %s",
+    string errmsg = std::format("mpp_io(mpp_get_var_natts): Error in inquiring natts of var {} of file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -1189,7 +1168,6 @@ int mpp_get_var_natts(int fid, int vid)
 void mpp_get_var_attname(int fid, int vid, int i, char *name)
 {
   int ncid, fldid, status;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_attname): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
@@ -1198,7 +1176,7 @@ void mpp_get_var_attname(int fid, int vid, int i, char *name)
 
   status = nc_inq_attname(ncid, fldid, i, name);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_get_var_attname): Error in inquiring %d attname of var %s of file %s", i,
+    string errmsg = std::format("mpp_io(mpp_get_var_attname): Error in inquiring %d attname of var {} of file {}", i,
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -1207,9 +1185,7 @@ void mpp_get_var_attname(int fid, int vid, int i, char *name)
 
 void mpp_copy_att_by_name(int fid_in, int vid_in, int fid_out, int vid_out, const char *name)
 {
-
   int status, ncid_in, ncid_out, fldid_in, fldid_out;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1225,7 +1201,7 @@ void mpp_copy_att_by_name(int fid_in, int vid_in, int fid_out, int vid_out, cons
 
   status = nc_copy_att(ncid_in, fldid_in, name, ncid_out, fldid_out);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_copy_att_by_name): Error in copying att %s of var %s of file %s", name,
+    string errmsg = std::format( "mpp_io(mpp_copy_att_by_name): Error in copying att {} of var {} of file {}", name,
 	    files[fid_in].var[vid_in].name, files[fid_in].name );
     netcdf_error(errmsg, status);
   }
@@ -1240,7 +1216,7 @@ void mpp_copy_att_by_name(int fid_in, int vid_in, int fid_out, int vid_out, cons
 void mpp_copy_global_att(int fid_in, int fid_out)
 {
   int natt, status, i, ncid_in, ncid_out;
-  char name[256], errmsg[512];
+  char name[256];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1248,12 +1224,12 @@ void mpp_copy_global_att(int fid_in, int fid_out)
 				      "a nonnegative integer that less than nfiles");
   if(fid_out<0 || fid_out >=nfiles) mpp_error("mpp_io(mpp_copy_global_att): invalid fid_out number, fid should be "
 				      "a nonnegative integer that less than nfiles");
+
   ncid_in = files[fid_in].ncid;
   ncid_out = files[fid_out].ncid;
-
   status = nc_inq_varnatts(ncid_in, NC_GLOBAL, &natt);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_copy_global_att): Error in inquiring natts(global) of file %s",
+    string errmsg = std::format("mpp_io(mpp_copy_global_att): Error in inquiring natts(global) of file {}",
 	    files[fid_in].name );
     netcdf_error(errmsg, status);
   }
@@ -1261,14 +1237,14 @@ void mpp_copy_global_att(int fid_in, int fid_out)
   for(i=0; i<natt; i++) {
     status = nc_inq_attname(ncid_in, NC_GLOBAL, i, name);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_copy_global_att): Error in inquiring %d global attname of file %s", i,
+      string errmsg = std::format("mpp_io(mpp_copy_global_att): Error in inquiring {} global attname of file {}", i,
 	      files[fid_in].name );
       netcdf_error(errmsg, status);
     }
 
     status = nc_copy_att(ncid_in, NC_GLOBAL, name, ncid_out, NC_GLOBAL);
     if(status != NC_NOERR) {
-      sprintf(errmsg, "mpp_io(mpp_copy_global_att): Error in copying %d global att %s of file %s", i,  name,
+      string errmsg = std::format("mpp_io(mpp_copy_global_att): Error in copying {} global att {} of file {}", i,  name,
 	      files[fid_in].name );
       netcdf_error(errmsg, status);
     }
@@ -1284,7 +1260,6 @@ void mpp_copy_global_att(int fid_in, int fid_out)
 void mpp_put_var_value(int fid, int vid, const void* data)
 {
   size_t status;
-  char errmsg[600];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1307,14 +1282,14 @@ void mpp_put_var_value(int fid, int vid, const void* data)
     status = nc_put_var_text(files[fid].ncid, files[fid].var[vid].fldid,static_cast<const char*>(data));
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_put_var_value): field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_put_var_value): field {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_put_var_value): Error in putting value of variable %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_put_var_value): Error in putting value of variable {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -1328,7 +1303,6 @@ void mpp_put_var_value(int fid, int vid, const void* data)
 void mpp_put_var_value_block(int fid, int vid, const size_t *start, const size_t *nwrite, const void *data)
 {
   int status;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1355,14 +1329,14 @@ void mpp_put_var_value_block(int fid, int vid, const size_t *start, const size_t
                               static_cast<const char*>(data));
     break;
   default:
-    sprintf(errmsg, "mpp_io(mpp_put_var_value_block): field %s in file %s has an invalid type, "
+    string errmsg = std::format("mpp_io(mpp_put_var_value_block): field {} in file {} has an invalid type, "
 	    "the type should be NC_DOUBLE, NC_FLOAT, NC_INT, NC_SHORT or NC_CHAR",
 	    files[fid].var[vid].name, files[fid].name );
     mpp_error(errmsg);
   }
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_put_var_value_block): Error in putting value of variable %s from file %s",
+    string errmsg = std::format("mpp_io(mpp_put_var_value_block): Error in putting value of variable {} from file {}",
 	    files[fid].var[vid].name, files[fid].name );
     netcdf_error(errmsg, status);
   }
@@ -1374,16 +1348,13 @@ void mpp_put_var_value_block(int fid, int vid, const size_t *start, const size_t
    redef the meta data of netcdf file with fid.
  *******************************************************************/
 void mpp_redef(int fid) {
-  int status;
-  char errmsg[512];
-
   if( mpp_pe() != mpp_root_pe() ) return;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_redef): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
 
-  status = nc_redef(files[fid].ncid);
+  auto status = nc_redef(files[fid].ncid);
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_redef): Error in redef the meta data of file %s", files[fid].name );
+    string errmsg = std::format("mpp_io(mpp_redef): Error in redef the meta data of file {}", files[fid].name );
     netcdf_error(errmsg, status);
   }
 } /* mpp_redef */
@@ -1394,7 +1365,6 @@ void mpp_redef(int fid) {
  *******************************************************************/
 void mpp_end_def(int fid) {
   int status;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_end_def): invalid fid number, fid should be "
@@ -1405,7 +1375,7 @@ void mpp_end_def(int fid) {
     status = nc_enddef(files[fid].ncid);
 
   if(status != NC_NOERR) {
-    sprintf(errmsg, "mpp_io(mpp_end_def): Error in end definition of file %s", files[fid].name );
+    string errmsg = std::format("mpp_io(mpp_end_def): Error in end definition of file {}", files[fid].name );
     netcdf_error(errmsg, status);
   }
 } /* mpp_end_def */
@@ -1480,7 +1450,6 @@ int mpp_var_exist(int fid, const char *field)
 int get_great_circle_algorithm(int fid)
 {
   char attval[256];
-  char errmsg[512];
   int great_circle_algorithm = 0;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(get_great_circle_algorithm): invalid fid number, fid should be "
@@ -1494,8 +1463,8 @@ int get_great_circle_algorithm(int fid)
     else if(!strcmp(attval, "FALSE"))
       great_circle_algorithm = 0;
     else {
-      sprintf(errmsg, "mpp_io: global atribute 'great_circle_algorithm' "
-	      "in file %s should have value 'TRUE' or 'FALSE'", files[fid].name);
+      string errmsg = std::format("mpp_io: global atribute 'great_circle_algorithm' "
+	      "in file {} should have value 'TRUE' or 'FALSE'", files[fid].name);
       mpp_error(errmsg);
     }
   }

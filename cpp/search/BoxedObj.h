@@ -19,6 +19,7 @@ namespace nct {
         BBox3D *box;
     public:
         BoxAndId(size_t id, BBox3D*box ) : id(id), box(box) {}
+        BoxAndId() : id(0), box(nullptr) {}
         BBox3D *getBox() {
             return box;
         }

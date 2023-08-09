@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "comments": [
+                "Full launch.json configuration details can be found here:",
+                "https://code.visualstudio.com/docs/cpp/launch-json-reference"
+            ],
+            "name": "Launch_template",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "all",
+            "postDebugTask": "all",
+            "program": "",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "ZET_ENABLE_PROGRAM_DEBUGGING",
+                    "value": "1"
+                },
+                {
+                    "name": "IGC_EnableGTLocationDebugging",
+                    "value": "1"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb-oneapi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Disable target async",
+                    "text": "set target-async off",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

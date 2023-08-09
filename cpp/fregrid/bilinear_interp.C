@@ -77,12 +77,12 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                            double lonbegin, double latbegin)
 {
   const int max_iter = 10;
-  double abs_center, dcub, dlon, dlat, coslat, distance;
+  double dcub, dlon, dlat, distance;
   double dist1, dist2, dist3, dist4, sum;
   double *shortest;
-  int    i, j, n, l, ic, jc, lc, icc, jcc, i_min, i_max, j_min, j_max, iter;
+  int    i, j, l, ic, jc, icc, jcc, i_min, i_max, j_min, j_max, iter;
   int    n0, n1, n2, n3, n4, m0, m1;
-  int    nx_in, ny_in, nx_out, ny_out, nxd, nyd;
+  int    nx_in, ny_in, nx_out, ny_out, nxd;
   double v0[3], v1[3], v2[3], v3[3], v4[3];
   int    all_done;
   int    *found, *index;
@@ -108,7 +108,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   nx_in    = grid_in->nx;       /* the cubic grid has same resolution on each face */
   ny_in    = grid_in->ny;
   nxd      = nx_in + 2;
-  nyd      = ny_in + 2;
+  //nyd      = ny_in + 2;
 
   interp->index  = (int    *)malloc(3*nx_out*ny_out*sizeof(int   ));
   interp->weight = (double *)malloc(4*nx_out*ny_out*sizeof(double));
@@ -447,7 +447,6 @@ void do_scalar_bilinear_interp(const Interp_config *interp, int vid, int ntiles_
 			  const Field_config *field_in, Field_config *field_out, int finer_step, int fill_missing)
 {
   int    nx_in, ny_in, nx_out, ny_out, nz;
-  int    n, ts, tn, tw, te;
   int    has_missing;
   double missing;
   double *data_fine;
@@ -485,7 +484,7 @@ void do_vector_bilinear_interp(Interp_config *interp, int vid, int ntiles_in, co
 {
   Field_config *var_cubsph;
   int          nx_in, ny_in, nx_out, ny_out, nxd, nyd, nz, has_missing;
-  int          i, j, k, n, n1, n2, ts, tn, tw, te;
+  int          i, j, k, n, n1, n2;
   double       missing;
   double       *x_latlon, *y_latlon, *z_latlon, *var_latlon;
 
@@ -662,8 +661,8 @@ void sort_index(int ntiles, int *index, double *shortest)
 int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *index,
 	       int i_in, int j_in, int l_in, int i_out, int j_out)
 {
-  int    ok, n0, n1, n2, n3, n4, n5;
-  int    nx_in, ny_in, nx_out, ny_out;
+  int    ok, n1, n2, n3, n4, n5;
+  int    nx_in;
   double v0[3], v1[3], v2[3], v3[3], v4[3], v5[3];
   double angle_1, angle_1a, angle_1b, angle_2, angle_2a, angle_2b;
   double angle_3, angle_3a, angle_3b, angle_4, angle_4a, angle_4b;
@@ -672,10 +671,10 @@ int get_index(const Grid_config *grid_in, const Grid_config *grid_out, int *inde
 
   ok=1;
   nx_in  = grid_in->nx_fine;
-  ny_in  = grid_in->nx_fine;
-  nx_out = grid_out->nx;
-  ny_out = grid_out->nx;
-  n0 = j_out*nx_out + i_out;
+  //ny_in  = grid_in->nx_fine;
+  //nx_out = grid_out->nx;
+  //ny_out = grid_out->nx;
+  //n0 = j_out*nx_out + i_out;
   n1 = j_in*nx_in + i_in;
   n2 = j_in*nx_in + i_in+1;
   n3 = (j_in+1)*nx_in + i_in;
@@ -763,7 +762,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
   double angle_3,  angle_3a,  angle_3b;
   double angle_4,  angle_4a,  angle_4b;
   int    n0, n1, n2, n3, n4, n5, n6, n7, n8;
-  int    nx_in, ny_in, nx_out, ny_out, nxd;
+  int    nx_in, ny_in, nx_out, nxd;
   double v0[3], v1[3], v2[3], v3[3], v4[3], v5[3], v6[3], v7[3], v8[3];
 
 
@@ -772,7 +771,7 @@ int get_closest_index(const Grid_config *grid_in, const Grid_config *grid_out, i
   ny_in  = grid_in->ny;
   nxd    = nx_in + 2;
   nx_out = grid_out->nx_fine;
-  ny_out = grid_out->ny_fine;
+  //ny_out = grid_out->ny_fine;
   n0     = j_out*nx_out+i_out;
   n1     = j_in*nxd+i_in;
   n2     = j_in*nxd+i_in+1;
