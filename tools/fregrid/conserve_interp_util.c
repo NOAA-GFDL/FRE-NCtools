@@ -95,6 +95,15 @@ void read_regrid_weights( int ntiles_in, int ntiles_out, Grid_config *grid_out,
       }
       free(t_in);
       free(ind);
+      free(i_in);
+      free(j_in);
+      free(i_out);
+      free(j_out);
+      free(xgrid_area);
+      if(opcode & CONSERVE_ORDER2) {
+      	free(xgrid_clon);
+	free(xgrid_clat);
+      }	 
     }//if read from file
   } // ntiles
   if(mpp_pe() == mpp_root_pe())printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
