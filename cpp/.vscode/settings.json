@@ -1,0 +1,9 @@
+{
+    "cmake.configureOnOpen": true,
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
+    "files.associations": {
+        "*.fh": "FortranFreeForm",
+        "*.C": "cpp",
+        "*.cpp": "cpp",
+    }
+}

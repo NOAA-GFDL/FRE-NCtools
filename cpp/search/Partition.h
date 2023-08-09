@@ -19,7 +19,7 @@ namespace nct {
     class PartitionFunction {
         using DI = nct::DistanceInterval<float>;
     public:
-        PartitionFunction() = default;;
+        PartitionFunction() = default;
         virtual void operator() (const NodeItr firstC, NodeItr& median, const NodeItr end) = 0;
     };
 

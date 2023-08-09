@@ -272,7 +272,7 @@ void conserve_interp(int nx_src, int ny_src, int nx_dst, int ny_dst, const doubl
   xgrid_j2   = (int    *)malloc(MAXXGRID*sizeof(int));
   xgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
   dst_area   = (double *)malloc(nx_dst*ny_dst*sizeof(double));
-  nxgrid = create_xgrid_2dx2d_order1(&nx_src, &ny_src, &nx_dst, &ny_dst, x_src, y_src, x_dst, y_dst, mask_src,
+  nxgrid = create_xgrid_2dx2d_order1(nx_src, ny_src, nx_dst, ny_dst, x_src, y_src, x_dst, y_dst, mask_src,
 	                       xgrid_i1, xgrid_j1, xgrid_i2, xgrid_j2, xgrid_area );
   /* The source grid may not cover the destination grid
      so need to sum of exchange grid area to get dst_area

@@ -1,0 +1,12 @@
+This "include" directory is only for library features that
+are not yet in the C++ release being used.  Note that to use these features
+the C++ code should have statements like :
+
+#if __cplusplus <= 202002L
+#include "include/format"
+#include "cartesian_product.hpp"
+#endif
+
+Also, once all the target compilers have the desired
+features, the relevant contents of this directory can be
+removed.

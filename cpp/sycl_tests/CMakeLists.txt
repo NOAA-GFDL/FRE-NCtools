@@ -2,6 +2,11 @@ include_directories(${CMAKE_SOURCE_DIR}/../include)
 include_directories(${CMAKE_SOURCE_DIR}/libfrencutils)
 include_directories(${CMAKE_SOURCE_DIR}/libSearch)
 
+include_directories(/home/mzuniga/llvm/build/install/include)
+include_directories(/home/mzuniga/llvm/build/install/include/sycl)
+include_directories(/home/mzuniga/llvm/build/install/include/sycl/CL)
+
+
 #currently included in upper directory file:
 #find_package(IntelSYCL REQUIRED)
 

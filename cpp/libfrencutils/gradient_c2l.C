@@ -63,7 +63,7 @@ void grad_c2l(const int *nlon, const int *nlat, const double *pin, const double 
 {
 
   double *pb, *pdx, *pdy, *grad3;
-  int nx, ny, nxp, nyp, i, j, m0, m1, m2, n;
+  int nx, ny, nxp, nyp, i, j, m0, m1, n;
 
   nx    = *nlon;
   ny    = *nlat;

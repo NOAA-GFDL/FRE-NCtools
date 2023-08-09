@@ -166,7 +166,6 @@ void mpp_compute_extent(int npts, int ndivs, int *ibegin, int *iend)
 **********************************************************/
 void mpp_define_domain_1d(int npts, int ndivs, domain1D *domain )
 {
-  int n, npts_left, pos, size;
 
   domain->beglist = (int *)malloc(ndivs*sizeof(int));
   domain->endlist = (int *)malloc(ndivs*sizeof(int));
@@ -191,7 +190,7 @@ void mpp_define_domain_1d(int npts, int ndivs, domain1D *domain )
 void mpp_define_domain2d(int ni, int nj, int layout[], int xhalo, int yhalo, domain2D *domain )
 {
   domain1D domx, domy;
-  int i, j, posx, posy, n; 
+  int i, j, n;
 
   domain->isclist = (int *)malloc(layout[0]*layout[1]*sizeof(int));
   domain->ieclist = (int *)malloc(layout[0]*layout[1]*sizeof(int));
@@ -359,10 +358,10 @@ void mpp_get_shift(domain2D domain, int sizex, int sizey, int *ishift, int *jshi
 void mpp_global_field_all_double(domain2D domain, int sizex, int sizey, const double* ldata, double* gdata)
 {
   double *send_buffer=NULL, *recv_buffer=NULL;
-  int i, j, n, ni, nj, ii, jj, l, p, recv_size;
+  int i, j, n, p, recv_size;
   int ishift, jshift, nxc, nyc, nxd, nyd, nxg;
   int is, ie, js, je, isd, jsd;
-  int send_buffer_is_allocated;
+  //int send_buffer_is_allocated;
 
   mpp_get_shift( domain, sizex, sizey, &ishift, &jshift);
   is = domain.isc;
@@ -441,7 +440,7 @@ void mpp_global_field_all_double(domain2D domain, int sizex, int sizey, const do
 void mpp_global_field_double(domain2D domain, int sizex, int sizey, const double* ldata, double* gdata)
 {
   double *send_buffer=NULL, *recv_buffer=NULL;
-  int i, j, n, ni, nj, ii, jj, l, p, recv_size;
+  int i, j, n, p, recv_size;
   int ishift, jshift, nxc, nyc, nxd, nyd, nxg;
   int is, ie, js, je, isd, jsd;
   
@@ -520,7 +519,7 @@ void mpp_global_field_double(domain2D domain, int sizex, int sizey, const double
 void mpp_global_field_int(domain2D domain, int sizex, int sizey, const int* ldata, int* gdata)
 {
   int *send_buffer=NULL, *recv_buffer=NULL;
-  int i, j, n, ni, nj, ii, jj, l, p, recv_size;
+  int i, j, n, p, recv_size;
   int ishift, jshift, nxc, nyc, nxd, nyd, nxg;
   int is, ie, js, je, isd, jsd;
   
@@ -601,7 +600,7 @@ void mpp_global_field_double_3D(domain2D domain, int sizex, int sizey, int sizez
 				const double* ldata, double* gdata)
 {
   double *send_buffer=NULL, *recv_buffer=NULL;
-  int i, j, k, n, ni, nj, ii, jj, l, p, recv_size;
+  int i, j, k, n, p, recv_size;
   int ishift, jshift, nxc, nyc, nxd, nyd, nxg, nyg;
   int is, ie, js, je, isd, jsd;
   int send_size;  
