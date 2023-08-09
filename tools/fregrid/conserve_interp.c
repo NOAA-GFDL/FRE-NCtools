@@ -53,7 +53,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   double *tmp_di_in, *tmp_dj_in;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
 
-  double garea;
   typedef struct{
     double *area;
     double *clon;
@@ -63,8 +62,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
   double time_nxgrid=0;
   clock_t time_start, time_end;
-
-  garea = 4*M_PI*RADIUS*RADIUS;
 
   if( opcode & READ) {
     read_regrid_weights(ntiles_in,ntiles_out, grid_out, interp, opcode);

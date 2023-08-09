@@ -33,7 +33,10 @@ void read_regrid_weights( int ntiles_in, int ntiles_out, Grid_config *grid_out,
 
   int *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
-  int n, i, nxgrid, garea;
+  int n, i, nxgrid;
+  double garea;
+
+  garea = 4*M_PI*RADIUS*RADIUS;
 
   for(n=0; n<ntiles_out; n++) {
     if( interp[n].file_exist ) { /* reading from file */
