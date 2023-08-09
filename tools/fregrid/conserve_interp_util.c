@@ -28,8 +28,8 @@
 #include "read_mosaic.h"
 #include "conserve_interp_util.h"
 
-void read_regrid_weights( int ntiles_in, int ntiles_out, Grid_config *grid_out, 
-                          Interp_config *interp, unsigned int opcode){
+void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out, 
+		      Interp_config *interp, unsigned int opcode){
 
   int *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;

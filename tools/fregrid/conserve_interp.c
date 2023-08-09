@@ -64,7 +64,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   clock_t time_start, time_end;
 
   if( opcode & READ) {
-    read_regrid_weights(ntiles_in,ntiles_out, grid_out, interp, opcode);
+    read_remap_file(ntiles_in,ntiles_out, grid_out, interp, opcode);
   }
   else {
     i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));

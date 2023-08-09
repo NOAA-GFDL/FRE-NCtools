@@ -21,7 +21,7 @@
 #define CONSERVE_INTERP_UTIL_H_
 #include "globals.h"
 
-void read_regrid_weights( int ntiles_in, int ntiles_out, Grid_config *grid_out,
-                          Interp_config *interp, unsigned int opcode);
+void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
+		      Interp_config *interp, unsigned int opcode);
 
 #endif
