@@ -24,6 +24,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <string>
 #include <cstdlib>
 #include <iostream>
 #include <sys/time.h>
@@ -32,6 +33,8 @@
 #include <mpi.h>
 #endif
 #include "mpp.h"
+
+using std::string;
 
 //These four fields are defined in the file of mpp_domain.c.
 static int npes, root_pe, pe; 
@@ -284,6 +287,10 @@ void mpp_max_double(int count, double *data)
     void mpp_error(char *str)
     error handler: will print out error message and then abort
 ***********************************************************/
+void mpp_error(const string& str)
+{
+  mpp_error(str.c_str());
+}
 
 void mpp_error(const char * str)
 {

@@ -107,20 +107,17 @@ void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, 
 *******************************************************************************/
 void set_field_struct(int ntiles, Field_config *field, int nvar, char * varname, File_config *file)
 {
-  int  n, i;
-
   if(nvar == 0) return;
 
-  for(n=0; n<ntiles; n++) {
+  for(int n=0; n<ntiles; n++) {
     field[n].area = NULL;
     field[n].file = file[n].name;
     field[n].fid = &(file[n].fid);
     field[n].nvar = nvar;
     field[n].var = (Var_config *)malloc(nvar*sizeof(Var_config));
-    for(i=0; i<nvar; i++)
+    for(int i=0; i<nvar; i++)
       strcpy(field[n].var[i].name, varname+i*STRING);
   }
-
 }; /* set_field_var */
 
 
@@ -150,8 +147,6 @@ void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, cons
     mpp_get_var_value(fid, vid, grid[n].weight);
     mpp_close(fid);
   }
-
-
 };/* set_weight_inf */
 
 
@@ -922,8 +917,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
         field[n].var[ll].type = mpp_get_var_type(file[n].fid, field[n].var[ll].vid);
         if (field[n].var[ll].type != NC_SHORT && field[n].var[ll].type != NC_INT && field[n].var[ll].type != NC_FLOAT &&
             field[n].var[ll].type != NC_DOUBLE) {
-          sprintf(errmsg,
-                  "fregrid_util(get_input_metadata): field %s in file %s has an invalid type, "
+          string errmsg = std::format(
+                  "fregrid_util(get_input_metadata): field {} in file {} has an invalid type, "
                   "the type should be NC_DOUBLE, NC_FLOAT, NC_INT or NC_SHORT",
                   field[n].var[ll].name, file[n].name);
           mpp_error(errmsg);
@@ -973,9 +968,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_methods", attval);
           status = parse_string(attval, "area:", areaval, errout);
           if (status == -1) {
-            sprintf(errmsg,
-                    "fregrid_util(get_input_metadata): %s for cell_methods "
-                    "attribute of field %s in file %s",
+            string errmsg = std::format(
+                    "fregrid_util(get_input_metadata): {} for cell_methods "
+                    "attribute of field {} in file {}",
                     errout, field[n].var[ll].name, file[n].name);
             mpp_error(errmsg);
           } else if (status == 1) {
@@ -984,8 +979,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
             else if (strcmp(areaval, "sum") == 0)
               field[n].var[ll].cell_methods = CELL_METHODS_SUM;
             else {
-              sprintf(errmsg,
-                      "fregrid_util(get_input_metadata): field %s in file %s attribute cell_methods "
+              string errmsg = std::format(
+                      "fregrid_util(get_input_metadata): field {} in file {} attribute cell_methods "
                       "should have value 'mean' or 'sum' after area: ",
                       field[n].var[ll].name, file[n].name);
               mpp_error(errmsg);
@@ -1005,9 +1000,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
           status = parse_string(attval, "volume:", field[n].var[ll].area_name, errout);
           if (status == -1) {
-            sprintf(errmsg,
-                    "fregrid_util(get_input_metadata): %s for cell_measure "
-                    "attribute volume of field %s in file %s",
+            string errmsg = std::format(
+                    "fregrid_util(get_input_metadata): {} for cell_measure "
+                    "attribute volume of field {} in file {}",
                     errout, field[n].var[ll].name, file[n].name);
             mpp_error(errmsg);
           } else if (status == 1) {
@@ -1016,9 +1011,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           } else {
             status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
             if (status == -1) {
-              sprintf(errmsg,
-                      "fregrid_util(get_input_metadata): %s for cell_measure "
-                      "attribute area of field %s in file %s",
+              string errmsg = std::format(
+                      "fregrid_util(get_input_metadata): {} for cell_measure "
+                      "attribute area of field {} in file {}",
                       errout, field[n].var[ll].name, file[n].name);
               mpp_error(errmsg);
             } else if (status == 1)
@@ -1040,8 +1035,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
               /* check if the variable is in associated_files or not */
               if (!mpp_global_att_exist(file[n].fid, "associated_files")) {
-                sprintf(errmsg,
-                        "fregrid_util(get_input_metadata):  field %s does not exist in file %s, "
+                string errmsg = std::format(
+                        "fregrid_util(get_input_metadata):  field {} does not exist in file {}, "
                         "and the file also does not have global attribute 'associated_files' ",
                         field[n].var[ll].area_name, file[n].name);
                 mpp_error(errmsg);
@@ -1050,15 +1045,15 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               sprintf(name, "%s:", field[n].var[ll].area_name);
               status = parse_string(globalatt, name, file2, errout);
               if (status == 0) {
-                sprintf(errmsg,
-                        "fregrid_util(get_input_metadata): global sttribute associated_files "
-                        "does not contains string %s in file %s",
+                string errmsg = std::format(
+                        "fregrid_util(get_input_metadata): global attribute associated_files "
+                        "does not contains string {} in file {}",
                         name, file[n].name);
                 mpp_error(errmsg);
               } else if (status == -1) {
-                sprintf(errmsg,
-                        "fregrid_util(get_input_metadata): %s for associated_files "
-                        "global attribute in file %s",
+                string errmsg = std::format(
+                        "fregrid_util(get_input_metadata): {} for associated_files "
+                        "global attribute in file {}",
                         errout, file[n].name);
                 mpp_error(errmsg);
               }
@@ -1072,7 +1067,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                 if (mpp_file_exist(file1))
                   strcpy(associated_file, file1);
                 else { /* add tile number if there is more than one tile */
-                  sprintf(errmsg, "fregrid_util(get_input_metadata): ntiles==1 and file %s does not exist", file1);
+                  string errmsg = std::format(
+                          "fregrid_util(get_input_metadata): ntiles==1 and file {} does not exist", file1);
                   mpp_error(errmsg);
                 }
               } else {
@@ -1088,8 +1084,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                   if (mpp_file_exist(file1))
                     strcpy(associated_file, file1);
                   else {
-                    sprintf(errmsg, "fregrid_util(get_input_metadata): both %s and %s do not exist", file1,
-                            associated_file);
+                    string errmsg = std::format(
+                            "fregrid_util(get_input_metadata): both {} and {} do not exist",
+                            file1,associated_file);
                     mpp_error(errmsg);
                   }
                 }
@@ -1145,12 +1142,13 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
               if (field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
                 if (ndim == 3 && field[n].var[ll].area_has_taxis) {
-                  string errmsg =
-                          format("fregrid_util(get_input_metadata): ndim=3, has_taxis=T and hax_naxis/has_zaxis=T for field {} in file {}",
-                               field[n].var[ll].area_name, associated_file);
-                  mpp_error(errmsg.c_str());
+                  string errmsg = format("fregrid_util(get_input_metadata): ndim=3,"
+                                         " has_taxis=T and hax_naxis/has_zaxis=T for field {} in file {}",
+                                         field[n].var[ll].area_name, associated_file);
+                  mpp_error(errmsg);
                 } else if (ndim == 4 && !field[n].var[ll].area_has_taxis) {
-                  sprintf(errmsg, "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field %s in file %s",
+                  string errmsg = std::format(
+                          "fregrid_util(get_input_metadata): ndim=4, has_taxis=F for field {} in file {}",
                           field[n].var[ll].area_name, associated_file);
                   mpp_error(errmsg);
                 }
@@ -1158,7 +1156,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
             }
 
             if (ndim > 4) {
-              sprintf(errmsg, "fregrid_util(get_input_metadata):  number of dimension of field %s in file %s > 4",
+              string errmsg = std::format(
+                      "fregrid_util(get_input_metadata):  number of dimension of field {} in file {} > 4",
                       field[n].var[ll].area_name, associated_file);
               mpp_error(errmsg);
             }
@@ -1194,9 +1193,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               use_bilinear = 1;
               field[n].var[ll].interp_method = BILINEAR;
             } else {
-              sprintf(
-                  errmsg,
-                  "get_input_metadata(fregrid_util.c): in file %s, attribute interp_method of field %s has value = %s"
+              string errmsg = std::format(
+                  "get_input_metadata(fregrid_util.c): in file {}, attribute interp_method of field {} has value = {}"
                   " is not suitable, it should be conserve_order1, conserve_order2 or bilinear",
                   file[n].name, field[n].var[ll].name, remap_method);
               mpp_error(errmsg);
@@ -1227,9 +1225,9 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               field[n].var[ll].has_zaxis = 1;
               field[n].var[ll].nz = dimsize[ndim - 3];
               if (kend > field[n].var[ll].nz) {
-                sprintf(errmsg,
+                string errmsg = std::format(
                         "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
-                        "number of vertical levels of field %s in file %s.",
+                        "number of vertical levels of field {} in file {}.",
                         field[n].var[ll].name, file[n].name);
                 mpp_error(errmsg);
               }
@@ -1259,14 +1257,10 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           if (cart[0] == 'T') {
             field[n].var[ll].has_taxis = 1;
             if (lend > dimsize[0]) {
-              string errMsg0 = format ("get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
+              string errmsg = format ("get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
                              "number of time levels of field {} in file {}.",
-                                       field[n].var[ll].name, file[n].name);
-              sprintf(errmsg,
-                      "get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
-                      "number of time levels of field %s in file %s.",
-                      field[n].var[ll].name, file[n].name);
-              mpp_error(errMsg0.c_str());
+                             field[n].var[ll].name, file[n].name);
+              mpp_error(errmsg);
             }
             if (lbegin > 0) {
               field[n].var[ll].lstart = lbegin - 1;
@@ -1389,16 +1383,16 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
         }
 
         if (field[n].var[ll].cell_measures != field[0].var[ll].cell_measures) {
-          sprintf(errmsg,
+          string errmsg = std::format(
                   "get_input_metadata(fregrid_util.c): mismatch of attribute `cell_measures` between tiles "
-                  "for field %s in file %s",
+                  "for field {} in file {}",
                   field[n].var[ll].name, file[n].name);
           mpp_error(errmsg);
         }
         if (field[n].var[ll].area_has_taxis != field[0].var[ll].area_has_taxis) {
-          sprintf(errmsg,
+          string errmsg = std::format(
                   "get_input_metadata(fregrid_util.c): mismatch of has_taxis between tiles "
-                  "for field %s in file %s",
+                  "for field {} in file {}",
                   field[n].var[ll].area_name, file[n].name);
           mpp_error(errmsg);
         }

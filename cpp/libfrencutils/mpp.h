@@ -27,6 +27,8 @@
 #ifndef MPP_H_
 #define MPP_H_
 
+#include <string>
+
 void mpp_init(int *argc, char ***argv);          /* start parallel programming, create communicator */
 void mpp_end();           /* end of parallel programming, abort the program */
 int mpp_pe();      /* return processor ID */
@@ -38,6 +40,7 @@ void mpp_send_int(const int* data, int size, int to_pe); /* send data */
 void mpp_recv_double(double* data, int size, int from_pe); /* recv data */
 void mpp_recv_int(int* data, int size, int from_pe); /* recv data */
 void mpp_error(const char *str);
+void mpp_error(const std::string& str);
 void mpp_sum_int(int count, int *data);
 void mpp_sum_double(int count, double *data);
 void mpp_min_double(int count, double *data);

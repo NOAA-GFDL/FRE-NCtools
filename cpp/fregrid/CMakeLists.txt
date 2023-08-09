@@ -1,5 +1,13 @@
 
-include_directories(${CMAKE_SOURCE_DIR}/../include)
+
+##if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# including the format file if compiler is not gcc.
+# nvc++ does not yet have this feature.
+# Intel/CodePlay DPC++ has ?
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
+##endif()
+
 include_directories(${CMAKE_SOURCE_DIR}/libfrencutils)
 include_directories(${CMAKE_SOURCE_DIR}/libSearch)
 include_directories(/home/mzuniga/llvm/build/install/include)
