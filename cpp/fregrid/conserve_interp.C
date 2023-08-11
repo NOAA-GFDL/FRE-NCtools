@@ -610,7 +610,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
             out_miss[n0] = 1;
           }
         }
-      } else {
+      } else {  //not has_missing
         for (n = 0; n < interp[m].nxgrid; n++) {
           i2 = interp[m].i_out[n];
           j2 = interp[m].j_out[n];
@@ -621,7 +621,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
           nx1 = grid_in[tile].nx;
           ny1 = grid_in[tile].ny;
           if (weight_exist) area *= grid_in[tile].weight[j1 * nx1 + i1];
-          for (k = 0; k < nz; k++) {
+          for (k = 0; k < nz; k++) {  //HS 14.3%
             n1 = k * nx1 * ny1 + j1 * nx1 + i1;
             n0 = k * nx2 * ny2 + j2 * nx2 + i2;
             if (cell_methods == CELL_METHODS_SUM)
@@ -766,7 +766,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
         out_area[n0] += area;
       }
       free(xdata);
-    } else {
+    } else { //not(interp_method == CONSERVE_ORDER1) and not(monotonic)
       if (has_missing) {
         for (n = 0; n < interp[m].nxgrid; n++) {
           i2 = interp[m].i_out[n];
@@ -893,7 +893,6 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
     free(out_miss);
   }
 
-
   /* conservation check if needed */
   if (opcode & CHECK_CONSERVE) {
     double gsum_in, dd;
@@ -921,8 +920,8 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
           for (j = 0; j < ny1; j++)
             for (i = 0; i < nx1; i++) {
               dd = field_in[n].data[k * (nx1 + 2 * halo) * (ny1 + 2 * halo) +
-                                    (j + halo) * (nx1 + 2 * halo) + i + halo];
-              if (dd != missing) gsum_in += dd * grid_in[n].cell_area[j * nx1 + i];
+                                    (j + halo) * (nx1 + 2 * halo) + i + halo];  //HS 21.4%
+              if (dd != missing) gsum_in += dd * grid_in[n].cell_area[j * nx1 + i]; //HS 7.1%
             }
       }
     }

@@ -22,6 +22,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <format>
 
 #include "read_mosaic.h"
 #include "constant.h"
@@ -34,12 +36,9 @@
 ********************************************************************/
 void handle_netcdf_error(const char *msg, int status )
 {
-  char errmsg[512];
-
-  sprintf( errmsg, "%s: %s", msg, (char *)nc_strerror(status) );
+  std::string errmsg = std::format("{}: {}", msg, nc_strerror(status) );
   error_handler(errmsg);
-
-}; /* handle_netcdf_error */
+};
 
 /***************************************************************************
   void get_file_dir(const char *file, char *dir)
@@ -789,21 +788,21 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
 void read_mosaic_grid_data(const char *mosaic_file, const char *name, int nx, int ny,
                            double *data, int level, int ioff, int joff)
 {
-  char   tilefile[STRING], gridfile[STRING], dir[STRING];
+  char gridfile[STRING], dir[STRING];
   double *tmp;
   int    ni, nj, nxp, nyp, i, j;
 
   get_file_dir(mosaic_file, dir);
 
   get_string_data_level(mosaic_file, "gridfiles", gridfile, &level);
-  sprintf(tilefile, "%s/%s", dir, gridfile);
+  std::string tilefile = std::format("{}/{}", dir, gridfile);
 
-  ni = get_dimlen(tilefile, "nx");
-  nj = get_dimlen(tilefile, "ny");
+  ni = get_dimlen(tilefile.c_str(), "nx");
+  nj = get_dimlen(tilefile.c_str(), "ny");
 
   if( ni != nx*2 || nj != ny*2) error_handler("supergrid size should be double of the model grid size");
   tmp = (double *)malloc((ni+1)*(nj+1)*sizeof(double));
-  get_var_data( tilefile, name, tmp);
+  get_var_data( tilefile.c_str(), name, tmp);
   nxp = nx + 1 - ioff;
   nyp = ny + 1 - joff;
   for(j=0; j<nyp; j++) for(i=0; i<nxp; i++) data[j*nxp+i] = tmp[(2*j+joff)*(ni+1)+2*i+ioff];

@@ -57,7 +57,6 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
 *******************************************************************************/
 
 using std::string;
-using std::format;
 
 void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, File_config *file,
 			  const char *filename)
@@ -188,8 +187,8 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     start[0] = n; start[1] = 0; nread[0] = 1; nread[1] = STRING;
     vid = mpp_get_varid(m_fid, "gridfiles");
     mpp_get_var_value_block(m_fid, vid, start, nread, filename);
-    sprintf(grid_file, "%s/%s", dir, filename);
-    g_fid = mpp_open(grid_file, MPP_READ);
+    std::string grid_file = std::format("{}/{}", dir, filename);
+    g_fid = mpp_open(grid_file.c_str(), MPP_READ);
 
     if(n==0) *great_circle_algorithm = get_great_circle_algorithm(g_fid);
     nx[n] = mpp_get_dimlen(g_fid, "nx");
@@ -417,7 +416,7 @@ void get_output_grid_from_mosaic(int ntiles, Grid_config *grid, const char *mosa
   int         *nx, *ny;
   double      *x, *y;
   size_t        start[4], nread[4];
-  char         grid_file[256], filename[256], dir[256];
+  char         filename[256], dir[256];
 
   if(opcode & BILINEAR) mpp_error("fregrid_util: for bilinear interpolation, output grid can not got from mosaic file");
 
@@ -472,8 +471,8 @@ void get_output_grid_from_mosaic(int ntiles, Grid_config *grid, const char *mosa
     start[0] = n; start[1] = 0; nread[0] = 1; nread[1] = STRING;
     vid = mpp_get_varid(m_fid, "gridfiles");
     mpp_get_var_value_block(m_fid, vid, start, nread, filename);
-    sprintf(grid_file, "%s/%s", dir, filename);
-    g_fid = mpp_open(grid_file, MPP_READ);
+    std::string grid_file = std::format( "{}/{}", dir, filename);
+    g_fid = mpp_open(grid_file.c_str(), MPP_READ);
     if(n==0) *great_circle_algorithm = get_great_circle_algorithm(g_fid);
     nx[n] = mpp_get_dimlen(g_fid, "nx");
     ny[n] = mpp_get_dimlen(g_fid, "ny");
@@ -1031,7 +1030,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               strcpy(associated_file, file[n].name);
               field[n].var[ll].area_fid = file[n].fid;
             } else {
-              char globalatt[1024], file1[512], str1[STRING], name[STRING], file2[STRING];
+              char globalatt[1024], file1[512], str1[STRING], file2[STRING];
 
               /* check if the variable is in associated_files or not */
               if (!mpp_global_att_exist(file[n].fid, "associated_files")) {
@@ -1042,8 +1041,8 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
                 mpp_error(errmsg);
               }
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
-              sprintf(name, "%s:", field[n].var[ll].area_name);
-              status = parse_string(globalatt, name, file2, errout);
+              std::string name = std::format( "{}:", field[n].var[ll].area_name);
+              status = parse_string(globalatt, name.c_str(), file2, errout);
               if (status == 0) {
                 string errmsg = std::format(
                         "fregrid_util(get_input_metadata): global attribute associated_files "
@@ -1142,7 +1141,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
               if (field[n].var[ll].area_has_naxis || field[n].var[ll].area_has_zaxis) {
                 if (ndim == 3 && field[n].var[ll].area_has_taxis) {
-                  string errmsg = format("fregrid_util(get_input_metadata): ndim=3,"
+                  string errmsg = std::format("fregrid_util(get_input_metadata): ndim=3,"
                                          " has_taxis=T and hax_naxis/has_zaxis=T for field {} in file {}",
                                          field[n].var[ll].area_name, associated_file);
                   mpp_error(errmsg);
@@ -1225,7 +1224,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               field[n].var[ll].has_zaxis = 1;
               field[n].var[ll].nz = dimsize[ndim - 3];
               if (kend > field[n].var[ll].nz) {
-                string errmsg = std::format(
+                std::string errmsg = std::format(
                         "get_input_metadata(fregrid_util.c): KlevelEnd should be no larger than "
                         "number of vertical levels of field {} in file {}.",
                         field[n].var[ll].name, file[n].name);
@@ -1257,7 +1256,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           if (cart[0] == 'T') {
             field[n].var[ll].has_taxis = 1;
             if (lend > dimsize[0]) {
-              string errmsg = format ("get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
+              string errmsg = std::format ("get_input_metadata(fregrid_util.c): LstepEnd should be no larger than "
                              "number of time levels of field {} in file {}.",
                              field[n].var[ll].name, file[n].name);
               mpp_error(errmsg);

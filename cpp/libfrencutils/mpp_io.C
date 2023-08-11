@@ -63,17 +63,13 @@ int      in_format = NC_FORMAT_NETCDF4_CLASSIC;
 ********************************************************************/
 void netcdf_error(const char *msg, int status )
 {
-  char errmsg[512];
-
-  sprintf( errmsg, "%s: %s", msg, nc_strerror(status) );
+  std::string errmsg = std::format("{}: {}", msg, nc_strerror(status) );
   mpp_error(errmsg);
-
-}; /* netcdf_error */
+};
 
 void netcdf_error(const string& msg, int status )
 {
-  std::string errmsg = std::format( "{}: {}", msg, nc_strerror(status) );
-  mpp_error(errmsg);
+  netcdf_error(msg.c_str(), status);
 }
 
 

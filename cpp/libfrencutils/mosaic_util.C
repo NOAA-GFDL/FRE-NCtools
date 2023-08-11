@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 #include "mosaic_util.h"
 #include "constant.h"
@@ -57,7 +58,13 @@ void error_handler(const char *msg)
 #else
   exit(1);
 #endif
-}; /* error_handler */
+};
+
+
+void error_handler(const std::string& msg){
+  error_handler(msg.c_str());
+};
+
 
 /*********************************************************************
 
