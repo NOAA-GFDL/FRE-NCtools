@@ -34,6 +34,8 @@ fregrid_SOURCES = bilinear_interp.c \
                   bilinear_interp.h \
                   conserve_interp.c \
                   conserve_interp.h \
+                  conserve_interp_util.c \
+                  conserve_interp_util.h \
                   fregrid_util.c \
                   fregrid_util.h \
                   fregrid.c \
