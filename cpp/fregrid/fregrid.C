@@ -319,7 +319,6 @@ int main(int argc, char* argv[])
   unsigned int nscalar_orig;
   int     option_index, c, i, n, m, l;
   char    entry[MAXSTRING];  /* should be long enough */
-  char    txt[STRING];
   char    history[MAXATT];
   int     fill_missing = 0;
   int     extrapolate = 0;
@@ -615,7 +614,7 @@ int main(int argc, char* argv[])
     if( nscalar && nfiles != 1 )
       mpp_error("fregrid: when scalar_field is specified, number of files must be 1");
     if( nfiles_out == 0 ) {
-      for(i=0; i<nfiles; i++) strcpy(output_file[i], input_file[i]);
+      for(unsigned int ui=0; ui<nfiles; ui++) strcpy(output_file[ui], input_file[ui]);
     }
     else if (nfiles_out != nfiles )
       mpp_error("fregrid:number of input file is not equal to number of output file");
@@ -896,8 +895,8 @@ int main(int argc, char* argv[])
     /* when the interp_method specified through command line is CONSERVE_ORDER1, but the interp_method in the source file
        field attribute is CONSERVE_ORDER2, need to modify the interp_method value */
     if (opcode & CONSERVE_ORDER1) {
-      for (l = 0; l < nscalar; l++) {
-        if (scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
+      for (unsigned int ul = 0; ul < nscalar; ul++) {
+        if (scalar_out->var[ul].interp_method == CONSERVE_ORDER2) {
         if (mpp_pe() == mpp_root_pe()) printf(
             "NOTE from fregrid: even though the interp_method specified through command line is "
             "conserve_order1, the interp_method is reset to conserve_order2 because some fields in "
@@ -909,8 +908,8 @@ int main(int argc, char* argv[])
       }
     }
     if (opcode & CONSERVE_ORDER1) {
-      for (l = 0; l < nvector; l++) {
-        if (u_out->var[l].interp_method == CONSERVE_ORDER2) {
+      for (unsigned int ul = 0; ul < nvector; ul++) {
+        if (u_out->var[ul].interp_method == CONSERVE_ORDER2) {
         if (mpp_pe() == mpp_root_pe()) printf(
             "NOTE from fregrid: even though the interp_method specified through command line is "
             "conserve_order1, the interp_method is reset to conserve_order2 because some fields in "
@@ -995,7 +994,7 @@ int main(int argc, char* argv[])
 
   /* Then doing the regridding */
   for (m = 0; m < file_in->nt; m++) {
-    int memsize, level_z, level_n, level_t;
+    int level_z, level_n, level_t;
 
     write_output_time(ntiles_out, file_out, m);
     if (nfiles > 1) write_output_time(ntiles_out, file2_out, m);
