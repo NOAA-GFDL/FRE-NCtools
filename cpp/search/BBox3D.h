@@ -134,7 +134,7 @@ namespace nct {
 
         //Augment the box in case of doubles stored as floats.
         void expand_for_doubles_if(){
-#ifndef USE_NEXTAFTER
+#ifdef USE_NEXTAFTER
           for (int i = 0; i < 3; i++) {
             hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
           }

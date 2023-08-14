@@ -83,7 +83,14 @@ int create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const i
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 void create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                         const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                        const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                        double *xgrid_area, double *xgrid_clon, double *xgrid_clat, int nxgrid1);
+                                        const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, int nxgrid1);
+
+void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
+                                std::vector<size_t>& i_in_r, std::vector<size_t>& j_in_r,
+                                std::vector<size_t>& i_out_r, std::vector<size_t>& j_out_r,
+                                std::vector<double>& xgrid_area_r);
 
 #endif

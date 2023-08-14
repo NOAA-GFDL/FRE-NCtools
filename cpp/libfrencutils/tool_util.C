@@ -137,7 +137,8 @@ double spherical_dist(double x1, double y1, double x2, double y2)
 double bipolar_dist(double x1, double y1, double x2, double y2,
 		    double bpeq, double bpsp, double bpnp, double rp )
 {
-  double dist, x[2],y[2], bp_lon[2], bp_lat[2], metric[2];
+  double dist{0.0};
+  double x[2],y[2], bp_lon[2], bp_lat[2], metric[2];
   double h1[2], h2[2], chic;
   int n;
 
@@ -292,8 +293,6 @@ double bipolar_area(double x1, double y1, double x2, double y2,
  ********************************************************************/
    double bp_phi(double x, double y, double bpsp, double bpnp)
 {
-  double bp_phi;
-
   if (lat_dist(x,bpsp)<90.)
     return (-90+lat_dist(x,bpsp));
   else
@@ -480,7 +479,8 @@ void vtx_insert(double *x, double *y, int *n, int n_ins)
 ********************************************************************************/
 double* compute_grid_bound(int nb, const double *bnds, const int *npts, int *grid_size, const char *center)
 {
-  int    refine, i, n, np;
+  int    refine{0};
+  int  i, n, np;
   double *grid=NULL, *tmp=NULL;
   double *grid1=NULL, *grid2=NULL;
 
@@ -541,15 +541,14 @@ int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds)
 {
   int grid_size;
   int refine, l;
-  double avg_res, chg_res, wid, an;
+  double avg_res, wid, an;
   int ncells;
-
   refine = 2;
 
   grid_size = 0;
   for(l=0; l<nb-1; l++) {
     avg_res = 0.5*(dbnds[l] + dbnds[l+1]);
-    chg_res = (dbnds[l+1] - dbnds[l]);
+    //chg_res = (dbnds[l+1] - dbnds[l]);
 
     wid   = fabs(bnds[l+1] - bnds[l]);
     an    = wid/avg_res;
@@ -569,11 +568,11 @@ int get_legacy_grid_size(int nb, const double *bnds, const double *dbnds)
 ********************************************************************************/
 double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnds, double stretch, int *grid_size, const char *center)
 {
-  int    refine, i, n, np, l;
+  int    refine, i, n, l;
   double avg_res, chg_res, tol;
   double wid, an, del, sum;
   double *grid=NULL;
-  int    maxlen = MAX_GRID_LENGTH/2;
+  const int    maxlen = MAX_GRID_LENGTH/2;
   double delta[maxlen];
   int    num, ncells, npts;
 
@@ -588,7 +587,6 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
 
   num = 0;
   for(l=0; l<nb-1; l++) {
-    int keep_going;
     /* avg_res = average resolution of T cells within region
        chg_res = change in resolution across the region
        wid     = width of region
@@ -688,7 +686,7 @@ double* compute_grid_bound_legacy(int nb, const double *bnds, const double *dbnd
 void get_boundary_type( const char *grid_file, int grid_version, int *cyclic_x, int *cyclic_y, int *is_tripolar )
 {
   int ntiles, ncontacts;
-  int m, fid, vid;
+  int m, fid;
   char errmsg[512];
   char attvalue[128];
   int tile1[2], tile2[2];

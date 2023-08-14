@@ -2411,9 +2411,9 @@ void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
 
 template<class T>
 void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
-  std::cout << "lon ,   lat:" << std::endl;
+  os << "lon ,   lat:" << std::endl;
   for (size_t i = 0; i < lonv.size(); i++) {
-    std::cout << lonv[i] * R2D << ", " << latv[i] * R2D << std::endl;
+    os << lonv[i] * R2D << ", " << latv[i] * R2D << std::endl;
   }
 }
 
@@ -2558,9 +2558,9 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
                                    const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
                                    vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
                                    vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
-  int nx1 {nlon_in}, nx2{nlon_out}, ny1{nlat_in}, ny2{nlat_out};
-  int nx1p{nx1 + 1};
-  int nx2p{nx2 + 1};
+  const size_t nx1 {(size_t) nlon_in}, nx2{(size_t)nlon_out}, ny1{(size_t)nlat_in}, ny2{(size_t)nlat_out};
+  const size_t nx1p{nx1 + 1};
+  const size_t nx2p{nx2 + 1};
 
   const std::source_location location = std::source_location::current();
   std::cout << format("Entered {}", location.function_name()) << std::endl;
@@ -2672,11 +2672,19 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
-
   create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                lon_in, lat_in, lon_out, lat_out, mask_in,
                                i_in_r, j_in_r, i_out_r, j_out_r,
                                xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+
+  if(false == true) {
+    create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
+                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                 i_in, j_in, i_out, j_out,
+                                 xgrid_area, xgrid_clon, xgrid_clat,
+                                 i_in_r, j_in_r, i_out_r, j_out_r,  xgrid_area_r);
+
+  }
 
   int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
   //Copy the results in the way original code expects.
@@ -2707,14 +2715,55 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   return nxgrid;
 }
 
+void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
+                                  vector<size_t>& i_in_r, vector<size_t>& j_in_r,
+                                  vector<size_t>& i_out_r, vector<size_t>& j_out_r,
+                                  vector<double>& xgrid_area_r) {
+  int nx1 {nlon_in}, nx2{nlon_out};
+  int nx1p{nx1 + 1};
+  int nx2p{nx2 + 1};
 
+  auto nxgrid =  create_xgrid_2dx2d_order2_legacy(nlon_in, nlat_in, nlon_out, nlat_out,
+                                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                                 i_in, j_in, i_out, j_out,
+                                                 xgrid_area, xgrid_clon, xgrid_clat);
+  auto nxgrid_r = static_cast<int> ( xgrid_area_r.size());
+  //Copy the results in the way original code expects.
+  set <string> sv;
+  if (nxgrid_r != nxgrid) {
+    for (int i = 0; i < nxgrid_r; ++i) {
+      string str = to_string(j_in_r[i]) + "_" + to_string(i_in_r[i]) +
+                   "_" + to_string(j_out_r[i]) + "_" + to_string(i_out_r[i]);
+      sv.insert(str);
+    }
+
+    for (int i = 0; i < nxgrid; ++i) {
+      string str = to_string(j_in[i]) + "_" + to_string(i_in[i]) +
+                   "_" + to_string(j_out[i]) + "_" + to_string(i_out[i]);
+      if (sv.find(str) == sv.end()) {
+        std::cout << "missing: " << str << endl;
+
+        //for 1
+        auto is1 = get_cell_idxs_ccw_4(i_in[i], j_in[i], nx1p);
+        auto is2 = get_cell_idxs_ccw_4(i_out[i], j_out[i], nx2p);
+        auto box = getBoxForSphericalPolygon( lat_in, lon_in, is1, true);
+        cout << "box1\n" << box << endl;
+        box = getBoxForSphericalPolygon( lat_out, lon_out, is2, true);
+        cout << "box2\n" << box << endl;
+      }
+    }
+  }
+
+}
 
 void
 create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                    const double *lon_in, const double *lat_in, const double *lon_out,
                                    const double *lat_out,
-                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat, int nxgrid1) {
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,int nxgrid1) {
   int nx1 {nlon_in}, nx2{nlon_out};
   int nx1p{nx1 + 1};
   int nx2p{nx2 + 1};

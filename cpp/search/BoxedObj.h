@@ -10,8 +10,6 @@
 // function addResult
 
 namespace nct {
-    using ResultIds = std::vector<size_t>;
-
     class BoxAndId {
         friend class BruteBoxQuery;
     private:
@@ -23,7 +21,7 @@ namespace nct {
         BBox3D *getBox() {
             return box;
         }
-        size_t getId() const {
+        [[nodiscard]] size_t getId() const {
             return id;
         }
         /*
