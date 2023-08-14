@@ -85,9 +85,10 @@ void netcdf_error(const string& msg, int status )
 ************************************************************/
 
 int mpp_open(const char *file, int action) {
+  int status {NC_NOERR};
   char curfile[STRING];
   char errmsg[512];
-  int ncid, status, istat, n, fid;
+  int ncid, istat, n, fid;
   static int first_call = 1;
   static size_t blksz=1048576;
 
@@ -393,11 +394,7 @@ int mpp_get_dimlen(int fid, const char *name)
 *********************************************************************/
 void mpp_get_var_value(int fid, int vid, void *data)
 {
-  int status;
-  int *data_i4;
-  short *data_i2;
-  float *data_r4;
-  char errmsg[512];
+  int status {NC_NOERR};
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_value_block): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -437,7 +434,7 @@ void mpp_get_var_value(int fid, int vid, void *data)
 *********************************************************************/
 void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t *nread, void *data)
 {
-  int status;
+  int status {NC_NOERR};
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_value_block): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -476,7 +473,7 @@ void mpp_get_var_value_block(int fid, int vid, const size_t *start, const size_t
  ******************************************************************/
 void mpp_get_var_att(int fid, int vid, const char *name, void *val)
 {
-  int status;
+  int status {NC_NOERR};;
   nc_type type;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_att): invalid fid number, fid should be "
@@ -524,7 +521,7 @@ void mpp_get_var_att(int fid, int vid, const char *name, void *val)
  ******************************************************************/
 void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
 {
-  int status;
+  int status {NC_NOERR};
   nc_type type;
   short sval;
   int   ival;
@@ -573,7 +570,7 @@ void mpp_get_var_att_double(int fid, int vid, const char *name, double *val)
  ******************************************************************/
 void mpp_get_global_att(int fid, const char *name, void *val)
 {
-  int status;
+  int status {NC_NOERR};
   char attval[4096];
   nc_type type;
   size_t attlen;
@@ -628,7 +625,8 @@ void mpp_get_global_att(int fid, const char *name, void *val)
 ********************************************************************/
 int mpp_get_var_ndim(int fid, int vid)
 {
-  int status, ndim;
+  int status {NC_NOERR};
+  int ndim;
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_ndim): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -651,10 +649,8 @@ int mpp_get_var_ndim(int fid, int vid)
 ********************************************************************/
 nc_type mpp_get_var_type(int fid, int vid)
 {
-  char errmsg[512];
-
   nc_type vartype;
-  int status;
+  int status {NC_NOERR};
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_ndim): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -678,7 +674,8 @@ For each dimension we are assuming there is a 1-d field have the same name as th
 *********************************************************************/
 void mpp_get_var_dimname(int fid, int vid, int ind, char *name)
 {
-  int status, ncid, fldid, ndims, dims[4];
+  int status {NC_NOERR};
+  int  ncid, fldid, ndims, dims[4];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_dimname): invalid fid number, fid should be "
 				    "a nonnegative integer that less than nfiles");
@@ -716,11 +713,9 @@ void mpp_get_var_dimname(int fid, int vid, int ind, char *name)
   char mpp_get_var_cart(int fid, int vid)
   get the cart of the dimension variable
   *************************************************************************/
-char mpp_get_var_cart(int fid, int vid)
-{
+char mpp_get_var_cart(int fid, int vid){
   char cart;
   int ncid, fldid, status;
-  char errmsg[512];
 
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_get_var_cart): invalid fid number, fid should be "
 				      "a nonnegative integer that less than nfiles");
@@ -731,6 +726,7 @@ char mpp_get_var_cart(int fid, int vid)
   ncid = files[fid].ncid;
   fldid = files[fid].var[vid].fldid;
   status = nc_get_att_text(ncid, fldid, "cartesian_axis", &cart);
+  //TODO: Investigate:
   if(status != NC_NOERR)status = nc_get_att_text(ncid, fldid, "axis", &cart);
   /*
   if(status != NC_NOERR){
@@ -840,7 +836,6 @@ int mpp_global_att_exist(int fid, const char *att)
 ********************************************************************/
 int mpp_def_dim(int fid, const char* name, int size) {
   int dimid, status;
-  char errmsg[512];
 
   if( mpp_pe() != mpp_root_pe() ) return 0;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_def_dim): invalid fid number, fid should be "
@@ -1010,7 +1005,7 @@ void mpp_set_deflation(int fid_in, int fid_out, int deflation, int shuffle) {
     // return if netcdf3
     int format;
     char errmsg[512];
-    int status;
+    int status ;
     status = nc_inq_format(files[fid_in].ncid, &format);
     if (status != NC_NOERR) {
         sprintf(errmsg, "mpp_io(mpp_set_deflation): Error in getting determining netcdf version");
@@ -1101,7 +1096,7 @@ void mpp_copy_var_att(int fid_in, int vid_in, int fid_out, int vid_out)
 **********************************************************************/
 void mpp_copy_data(int fid_in, int vid_in, int fid_out, int vid_out)
 {
-  int status;
+  int status {NC_NOERR};
   int ndim, dims[5], i;
   size_t dsize, size;
   double *data=NULL;
@@ -1181,7 +1176,8 @@ void mpp_get_var_attname(int fid, int vid, int i, char *name)
 
 void mpp_copy_att_by_name(int fid_in, int vid_in, int fid_out, int vid_out, const char *name)
 {
-  int status, ncid_in, ncid_out, fldid_in, fldid_out;
+  int status {NC_NOERR};
+  int ncid_in, ncid_out, fldid_in, fldid_out;
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1255,7 +1251,7 @@ void mpp_copy_global_att(int fid_in, int fid_out)
  ********************************************************************/
 void mpp_put_var_value(int fid, int vid, const void* data)
 {
-  size_t status;
+  int status {NC_NOERR};
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1298,7 +1294,7 @@ void mpp_put_var_value(int fid, int vid, const void* data)
 *********************************************************************/
 void mpp_put_var_value_block(int fid, int vid, const size_t *start, const size_t *nwrite, const void *data)
 {
-  int status;
+  int status {NC_NOERR};
 
   if( mpp_pe() != mpp_root_pe() ) return;
 
@@ -1360,7 +1356,7 @@ void mpp_redef(int fid) {
    end the definition of netcdf file with ncid.
  *******************************************************************/
 void mpp_end_def(int fid) {
-  int status;
+  int status {NC_NOERR};
 
   if( mpp_pe() != mpp_root_pe() ) return;
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_end_def): invalid fid number, fid should be "

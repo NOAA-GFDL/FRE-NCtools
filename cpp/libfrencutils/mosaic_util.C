@@ -80,32 +80,32 @@ void error_handler(const std::string& msg){
      array:  array of data points  (must be monotonically increasing)
      ia   :  size of array.
  ********************************************************************/
-int nearest_index(double value, const double *array, int ia)
-{
+int nearest_index(double value, const double *array, int ia){
+  //TODO: Warnig: index may be returned uninitialized?
   int index, i;
   int keep_going;
 
-  for(i=1; i<ia; i++){
-    if (array[i] < array[i-1])
+  for (i = 1; i < ia; i++) {
+    if (array[i] < array[i - 1])
       error_handler("nearest_index: array must be monotonically increasing");
   }
-  if (value < array[0] )
+
+  if (value < array[0])
     index = 0;
-  else if ( value > array[ia-1])
-    index = ia-1;
-  else
-    {
-      i=0;
-      keep_going = 1;
-      while (i < ia && keep_going) {
-   i = i+1;
-   if (value <= array[i]) {
-     index = i;
-     if (array[i]-value > value-array[i-1]) index = i-1;
-     keep_going = 0;
-   }
+  else if (value > array[ia - 1])
+    index = ia - 1;
+  else {
+    i = 0;
+    keep_going = 1;
+    while (i < ia && keep_going) {
+      i = i + 1;
+      if (value <= array[i]) {
+        index = i;
+        if (array[i] - value > value - array[i - 1]) index = i - 1;
+        keep_going = 0;
       }
     }
+  }
   return index;
 
 };
@@ -115,8 +115,8 @@ int nearest_index(double value, const double *array, int ia)
 void tokenize(const char * const string, const char *tokens, unsigned int varlen,
          unsigned int maxvar, char * pstring, unsigned int * const nstr)
 {
-  size_t i, j, nvar, len, ntoken;
-  int found, n;
+  size_t i, j, nvar, len, ntoken, n;
+  int found;
 
   nvar = 0; j = 0;
   len = strlen(string);

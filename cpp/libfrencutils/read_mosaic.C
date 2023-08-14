@@ -694,85 +694,88 @@ void read_mosaic_contact(const char *mosaic_file, int *tile1, int *tile2, int *i
   char **gridtiles;
 #define MAXVAR 40
   char pstring[MAXVAR][STRING];
-  int ntiles, ncontacts, n, m, l, found;
+  int ntiles, ncontacts, n, m, found;
   unsigned int nstr;
   const int x_refine = 2, y_refine = 2;
   int i1_type, j1_type, i2_type, j2_type;
 
   ntiles = get_dimlen(mosaic_file, "ntiles");
-  gridtiles = (char **)malloc(ntiles*sizeof(char *));
-  for(n=0; n<ntiles; n++) {
-    gridtiles[n] = (char *)malloc(STRING*sizeof(char));
+  gridtiles = (char **) malloc(ntiles * sizeof(char *));
+  for (n = 0; n < ntiles; n++) {
+    gridtiles[n] = (char *) malloc(STRING * sizeof(char));
     get_string_data_level(mosaic_file, "gridtiles", gridtiles[n], &n);
   }
 
   ncontacts = get_dimlen(mosaic_file, "ncontact");
-  for(n = 0; n < ncontacts; n++) {
+  for (n = 0; n < ncontacts; n++) {
     get_string_data_level(mosaic_file, "contacts", contacts, &n);
     /* parse the string contacts to get tile number */
-    tokenize( contacts, ":", STRING, MAXVAR, (char *)pstring, &nstr);
-    if(nstr != 4) error_handler("Error from read_mosaic: number of elements "
-				 "in contact seperated by :/:: should be 4");
+    tokenize(contacts, ":", STRING, MAXVAR, (char *) pstring, &nstr);
+    if (nstr != 4)
+      error_handler("Error from read_mosaic: number of elements "
+                    "in contact seperated by :/:: should be 4");
     found = 0;
-    for(m=0; m<ntiles; m++) {
-      if(strcmp(gridtiles[m], pstring[1]) == 0) { /*found the tile name */
-	found = 1;
-	tile1[n] = m+1;
-	break;
+    for (m = 0; m < ntiles; m++) {
+      if (strcmp(gridtiles[m], pstring[1]) == 0) { /*found the tile name */
+        found = 1;
+        tile1[n] = m + 1;
+        break;
       }
     }
-    if(!found) error_handler("error from read_mosaic: the first tile name specified "
-			     "in contact is not found in tile list");
+    if (!found)
+      error_handler("error from read_mosaic: the first tile name specified "
+                    "in contact is not found in tile list");
     found = 0;
-    for(m=0; m<ntiles; m++) {
-      if(strcmp(gridtiles[m], pstring[3]) == 0) { /*found the tile name */
-	found = 1;
-	tile2[n] = m+1;
-	break;
+    for (m = 0; m < ntiles; m++) {
+      if (strcmp(gridtiles[m], pstring[3]) == 0) { /*found the tile name */
+        found = 1;
+        tile2[n] = m + 1;
+        break;
       }
     }
-    if(!found) error_handler("error from read_mosaic: the second tile name specified "
-			     "in contact is not found in tile list");
+    if (!found)
+      error_handler("error from read_mosaic: the second tile name specified "
+                    "in contact is not found in tile list");
     get_string_data_level(mosaic_file, "contact_index", contacts, &n);
     /* parse the string to get contact index */
-    tokenize( contacts, ":,", STRING, MAXVAR, (char *)pstring, &nstr);
-    if(nstr != 8) error_handler("Error from read_mosaic: number of elements "
-				 "in contact_index seperated by :/, should be 8");
+    tokenize(contacts, ":,", STRING, MAXVAR, (char *) pstring, &nstr);
+    if (nstr != 8)
+      error_handler("Error from read_mosaic: number of elements "
+                    "in contact_index seperated by :/, should be 8");
     /* make sure the string is only composed of numbers */
-    for(m=0; m<nstr; m++) for(l=0; l<strlen(pstring[m]); l++) {
-      if(pstring[m][l] > '9' ||  pstring[m][l] < '0' ) {
-	error_handler("Error from read_mosaic: some of the character in "
-		      "contact_indices except token is not digit number");
+    for (size_t mi = 0; mi < nstr; mi++)
+      for (size_t li = 0; li < strlen(pstring[mi]); li++) {
+        if (pstring[mi][li] > '9' || pstring[mi][li] < '0') {
+          error_handler("Error from read_mosaic: some of the character in "
+                        "contact_indices except token is not digit number");
+        }
       }
-    }
     istart1[n] = atoi(pstring[0]);
-    iend1[n]   = atoi(pstring[1]);
+    iend1[n] = atoi(pstring[1]);
     jstart1[n] = atoi(pstring[2]);
-    jend1[n]   = atoi(pstring[3]);
+    jend1[n] = atoi(pstring[3]);
     istart2[n] = atoi(pstring[4]);
-    iend2[n]   = atoi(pstring[5]);
+    iend2[n] = atoi(pstring[5]);
     jstart2[n] = atoi(pstring[6]);
-    jend2[n]   = atoi(pstring[7]);
-    i1_type = transfer_to_model_index(istart1[n], iend1[n], istart1+n, iend1+n, x_refine);
-    j1_type = transfer_to_model_index(jstart1[n], jend1[n], jstart1+n, jend1+n, y_refine);
-    i2_type = transfer_to_model_index(istart2[n], iend2[n], istart2+n, iend2+n, x_refine);
-    j2_type = transfer_to_model_index(jstart2[n], jend2[n], jstart2+n, jend2+n, y_refine);
-    if( i1_type == 0 && j1_type == 0 )
+    jend2[n] = atoi(pstring[7]);
+    i1_type = transfer_to_model_index(istart1[n], iend1[n], istart1 + n, iend1 + n, x_refine);
+    j1_type = transfer_to_model_index(jstart1[n], jend1[n], jstart1 + n, jend1 + n, y_refine);
+    i2_type = transfer_to_model_index(istart2[n], iend2[n], istart2 + n, iend2 + n, x_refine);
+    j2_type = transfer_to_model_index(jstart2[n], jend2[n], jstart2 + n, jend2 + n, y_refine);
+    if (i1_type == 0 && j1_type == 0)
       error_handler("Error from read_mosaic_contact:istart1==iend1 and jstart1==jend1");
-    if( i2_type == 0 && j2_type == 0 )
+    if (i2_type == 0 && j2_type == 0)
       error_handler("Error from read_mosaic_contact:istart2==iend2 and jstart2==jend2");
-    if( i1_type + j1_type != i2_type + j2_type )
+    if (i1_type + j1_type != i2_type + j2_type)
       error_handler("Error from read_mosaic_contact: It is not a line or overlap contact");
 
   }
 
-  for(m=0; m<ntiles; m++) {
+
+  for (m = 0; m < ntiles; m++) {
     free(gridtiles[m]);
   }
-
   free(gridtiles);
-
-
 }; /* read_mosaic_contact */
 
 
