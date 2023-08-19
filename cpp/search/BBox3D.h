@@ -71,8 +71,9 @@ namespace nct {
         }
 
         friend std::ostream &operator<<(std::ostream &os, const BBox3D &b) {
-          for (int i = 0; i < 3; i++) {
-            os << "[ " << b.lo[i] << ", " << b.hi[i] << " ]" << std::endl;
+          for(int i = 0; i<3; i++){
+            auto str = std::format("[ {:16.10e},{:16.10e} ], ", b.lo[i], b.hi[i]);
+            os << str << std::endl;
           }
           return os;
         }
@@ -132,14 +133,41 @@ namespace nct {
           }
         }
 
+      template<class T>
+      inline static bool contains(const BBox3D &bb, const std::array<T, 3> &p) {
+        if (bb.lo[0] <= p[0] && p[0] <= bb.hi[0] &&
+            bb.lo[1] <= p[1] && p[1] <= bb.hi[1] &&
+            bb.lo[2] <= p[2] && p[2] <= bb.hi[2]) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      //Augment the box in case of doubles stored as floats
+      inline void expand_xy_by_kf(float kf = 0.000001) {
+        for (int i = 0; i < 3; i++) {
+          auto diff = kf * (hi[i] - lo[i]);
+          hi[i] += diff;
+          lo[i] -= diff;
+        }
+      }
         //Augment the box in case of doubles stored as floats.
-        void expand_for_doubles_if(){
-#ifdef USE_NEXTAFTER
+        inline void expand_for_doubles(){
           for (int i = 0; i < 3; i++) {
+            hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+            lo[i] = std::nextafter(lo[i], -std::numeric_limits<float>::max());
+          }
+        }
+
+      //Augment the box in case of doubles stored as floats.
+      inline void expand_for_doubles_if(){
+#ifdef USE_NEXTAFTER
+        for (int i = 0; i < 3; i++) {
             hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
           }
 #endif
-        }
+      }
 
     };
 } // nct
