@@ -674,12 +674,14 @@ int main(int argc, char* argv[])
   {
     int base_cpu;
 
+    /*
 #if defined(_OPENMP)
     omp_set_num_threads(nthreads);
     base_cpu = get_cpu_affinity();
 #pragma omp parallel
     set_cpu_affinity(base_cpu + omp_get_thread_num());
 #endif
+     */
   }
 
   /* get the mosaic information of input and output mosaic*/

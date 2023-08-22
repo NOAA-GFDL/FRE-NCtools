@@ -9,6 +9,7 @@
 //#include <ranges>
 #include <algorithm>
 #include <cmath>
+#include <format>
 
 #include "DistanceInterval.h"
 #include "Point3D.h"

@@ -2332,7 +2332,7 @@ double dist_between_boxes(const double *x1, const double *y1, const double *z1, 
   dist = sqrt(dist);
   return (dist);
 
-}; /* dist_between_boxes */
+}
 
 /*******************************************************************************
  int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
@@ -2351,7 +2351,7 @@ int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
    product = ( x-x0 )*(y1-y0) + (x0-x1)*(y-y0);
    return (product<=SMALL) ? 1:0;
 
- } /* inside_edge */
+ }
 
 // Code below for using search algorithms in create_xgrid_...
 
@@ -2724,6 +2724,11 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
   std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
+extern 
+int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2_ws
  */
@@ -2733,6 +2738,16 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
+
+  /*
+  auto nxgrid_l =  create_xgrid_2dx2d_order2_legacy_gpu(nlon_in, nlat_in, nlon_out, nlat_out,
+                                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                                 i_in, j_in, i_out, j_out,
+                                                 xgrid_area, xgrid_clon, xgrid_clat);
+  return nxgrid_l;
+   */
+
+
   create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                lon_in, lat_in, lon_out, lat_out, mask_in,
                                i_in_r, j_in_r, i_out_r, j_out_r,

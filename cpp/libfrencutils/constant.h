@@ -34,6 +34,8 @@
 #endif
 
 
+//TODO: change # defines to constants, e.g. 
+//consexpression double  R2D {180/M_PI};
 #define R2D (180/M_PI)
 #define D2R (M_PI/180)
 #define TPI (2.0*M_PI)
