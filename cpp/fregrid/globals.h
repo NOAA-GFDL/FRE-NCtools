@@ -23,6 +23,11 @@
 #include "constant.h"
 #include "mpp_domain.h"
 
+//TODO: For C++ projects, most "#defined vars" below should be replaced with/in
+// enum classes, constexpr,  or possibly deleted altogether. Additinally their scope 
+// should be restricted (e.g. placed  in a namespaced).  Also, character arrays 
+// should be replaced by std::string and some structs may be changed to classes.
+
 #define MAXATT   4096
 #define MAXSTRING 10240
 #define MAXENTRY  512
