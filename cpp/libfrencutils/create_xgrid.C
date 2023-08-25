@@ -2401,88 +2401,48 @@ void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
   }
 }
 
-/**
- * @brief Check and expand the box based on input span vectors and parameters.
- *
- * This function checks and expands the bounding box to make sure it contains points
- * samplep from the polygon `xv` and `yv` (as span vectors). The sampling size is
- * `npoints1D` in each of the lon and lat coordinates
- *
- * @param xv The span vector representing the x-coordinate (lon) values.
- * @param yv The span vector representing the y-coordinate (lat) values.
- * @param box The bounding box to be checked and potentially expanded.
- * @param npoints1D The number of points (per dimension) used for expansion.
- * @param expand A flag indicating whether or not to expand the box.
- *
- * @return if the box was expanded/
- *
- * @remark The function modifies the `box` object directly if expansion is
- *         required.
- */
 
-bool checkAndExpandBox(span<double> xv, span<double> yv, BBox_t & box,
-                       unsigned int npoints1D = 5, bool expand = true ) {
-  bool expanded = false;
-  std::array<double, 3> pt{};
-  const auto [miny_it, maxy_it] = std::minmax_element(begin(yv), end(yv));
-  const double miny = *miny_it;
-  const double maxy = *maxy_it;
-  const auto [minx_it, maxx_it] = std::minmax_element(begin(xv), end(xv));
-  const double minx = *minx_it;
-  const double maxx = *maxx_it;
-
-  const unsigned int NDX{npoints1D};
-  const unsigned int NDY{npoints1D};
-  const double dy = (maxy - miny) / NDY;
-  const double dx = (maxx - minx) / NDX;
-  for (int i = 0; i < NDX; ++i) {
-    auto ax = minx + i * dx;
-    for (int j = 0; j < NDY; ++j) {
-      latlon2xyz(miny + j * dy, ax, pt);
-      auto contains_point = BBox3D::contains(box, pt);
-      if (!contains_point && expand) {
-        box.expand(pt);
-        box.expand_for_doubles();
-        expanded = true;
-        contains_point = BBox3D::contains(box, pt);
-        if (!contains_point) {
-          cout << "BBox missing point after expanding for point. polygon,box and point are:" << std::endl;
-          printPolygon(cout, xv, yv);
-          cout << box << endl;
-          auto str = std::format("< {:16.10e}, {:16.10e}, {:16.10e}>", pt[0],pt[1],pt[2]);
-          cout << str <<endl;
-          mpp_error("BBox missing point after expanding for point");
-        }
-      }
+size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, double *xv) {
+  size_t count {0};
+  for (unsigned int i = 0; i < NV4; i++) {
+    if (xv[i] == 2 * M_PI) xv[i] = 0;
+    if (xv[i] >= 2 * M_PI || xv[i] < 0.) {
+      string errmsg = std::format(
+              "xv[i] > 2 * M_PI | xv[i] < 0. xv[i]: {} ", xv[i]);
+      cerr << errmsg << endl;
+      count++;
+    }
+    if (yv[i] < -M_PI_2 || yv[i] > M_PI_2) {
+      string errmsg = std::format(
+              "yv[i] < -M_PI_2|| yv[i] > M_PI_2: {} ", yv[i]);
+      cerr << errmsg.c_str() << endl;
+      count++;
     }
   }
-  return expanded;
+  return count;
 }
-
 /**
  * Find the 3D (XYZ) axis-aligned bounding box of a spherical polygon.
  * The six values that define the bounding box are the extremas on the
- * Y,Y, and Z axis of nay point of the polygon, which may or may not be the vertices
+ * Y,Y, and Z axis of any point of the polygon, which may or may not be the vertices
  * of the polygon, or even lie on the edges - i.e some bay be in the interior.
  * If a tight bounding box is preferred, but a larger one is acceptable though
  * when used for nearest neighbor search, th search time will go up.
  *
- * In this algorithm below we start with the bounding
- * box that includes the vertices, and then we add these possible extrema points:
- * a) if the polygon contains a pole, expand the box by the point (<x,y,z>) that is
- *    the pole.
- * b) if an edge crosses the equator (lat = 0), expand the box by extrema by points
- * at the equator .
- * c) if an edge crosses any plane defined be the prime meridian or its perpendicular
- * (longitudes 0, pi/2, pi, 3 pi/2 ) then we add extrema point(s) that are on that
- * plane). Note that a polygon may intersect with both a meridian plane and the equator.
+ * ASSUMPTIONS: Polygons (cells) are four vertices long and function fix_lon is not used.
+ * Indeed since the polygon mesh and not individual polygons (or cells) are passed in,
+ * it would be difficult for the clients function to apply fix_lon to the cells,  but
+ * this should be kept in mind if future development is done.
  *
- * NOTE: there may be a more mathematical (calculus based) alternative to find the extrema
- * points (in x ,y, and z) for the function ll2xyz (the spherical polygon or surface in
- * lat-lon) , given the boundary (the edges of the polygon ).
+ * NOTE: In the github record there is an earlier version of this function that resulted
+ * in smaller bounding boxes but with box queries missing a small number hits when boxes were
+ * of polygons (cells) from the cubic sphere grid.  That version of the code may be of
+ * interest if further optimization is desired. Additionally,  there may be a more mathematical
+ * (calculus based) alternative to find the extrema points (in x ,y, and z) for the function
+ * ll2xyz (the spherical polygon or surface in lat-lon) , given the boundary (the edges of the
+ * polygon ).
  *
- * //TODO: This function needs unit tests.
- * //TODO: remove call to fix_lon; make yv[], xv[] much shorter. check input data.
+ * //TODO: Write unit tests for this function in unit test framework.
  *
  * @param lat_m The array of latitudes that define the polygon mesh.
  * @param lon_m The array of longitudes that define the polygon mesh.
@@ -2492,53 +2452,44 @@ bool checkAndExpandBox(span<double> xv, span<double> yv, BBox_t & box,
  */
 BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
                                   const array<size_t, 4> &is, bool debugf  = false) {
+  constexpr unsigned int NV4{4};
   // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
-  // where its possible to have an extrema in X or Y when the edge crosses them.
-  // there is an extra +- 90 degrees on the ends because of the way fix lon can adjust lons.
-  bool crosses_equator = false;
+  // where its possible to have an extrema in X or Y when an edge crosses them.
   constexpr static array<double, 7> xlons {0, M_PI_2, M_PI, 3. * M_PI_2, 2. * M_PI};
   std::array<double, 3> pt{}; // a 3D point.
-  //TODO: Place xv and yv together in a class( allows avoiding use fo normal for loops below).
-  double yv[4], xv[4];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
-  for (auto i = 0; i< 4; i++) { //NOTE: four vertices per polygon
+  BBox_t box; //the thing we are calculating.
+  bool crosses_equator = false;
+  double yv[ NV4 ], xv[ NV4 ];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
+  for (auto i = 0; i< NV4 ; i++) {
     xv[i] = lon_m[is[i]];
     yv[i] = lat_m[is[i]];
   }
 
-  for (unsigned int i = 0; i < 4; i++) {
-    if (xv[i] == 2 * M_PI) xv[i] = 0;
-    if (xv[i] >= 2 * M_PI || xv[i] < 0.) {
-      std::string errmsg = std::format(
-              "xv[i] > 2 * M_PI | xv[i] < 0. xv[i]: {} ", xv[i]);
-      mpp_error(errmsg.c_str());
-
-    }
-    if (yv[i] < -M_PI_2 || yv[i] > M_PI_2) {
-      std::string errmsg = std::format(
-              "yv[i] < -M_PI_2|| yv[i] > M_PI_2: {} ", yv[i]);
-      mpp_error(errmsg.c_str());
-    }
+  auto occd = latlons_outside_ccd_domain(4, yv, xv);
+  if(occd>0){
+    mpp_error("There are lats or lons outside CCD");
   }
 
-  if (debugf) {
-    printPolygon<double>(cout, {xv,4}, {yv,4});
-  }
+  //Expand the bounding box in consideration of the max and mins of the lats and lons:
+  const auto [miny_it, maxy_it] = std::minmax_element(begin(yv), end(yv));
+  const double miny = *miny_it;
+  const double maxy = *maxy_it;
+  const auto [minx_it, maxx_it] = std::minmax_element(begin(xv), end(xv));
+  const double minx = *minx_it;
+  const double maxx = *maxx_it;
+  latlon2xyz( miny, minx, pt);
+  box.expand( pt );
+  latlon2xyz( maxy, minx, pt);
+  box.expand( pt );
+  latlon2xyz( miny, maxx, pt);
+  box.expand( pt );
+  latlon2xyz( maxy, maxx, pt);
+  box.expand( pt );
 
-  // inherited from the old code: Is this really necessary for getting the bbox?
-  //auto n1 = fix_lon(xv, yv, 4, M_PI);
-  auto n1 = 4;
-
-  BBox_t box;
-
-  //Augment/expand the box to include the polygon vertices:
-  for (auto i = 0; i < n1; i++) {
-    latlon2xyz(yv[i], xv[i], pt);
-    box.expand(pt);
-  }
-
-  // Augment the bbox if the polygon contains a pole:
-  //Note that any Z=k plane of the bbox calculated from the vertices
-  //in the step above is sufficient to determine this:
+  //For case where a pole is inside a polygon. Note that
+  // any Z=k plane of the bbox calculated from above
+  // (or even from the actual vertices)
+  // would be sufficient to determine this:
   latlon2xyz(M_PI_2, 0.0, pt); //the north pole
   if (BBox_t::contains_zk(box, pt) && (yv[0] >=  0)){
     box.expand(pt);
@@ -2548,30 +2499,29 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
     box.expand(pt);
   }
 
-  //Augment the box for coordinate value extrema when edge crosses the equator:
-  for (auto i = 0; i < n1; i++) {
+  //Expand the box for coordinate value extrema when edge crosses the equator:
+  for (auto i = 0; i < NV4; i++) {
     auto equator_lat = 0.;
     auto t1 = yv[i];
-    auto t2 = yv[(i + 1) % n1];
+    auto t2 = yv[(i + 1) % NV4];
     if (std::signbit(t1) != std::signbit(t2 )) {
       crosses_equator = true;
       latlon2xyz(equator_lat, xv[i], pt);
       box.expand(pt);
-      latlon2xyz(equator_lat,  xv[(i + 1) % n1], pt);
+      latlon2xyz(equator_lat,  xv[(i + 1) % NV4], pt);
       box.expand(pt);
     }
   }
 
-  //Augment the box for coordinate value extrema when edge crosses meridian plane (
-  // or the meridian plane's perpendicular) :
-  for (auto i = 0; i < n1; i++) {
+  //Expand the box for coordinate value extrema when edge crosses XZ or YZ plane
+  for (auto i = 0; i < NV4; i++) {
     auto t1 = xv[i];
-    auto t2 = xv[(i + 1) % n1];
+    auto t2 = xv[(i + 1) % NV4];
     for (const auto &xang: xlons) {
       if (std::signbit(t1 - xang) != std::signbit(t2 - xang)) {
         latlon2xyz(yv[i], xang, pt);
         box.expand(pt);
-        latlon2xyz(yv[(i + 1) % n1], xang, pt);
+        latlon2xyz(yv[(i + 1) % NV4], xang, pt);
         box.expand(pt);
         if(crosses_equator) {
           latlon2xyz(0.0, xang, pt);
@@ -2581,13 +2531,9 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
     }
   }
   box.expand_for_doubles();
-  auto expanded = checkAndExpandBox(xv, yv, box, 3, true);
-  //if(expanded) {
-  box.expand_xy_by_kf(0.000005);//thse worked 0.0000005 (5 X 10-6);
-
-  //box.expand_for_doubles_if();
   return box;
 }
+
 
 /**
  * Generate the exchange grid between two grids for the 2nd order
@@ -2729,8 +2675,12 @@ int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, c
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                               const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+
+
 /*
- * Just a wrapper for calling create_xgrid_2dx2d_order2_ws
+ * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
+ * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
+ * legacy function to perform some checks, as well as the gpu version of the legacy function.
  */
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
@@ -2739,56 +2689,59 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
-  /*
-  auto nxgrid_l =  create_xgrid_2dx2d_order2_legacy_gpu(nlon_in, nlat_in, nlon_out, nlat_out,
-                                                 lon_in, lat_in, lon_out, lat_out, mask_in,
-                                                 i_in, j_in, i_out, j_out,
-                                                 xgrid_area, xgrid_clon, xgrid_clat);
+  bool use_legacy_gpu{false};
+  bool check_with_legacy_cpu{false};
+
+  if (use_legacy_gpu){
+    auto nxgrid_l = create_xgrid_2dx2d_order2_legacy_gpu(nlon_in, nlat_in, nlon_out, nlat_out,
+                                                         lon_in, lat_in, lon_out, lat_out, mask_in,
+                                                         i_in, j_in, i_out, j_out,
+                                                         xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid_l;
-   */
 
+  }else{
 
-  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                               lon_in, lat_in, lon_out, lat_out, mask_in,
-                               i_in_r, j_in_r, i_out_r, j_out_r,
-                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
-
-  if(true == false) {
-    create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
+    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                  lon_in, lat_in, lon_out, lat_out, mask_in,
-                                 i_in, j_in, i_out, j_out,
-                                 xgrid_area, xgrid_clon, xgrid_clat,
-                                 i_in_r, j_in_r, i_out_r, j_out_r,  xgrid_area_r);
+                                 i_in_r, j_in_r, i_out_r, j_out_r,
+                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
 
-  }
+    if (check_with_legacy_cpu) {
+      create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
+                                      lon_in, lat_in, lon_out, lat_out, mask_in,
+                                      i_in, j_in, i_out, j_out,
+                                      xgrid_area, xgrid_clon, xgrid_clat,
+                                      i_in_r, j_in_r, i_out_r, j_out_r, xgrid_area_r);
 
-  int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
-  //Copy the results in the way original code expects.
-  if (!xgrid_area_r.empty()) {
-    //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
-    std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
-    std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
-    std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
-
-    //TODO: eventually replace assignment with memcpy below:
-    //For the mean time its not possible fast memcpy as above since the caller expects
-    // arrays of ints instead of arrays of size_t for these four:
-    /*
-    std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
-    std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
-    std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
-    std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
-    */
-    //And so ...
-    for (int i = 0; i < nxgrid; i++) {
-      i_in[i] = static_cast<int>(i_in_r[i]);
-      j_in[i] = static_cast<int>(j_in_r[i]);
-      i_out[i] = static_cast<int>(i_out_r[i]);
-      j_out[i] = static_cast<int>(j_out_r[i]);
     }
+
+    int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
+    //Copy the results in the way original code expects.
+    if (!xgrid_area_r.empty()) {
+      //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
+      std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
+      std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
+      std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
+
+      //TODO: eventually replace assignment with memcpy below:
+      //For the mean time its not possible fast memcpy as above since the caller expects
+      // arrays of ints instead of arrays of size_t for these four:
+      /*
+      std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
+      std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
+      std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
+      std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
+      */
+      //And so ...
+      for (int i = 0; i < nxgrid; i++) {
+        i_in[i] = static_cast<int>(i_in_r[i]);
+        j_in[i] = static_cast<int>(j_in_r[i]);
+        i_out[i] = static_cast<int>(i_out_r[i]);
+        j_out[i] = static_cast<int>(j_out_r[i]);
+      }
+    }
+    return nxgrid;
   }
-  std::cout << "create_xgrid_2dx2d_order2_ws wrapper returning nxgrid = " << nxgrid << std::endl;
-  return nxgrid;
 }
 
 void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,

@@ -21,9 +21,9 @@
 #ifndef NCTOOLS_CONSTANT_H
 #define NCTOOLS_CONSTANT_H
 
-//TODO: redefine constants without using macros.
+//TODO: redefine remaining constants without using macros.
 
-#define RADIUS        (6371000.)
+constexpr double  RADIUS {6371000};
 #define STRING        255
 
 #ifndef M_PI
@@ -33,12 +33,9 @@
 #define M_PI_2      (1.57079632679489661923)
 #endif
 
-
-//TODO: change # defines to constants, e.g. 
-//consexpression double  R2D {180/M_PI};
-#define R2D (180/M_PI)
-#define D2R (M_PI/180)
-#define TPI (2.0*M_PI)
+constexpr double R2D {180/M_PI};
+constexpr double D2R {M_PI/180};
+constexpr double TPI {2 * M_PI};
 
 #endif
 

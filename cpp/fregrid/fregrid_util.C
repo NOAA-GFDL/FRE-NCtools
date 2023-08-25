@@ -167,7 +167,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   int m_fid, g_fid, vid;
   int *nx, *ny;
   double *x, *y;
-  char grid_file[256], filename[256], dir[256];
+  char filename[256], dir[256];
   size_t start[4], nread[4];
   Data_holder *dHold;
   Bound_config *bound_C;
@@ -842,7 +842,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
   int ndim, dimsize[5];
   nc_type type[5];
   char cart[5];
-  char dimname[5][STRING], bndname[5][STRING], errmsg[STRING];
+  char dimname[5][STRING], bndname[5][STRING];
   File_config *file = NULL;
   Field_config *field = NULL;
   size_t start[4], nread[4];
@@ -980,7 +980,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           char attval[STRING] = "";
           char areaval[STRING] = "";
           int status;
-          char errout[STRING], errmsg[STRING];
+          char errout[STRING];
           mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_methods", attval);
           status = parse_string(attval, "area:", areaval, errout);
           if (status == -1) {
