@@ -9,6 +9,7 @@
 //#include <ranges>
 #include <algorithm>
 #include <cmath>
+#include <format>
 
 #include "DistanceInterval.h"
 #include "Point3D.h"
@@ -22,10 +23,9 @@ namespace nct {
     class BBox3D {
     private:
         //bounding boxes are always made up of floats (i.e. double
-        // precision is not needed. See function  expand_for_doubles_if()).
+        // precision is not needed. See functions expand_for_doubles
         std::array<float, 3> lo;
         std::array<float, 3> hi;
-
     public:
         inline float getLo(int dim) { return lo[dim]; }
         inline float getHi(int dim) { return hi[dim]; }
@@ -41,12 +41,11 @@ namespace nct {
                   }};
 
           for (dim = 0; dim < 3; ++dim) {
-            //auto [min, max] = minmax_element(poly.points, comp); version used by ranges lib
             auto [min, max] = std::minmax_element(poly.points.begin(), poly.points.end(), comp);
             lo[dim] = static_cast<float>((*min)->p[dim]);
             hi[dim] = static_cast<float>((*max)->p[dim]);
           }
-          expand_for_doubles_if();
+          expand_for_doubles();
         }
 
         /**
@@ -60,7 +59,6 @@ namespace nct {
           }
         }
 
-
         //Expand box so that it contain point p
         template <class T>
         void expand(const std::array<T, 3>& p) {
@@ -71,8 +69,9 @@ namespace nct {
         }
 
         friend std::ostream &operator<<(std::ostream &os, const BBox3D &b) {
-          for (int i = 0; i < 3; i++) {
-            os << "[ " << b.lo[i] << ", " << b.hi[i] << " ]" << std::endl;
+          for(int i = 0; i<3; i++){
+            auto str = std::format("[ {:16.10e},{:16.10e} ], ", b.lo[i], b.hi[i]);
+            os << str << std::endl;
           }
           return os;
         }
@@ -86,24 +85,6 @@ namespace nct {
           } else {
             return true;
           }
-        }
-
-        //Expand box a with extents of box B
-        static void expand(BBox3D &A, BBox3D &B) {
-          for (int i = 0; i < 3; i++) {
-            if (B.lo[i] < A.lo[i])
-              A.lo[i] = B.lo[i];
-            if (B.hi[i] > A.hi[i])
-              A.hi[i] = B.hi[i];
-          }
-        }
-
-        //Expand box A with extents of box B in dimension d
-        static void expand(BBox3D &A, BBox3D &B, const int d) {
-          if (B.lo[d] < A.lo[d])
-            A.lo[d] = B.lo[d];
-          if (B.hi[d] > A.hi[d])
-            A.hi[d] = B.hi[d];
         }
 
         inline static bool intersect(const BBox3D &A, DistanceInterval<float> &di, const int dim) {
@@ -132,14 +113,51 @@ namespace nct {
           }
         }
 
-        //Augment the box in case of doubles stored as floats.
-        void expand_for_doubles_if(){
-#ifndef USE_NEXTAFTER
+      template<class T>
+      inline static bool contains(const BBox3D &bb, const std::array<T, 3> &p) {
+        if (bb.lo[0] <= p[0] && p[0] <= bb.hi[0] &&
+            bb.lo[1] <= p[1] && p[1] <= bb.hi[1] &&
+            bb.lo[2] <= p[2] && p[2] <= bb.hi[2]) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+
+      /***
+       //TODO: delete. This was a Temporary debugging aid :
+       inline void expand_xy_by_kf(float kf = 0.000001) {
+        for (int i = 0; i < 3; i++) {
+          auto diff = kf * (hi[i] - lo[i]);
+          hi[i] += diff;
+          lo[i] -= diff;
+        }
+      }
+      ***/
+
+        //Expand the box by "+- next possible float" in all six interval ends.
+        // This is useful as boxes lo[] and hi[] are float; but the boxes are set
+        // or expanded with data that is doubles.
+        inline void expand_for_doubles(){
           for (int i = 0; i < 3; i++) {
             hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+            lo[i] = std::nextafter(lo[i], -std::numeric_limits<float>::max());
+          }
+        }
+
+      //Expand the box by "+- next possible float" in all six interval ends.
+      // This is useful as boxes lo[] and hi[] are float; but the boxes are set
+      // or expanded with data that is doubles.
+      // Function actually only does something when compiled with option USE_NEXTAFTER.
+      inline void expand_for_doubles_if(){
+#ifdef USE_NEXTAFTER
+        for (int i = 0; i < 3; i++) {
+            hi[i] = std::nextafter(hi[i], std::numeric_limits<float>::max());
+            lo[i] = std::nextafter(lo[i], -std::numeric_limits<float>::max());
           }
 #endif
-        }
+      }
 
     };
 } // nct

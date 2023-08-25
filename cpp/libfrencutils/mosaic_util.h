@@ -29,6 +29,7 @@
 #include <cmath>
 #endif
 
+#include <string>
 
 const double SMALL_VALUE {1.0E-10};
 
@@ -45,6 +46,7 @@ struct Node{
 
 
 void error_handler(const char *msg);
+void error_handler(const std::string&  msg );
 int nearest_index(double value, const double *array, int ia);
 int lon_fix(double *x, double *y, int n_in, double tlon);
 double minval_double(int size, const double *data);
@@ -67,7 +69,6 @@ double spherical_angle(const double *v1, const double *v2, const double *v3);
 void normalize_vect(double *e);
 void unit_vect_latlon(int size, const double *lon, const double *lat, double *vlon, double *vlat);
 double great_circle_area(int n, const double *x, const double *y, const double *z);
-double * cross(const double *p1, const double *p2);
 double dot(const double *p1, const double *p2);
 int intersect_tri_with_line(const double *plane, const double *l1, const double *l2, double *p,
               double *t);

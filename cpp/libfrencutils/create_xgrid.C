@@ -29,6 +29,7 @@
 #include <span>
 #include <source_location>
 #include <format>
+#include "mpp.h"
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BruteBoxQuery.h"
@@ -900,24 +901,25 @@ int create_xgrid_2dx2d_order2_(const int nlon_in, const int nlat_in, const int n
 
 };
 #endif
+
 int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                     const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                     const double *lon_in, const double *lat_in, const double *lon_out,
+                                     const double *lat_out,
                                      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                     double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
-{
+                                     double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
 
 #define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
-  int nblocks =1;
-  int *istart2=NULL, *iend2=NULL;
+  int nblocks = 1;
+  int *istart2 = NULL, *iend2 = NULL;
   int npts_left, nblks_left, pos, m, npts_my, ij;
-  double *lon_out_min_list,*lon_out_max_list,*lon_out_avg,*lat_out_min_list,*lat_out_max_list;
+  double *lon_out_min_list, *lon_out_max_list, *lon_out_avg, *lat_out_min_list, *lat_out_max_list;
   double *lon_out_list, *lat_out_list;
-  int *pnxgrid=NULL, *pstart;
-  int *pi_in=NULL, *pj_in=NULL, *pi_out=NULL, *pj_out=NULL;
-  double *pxgrid_area=NULL, *pxgrid_clon=NULL, *pxgrid_clat=NULL;
-  int    *n2_list;
+  int *pnxgrid = NULL, *pstart;
+  int *pi_in = NULL, *pj_in = NULL, *pi_out = NULL, *pj_out = NULL;
+  double *pxgrid_area = NULL, *pxgrid_clon = NULL, *pxgrid_clat = NULL;
+  int *n2_list;
   int nthreads, nxgrid_block_max;
 
   nx1 = nlon_in;
@@ -927,20 +929,12 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
 
-  area_in  = (double *)malloc(nx1*ny1*sizeof(double));
-  area_out = (double *)malloc(nx2*ny2*sizeof(double));
+  area_in = (double *) malloc(nx1 * ny1 * sizeof(double));
+  area_out = (double *) malloc(nx2 * ny2 * sizeof(double));
   get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in);
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
 
   nthreads = 1;
-  //TODO: remove/clean this up after initial testing.
-
-  /* nxgrid = create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                                        lon_in, lat_in, lon_out, lat_out,
-                                        mask_in, i_in, j_in, i_out, j_out,
-                                        xgrid_area, xgrid_clon, xgrid_clat);
-  return nxgrid;
-*/
 
 #if defined(_OPENMP)
 #pragma omp parallel
@@ -949,20 +943,20 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
 
   nblocks = nthreads;
 
-  istart2 = (int *)malloc(nblocks*sizeof(int));
-  iend2 = (int *)malloc(nblocks*sizeof(int));
+  istart2 = (int *) malloc(nblocks * sizeof(int));
+  iend2 = (int *) malloc(nblocks * sizeof(int));
 
-  pstart = (int *)malloc(nblocks*sizeof(int));
-  pnxgrid = (int *)malloc(nblocks*sizeof(int));
+  pstart = (int *) malloc(nblocks * sizeof(int));
+  pnxgrid = (int *) malloc(nblocks * sizeof(int));
 
-  nxgrid_block_max = MAXXGRID/nblocks;
+  nxgrid_block_max = MAXXGRID / nblocks;
 
-  for(m=0; m<nblocks; m++) {
+  for (m = 0; m < nblocks; m++) {
     pnxgrid[m] = 0;
-    pstart[m] = m*nxgrid_block_max;
+    pstart[m] = m * nxgrid_block_max;
   }
 
-  if(nblocks == 1) {
+  if (nblocks == 1) {
     pi_in = i_in;
     pj_in = j_in;
     pi_out = i_out;
@@ -970,48 +964,47 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
     pxgrid_area = xgrid_area;
     pxgrid_clon = xgrid_clon;
     pxgrid_clat = xgrid_clat;
-  }
-  else {
-    pi_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clon = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clat = (double *)malloc(MAXXGRID*sizeof(double));
+  } else {
+    pi_in = (int *) malloc(MAXXGRID * sizeof(int));
+    pj_in = (int *) malloc(MAXXGRID * sizeof(int));
+    pi_out = (int *) malloc(MAXXGRID * sizeof(int));
+    pj_out = (int *) malloc(MAXXGRID * sizeof(int));
+    pxgrid_area = (double *) malloc(MAXXGRID * sizeof(double));
+    pxgrid_clon = (double *) malloc(MAXXGRID * sizeof(double));
+    pxgrid_clat = (double *) malloc(MAXXGRID * sizeof(double));
   }
 
-  npts_left = nx2*ny2;
+  npts_left = nx2 * ny2;
   nblks_left = nblocks;
   pos = 0;
-  for(m=0; m<nblocks; m++) {
+  for (m = 0; m < nblocks; m++) {
     istart2[m] = pos;
-    npts_my = npts_left/nblks_left;
+    npts_my = npts_left / nblks_left;
     iend2[m] = istart2[m] + npts_my - 1;
     pos = iend2[m] + 1;
     npts_left -= npts_my;
     nblks_left--;
   }
 
-  lon_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_avg = (double *)malloc(nx2*ny2*sizeof(double));
-  n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
-  lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-  lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
+  lon_out_min_list = (double *) malloc(nx2 * ny2 * sizeof(double));
+  lon_out_max_list = (double *) malloc(nx2 * ny2 * sizeof(double));
+  lat_out_min_list = (double *) malloc(nx2 * ny2 * sizeof(double));
+  lat_out_max_list = (double *) malloc(nx2 * ny2 * sizeof(double));
+  lon_out_avg = (double *) malloc(nx2 * ny2 * sizeof(double));
+  n2_list = (int *) malloc(nx2 * ny2 * sizeof(int));
+  lon_out_list = (double *) malloc(MAX_V * nx2 * ny2 * sizeof(double));
+  lat_out_list = (double *) malloc(MAX_V * nx2 * ny2 * sizeof(double));
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nx2,ny2,nx2p,lon_out,lat_out,lat_out_min_list, \
                                               lat_out_max_list,lon_out_min_list,lon_out_max_list, \
                                               lon_out_avg,n2_list,lon_out_list,lat_out_list)
 #endif
-  for(ij=0; ij<nx2*ny2; ij++){
+  for (ij = 0; ij < nx2 * ny2; ij++) {
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
     double x2_in[MV], y2_in[MV];
-    i2 = ij%nx2;
-    j2 = ij/nx2;
-    n = j2*nx2+i2;
+    i2 = ij % nx2;
+    j2 = ij / nx2;
+    n = j2 * nx2 + i2;
     n0 = j2*nx2p+i2; n1 = j2*nx2p+i2+1;
     n2 = (j2+1)*nx2p+i2+1; n3 = (j2+1)*nx2p+i2;
     x2_in[0] = lon_out[n0]; y2_in[0] = lat_out[n0];
@@ -1022,18 +1015,18 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    if (n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
     n2_list[n] = n2_in;
-    for(l=0; l<n2_in; l++) {
-      lon_out_list[n*MAX_V+l] = x2_in[l];
-      lat_out_list[n*MAX_V+l] = y2_in[l];
+    for (l = 0; l < n2_in; l++) {
+      lon_out_list[n * MAX_V + l] = x2_in[l];
+      lat_out_list[n * MAX_V + l] = y2_in[l];
     }
   }
 
-nxgrid = 0;
+  nxgrid = 0;
 
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
@@ -1043,83 +1036,83 @@ nxgrid = 0;
                                               pxgrid_area,pnxgrid,pxgrid_clon,pxgrid_clat,pi_in, \
                                               pj_in,pi_out,pj_out,pstart,nthreads)
 #endif
-  for(m=0; m<nblocks; m++) {
+  for (m = 0; m < nblocks; m++) {
     int i1, j1, ij;
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n0, n1, n2, n3, l,n1_in;
-      double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
-      double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
+          int n0, n1, n2, n3, l, n1_in;
+          double lat_in_min, lat_in_max, lon_in_min, lon_in_max, lon_in_avg;
+          double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
-      n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
-      n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-      x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
-      x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
-      x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
-      x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-      lat_in_min = minval_double(4, y1_in);
-      lat_in_max = maxval_double(4, y1_in);
-      n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-      lon_in_min = minval_double(n1_in, x1_in);
-      lon_in_max = maxval_double(n1_in, x1_in);
-      lon_in_avg = avgval_double(n1_in, x1_in);
-      for(ij=istart2[m]; ij<=iend2[m]; ij++) {
-	int n_out, i2, j2, n2_in;
-	double xarea, dx, lon_out_min, lon_out_max;
-	double x2_in[MAX_V], y2_in[MAX_V];
+          n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
+          n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
+          x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
+          x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
+          x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
+          x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
+          lat_in_min = minval_double(4, y1_in);
+          lat_in_max = maxval_double(4, y1_in);
+          n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
+          lon_in_min = minval_double(n1_in, x1_in);
+          lon_in_max = maxval_double(n1_in, x1_in);
+          lon_in_avg = avgval_double(n1_in, x1_in);
+          for (ij = istart2[m]; ij <= iend2[m]; ij++) {
+            int n_out, i2, j2, n2_in;
+            double xarea, dx, lon_out_min, lon_out_max;
+            double x2_in[MAX_V], y2_in[MAX_V];
 
-	i2 = ij%nx2;
-	j2 = ij/nx2;
+            i2 = ij % nx2;
+            j2 = ij / nx2;
 
-	if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
-	/* adjust x2_in according to lon_in_avg*/
-	n2_in = n2_list[ij];
-	for(l=0; l<n2_in; l++) {
-	  x2_in[l] = lon_out_list[ij*MAX_V+l];
-	  y2_in[l] = lat_out_list[ij*MAX_V+l];
-	}
-	lon_out_min = lon_out_min_list[ij];
-	lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
-	if(dx < -M_PI ) {
-	  lon_out_min += TPI;
-	  lon_out_max += TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] += TPI;
-	}
-        else if (dx >  M_PI) {
-	  lon_out_min -= TPI;
-	  lon_out_max -= TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
-	}
+            if (lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min) continue;
+            /* adjust x2_in according to lon_in_avg*/
+            n2_in = n2_list[ij];
+            for (l = 0; l < n2_in; l++) {
+              x2_in[l] = lon_out_list[ij * MAX_V + l];
+              y2_in[l] = lat_out_list[ij * MAX_V + l];
+            }
+            lon_out_min = lon_out_min_list[ij];
+            lon_out_max = lon_out_max_list[ij];
+            dx = lon_out_avg[ij] - lon_in_avg;
+            if (dx < -M_PI) {
+              lon_out_min += TPI;
+              lon_out_max += TPI;
+              for (l = 0; l < n2_in; l++) x2_in[l] += TPI;
+            } else if (dx > M_PI) {
+              lon_out_min -= TPI;
+              lon_out_max -= TPI;
+              for (l = 0; l < n2_in; l++) x2_in[l] -= TPI;
+            }
 
-	/* x2_in should in the same range as x1_in after lon_fix, so no need to
-	   consider cyclic condition
-	*/
-	if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
-	if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
-	  int nn;
-	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	  min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
-	    nn = pstart[m] + pnxgrid[m]-1;
-	    pxgrid_area[nn] = xarea;
-	    pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	    pxgrid_clat[nn] = poly_ctrlat (x_out, y_out, n_out );
-	    pi_in[nn]       = i1;
-	    pj_in[nn]       = j1;
-	    pi_out[nn]      = i2;
-	    pj_out[nn]      = j2;
-	  }
-	}
-      }
-    }
+            /* x2_in should in the same range as x1_in after lon_fix, so no need to
+               consider cyclic condition
+            */
+            if (lon_out_min >= lon_in_max || lon_out_max <= lon_in_min) continue;
+            if ((n_out = clip_2dx2d(x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out)) > 0) {
+              double min_area;
+              int nn;
+              xarea = poly_area(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
+              min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
+              if (xarea / min_area > AREA_RATIO_THRESH) {
+                pnxgrid[m]++;
+                if (pnxgrid[m] >= MAXXGRID / nthreads)
+                  error_handler(
+                          "nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+                nn = pstart[m] + pnxgrid[m] - 1;
+                pxgrid_area[nn] = xarea;
+                pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+                pxgrid_clat[nn] = poly_ctrlat(x_out, y_out, n_out);
+                pi_in[nn] = i1;
+                pj_in[nn] = j1;
+                pi_out[nn] = i2;
+                pj_out[nn] = j2;
+              }
+            }
+          }
+        }
   }
 
   /*copy data if nblocks > 1 */
-  if(nblocks == 1) {
+  if (nblocks == 1) {
     nxgrid = pnxgrid[0];
     pi_in = NULL;
     pj_in = NULL;
@@ -1128,21 +1121,20 @@ nxgrid = 0;
     pxgrid_area = NULL;
     pxgrid_clon = NULL;
     pxgrid_clat = NULL;
-  }
-  else {
+  } else {
     int nn, i;
     nxgrid = 0;
-    for(m=0; m<nblocks; m++) {
-      for(i=0; i<pnxgrid[m]; i++) {
-	nn = pstart[m] + i;
-	i_in[nxgrid] = pi_in[nn];
-	j_in[nxgrid] = pj_in[nn];
-	i_out[nxgrid] = pi_out[nn];
-	j_out[nxgrid] = pj_out[nn];
-	xgrid_area[nxgrid] = pxgrid_area[nn];
-	xgrid_clon[nxgrid] = pxgrid_clon[nn];
-	xgrid_clat[nxgrid] = pxgrid_clat[nn];
-	nxgrid++;
+    for (m = 0; m < nblocks; m++) {
+      for (i = 0; i < pnxgrid[m]; i++) {
+        nn = pstart[m] + i;
+        i_in[nxgrid] = pi_in[nn];
+        j_in[nxgrid] = pj_in[nn];
+        i_out[nxgrid] = pi_out[nn];
+        j_out[nxgrid] = pj_out[nn];
+        xgrid_area[nxgrid] = pxgrid_area[nn];
+        xgrid_clon[nxgrid] = pxgrid_clon[nn];
+        xgrid_clat[nxgrid] = pxgrid_clat[nn];
+        nxgrid++;
       }
     }
     free(pi_in);
@@ -1164,14 +1156,6 @@ nxgrid = 0;
   free(n2_list);
   free(lon_out_list);
   free(lat_out_list);
-
-  /*
-  std::cout << "legacy returning nxgrid = " << nxgrid << std::endl;
-    create_xgrid_2dx2d_order2_ws_check(nlon_in, nlat_in, nlon_out, nlat_out,
-                                        lon_in, lat_in, lon_out, lat_out,
-                                        mask_in, i_in, j_in, i_out, j_out,
-                                        xgrid_area, xgrid_clon, xgrid_clat, nxgrid);
-*/
 
   return nxgrid;
 
@@ -2348,7 +2332,7 @@ double dist_between_boxes(const double *x1, const double *y1, const double *z1, 
   dist = sqrt(dist);
   return (dist);
 
-}; /* dist_between_boxes */
+}
 
 /*******************************************************************************
  int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
@@ -2367,7 +2351,7 @@ int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
    product = ( x-x0 )*(y1-y0) + (x0-x1)*(y-y0);
    return (product<=SMALL) ? 1:0;
 
- } /* inside_edge */
+ }
 
 // Code below for using search algorithms in create_xgrid_...
 
@@ -2411,35 +2395,54 @@ void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
 
 template<class T>
 void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
-  std::cout << "lon ,   lat:" << std::endl;
+  os << "lon ,   lat:" << std::endl;
   for (size_t i = 0; i < lonv.size(); i++) {
-    std::cout << lonv[i] * R2D << ", " << latv[i] * R2D << std::endl;
+    os << lonv[i] * R2D << ", " << latv[i] * R2D << std::endl;
   }
 }
 
+
+size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, double *xv) {
+  size_t count {0};
+  for (unsigned int i = 0; i < NV4; i++) {
+    if (xv[i] == 2 * M_PI) xv[i] = 0;
+    if (xv[i] >= 2 * M_PI || xv[i] < 0.) {
+      string errmsg = std::format(
+              "xv[i] > 2 * M_PI | xv[i] < 0. xv[i]: {} ", xv[i]);
+      cerr << errmsg << endl;
+      count++;
+    }
+    if (yv[i] < -M_PI_2 || yv[i] > M_PI_2) {
+      string errmsg = std::format(
+              "yv[i] < -M_PI_2|| yv[i] > M_PI_2: {} ", yv[i]);
+      cerr << errmsg.c_str() << endl;
+      count++;
+    }
+  }
+  return count;
+}
 /**
  * Find the 3D (XYZ) axis-aligned bounding box of a spherical polygon.
  * The six values that define the bounding box are the extremas on the
- * Y,Y, and Z axis of nay point of the polygon, which may or may not be the vertices
+ * Y,Y, and Z axis of any point of the polygon, which may or may not be the vertices
  * of the polygon, or even lie on the edges - i.e some bay be in the interior.
  * If a tight bounding box is preferred, but a larger one is acceptable though
  * when used for nearest neighbor search, th search time will go up.
  *
- * In this algorithm below we start with the bounding
- * box that includes the vertices, and then we add these possible extrema points:
- * a) if the polygon contains a pole, expand the box by the point (<x,y,z>) that is
- *    the pole.
- * b) if an edge crosses the equator (lat = 0), expand the box by extrema by points
- * at the equator .
- * c) if an edge crosses any plane defined be the prime meridian or its perpendicular
- * (longitudes 0, pi/2, pi, 3 pi/2 ) then we add extrema point(s) that are on that
- * plane). Note that a polygon may intersect with both a meridian plane and the equator.
+ * ASSUMPTIONS: Polygons (cells) are four vertices long and function fix_lon is not used.
+ * Indeed since the polygon mesh and not individual polygons (or cells) are passed in,
+ * it would be difficult for the clients function to apply fix_lon to the cells,  but
+ * this should be kept in mind if future development is done.
  *
- * NOTE: there may be a more mathematical (calculus based) alternative to find the extrema
- * points (in x ,y, and z) for the function ll2xyz (the spherical polygon or surface in
- * lat-lon) , given the boundary (the edges of the polygon ).
+ * NOTE: In the github record there is an earlier version of this function that resulted
+ * in smaller bounding boxes but with box queries missing a small number hits when boxes were
+ * of polygons (cells) from the cubic sphere grid.  That version of the code may be of
+ * interest if further optimization is desired. Additionally,  there may be a more mathematical
+ * (calculus based) alternative to find the extrema points (in x ,y, and z) for the function
+ * ll2xyz (the spherical polygon or surface in lat-lon) , given the boundary (the edges of the
+ * polygon ).
  *
- * //TODO: This function needs unit tests.
+ * //TODO: Write unit tests for this function in unit test framework.
  *
  * @param lat_m The array of latitudes that define the polygon mesh.
  * @param lon_m The array of longitudes that define the polygon mesh.
@@ -2449,74 +2452,76 @@ void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
  */
 BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
                                   const array<size_t, 4> &is, bool debugf  = false) {
+  constexpr unsigned int NV4{4};
   // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
-  // where its possible to have an extrema in X or Y when the edge crosses them.
-  // there is an extra +- 90 degrees on the ends because of the way fix lon can adjust lons.
-  bool crosses_equator = false;
-  constexpr static array<double, 7> xlons {-M_PI_2, 0, M_PI_2, M_PI, 3. * M_PI_2, 2. * M_PI, 5. * M_PI_2};
+  // where its possible to have an extrema in X or Y when an edge crosses them.
+  constexpr static array<double, 7> xlons {0, M_PI_2, M_PI, 3. * M_PI_2, 2. * M_PI};
   std::array<double, 3> pt{}; // a 3D point.
-  //TODO: Place xv and yv together in a class( allows avoiding use fo normal for loops below).
-  double yv[MV], xv[MV];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
-  for (auto i = 0; i< 4; i++) { //NOTE: four vertices per polygon
+  BBox_t box; //the thing we are calculating.
+  bool crosses_equator = false;
+  double yv[ NV4 ], xv[ NV4 ];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
+  for (auto i = 0; i< NV4 ; i++) {
     xv[i] = lon_m[is[i]];
     yv[i] = lat_m[is[i]];
   }
 
-  if (debugf) {
-    printPolygon<double>(cout, {xv,4}, {yv,4});
+  auto occd = latlons_outside_ccd_domain(4, yv, xv);
+  if(occd>0){
+    mpp_error("There are lats or lons outside CCD");
   }
 
-  // inherited from the old code: Is this really necessary for getting the bbox?
-  auto n1 = fix_lon(xv, yv, 4, M_PI);
+  //Expand the bounding box in consideration of the max and mins of the lats and lons:
+  const auto [miny_it, maxy_it] = std::minmax_element(begin(yv), end(yv));
+  const double miny = *miny_it;
+  const double maxy = *maxy_it;
+  const auto [minx_it, maxx_it] = std::minmax_element(begin(xv), end(xv));
+  const double minx = *minx_it;
+  const double maxx = *maxx_it;
+  latlon2xyz( miny, minx, pt);
+  box.expand( pt );
+  latlon2xyz( maxy, minx, pt);
+  box.expand( pt );
+  latlon2xyz( miny, maxx, pt);
+  box.expand( pt );
+  latlon2xyz( maxy, maxx, pt);
+  box.expand( pt );
 
-  BBox_t box;
-
-  //Augment/expand the box to include the polygon vertices:
-  for (auto i = 0; i < n1; i++) {
-    latlon2xyz(yv[i], xv[i], pt);
-    box.expand(pt);
-  }
-
-  // Augment the bbox if the polygon contains a pole:
-  //Note that any Z=k plane of the bbox calculated from the vertices
-  //in the step above is sufficient to determine this:
+  //For case where a pole is inside a polygon. Note that
+  // any Z=k plane of the bbox calculated from above
+  // (or even from the actual vertices)
+  // would be sufficient to determine this:
   latlon2xyz(M_PI_2, 0.0, pt); //the north pole
   if (BBox_t::contains_zk(box, pt) && (yv[0] >=  0)){
-    cout <<" *** Augmenting for the north pole. ***" << endl;
-    printPolygon<double>(cout, {xv,4}, {yv,4});
     box.expand(pt);
   }
   latlon2xyz(-M_PI_2, 0.0, pt); //the south pole
   if (BBox_t::contains_zk(box, pt) && (yv[0] < 0)){
-    cout << "*** Augmenting for the south pole. *** " << endl;
-    printPolygon<double>(cout, {xv,4}, {yv,4});
     box.expand(pt);
   }
 
-  //Augment the box for coordinate value extrema when edge crosses the equator:
-  for (auto i = 0; i < n1; i++) {
+  //Expand the box for coordinate value extrema when edge crosses the equator:
+  for (auto i = 0; i < NV4; i++) {
     auto equator_lat = 0.;
     auto t1 = yv[i];
-    auto t2 = yv[(i + 1) % n1];
+    auto t2 = yv[(i + 1) % NV4];
     if (std::signbit(t1) != std::signbit(t2 )) {
       crosses_equator = true;
       latlon2xyz(equator_lat, xv[i], pt);
       box.expand(pt);
-      latlon2xyz(equator_lat,  xv[(i + 1) % n1], pt);
+      latlon2xyz(equator_lat,  xv[(i + 1) % NV4], pt);
       box.expand(pt);
     }
   }
 
-  //Augment the box for coordinate value extrema when edge crosses meridian plane (
-  // or the meridian plane's perpendicular) :
-  for (auto i = 0; i < n1; i++) {
+  //Expand the box for coordinate value extrema when edge crosses XZ or YZ plane
+  for (auto i = 0; i < NV4; i++) {
     auto t1 = xv[i];
-    auto t2 = xv[(i + 1) % n1];
+    auto t2 = xv[(i + 1) % NV4];
     for (const auto &xang: xlons) {
       if (std::signbit(t1 - xang) != std::signbit(t2 - xang)) {
         latlon2xyz(yv[i], xang, pt);
         box.expand(pt);
-        latlon2xyz(yv[(i + 1) % n1], xang, pt);
+        latlon2xyz(yv[(i + 1) % NV4], xang, pt);
         box.expand(pt);
         if(crosses_equator) {
           latlon2xyz(0.0, xang, pt);
@@ -2525,10 +2530,10 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
       }
     }
   }
-
-  box.expand_for_doubles_if();
+  box.expand_for_doubles();
   return box;
 }
+
 
 /**
  * Generate the exchange grid between two grids for the 2nd order
@@ -2558,12 +2563,14 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
                                    const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
                                    vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
                                    vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
-  int nx1 {nlon_in}, nx2{nlon_out}, ny1{nlat_in}, ny2{nlat_out};
-  int nx1p{nx1 + 1};
-  int nx2p{nx2 + 1};
+  const size_t nx1 {(size_t) nlon_in}, nx2{(size_t)nlon_out}, ny1{(size_t)nlat_in}, ny2{(size_t)nlat_out};
+  const size_t nx1p{nx1 + 1};
+  const size_t nx2p{nx2 + 1};
 
   const std::source_location location = std::source_location::current();
-  std::cout << format("Entered {}", location.function_name()) << std::endl;
+  string fName = location.function_name();
+  fName = fName.substr(0, fName.find("("));
+  std::cout << format("Entered {}", fName) << std::endl;
 
   //Set "b" is to be inserted in the tree; set "a" will be used to make query
   //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of
@@ -2663,8 +2670,17 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
   std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
+extern 
+int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+
+
 /*
- * Just a wrapper for calling create_xgrid_2dx2d_order2_ws
+ * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
+ * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
+ * legacy function to perform some checks, as well as the gpu version of the legacy function.
  */
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
@@ -2673,48 +2689,116 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
-  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                               lon_in, lat_in, lon_out, lat_out, mask_in,
-                               i_in_r, j_in_r, i_out_r, j_out_r,
-                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+  bool use_legacy_gpu{false};
+  bool check_with_legacy_cpu{false};
 
-  int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
-  //Copy the results in the way original code expects.
-  if (!xgrid_area_r.empty()) {
-    //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
-    std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
-    std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
-    std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
+  if (use_legacy_gpu){
+    auto nxgrid_l = create_xgrid_2dx2d_order2_legacy_gpu(nlon_in, nlat_in, nlon_out, nlat_out,
+                                                         lon_in, lat_in, lon_out, lat_out, mask_in,
+                                                         i_in, j_in, i_out, j_out,
+                                                         xgrid_area, xgrid_clon, xgrid_clat);
+  return nxgrid_l;
 
-    //TODO: eventually replace assignment with memcpy below:
-    //For the mean time its not possible fast memcpy as above since the caller expects
-    // arrays of ints instead of arrays of size_t for these four:
-    /*
-    std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
-    std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
-    std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
-    std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
-    */
-    //And so ...
-    for (int i = 0; i < nxgrid; i++) {
-      i_in[i] = static_cast<int>(i_in_r[i]);
-      j_in[i] = static_cast<int>(j_in_r[i]);
-      i_out[i] = static_cast<int>(i_out_r[i]);
-      j_out[i] = static_cast<int>(j_out_r[i]);
+  }else{
+
+    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                 i_in_r, j_in_r, i_out_r, j_out_r,
+                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+
+    if (check_with_legacy_cpu) {
+      create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
+                                      lon_in, lat_in, lon_out, lat_out, mask_in,
+                                      i_in, j_in, i_out, j_out,
+                                      xgrid_area, xgrid_clon, xgrid_clat,
+                                      i_in_r, j_in_r, i_out_r, j_out_r, xgrid_area_r);
+
     }
+
+    int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
+    //Copy the results in the way original code expects.
+    if (!xgrid_area_r.empty()) {
+      //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
+      std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
+      std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
+      std::memcpy(xgrid_clat, xgrid_clat_r.data(), nxgrid * sizeof(double));
+
+      //TODO: eventually replace assignment with memcpy below:
+      //For the mean time its not possible fast memcpy as above since the caller expects
+      // arrays of ints instead of arrays of size_t for these four:
+      /*
+      std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
+      std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
+      std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
+      std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
+      */
+      //And so ...
+      for (int i = 0; i < nxgrid; i++) {
+        i_in[i] = static_cast<int>(i_in_r[i]);
+        j_in[i] = static_cast<int>(j_in_r[i]);
+        i_out[i] = static_cast<int>(i_out_r[i]);
+        j_out[i] = static_cast<int>(j_out_r[i]);
+      }
+    }
+    return nxgrid;
   }
-  std::cout << "create_xgrid_2dx2d_order2_ws wrapper returning nxgrid = " << nxgrid << std::endl;
-  return nxgrid;
 }
 
+void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
+                                  vector<size_t>& i_in_r, vector<size_t>& j_in_r,
+                                  vector<size_t>& i_out_r, vector<size_t>& j_out_r,
+                                  vector<double>& xgrid_area_r) {
+  int nx1 {nlon_in}, nx2{nlon_out};
+  int nx1p{nx1 + 1};
+  int nx2p{nx2 + 1};
 
+  auto nxgrid =  create_xgrid_2dx2d_order2_legacy(nlon_in, nlat_in, nlon_out, nlat_out,
+                                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                                 i_in, j_in, i_out, j_out,
+                                                 xgrid_area, xgrid_clon, xgrid_clat);
+  auto nxgrid_r = static_cast<int> ( xgrid_area_r.size());
+  //Copy the results in the way original code expects.
+  set <string> sv;
+  if (nxgrid_r != nxgrid) {
+    for (int i = 0; i < nxgrid_r; ++i) {
+      string str = to_string(j_in_r[i]) + "_" + to_string(i_in_r[i]) +
+                   "_" + to_string(j_out_r[i]) + "_" + to_string(i_out_r[i]);
+      sv.insert(str);
+    }
+
+    for (int i = 0; i < nxgrid; ++i) {
+      string str = to_string(j_in[i]) + "_" + to_string(i_in[i]) +
+                   "_" + to_string(j_out[i]) + "_" + to_string(i_out[i]);
+      if (sv.find(str) == sv.end()) {
+        std::cout << "missing: " << str << endl;
+
+        auto is1 = get_cell_idxs_ccw_4(i_in[i], j_in[i], nx1p);
+        auto is2 = get_cell_idxs_ccw_4(i_out[i], j_out[i], nx2p);
+        auto box = getBoxForSphericalPolygon( lat_in, lon_in, is1, true);
+        cout << "box1\n" << box << endl;
+        box = getBoxForSphericalPolygon( lat_out, lon_out, is2, true);
+        cout << "box2\n" << box << endl;
+        double yv[4], xv[4];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
+        for (auto i = 0; i < 4; i++) { //NOTE: four vertices per polygon
+          xv[i] = lon_out[is2[i]];
+          yv[i] = lat_out[is2[i]];
+        }
+        cout << "polygon in out" << std::endl;
+        printPolygon<double>(cout, {xv,4}, {yv,4});
+      }
+    }
+  }
+
+}
 
 void
 create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                    const double *lon_in, const double *lat_in, const double *lon_out,
                                    const double *lat_out,
-                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat, int nxgrid1) {
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,int nxgrid1) {
   int nx1 {nlon_in}, nx2{nlon_out};
   int nx1p{nx1 + 1};
   int nx2p{nx2 + 1};

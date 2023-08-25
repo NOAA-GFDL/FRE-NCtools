@@ -130,11 +130,10 @@ int* mpp_get_pelist()
  this is to check if current PE's outstanding puts are complete
 *************************************************************/
 void mpp_sync_self() {
-  int n;
 #ifdef use_libMPI
   MPI_Status status;
 
-  for(n=0; n<npes; n++) {
+  for(int n=0; n<npes; n++) {
     if(request[n] != MPI_REQUEST_NULL) MPI_Wait( request+n, &status );
   }
 #endif
