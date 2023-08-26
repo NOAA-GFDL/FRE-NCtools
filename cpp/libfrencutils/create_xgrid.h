@@ -23,8 +23,12 @@
 #define MAXXGRID 1e7
 #endif
 
+#include <array>
+#include "BBox3D.h"
 #define MV 50
 #include <vector>
+#include <span>
+
 /* this value is small compare to earth area */
 
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
@@ -74,6 +78,9 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
 			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
 			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 
+void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v);
+nct::BBox3D getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
+                                 const std::array<size_t, 4> &is, bool debugf  = false);
 int search_grids(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                  const double *mask_in, std::vector<std::vector<size_t>> & results1) ;
@@ -92,5 +99,9 @@ void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const
                                 std::vector<size_t>& i_in_r, std::vector<size_t>& j_in_r,
                                 std::vector<size_t>& i_out_r, std::vector<size_t>& j_out_r,
                                 std::vector<double>& xgrid_area_r);
+
+template<class T>
+void printPolygon(std::ostream &os, std::span<T> lonv, std::span<T> latv) ;
+
 
 #endif

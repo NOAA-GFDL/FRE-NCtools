@@ -28,6 +28,7 @@ const int NY{100};
 const int NZ{4};
 
 //constexpr long long size = 1'000'000'000;
+//TODO: this will be replaced by unit or functionality tests?
 
 using namespace std;
 using namespace std::chrono;
@@ -38,7 +39,7 @@ void runAndTime(const std::string& name, Func func){
     const auto start =  high_resolution_clock::now();
     func();
     //const std::chrono::duration<double> dur = std::chrono::steady_clock::now() - sta;
-    const auto dt = duration_cast<microseconds>(   high_resolution_clock::now() - start);
+    const auto dt = duration_cast<microseconds>( high_resolution_clock::now() - start);
     cout << "For " << name << " time is : " << (dt.count() / 1.0e6) << " sec. " << endl;
 }
 
