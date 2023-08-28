@@ -54,20 +54,6 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
 
 
 /*******************************************************************************
-  int get_maxxgrid
-  return constants MAXXGRID.
-*******************************************************************************/
-int get_maxxgrid(void)
-{
-  return MAXXGRID;
-}
-
-int get_maxxgrid_(void)
-{
-  return get_maxxgrid();
-}
-
-/*******************************************************************************
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, const double *area)
   return the grid area.
 *******************************************************************************/
@@ -2451,7 +2437,7 @@ size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, dou
  * @return
  */
 BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
-                                  const array<size_t, 4> &is, bool debugf  = false) {
+                                  const array<size_t, 4> &is, bool debugf) {
   constexpr unsigned int NV4{4};
   // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
   // where its possible to have an extrema in X or Y when an edge crosses them.

@@ -14,11 +14,11 @@ include_directories(/home/mzuniga/llvm/build/install/include)
 include_directories(/home/mzuniga/llvm/build/install/include/sycl)
 include_directories(/home/mzuniga/llvm/build/install/include/sycl/CL)
 
-
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 add_executable(fregrid.x fregrid.C conserve_interp.C fregrid_util.C bilinear_interp.C)
+#        ../test/main.C
+#        ../test/integration_tests.C)
 #add_sycl_to_target(TARGET fregrid.x SOURCES  fregrid.C)
 
 add_executable(searchtest.x searchtest.C)
