@@ -35,11 +35,11 @@ bool checkBBoxViaPolySamples(std::span<double> yv, std::span<double> xv,
       auto contains_point = nct::BBox3D::contains(box, pt);
       if (!contains_point) {
         passed = false;
-        //TODO: the polygon and the box can be saved to strstream
-         printPolygon<double>(std::cout, xv, yv);
-         std::cout << box << std::endl;
-         auto str = std::format("< {:16.10e}, {:16.10e}, {:16.10e}>", pt[0],pt[1],pt[2]);
-         std::cout << str <<std::endl;
+        //TODO: DEBUG or CTest option ? : saved to strstream the polygon and the box ?
+       //  printPolygon<double>(std::cout, xv, yv);
+       //  std::cout << box << std::endl;
+      //   auto str = std::format("< {:16.10e}, {:16.10e}, {:16.10e}>", pt[0],pt[1],pt[2]);
+      //   std::cout << str <<std::endl;
       }
     }
   }

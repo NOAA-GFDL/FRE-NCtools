@@ -2634,6 +2634,7 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
           for (auto l = 0; l < n2_in; l++) x2_in[l] -= TPI;
         }
 
+        //Call the 2D_by_2D clipping algorithm
         auto n_out = clip_2dx2d(x1_in, y1_in, n1_in, x2_in,
                                 y2_in, n2_in, x_out, y_out);
         if (n_out > 0) {
@@ -2730,6 +2731,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   }
 }
 
+//TODO: this is to be removed:
 void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
