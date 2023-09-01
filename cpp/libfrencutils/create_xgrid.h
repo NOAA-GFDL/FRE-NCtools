@@ -27,6 +27,7 @@
 #include "BBox3D.h"
 #define MV 50
 #include <vector>
+#include <array>
 #include <span>
 
 /* this value is small compare to earth area */
@@ -79,15 +80,20 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
 			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 
 void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v);
+std::array<size_t, 4>
+get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx);
 nct::BBox3D getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
                                  const std::array<size_t, 4> &is, bool debugf  = false);
 int search_grids(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                  const double *mask_in, std::vector<std::vector<size_t>> & results1) ;
-int create_xgrid_2dx2d_order2_ws(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+
+void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, std::vector<size_t>& i_in, std::vector<size_t>& j_in,
+                                   std::vector<size_t>& i_out, std::vector<size_t>& j_out, std::vector<double>& xgrid_area,
+                                   std::vector<double>& xgrid_clon, std::vector<double>& xgrid_clat);
+
 void create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                         const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                         const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, int nxgrid1);
@@ -102,6 +108,12 @@ void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const
 
 template<class T>
 void printPolygon(std::ostream &os, std::span<T> lonv, std::span<T> latv) ;
+
+void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, std::vector<size_t>& i_in, std::vector<size_t>& j_in,
+                                   std::vector<size_t>& i_out, std::vector<size_t>& j_out, std::vector<double>& xgrid_area,
+                                   std::vector<double>& xgrid_clon, std::vector<double>& xgrid_clat);
 
 
 #endif

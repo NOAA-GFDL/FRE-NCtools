@@ -2688,7 +2688,12 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
 
   }else{
 
-    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+    /*create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                                 lon_in, lat_in, lon_out, lat_out, mask_in,
+                                 i_in_r, j_in_r, i_out_r, j_out_r,
+                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r);*/
+
+    create_xgrid_2dx2d_order2_bfwbb(nlon_in, nlat_in, nlon_out, nlat_out,
                                  lon_in, lat_in, lon_out, lat_out, mask_in,
                                  i_in_r, j_in_r, i_out_r, j_out_r,
                                  xgrid_area_r, xgrid_clon_r, xgrid_clat_r);

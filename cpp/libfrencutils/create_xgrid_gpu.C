@@ -12,8 +12,18 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <format>
 
+#include <array>
+#include <algorithm>
+#include "BBox3D.h"
+#include "Polygon.h"
+#include "BoxedObj.h"
+//#include "mosaic_util.h"
 #include "create_xgrid.h"
+#include "create_xgrid.h"
+
+#include "cartesian_product.hpp"
 
 using std::sin;
 
@@ -31,6 +41,21 @@ using std::sin;
 
 constexpr double MU_TOLORENCE{1.e-6};
 constexpr double SMALL_VALUE_PA{1.0E-10};
+
+//TODO: place elsewhere
+//Note three of these below are negative, and one is positive
+constexpr float FILL_VALUE_FLOAT{ -std::numeric_limits<float>::max()};
+constexpr double FILL_VALUE_DOUBLE{ -std::numeric_limits<double>::max()};
+constexpr int FILL_VALUE_INT{ std::numeric_limits<int>::min() };
+constexpr size_t FILL_VALUE_SIZE_T{ std::numeric_limits<size_t>::max() };
+
+//constexpr unsigned int MAX_NN{10}; //MAX_near neighbors per cell
+
+using std::vector;
+using BBox_t = nct::BBox3D;
+using BPair_t = nct::BoxAndId;
+using Poly_t = nct::MeshPolygon<double>;
+using Point_t = nct::Point3D<double>;
 
 // These functions are defined here as they were moved from the .C file to the the h
 // file in order to use the std parallelization for GPUs with nvc++ 23.x compiers:
@@ -559,6 +584,7 @@ int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, c
   nxgrid = 0;
 
   for (m = 0; m < nblocks; m++) {
+    //NOTE: outer loop is 1/in
     auto ids = std::views::iota(0, ny1);
     // for(j1=0; j1<ny1; j1++)
     std::for_each_n(std::execution::par, ids.begin(), ny1, [=](int j1) {
@@ -586,6 +612,7 @@ int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, c
           lon_in_min = minval_double_gpu(n1_in, x1_in);
           lon_in_max = maxval_double_gpu(n1_in, x1_in);
           lon_in_avg = avgval_double_gpu(n1_in, x1_in);
+          //NOTE: Inner loop in 2 our out
           for (int ij = istart2[m]; ij <= iend2[m]; ij++) {
             int n_out, i2, j2, n2_in;
             double xarea, dx, lon_out_min, lon_out_max;
@@ -693,28 +720,28 @@ int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, c
   return nxgrid;
 }
 
-int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+// grid suffix synonyms: '2'/out/target
+// grid suffix synonyms: '1'/in/source
+int create_xgrid_2dx2d_order2_noahack(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                               const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
 #define MAX_V 8
-  int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
-  int ij, i1, j1;
   double *lon_out_min_list,*lon_out_max_list,*lon_out_avg,*lat_out_min_list,*lat_out_max_list;
   double *lon_out_list, *lat_out_list;
   int    *n2_list;
   int mxxgrid;
 
-  nx1 = *nlon_in;
-  ny1 = *nlat_in;
-  nx2 = *nlon_out;
-  ny2 = *nlat_out;
-  nx1p = nx1 + 1;
-  nx2p = nx2 + 1;
-  mxxgrid = get_maxxgrid();
+  const int nx1 {nlon_in};
+  const int ny1 {nlat_in};
+  const int nx2 {nlon_out};
+  const int ny2 {nlat_out};
+  const int nx1p {nx1 + 1};
+  const int nx2p {nx2 + 1};
+  mxxgrid = MAXXGRID;
 
   area_in  = (double *)malloc(nx1*ny1*sizeof(double));
   area_out = (double *)malloc(nx2*ny2*sizeof(double));
@@ -729,63 +756,50 @@ int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, co
   n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
   lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-#if defined(_OPENMP)
-  #pragma omp parallel for default(none) shared(nx2,ny2,nx2p,lon_out,lat_out,lat_out_min_list, \
-                                              lat_out_max_list,lon_out_min_list,lon_out_max_list, \
-                                              lon_out_avg,n2_list,lon_out_list,lat_out_list)
-#endif
-  nxgrid = 0;
-#pragma acc kernels copyin(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)], mask_in[0:nx1*ny1], \
-                           xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
-                           i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid], \
-                           area_in[0:nx1*ny1], area_out[0:nx2*ny2], \
-                           lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)]) \
-                   copyout(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2], \
-		          lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2],  \
-		          lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2],  \
-		          lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2]) \
-                   copy (nxgrid)
-  {
-#pragma acc loop independent
-    for(ij=0; ij<nx2*ny2; ij++){
-      int i2, j2, n, n0, n1, n2, n3, n2_in, l;
-      double x2_in[MV], y2_in[MV];
-      i2 = ij%nx2;
-      j2 = ij/nx2;
-      n = j2*nx2+i2;
-      n0 = j2*nx2p+i2; n1 = j2*nx2p+i2+1;
-      n2 = (j2+1)*nx2p+i2+1; n3 = (j2+1)*nx2p+i2;
-      x2_in[0] = lon_out[n0]; y2_in[0] = lat_out[n0];
-      x2_in[1] = lon_out[n1]; y2_in[1] = lat_out[n1];
-      x2_in[2] = lon_out[n2]; y2_in[2] = lat_out[n2];
-      x2_in[3] = lon_out[n3]; y2_in[3] = lat_out[n3];
 
-      lat_out_min_list[n] = minval_double(4, y2_in);
-      lat_out_max_list[n] = maxval_double(4, y2_in);
-      n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-//    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
-      lon_out_min_list[n] = minval_double(n2_in, x2_in);
-      lon_out_max_list[n] = maxval_double(n2_in, x2_in);
-      lon_out_avg[n] = avgval_double(n2_in, x2_in);
-      n2_list[n] = n2_in;
-#pragma acc loop independent
-      for(l=0; l<n2_in; l++) {
-        lon_out_list[n*MAX_V+l] = x2_in[l];
-        lat_out_list[n*MAX_V+l] = y2_in[l];
-      }
+  auto ids = std::views::iota(0, (nx2 * ny2));
+  std::for_each_n(std::execution::par, ids.begin(), (nx2 * ny2), [=](int ij) {
+    //originals equivalent had been labeled 'acc loop independent'
+    int i2, j2, n, n0, n1, n2, n3, n2_in, l;
+    double x2_in[MV], y2_in[MV];
+    i2 = ij % nx2;
+    j2 = ij / nx2;
+    n = j2 * nx2 + i2;
+    n0 = j2 * nx2p + i2;
+    n1 = j2 * nx2p + i2 + 1;
+    n2 = (j2 + 1) * nx2p + i2 + 1;
+    n3 = (j2 + 1) * nx2p + i2;
+
+    x2_in[0] = lon_out[n0]; y2_in[0] = lat_out[n0];
+    x2_in[1] = lon_out[n1]; y2_in[1] = lat_out[n1];
+    x2_in[2] = lon_out[n2]; y2_in[2] = lat_out[n2];
+    x2_in[3] = lon_out[n3]; y2_in[3] = lat_out[n3];
+
+    lat_out_min_list[n] = minval_double_gpu(4, y2_in);
+    lat_out_max_list[n] = maxval_double_gpu(4, y2_in);
+    n2_in = fix_lon_gpu(x2_in, y2_in, 4, M_PI);
+    //if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    lon_out_min_list[n] = minval_double_gpu(n2_in, x2_in);
+    lon_out_max_list[n] = maxval_double_gpu(n2_in, x2_in);
+    lon_out_avg[n] = avgval_double_gpu(n2_in, x2_in);
+    n2_list[n] = n2_in;
+
+    //original had been labeled `acc loop independent`
+    //consider moving in its own for_each?
+    for (l = 0; l < n2_in; l++) {
+      lon_out_list[n * MAX_V + l] = x2_in[l];
+      lat_out_list[n * MAX_V + l] = y2_in[l];
     }
+  });
 
-
-#if defined(_OPENMP)
-    #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
-                                              istart2,iend2,nx2,lat_out_min_list,lat_out_max_list, \
-                                              n2_list,lon_out_list,lat_out_list,lon_out_min_list, \
-                                              lon_out_max_list,lon_out_avg,area_in,area_out, \
-                                              pxgrid_area,pnxgrid,pxgrid_clon,pxgrid_clat,pi_in, \
-                                              pj_in,pi_out,pj_out,pstart,nthreads)
-#endif
-#pragma acc loop independent reduction(+:nxgrid) collapse(2)
-    for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+    // original used acc shared construct here
+  // acc loop independent reduction(+:nxgrid) collapse(2)
+    //These are the loops over source cells
+    int nxgrid;
+    ids = std::views::iota(0, ny1);
+    std::for_each_n(std::execution::par, ids.begin(), ny1, [=](int j1) {
+      for(int  i1=0; i1<nx1; i1++)  //TODO: place i1 in 2D loop (of i1 x j1)
+        if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
           int n0, n1, n2, n3, l,n1_in;
           double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
           double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
@@ -796,25 +810,26 @@ int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, co
           x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
           x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
           x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-          lat_in_min = minval_double(4, y1_in);
-          lat_in_max = maxval_double(4, y1_in);
-          n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-          lon_in_min = minval_double(n1_in, x1_in);
-          lon_in_max = maxval_double(n1_in, x1_in);
-          lon_in_avg = avgval_double(n1_in, x1_in);
-#pragma acc loop independent reduction(+:nxgrid)
-          for(ij=0; ij<=nx2*ny2; ij++) {
+          lat_in_min = minval_double_gpu(4, y1_in);
+          lat_in_max = maxval_double_gpu(4, y1_in);
+          n1_in = fix_lon_gpu(x1_in, y1_in, 4, M_PI);
+          lon_in_min = minval_double_gpu(n1_in, x1_in);
+          lon_in_max = maxval_double_gpu(n1_in, x1_in);
+          lon_in_avg = avgval_double_gpu(n1_in, x1_in);
+          // original had acc loop independent reduction(+:nxgrid)
+          for(int ij=0; ij<=nx2*ny2; ij++) { //and the loop over target cells
             int n_out, i2, j2, n2_in;
-            double xarea, dx, lon_out_min, lon_out_max;
+            double dx, lon_out_min, lon_out_max;
             double x2_in[MAX_V], y2_in[MAX_V];
 
             i2 = ij%nx2;
             j2 = ij/nx2;
 
+            //Note: longitude gate considered a few lines below this.
             if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
             /* adjust x2_in according to lon_in_avg*/
             n2_in = n2_list[ij];
-#pragma acc loop seq
+            // #pragma acc loop seq
             for(l=0; l<n2_in; l++) {
               x2_in[l] = lon_out_list[ij*MAX_V+l];
               y2_in[l] = lat_out_list[ij*MAX_V+l];
@@ -825,25 +840,21 @@ int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, co
             if(dx < -M_PI ) {
               lon_out_min += TPI;
               lon_out_max += TPI;
-#pragma acc loop seq
+              //#pragma acc loop seq
               for (l=0; l<n2_in; l++) x2_in[l] += TPI;
-            }
-            else if (dx >  M_PI) {
+            }else if (dx >  M_PI) {
               lon_out_min -= TPI;
               lon_out_max -= TPI;
-#pragma acc loop seq
+              //#pragma acc loop seq
               for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
             }
 
-            /* x2_in should in the same range as x1_in after lon_fix, so no need to
-               consider cyclic condition
-            */
+            //NOTE: latitudes gate considered a few lines above this.
             if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
             n_out = 1;
             if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-              double min_area;
-              xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              double xarea = poly_area_gpu (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              double min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
               if( xarea/min_area > AREA_RATIO_THRESH ) {
 //            if(nxgrid>= MAXXGRID/nthreads)
 //	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
@@ -854,12 +865,12 @@ int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, co
                 j_in[nxgrid]       = j1;
                 i_out[nxgrid]      = i2;
                 j_out[nxgrid]      = j2;
-                nxgrid++;
+                //nxgrid++; TODO: needs to accumulate
               }
             }
           }
         }
-  }
+  });
 
   free(area_in);
   free(area_out);
@@ -875,3 +886,278 @@ int create_xgrid_2dx2d_order2_noahack(const int *nlon_in, const int *nlat_in, co
   return nxgrid;
 
 }
+
+bool is_near(float x , float y){
+    return ((x-y) * (x-y) < 1.5);
+}
+
+//TODO: This formula for the maximum number of cells in one grid to any other in another grid is
+// merely a heuristic. A better one might involve max and min cell areas. Consider how many
+//cells from one grid can overlap the largest cell from another. The factor of 1000 below
+//should take care of really wierd cells.
+size_t get_max_cell_nns(const size_t nx1, const size_t nx2, const size_t ny1, const size_t ny2)
+{ return 1000 * std::max(nx1 * ny1, nx2 * ny2) / std::min(nx1 * ny1, nx2 * ny2); }
+
+//Return the max number of near neighbors for a grid.
+size_t
+get_max_grid_nns(const size_t nx1, const size_t nx2, const size_t ny1, const size_t ny2)
+{ return 10 * std::max(nx1 * ny1, nx2 * ny2); }
+
+/*
+ * create_xgrid_2dx2d_order2 - brute force with bounding box usage
+ */
+void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
+                                   vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
+                                   vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
+#define MAX_V 8
+  const size_t nx1 {(size_t) nlon_in}, nx2{(size_t)nlon_out}, ny1{(size_t)nlat_in}, ny2{(size_t)nlat_out};
+  const size_t nx1p{nx1 + 1};
+  const size_t nx2p{nx2 + 1};
+
+  std::vector<double> area_in(nx1 * ny1);
+  std::vector<double> area_out(nx2 * ny2);
+  //TODO: note get_grid_area can be parallelized.
+  get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in.data());
+  get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out.data());
+
+  std::cout << "*** S1 ***" <<std::endl;
+
+  // grid suffix synonyms: '2'/out/target
+  // grid suffix synonyms: '1'/in/source
+  //The out our target pairs
+  vector<Poly_t> polys_2;
+  vector<BBox_t> boxes_2;
+  vector<BPair_t> bPairs_2;
+  boxes_2.reserve(nx2 * ny2);
+  //bPairs_2.reserve(nx2 * ny2);
+  //TODO: Parallelize
+  for (size_t ij = 0; ij < nx2 * ny2; ij++) {
+    auto i2 = ij % nx2;
+    auto j2 = ij / nx2;
+    auto n = j2 * nx2 + i2;  //NOTE: using nx2; not nx2p
+    assert (n == ij);
+    auto ip = get_cell_idxs_ccw_4(i2, j2, nx2p);
+    boxes_2.emplace_back(getBoxForSphericalPolygon(lat_out, lon_out, ip));
+    //bPairs_2.emplace_back(ij, &boxes_2[n] );
+  }
+
+  //The "in" or source pairs
+  //TODO::parallelize
+  vector<Poly_t> polys_1;
+  vector<BBox_t> boxes_1;
+  vector<BPair_t> bPairs_1;
+  boxes_1.reserve(nx1 * ny1);
+  //bPairs_1.reserve(nx1 * ny1);
+  for (size_t ij = 0; ij < nx1 * ny1; ij++) {
+    auto i1 = ij % nx1;
+    auto j1 = ij / nx1;
+    auto n = j1 * nx1 + i1;
+    assert (n == ij);
+    auto ip = get_cell_idxs_ccw_4(i1, j1, nx1p);
+    boxes_1.emplace_back(getBoxForSphericalPolygon(lat_in, lon_in, ip));
+    //bPairs_1.emplace_back(ij, &boxes_1[n] );
+  }
+  std::cout << "*** S2 ***" <<std::endl;
+  std::cout << "boxes_1.size = " << boxes_1.size()<< std::endl;
+  std::cout << "boxes_2.size = " << boxes_2.size()<< std::endl;
+
+  const size_t max_cell_nns = get_max_cell_nns(nx1, nx2, ny1, ny2);
+  const size_t max_grid_nns  = get_max_grid_nns(nx1, nx2, ny1, ny2);
+
+  std::cout << "*** S3 ***" <<std::endl;
+
+  //vector<int> nn1(max_cell_nns, FILL_VALUE_INT);
+  vector<std::tuple<int, int>> nn_pairs1;
+  for (int j = 0; j < boxes_1.size(); j++) {//NOTE:outer loop over boxes 1
+    vector<int> nn1;
+    auto g2_ids = std::views::iota(0, (int) (nx2 * ny2));
+    std::copy_if(std::execution::seq,  //TODO: change 'seq' to 'par'
+            g2_ids.begin(), g2_ids.end(), //The range of pairs from ids set
+            std::back_inserter(nn1),
+            [=, boxes_1 = boxes_1.data(), boxes_2 = boxes_2.data()](auto idx) {
+             return (nct::BBox3D::intersect(boxes_1[j], boxes_2[idx]));
+            });
+
+    //For reproducibility, results are ordered by increasing ij value:
+    vector<int> nn1b;
+    for (size_t k = 0; k <nn1.size(); k++) {
+      if (nn1[k] != FILL_VALUE_INT) {
+        nn1b.push_back(nn1[k]);
+        nn1[k] = FILL_VALUE_INT;
+      }else{
+        break;//TODO: and NOTE: Nowhere in the copy_if documentation does it say that
+        //the inserts will be at the front of array if fixed length array is used; but it seems to be true.
+      }
+    }
+    sort(nn1b.begin(), nn1b.end(), [](auto x, auto y) {return (x<y);});
+    //std::cout << " j nn1.size nns_pairs.size: " << j << " " <<
+   // nn1.size() << " " << nn_pairs1.size() << std::endl;
+     for (size_t k = 0; k <nn1b.size(); k++) {
+       if (nn1b[k] != FILL_VALUE_INT) {
+         nn_pairs1.push_back({j, nn1b[k]});
+         nn1b[k] = FILL_VALUE_INT;
+       }else{
+       break;
+       }
+     }
+     nn1.clear();
+     nn1b.clear();
+
+
+  }
+
+  //TRIM nn_pairs to only hold the real pairs.
+  vector<std::tuple<int, int>> nn_pairs;
+  for (auto &p: nn_pairs1) {
+    auto [ij1, ij2] = p;
+    //auto ix = get<0>(p); auto jy = get<1>(p);
+    if (ij1 != FILL_VALUE_INT) {
+      nn_pairs.push_back(p);
+    } else {
+    break;
+    }
+  }
+  //std::cout << " nn_pairs.size() : " << nn_pairs.size() << std::endl;
+
+  //Given the initial neighbor pairs, calculate the final pair intersections.
+  std::vector<double> xarea_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  std::vector<double> clon_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  std::vector<double> clat_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  vector<size_t>i_in_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>j_in_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>i_out_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>j_out_v(max_grid_nns, FILL_VALUE_INT);
+  //TODO: parallelize
+  for(int ij = 0; ij < nn_pairs.size(); ij++) {
+    auto [ij1, ij2] = nn_pairs[ij];
+    auto i1 = ij1 % nx1;
+    auto j1 = ij1 / nx1;
+    auto i2 = ij2 % nx2;
+    auto j2 = ij2 / nx2;
+
+    //TODO: refactor into a function ?
+    double x1_in[MAX_V], y1_in[MAX_V], x2_in[MAX_V], y2_in[MAX_V], x_out[MAX_V], y_out[MAX_V];
+    auto idxs_1 = get_cell_idxs_ccw_4(i1, j1, nx1p);
+    for (int i = 0; i < 4; i++) {
+      x1_in[i] = lon_in[idxs_1[i]];
+      y1_in[i] = lat_in[idxs_1[i]];
+    }
+
+    auto idxs_2 = get_cell_idxs_ccw_4(i2, j2, nx2p);
+    //The legacy polygon lat-lon representation:
+    for (int i = 0; i < 4; i++) {
+      x2_in[i] = lon_out[idxs_2[i]];
+      y2_in[i] = lat_out[idxs_2[i]];
+    }
+
+    //Some polys require "fixing" before calling area (and clipping?) function.
+    auto n1_in = fix_lon_gpu(x1_in, y1_in, 4, M_PI);
+    auto n2_in = fix_lon_gpu(x2_in, y2_in, 4, M_PI); //TODO: does this one get fixed
+    auto lon_in_avg = avgval_double_gpu(n1_in, x1_in);
+
+    //Call the 2D_by_2D clipping algorithm
+    auto n_out = clip_2dx2d(x1_in, y1_in, n1_in, x2_in,
+                            y2_in, n2_in, x_out, y_out);
+    if (n_out > 0) {
+      auto xarea = poly_area_gpu(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
+      auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
+      if (xarea / min_area > AREA_RATIO_THRESH) {
+        xarea_v[ij] = xarea;
+        clon_v[ij] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+        clat_v[ij] = poly_ctrlat(x_out, y_out, n_out);
+        i_in_v[ij] = i1; //stores the lower corner of poly
+        j_in_v[ij] = j1;
+        i_out_v[ij] = i2;
+        j_out_v[ij] = j2;
+      } //else leave in the FILL_VALUE
+    }
+  }
+  std::cout << "*** S5 ***" <<std::endl;
+
+  //Save final answers (though copy_if can be used again); but don't use more memory than needed.
+    auto nxgrid = count_if(xarea_v.begin(), xarea_v.end(), [](double x) { return x > 0; });
+
+    xgrid_area.reserve(nxgrid);  //TODO: is assign(capacity(, FILL_VALUE) needed?
+    i_in.reserve(nxgrid);
+    j_in.reserve(nxgrid);
+    i_out.reserve(nxgrid);
+    j_out.reserve(nxgrid);
+    xgrid_clon.reserve(nxgrid);
+    xgrid_clat.reserve(nxgrid);
+
+    //auto ir = 0;
+    for(int i = 0; i  < nn_pairs.size(); i ++) {
+      if (xarea_v[i] > 0.0) {
+        xgrid_area.emplace_back(xarea_v[ i ]);
+        xgrid_clon.emplace_back(clon_v[i]);
+        xgrid_clat.emplace_back(clat_v[i]);
+        i_in.emplace_back(i_in_v[i]);
+        j_in.emplace_back(j_in_v[i]);
+        i_out .emplace_back(i_out_v[i]);
+        j_out.emplace_back(j_out_v[i]);
+      ///  ++i;
+      }
+    }
+
+    std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
+   // return nxgrid;
+}
+/*
+ *
+ //vector<std::tuple<int, int>> nn_pairs1(
+   //       max_grid_nns,
+  //        std::tuple<int, int>{FILL_VALUE_INT, FILL_VALUE_INT});
+  //auto g1_ids = std::views::iota(0, (int) (nx1 * ny1));
+  //auto g2_ids = std::views::iota(0, (int) (nx2 * ny2));
+  //auto gxg_ids = tl::views::cartesian_product(g1_ids, g2_ids);
+
+
+
+  std::copy_if(
+          std::execution::seq,  //TODO: change to 'par' (seq-quential is the default)
+          gxg_ids.begin(), gxg_ids.end(), //The range of pairs from ids set
+          nn_pairs1.begin(), //GPU nvc++ requires random_access iter; container resizing not allowed.
+          //for this item, an access by iterator idiom
+          [=, b1v = boxes_1.data(), b2v = boxes_2.data()](auto idx) { //[] is start of lambda definition.
+            auto [ij1, ij2] = idx;
+            return (nct::BBox3D::intersect(b1v[ ij1], b2v [ ij2]));
+          });
+  std::cout << "*** S4 ***" <<std::endl;
+
+  // Make the indexes of cells of each grid, and the cartesian product between the two.
+  // Note the cartesian product is actually a lazy generator of indices and does not
+  // (fortunately) take up N1 x N2 space. The motivation is to use copy_if with index access idiom.
+  // Also by constraints from the nvc++ (for GPUs), container resizing is not allowed (so its space
+  // must be pre-allocated) and container must feature a random_access iterator.
+
+  vector<std::tuple<int, int>> nn_pairs1(  //Allocate and initialize 1D array of Pairs of Near Neighbors:
+          max_grid_nns,
+          std::tuple<int, int>{FILL_VALUE_INT, FILL_VALUE_INT});
+  //auto g1_ids = std::views::iota(0, (int) (nx1 * ny1));
+  //auto g2_ids = std::views::iota(0, (int) (nx2 * ny2));
+  //auto gxg_ids = tl::views::cartesian_product(g1_ids, g2_ids);
+
+  std::cout << "*** S3 ***" <<std::endl;
+
+  // Determine the near-neighbors pairs and copy the indexes of each pair. The near-neighbors in this step
+  // are merely a superset of the final near-neighbors, and will later be further filtered by clip-polygon.
+  // In this step the near-neighbor intersection test is the box-box intersection test. If the final
+  // intersection test (with clip_polygon) were used, only about (k * max(N1, N2)), where k is small (~4).
+  // If instead polygon boxes are calculated fairly tight around the polygons, that 'k' should only be
+  // slightly bigger.
+  /*std::copy_if(
+          std::execution::seq,  //TODO: change to 'par' (seq-quential is the default)
+          gxg_ids.begin(), gxg_ids.end(), //The range of pairs from ids set
+          nn_pairs1.begin(), //GPU nvc++ requires random_access iter; container resizing not allowed.
+          //for this item, an access by iterator idiom
+          [=, b1v = boxes_1.data(), b2v = boxes_2.data()](auto idx) { //[] is start of lambda definition.
+            auto [ij1, ij2] = idx;
+            return (nct::BBox3D::intersect(b1v[ ij1], b2v [ ij2]));
+          });
+  std::cout << "*** S4 ***" <<std::endl;
+
+
+
+*/
