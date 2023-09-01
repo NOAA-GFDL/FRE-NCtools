@@ -48,6 +48,6 @@ prepare_input_data ()
    mppnccombine -64 output/$test_file ${test_file}.????
 
   # Compare output
-   nccmp -w format -md output/$test_file input/$test_file
+   run_and_check nccmp -w format -md output/$test_file input/$test_file
 
 }

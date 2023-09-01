@@ -33,12 +33,12 @@ load test_utils
    mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????
-  [ -e mppnccombine_output.nc ]
+  run_and_check [ -e mppnccombine_output.nc ]
   ncdump -h mppnccombine_output.nc
 
-  [ -e $top_srcdir/t/Test02-reference/mppnccombine_output.nc ]
+  run_and_check [ -e $top_srcdir/t/Test02-reference/mppnccombine_output.nc ]
 
   nccmp -V
 
-  nccmp -d mppnccombine_output.nc  $top_srcdir/t/Test02-reference/mppnccombine_output.nc
+  run_and_check nccmp -d mppnccombine_output.nc  $top_srcdir/t/Test02-reference/mppnccombine_output.nc
 }

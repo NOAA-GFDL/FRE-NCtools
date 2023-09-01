@@ -30,6 +30,6 @@ load test_utils
   mppnccombine \
       mppnccombine_output.nc \
       mppnccombine.nc.????
-  [ -e mppnccombine_output.nc ]
+  run_and_check [ -e mppnccombine_output.nc ]
   ncdump -h mppnccombine_output.nc
 }
