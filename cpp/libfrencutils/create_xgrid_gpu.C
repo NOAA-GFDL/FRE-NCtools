@@ -12,10 +12,36 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <array>
+#include <algorithm>
 
+#include "mpp.h"
+#include "BBox3D.h"
+#include "Polygon.h"
+#include "BoxedObj.h"
 #include "create_xgrid.h"
 
+//#include "cartesian_product.hpp"
+
+/**
+ * README  IMPORTANT
+ * Most of the functions in this file are direct copies of those from the
+ * create_xgrid.C file. The reason is that the nvc++ compiler using C++ std
+ * parallelism requires many functions to be defined in the same file as the
+ * function targeted for GPU execution (e.g. create_xgrid_2dx2d_order2_bfwbb
+ * near the bottom of this file). The amount of source copying within this file
+ * will be improved ASAP.
+ */
+
 using std::sin;
+using std::vector;
+using std::string;
+using std::array;
+
+using BBox_t = nct::BBox3D;
+using BPair_t = nct::BoxAndId;
+using Point_t = nct::Point3D<double>;
+
 
 #include "constant.h"
 #ifndef MAXXGRID
@@ -25,16 +51,50 @@ using std::sin;
 
 #define AREA_RATIO_THRESH (1.e-6)
 #define MASK_THRESH (0.5)
-// #define EPSLN8            (1.e-8)
 #define EPSLN30 (1.0e-30)
-// #define EPSLN10           (1.0e-10)
 
 constexpr double MU_TOLORENCE{1.e-6};
 constexpr double SMALL_VALUE_PA{1.0E-10};
 
-// These functions are defined here as they were moved from the .C file to the the h
-// file in order to use the std parallelization for GPUs with nvc++ 23.x compiers:
+//TODO: place elsewhere
+//NOTE: some of these are are negative values:
+constexpr double FILL_VALUE_DOUBLE{ -std::numeric_limits<double>::max()};
+constexpr int FILL_VALUE_INT{ std::numeric_limits<int>::max() };
+constexpr size_t FILL_VALUE_SIZE_T{ std::numeric_limits<size_t>::max() };
 
+
+void gpu_error(const string& str)
+{
+  gpu_error(str.c_str());
+}
+
+void gpu_error(const char * str)
+{
+  fprintf(stderr, "Error from  GPU: %s\n",  str );
+  //exit(1);  //TODO:
+}
+
+
+void latlon2xyz_gpu(const double lat, const double lon,  std::array<double,3> &  v){
+  v[0] = RADIUS * cos(lat) * cos(lon );
+  v[1] = RADIUS * cos(lat) * sin(lon);
+  v[2] = RADIUS * sin(lat);
+}
+
+
+size_t  latlons_outside_ccd_domain_gpu(const unsigned int NV4, const double *yv, double *xv) {
+  size_t count {0};
+  for (unsigned int i = 0; i < NV4; i++) {
+    if (xv[i] == 2 * M_PI) xv[i] = 0;
+    if (xv[i] >= 2 * M_PI || xv[i] < 0.) {
+      count++;
+    }
+    if (yv[i] < -M_PI_2 || yv[i] > M_PI_2) {
+      count++;
+    }
+  }
+  return count;
+}
 extern double maxval_double_gpu(int size, const double *data) {
   int n;
   double maxval;
@@ -365,6 +425,7 @@ int clip_2dx2d_gpu(const double lon1_in[], const double lat1_in[], int n1_in,
   int gttwopi = 0;
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
+  //Unexpected branch type (/home/mzuniga/nct_search/FRE-NCtools/cpp/libfrencutils/create_xgrid_gpu.C: 428)
   n_out = n1_in;
   for (i1 = 0; i1 < n1_in; i1++) {
     lon_tmp[i1] = lon1_in[i1];
@@ -432,263 +493,388 @@ int clip_2dx2d_gpu(const double lon1_in[], const double lat1_in[], int n1_in,
   return (n_out);
 }
 
+
+inline
+size_t pt_idx_gpu(const size_t i, const size_t j,  const size_t nx) {
+  return ( j * nx + i);
+}
+std::array<size_t, 4>
+get_cell_idxs_ccw_4_gpu(const size_t i, const size_t j, const size_t nx) {
+  std::array<size_t, 4> idxs;
+  idxs[0] = pt_idx_gpu(i, j, nx); //ll
+  idxs[1] = pt_idx_gpu(i + 1, j , nx); //lr
+  idxs[2] = pt_idx_gpu(i + 1, j + 1, nx); //ur
+  idxs[3] = pt_idx_gpu(i, j + 1, nx);//ul
+  return idxs;
+}
+
+std::tuple<double, double>
+ getPolygonMinMax_gpu(const double lat_m[], const double lon_m[],
+                      const array<size_t, 4> &is, bool debugf=false) {
+  constexpr unsigned int NV4{4};
+  auto tempy = lat_m[is[0]];
+  double maxl = tempy;
+  double minl = tempy;
+  for (auto i = 1; i < NV4; i++) {
+    tempy = lat_m[is[i]];
+    if (tempy > maxl) maxl = tempy;
+    if (tempy < minl) minl = tempy;
+  }
+  return {minl, maxl};
+}
+
+
+BBox_t getBoxForSphericalPolygon_gpu(const double lat_m[], const double lon_m[],
+                                 const array<size_t, 4> &is, bool debugf=false) {
+  constexpr unsigned int NV4{4};
+  // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
+  // where its possible to have an extrema in X or Y when an edge crosses them.
+  constexpr  array<double, 7> xlons {0, M_PI_2, M_PI, 3. * M_PI_2, 2. * M_PI};
+  std::array<double, 3> pt{}; // a 3D point.
+  BBox_t box; //the thing we are calculating.
+  bool crosses_equator = false;
+  double yv[ NV4 ], xv[ NV4 ];  //the latitudes (yv) and longitudes (xv) of one polygon/cell.
+  for (auto i = 0; i< NV4 ; i++) {
+    xv[i] = lon_m[is[i]];
+    yv[i] = lat_m[is[i]];
+  }
+
+  auto occd = latlons_outside_ccd_domain_gpu(4, yv, xv);
+  if(occd>0){
+    gpu_error("There are lats or lons outside CCD");
+  }
+
+  //Expand the bounding box in consideration of the max and mins of the lats and lons:
+  const auto [miny_it, maxy_it] = std::minmax_element(std::begin(yv), std::end(yv));
+  const double miny = *miny_it;
+  const double maxy = *maxy_it;
+  const auto [minx_it, maxx_it] = std::minmax_element(std::begin(xv), std::end(xv));
+  const double minx = *minx_it;
+  const double maxx = *maxx_it;
+  latlon2xyz_gpu( miny, minx, pt);
+  box.expand( pt );
+  latlon2xyz_gpu( maxy, minx, pt);
+  box.expand( pt );
+  latlon2xyz_gpu( miny, maxx, pt);
+  box.expand( pt );
+  latlon2xyz_gpu( maxy, maxx, pt);
+  box.expand( pt );
+
+  //For case where a pole is inside a polygon. Note that
+  // any Z=k plane of the bbox calculated from above
+  // (or even from the actual vertices)
+  // would be sufficient to determine this:
+  latlon2xyz_gpu(M_PI_2, 0.0, pt); //the north pole
+  if (BBox_t::contains_zk(box, pt) && (yv[0] >=  0)){
+    box.expand(pt);
+  }
+  latlon2xyz_gpu(-M_PI_2, 0.0, pt); //the south pole
+  if (BBox_t::contains_zk(box, pt) && (yv[0] < 0)){
+    box.expand(pt);
+  }
+
+  //Expand the box for coordinate value extrema when edge crosses the equator:
+  for (auto i = 0; i < NV4; i++) {
+    auto equator_lat = 0.;
+    auto t1 = yv[i];
+    auto t2 = yv[(i + 1) % NV4];
+    if (std::signbit(t1) != std::signbit(t2 )) {
+      crosses_equator = true;
+      latlon2xyz_gpu(equator_lat, xv[i], pt);
+      box.expand(pt);
+      latlon2xyz_gpu(equator_lat,  xv[(i + 1) % NV4], pt);
+      box.expand(pt);
+    }
+  }
+
+  //Expand the box for coordinate value extrema when edge crosses XZ or YZ plane
+  for (auto i = 0; i < NV4; i++) {
+    auto t1 = xv[i];
+    auto t2 = xv[(i + 1) % NV4];
+    for (const auto &xang: xlons) {
+      if (std::signbit(t1 - xang) != std::signbit(t2 - xang)) {
+        latlon2xyz_gpu(yv[i], xang, pt);
+        box.expand(pt);
+        latlon2xyz_gpu(yv[(i + 1) % NV4], xang, pt);
+        box.expand(pt);
+        if(crosses_equator) {
+          latlon2xyz_gpu(0.0, xang, pt);
+          box.expand(pt);
+        }
+      }
+    }
+  }
+  box.expand_for_doubles();
+  return box;
+}
+
+// grid suffix synonyms: '2'/out/target
+// grid suffix synonyms: '1'/in/source
+
+//TODO: This formula for the maximum number of cells in one grid to any other in another grid is
+// merely a heuristic. A better one might involve max and min cell areas. Consider how many
+//cells from one grid can overlap the largest cell from another. The factor of 1000 below
+//should take care of really wierd cells.
+size_t get_max_cell_nns(const size_t nx1, const size_t nx2, const size_t ny1, const size_t ny2)
+{ return 1000 * std::max(nx1 * ny1, nx2 * ny2) / std::min(nx1 * ny1, nx2 * ny2); }
+
+//Return the max number of near neighbors for a grid.
+size_t
+get_max_grid_nns(const size_t nx1, const size_t nx2, const size_t ny1, const size_t ny2)
+{ return 10 * std::max(nx1 * ny1, nx2 * ny2); }
+
+/*
+ * create_xgrid_2dx2d_order2 - brute force with bounding box usage
+ */
+
+void print(std::tuple<int,int> t)
+{
+  const auto& [a, b] = t;
+  std::cout << '(' << a << ' ' << b <<  ')' << std::endl;
+}
+
+std::tuple<int, int>
+index_pair_from_combo( const int idx_pair, const int nxy2){
+  int ij1 = idx_pair / nxy2; //First index
+  int ij2 = idx_pair % nxy2;
+  return {ij1, ij2};
+}
+
 int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                          const double *lon_in, const double *lat_in, const double *lon_out,
                                          const double *lat_out,
                                          const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
                                          double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
+  return (0);
+}
+
+//V3
+
+/*
+ * function create_xgrid_2dx2d_order2 (bfwbb)
+ * This function uses the std::copy_if function to collect the [ij1 , ij2]  pairs of indexes of
+ * those polygons that pass the "is near neighbors" filters. The filters arr bounding-box intersections
+ * (and (possibly TBD) also lat/lon overlap tests). The sole purpose of using copy_if
+ * is to parallelize the brute-force (O(n1 x n2) ) computations. Note that copy_if is merely (with the
+ * cartesian_product class or the iota class) generating the possible index pairs and copying (or saving)
+ * only those pairs that pass the neighbors tests.
+ *
+ * ISSUES: There have been some trouble with copy_if using cartesian_product class (which at this
+ * time is not yet available in the C++23 lib). Additionally, there was a compiler bug in creating
+ * iotas templated to size_t; and this has forced all the following:
+ * A) A single iota is used (instead of the cartesian_product). A trick was used to combine
+ *    two integers into one (e.g. ij = i * MAXJ + j). When later needed the 'i' and 'j' are recouped from
+ *    from 'ij' (using modulo and division operators).
+ * B) The iota is templated on int. Because of the trick in A) above, it would have been better to
+ *     use size_t, but unfortunately that does not compile with nvc++.
+ * C) To make sure the combine ints fit into one int, an outer loop was introduced. So now a
+ *   combine int is made up of ij1 and i2.
+ *   TODO: Change to the C++23 cartesian_product when avaialble.
+ *   NOTE: Recall C++ is row-major order, so column index (J) should be outer index.
+ */
+
+void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                       const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
+                                       vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
+                                       vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
 #define MAX_V 8
-  int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
-  double *area_in, *area_out;
-  int nblocks = 1;
-  int *istart2 = NULL, *iend2 = NULL;
-  int npts_left, nblks_left, pos, m, npts_my, ij;
-  double *lon_out_min_list, *lon_out_max_list, *lon_out_avg, *lat_out_min_list, *lat_out_max_list;
-  double *lon_out_list, *lat_out_list;
-  int *pnxgrid = NULL, *pstart;
-  int *pi_in = NULL, *pj_in = NULL, *pi_out = NULL, *pj_out = NULL;
-  double *pxgrid_area = NULL, *pxgrid_clon = NULL, *pxgrid_clat = NULL;
-  int *n2_list;
-  int nthreads, nxgrid_block_max;
+  const size_t nx1{(size_t) nlon_in}, nx2{(size_t) nlon_out}, ny1{(size_t) nlat_in}, ny2{(size_t) nlat_out};
+  const size_t nx1p{nx1 + 1};
+  const size_t nx2p{nx2 + 1};
 
-  nx1 = nlon_in;
-  ny1 = nlat_in;
-  nx2 = nlon_out;
-  ny2 = nlat_out;
-  nx1p = nx1 + 1;
-  nx2p = nx2 + 1;
+  //These two are sized int because their use in copy_if
+  const int nxy1{nx1 * ny1};
+  const int nxy2{nx2 * ny2};
 
-  area_in = (double *)malloc(nx1 * ny1 * sizeof(double));
-  area_out = (double *)malloc(nx2 * ny2 * sizeof(double));
-  get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in);
-  get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
-
-  nthreads = 1;
-
-  nblocks = nthreads;
-
-  istart2 = (int *)malloc(nblocks * sizeof(int));
-  iend2 = (int *)malloc(nblocks * sizeof(int));
-
-  pstart = (int *)malloc(nblocks * sizeof(int));
-  pnxgrid = (int *)malloc(nblocks * sizeof(int));
-
-  nxgrid_block_max = MAXXGRID / nblocks;
-
-  for (m = 0; m < nblocks; m++) {
-    pnxgrid[m] = 0;
-    pstart[m] = m * nxgrid_block_max;
+  if ((size_t) nxy1 * ny2 >= std::numeric_limits<int>::max()) {
+    /* Grids are too big - but only for the current 23.7 nvc++ limitations on using copy_if
+     * with iotas templated with ints (i.e. cant use size_t).
+     */
+    std::cerr << "Grids too big nxy1 * ny2 ) >= std::numeric_limits<int>::max()) " << std::endl;
+    //exit here is possible
   }
+  const int max_grid_nns = get_max_grid_nns(nx1, nx2, ny1, ny2);
+  std::cout << "max_grid_nns estimated at :" << max_grid_nns << std::endl;
 
-  if (nblocks == 1) {
-    pi_in = i_in;
-    pj_in = j_in;
-    pi_out = i_out;
-    pj_out = j_out;
-    pxgrid_area = xgrid_area;
-    pxgrid_clon = xgrid_clon;
-    pxgrid_clat = xgrid_clat;
-  } else {
-    pi_in = (int *)malloc(MAXXGRID * sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID * sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID * sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID * sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID * sizeof(double));
-    pxgrid_clon = (double *)malloc(MAXXGRID * sizeof(double));
-    pxgrid_clat = (double *)malloc(MAXXGRID * sizeof(double));
-  }
+  std::vector<double> area_in(nx1 * ny1);
+  std::vector<double> area_out(nx2 * ny2);
+  //TODO: note get_grid_area can be parallelized.
+  get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in.data());
+  get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out.data());
 
-  npts_left = nx2 * ny2;
-  nblks_left = nblocks;
-  pos = 0;
-  for (m = 0; m < nblocks; m++) {
-    istart2[m] = pos;
-    npts_my = npts_left / nblks_left;
-    iend2[m] = istart2[m] + npts_my - 1;
-    pos = iend2[m] + 1;
-    npts_left -= npts_my;
-    nblks_left--;
-  }
-
-  lon_out_min_list = (double *)malloc(nx2 * ny2 * sizeof(double));
-  lon_out_max_list = (double *)malloc(nx2 * ny2 * sizeof(double));
-  lat_out_min_list = (double *)malloc(nx2 * ny2 * sizeof(double));
-  lat_out_max_list = (double *)malloc(nx2 * ny2 * sizeof(double));
-  lon_out_avg = (double *)malloc(nx2 * ny2 * sizeof(double));
-  n2_list = (int *)malloc(nx2 * ny2 * sizeof(int));
-  lon_out_list = (double *)malloc(MAX_V * nx2 * ny2 * sizeof(double));
-  lat_out_list = (double *)malloc(MAX_V * nx2 * ny2 * sizeof(double));
-
-  auto ids = std::views::iota(0, (nx2 * ny2));
-  std::for_each_n(std::execution::par,
-                  ids.begin(), (nx2 * ny2),
-                  [=](int ij) {
-                    // for (ij = 0; ij < nx2 * ny2; ij++) {
-                    int i2, j2, n, n0, n1, n2, n3, n2_in, l;
-                    double x2_in[MV], y2_in[MV];
-                    i2 = ij % nx2;
-                    j2 = ij / nx2;
-                    n = j2 * nx2 + i2;
-                    n0 = j2 * nx2p + i2;
-                    n1 = j2 * nx2p + i2 + 1;
-                    n2 = (j2 + 1) * nx2p + i2 + 1;
-                    n3 = (j2 + 1) * nx2p + i2;
-                    x2_in[0] = lon_out[n0];
-                    y2_in[0] = lat_out[n0];
-                    x2_in[1] = lon_out[n1];
-                    y2_in[1] = lat_out[n1];
-                    x2_in[2] = lon_out[n2];
-                    y2_in[2] = lat_out[n2];
-                    x2_in[3] = lon_out[n3];
-                    y2_in[3] = lat_out[n3];
-
-                    lat_out_min_list[n] = minval_double_gpu(4, y2_in);
-                    lat_out_max_list[n] = maxval_double_gpu(4, y2_in);
-                    n2_in = fix_lon_gpu(x2_in, y2_in, 4, M_PI);
-                    if (n2_in > MAX_V) error_handler_gpu("create_xgrid.c: n2_in is greater than MAX_V");
-                    lon_out_min_list[n] = minval_double_gpu(n2_in, x2_in);
-                    lon_out_max_list[n] = maxval_double_gpu(n2_in, x2_in);
-                    lon_out_avg[n] = avgval_double_gpu(n2_in, x2_in);
-                    n2_list[n] = n2_in;
-                    for (l = 0; l < n2_in; l++) {
-                      lon_out_list[n * MAX_V + l] = x2_in[l];
-                      lat_out_list[n * MAX_V + l] = y2_in[l];
-                    }
+  // grid suffix synonyms: '2'/out/target
+  // grid suffix synonyms: '1'/in/source
+  //The out or target pairs
+  vector<BBox_t> boxes_2(nx2 * ny2);
+  auto ids2 = std::views::iota(0);
+  std::for_each_n(std::execution::par, ids2.begin(), nx2 * ny2,
+                  [=, boxes_2 = boxes_2.data()](int ij) {
+                    auto i2 = ij % nx2;
+                    auto j2 = ij / nx2;
+                    auto ip = get_cell_idxs_ccw_4_gpu(i2, j2, nx2p);
+                    boxes_2[ij] = getBoxForSphericalPolygon_gpu(lat_out, lon_out, ip);
+                  });
+  //The "in" or source pairs
+  vector<BBox_t> boxes_1(nx1 * ny1);
+  auto ids1 = std::views::iota(0);
+  std::for_each_n(std::execution::par, ids1.begin(), nx1 * ny1,
+                  [=, boxes_1 = boxes_1.data()](int ij) {
+                    auto i1 = ij % nx1;
+                    auto j1 = ij / nx1;
+                    auto ip = get_cell_idxs_ccw_4_gpu(i1, j1, nx1p);
+                    boxes_1[ij] = getBoxForSphericalPolygon_gpu(lat_in, lon_in, ip);
                   });
 
-  nxgrid = 0;
+  std::cout << "BBox array sizes: " << boxes_1.size() << " ; " << boxes_2.size() << std::endl;
 
-  for (m = 0; m < nblocks; m++) {
-    auto ids = std::views::iota(0, ny1);
-    // for(j1=0; j1<ny1; j1++)
-    std::for_each_n(std::execution::par, ids.begin(), ny1, [=](int j1) {
-      for (int i1 = 0; i1 < nx1; i1++) {
-        if (mask_in[j1 * nx1 + i1] > MASK_THRESH) {
-          int n0, n1, n2, n3, l, n1_in;
-          double lat_in_min, lat_in_max, lon_in_min, lon_in_max, lon_in_avg;
-          double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
+  vector<std::tuple<int,int>> nn_pairs;
+  for (int i2 = 0; i2 < nx2; i2++) {
+    vector<int> nn_pairs1(max_grid_nns, FILL_VALUE_INT);
+    //An iota that generates all the continuous integers in [0, nxy1 * nx2):
+    auto g12_ids = std::views::iota((int) 0, (int) (nxy1 * ny2));
+    std::copy_if(std::execution::par,  //TODO: experiment with par_unseq
+                 g12_ids.begin(), g12_ids.end(),
+                 nn_pairs1.begin(),
+                 [=, boxes_1 = boxes_1.data(), boxes_2 = boxes_2.data()](auto ij12) {
+                   auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
+                   auto ij2 = j2 * nx2 + i2;
+                   return (nct::BBox3D::intersect(boxes_1[ij1], boxes_2[ij2]));
+                 });
 
-          n0 = j1 * nx1p + i1;
-          n1 = j1 * nx1p + i1 + 1;
-          n2 = (j1 + 1) * nx1p + i1 + 1;
-          n3 = (j1 + 1) * nx1p + i1;
-          x1_in[0] = lon_in[n0];
-          y1_in[0] = lat_in[n0];
-          x1_in[1] = lon_in[n1];
-          y1_in[1] = lat_in[n1];
-          x1_in[2] = lon_in[n2];
-          y1_in[2] = lat_in[n2];
-          x1_in[3] = lon_in[n3];
-          y1_in[3] = lat_in[n3];
-          lat_in_min = minval_double_gpu(4, y1_in);
-          lat_in_max = maxval_double_gpu(4, y1_in);
-          n1_in = fix_lon_gpu(x1_in, y1_in, 4, M_PI);
-          lon_in_min = minval_double_gpu(n1_in, x1_in);
-          lon_in_max = maxval_double_gpu(n1_in, x1_in);
-          lon_in_avg = avgval_double_gpu(n1_in, x1_in);
-          for (int ij = istart2[m]; ij <= iend2[m]; ij++) {
-            int n_out, i2, j2, n2_in;
-            double xarea, dx, lon_out_min, lon_out_max;
-            double x2_in[MAX_V], y2_in[MAX_V];
-
-            i2 = ij % nx2;
-            j2 = ij / nx2;
-
-            if (lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min) continue;
-            /* adjust x2_in according to lon_in_avg*/
-            n2_in = n2_list[ij];
-            for (l = 0; l < n2_in; l++) {
-              x2_in[l] = lon_out_list[ij * MAX_V + l];
-              y2_in[l] = lat_out_list[ij * MAX_V + l];
-            }
-            lon_out_min = lon_out_min_list[ij];
-            lon_out_max = lon_out_max_list[ij];
-            dx = lon_out_avg[ij] - lon_in_avg;
-            if (dx < -M_PI) {
-              lon_out_min += TPI;
-              lon_out_max += TPI;
-              for (l = 0; l < n2_in; l++) x2_in[l] += TPI;
-            } else if (dx > M_PI) {
-              lon_out_min -= TPI;
-              lon_out_max -= TPI;
-              for (l = 0; l < n2_in; l++) x2_in[l] -= TPI;
-            }
-
-            /* x2_in should in the same range as x1_in after lon_fix, so no need to
-               consider cyclic condition
-            */
-            if (lon_out_min >= lon_in_max || lon_out_max <= lon_in_min) continue;
-            if ((n_out = clip_2dx2d_gpu(x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out)) > 0) {
-              double min_area;
-              int nn;
-              xarea = poly_area_gpu(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
-              min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
-              if (xarea / min_area > AREA_RATIO_THRESH) {
-                pnxgrid[m]++;
-                if (pnxgrid[m] >= MAXXGRID / nthreads)
-                  error_handler_gpu(
-                      "nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
-                nn = pstart[m] + pnxgrid[m] - 1;
-                pxgrid_area[nn] = xarea;
-                pxgrid_clon[nn] = poly_ctrlon_gpu(x_out, y_out, n_out, lon_in_avg);
-                pxgrid_clat[nn] = poly_ctrlat_gpu(x_out, y_out, n_out);
-                pi_in[nn] = i1;
-                pj_in[nn] = j1;
-                pi_out[nn] = i2;
-                pj_out[nn] = j2;
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  /*copy data if nblocks > 1 */
-  if (nblocks == 1) {
-    nxgrid = pnxgrid[0];
-    pi_in = NULL;
-    pj_in = NULL;
-    pi_out = NULL;
-    pj_out = NULL;
-    pxgrid_area = NULL;
-    pxgrid_clon = NULL;
-    pxgrid_clat = NULL;
-  } else {
-    int nn, i;
-    nxgrid = 0;
-    for (m = 0; m < nblocks; m++) {
-      for (i = 0; i < pnxgrid[m]; i++) {
-        nn = pstart[m] + i;
-        i_in[nxgrid] = pi_in[nn];
-        j_in[nxgrid] = pj_in[nn];
-        i_out[nxgrid] = pi_out[nn];
-        j_out[nxgrid] = pj_out[nn];
-        xgrid_area[nxgrid] = pxgrid_area[nn];
-        xgrid_clon[nxgrid] = pxgrid_clon[nn];
-        xgrid_clat[nxgrid] = pxgrid_clat[nn];
-        nxgrid++;
-      }
+    //TRIM nn_pairs to only hold the real pairs.
+    for (auto &ij12: nn_pairs1) {
+      if (ij12 == FILL_VALUE_INT) break;
+      auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
+      int ij2 = j2 * nx2 + i2;
+      nn_pairs.push_back({(int)ij1, ij2});
     }
-    free(pi_in);
-    free(pj_in);
-    free(pi_out);
-    free(pj_out);
-    free(pxgrid_area);
-    free(pxgrid_clon);
-    free(pxgrid_clat);
   }
 
-  free(area_in);
-  free(area_out);
-  free(lon_out_min_list);
-  free(lon_out_max_list);
-  free(lat_out_min_list);
-  free(lat_out_max_list);
-  free(lon_out_avg);
-  free(n2_list);
-  free(lon_out_list);
-  free(lat_out_list);
+  //NOTE For reproducibility with baseline, results are ordered by increasing : i1; j1; ij2
+  auto iidx_cmp = [](const std::tuple<int,int>& a, const std::tuple<int,int>& b) -> bool
+  {
+    if(std::get<0>(a) == std::get<0>(b)){
+      return  std::get<1>(a) < std::get<1>(b);
+    }else{
+      return std::get<0>(a) < std::get<0>(b);
+    }
+  };
+  std::sort(nn_pairs.begin(), nn_pairs.end(), iidx_cmp);
 
-  return nxgrid;
+
+  //std::cout << "nn_pairs1[0]= " << nn_pairs1[0] << " nn_pairs1[size()-1]"<< nn_pairs1[nn_pairs1.size()-1] << std::endl;
+  //std::cout << "nn_pairs[0]= " << nn_pairs[0] << " nn_pairs[size()-1]"<< nn_pairs[nn_pairs.size()-1] << std::endl;
+  //std::cout << " nn_pairs.size() : " << nn_pairs.size() << std::endl;
+
+  //Given the initial neighbor pairs, calculate the final pair intersections.
+
+  std::vector<double> xarea_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  std::vector<double> clon_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  std::vector<double> clat_v(max_grid_nns, FILL_VALUE_DOUBLE);
+  vector<size_t>i_in_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>j_in_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>i_out_v(max_grid_nns, FILL_VALUE_INT);
+  vector<size_t>j_out_v(max_grid_nns, FILL_VALUE_INT);
+
+  //NOTE: Parallelizing the loop below may not buy much since size of nn_pairs should
+  // already be linear in the size of the larger grid.
+  for(size_t ij = 0; ij < nn_pairs.size(); ij++) {
+    auto [ij1, ij2] = nn_pairs[ij];
+   // auto [ij1, ij2] = index_pair_from_combo(nn_pairs[ij], ny2);
+    auto i1 = ij1 % nx1;
+    auto j1 = ij1 / nx1;
+    auto i2 = ij2 % nx2;
+    auto j2 = ij2 / nx2;
+
+    //TODO: refactor into a function ?
+    double x1_in[MAX_V], y1_in[MAX_V], x2_in[MAX_V], y2_in[MAX_V], x_out[MAX_V], y_out[MAX_V];
+     auto idxs_1 = get_cell_idxs_ccw_4_gpu(i1, j1, nx1p);
+     for (int i = 0; i < 4; i++) {
+        x1_in[i] = lon_in[idxs_1[i]];
+        y1_in[i] = lat_in[idxs_1[i]];
+      }
+
+    auto idxs_2 = get_cell_idxs_ccw_4_gpu(i2, j2, nx2p);
+    //The legacy polygon lat-lon representation:
+    for (int i = 0; i < 4; i++) {
+      x2_in[i] = lon_out[idxs_2[i]];
+      y2_in[i] = lat_out[idxs_2[i]];
+    }
+
+    //Some polys require "fixing" before calling area (and clipping?) function.
+    auto n1_in = fix_lon_gpu(x1_in, y1_in, 4, M_PI);
+    auto n2_in = fix_lon_gpu(x2_in, y2_in, 4, M_PI); //TODO: does this one get fixed
+    auto lon_in_avg = avgval_double_gpu(n1_in, x1_in);
+
+    //Call the 2D_by_2D clipping algorithm
+    auto n_out = clip_2dx2d_gpu(x1_in, y1_in, n1_in, x2_in,
+                                y2_in, n2_in, x_out, y_out);
+    if (n_out > 0) {
+      auto xarea = poly_area_gpu(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
+      auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
+      if (xarea / min_area > AREA_RATIO_THRESH) {
+        xarea_v[ij] = xarea;
+        clon_v[ij] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+        clat_v[ij] = poly_ctrlat(x_out, y_out, n_out);
+        i_in_v[ij] = i1; //stores the lower corner of poly
+        j_in_v[ij] = j1;
+        i_out_v[ij] = i2;
+        j_out_v[ij] = j2;
+      } //else leave in the FILL_VALUE
+    }
+  }
+
+  //Save final answers (though copy_if can be used again); but don't use more memory than needed.
+  auto nxgrid = count_if(xarea_v.begin(), xarea_v.end(), [](double x) { return x > 0; });
+
+  xgrid_area.reserve(nxgrid);  //TODO: is assign(capacity(, FILL_VALUE) needed?
+  i_in.reserve(nxgrid);
+  j_in.reserve(nxgrid);
+  i_out.reserve(nxgrid);
+  j_out.reserve(nxgrid);
+  xgrid_clon.reserve(nxgrid);
+  xgrid_clat.reserve(nxgrid);
+
+  //auto ir = 0;
+  for(int i = 0; i  < nn_pairs.size(); i ++) {
+    if (xarea_v[i] > 0.0) {
+      xgrid_area.emplace_back(xarea_v[ i ]);
+      xgrid_clon.emplace_back(clon_v[i]);
+      xgrid_clat.emplace_back(clat_v[i]);
+      i_in.emplace_back(i_in_v[i]);
+      j_in.emplace_back(j_in_v[i]);
+      i_out .emplace_back(i_out_v[i]);
+      j_out.emplace_back(j_out_v[i]);
+    }
+  }
+
+  std::cout <<"create_xgrid_2dx2d_order2_bff2 end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
+  // return nxgrid;
 }
+//if desired to do
+/*
+vector<double> lats_min_1(nx1 * ny1);
+vector<double> lats_max_1(nx1 * ny1);
+ids1 = std::views::iota(0);
+std::for_each_n(std::execution::par, ids1.begin(), nx1 * ny1,
+[=, lats_min_1 = lats_min_1.data(), lats_max_1 = lats_max_1.data()](int ij) {
+auto i1 = ij % nx1;
+auto j1 = ij / nx1;
+auto ip = get_cell_idxs_ccw_4_gpu(i1, j1, nx1p);
+auto [minl, maxl] = getPolygonMinMax_gpu(lat_out, lon_out, ip);
+lats_min_1[ij] = minl;
+lats_max_1[ij] = maxl;
+});
+
+  vector<double> lats_min_2(nx2 * ny2);
+  vector<double> lats_max_2(nx2 * ny2);
+  for (int ij = 0; ij < nxy2; ij++) {
+    auto i2 = ij % nx2;
+    auto j2 = ij / nx2;
+    auto ip = get_cell_idxs_ccw_4_gpu(i2, j2, nx2p);
+    auto [minl, maxl] = getPolygonMinMax_gpu(lat_out, lon_out, ip);
+    lats_min_2[ij] = minl;
+    lats_max_2[ij] = maxl;
+  }
+*/

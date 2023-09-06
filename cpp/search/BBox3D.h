@@ -30,6 +30,15 @@ namespace nct {
         inline float getLo(int dim) { return lo[dim]; }
         inline float getHi(int dim) { return hi[dim]; }
 
+      void operator=(const BBox3D& b)
+      {
+        for (auto i = 0; i < 3; i++) {
+          lo[i] = b.lo[i];
+          hi[i] = b.hi[i];
+        }
+      }
+
+
         //Constructor from a mesh of polygons, which in turn is really
         //  just a vector of pointers to points.
         //  This is the constructor for use with legacy nctools

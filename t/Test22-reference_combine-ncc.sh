@@ -30,12 +30,12 @@ load test_utils
    combine-ncc \
       combine-ncc.atmos_daily.nc.copy \
       combine-ncc_output.nc
-  [ -e combine-ncc_output.nc ]
+  run_and_check [ -e combine-ncc_output.nc ]
   ncdump -h combine-ncc_output.nc
 
-  [ -e $top_srcdir/t/Test17-reference/combine-ncc_output.nc ]
+  run_and_check [ -e $top_srcdir/t/Test17-reference/combine-ncc_output.nc ]
 
-  nccmp -V
+  run_and_check  nccmp -V
 
-  nccmp -d combine-ncc_output.nc  $top_srcdir/t/Test17-reference/combine-ncc_output.nc
+  run_and_check  nccmp -d combine-ncc_output.nc  $top_srcdir/t/Test17-reference/combine-ncc_output.nc
 }

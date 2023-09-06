@@ -237,6 +237,10 @@ char *usage[] = {
   "   --min_thickness #             inimum vertical thickness allowed. with default value   ",
   "                                 0.1. Increase or decrease this number as needed.        ",
   "                                                                                         ",
+  "   --rotate_poly                 Set to calculate polar polygon areas by caculating the  ",
+  "                                 area of a copy of the polygon, with the copy being      ",
+  "                                 rotated far away from the pole.                                    ",
+  "                                                                                         ",
   "   --help                        Print out this message and then exit.                   ",
   "                                                                                         ",
   "   --verbose                     Will print out running time message when this           ",
@@ -314,6 +318,7 @@ int main(int argc, char* argv[])
   int    cyclic_x, cyclic_y, tripolar_grid;
   int    errflg = (argc == 1);
   int    option_index, i, c;
+  int    rotate_poly=0;
   unsigned int verbose = 0;
 
   /*
@@ -366,6 +371,7 @@ int main(int argc, char* argv[])
     {"fraction_full_cell",          required_argument, NULL, 'R'},
     {"dont_open_very_this_cell",    no_argument,       NULL, 'S'},
     {"min_thickness",               required_argument, NULL, 'T'},
+    {"rotate_poly",                 no_argument,       NULL, 'z'},
     {"help",                        no_argument,       NULL, 'h'},
     {"verbose",                     no_argument,       NULL, 'V'},
     {0, 0, 0, 0},
@@ -514,6 +520,9 @@ int main(int argc, char* argv[])
     case 'T':
       min_thickness = atof(optarg);
       break;
+    case 'z':
+      rotate_poly = 1;
+      break;
     case 'V':
       verbose = 1;
       break;
@@ -530,6 +539,7 @@ int main(int argc, char* argv[])
     }
   }
 
+  if(rotate_poly) set_rotate_poly_true();
 
   /* Write out arguments value  */
   if(mpp_pe() == mpp_root_pe() && verbose) printf("NOTE from make_topog ==> the topog_type is: %s\n",topog_type);
