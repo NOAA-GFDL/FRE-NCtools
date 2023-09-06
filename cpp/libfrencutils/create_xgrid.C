@@ -37,6 +37,7 @@
 #include "DITree.h"
 #include "mosaic_util.h"
 #include "create_xgrid.h"
+#include "create_xgrid_aux.h"
 #include "constant.h"
 
 #define AREA_RATIO_THRESH (1.e-6)
@@ -44,6 +45,15 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
+
+using namespace std;
+using namespace nct;
+using BBox_t = nct::BBox3D;
+using BPair_t = nct::BoxAndId;
+using Poly_t = nct::MeshPolygon<double>;
+using Point_t = nct::Point3D<double>;
+using std::vector;
+using std::string;
 
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
@@ -2341,13 +2351,6 @@ int inside_edge(double x0, double y0, double x1, double y1, double x, double y)
 
 // Code below for using search algorithms in create_xgrid_...
 
-using namespace std;
-using namespace nct;
-using BBox_t = nct::BBox3D;
-using BPair_t = nct::BoxAndId;
-using Poly_t = nct::MeshPolygon<double>;
-using Point_t = nct::Point3D<double>;
-
 inline
 size_t pt_idx(const size_t i, const size_t j,  const size_t nx) {
   return ( j * nx + i);
@@ -2436,8 +2439,9 @@ size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, dou
  * @param debugf
  * @return
  */
+
 BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
-                                  const array<size_t, 4> &is, bool debugf) {
+                                 const array<size_t, 4> &is, bool debugf) {
   constexpr unsigned int NV4{4};
   // xlons are the longitudes that define the X=0 and Y=0 planes(see ll2xyz function)
   // where its possible to have an extrema in X or Y when an edge crosses them.
@@ -2519,6 +2523,7 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
   box.expand_for_doubles();
   return box;
 }
+
 
 
 /**

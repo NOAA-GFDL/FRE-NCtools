@@ -23,14 +23,21 @@
 #define MAXXGRID 1e7
 #endif
 
-#include <array>
-#include "BBox3D.h"
-#define MV 50
 #include <vector>
 #include <array>
 #include <span>
 
+#define MV 50
+
+#include "BBox3D.h"
+using std::vector;
+
+
+
 /* this value is small compare to earth area */
+
+
+
 
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
 double poly_ctrlat(const double lon[], const double lat[], int n);
@@ -83,7 +90,7 @@ void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v);
 std::array<size_t, 4>
 get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx);
 nct::BBox3D getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
-                                 const std::array<size_t, 4> &is, bool debugf  = false);
+                               const std::array<size_t, 4> &is, bool debugf  = false);
 int search_grids(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                  const double *mask_in, std::vector<std::vector<size_t>> & results1) ;
