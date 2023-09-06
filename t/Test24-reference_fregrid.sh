@@ -56,15 +56,15 @@ load test_utils
 		--output_mosaic latlon_mosaic.nc   \
 		--check_conserve
 
-   [ -e ocean_temp_salt.res.latlon.nc ]
-   [ -e $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc ]
+   run_and_check [ -e ocean_temp_salt.res.latlon.nc ]
+   run_and_check [ -e $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc ]
 
-   nccmp -V
+   run_and_check nccmp -V
 
-   nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
+   run_and_check nccmp -d  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
 
-   [ -e latlon_mosaic.nc ]
-   [ -e $top_srcdir/t/Test20-reference/latlon_mosaic.nc ]
+   run_and_check [ -e latlon_mosaic.nc ]
+   run_and_check [ -e $top_srcdir/t/Test20-reference/latlon_mosaic.nc ]
 
-   nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
+   run_and_check  nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
 }

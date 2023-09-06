@@ -307,6 +307,10 @@ char *usage[] = {
   "   --non_length_angle         When specified, will not output length(dx,dy) and  ",
   "                              angle (angle_dx, angle_dy)                         ",
   "                                                                                 ",
+  "   --rotate_poly              Set to calculate polar polygon areas by caculating ",
+  "                              the area of a copy of the polygon, with the copy   ",
+  "                              being rotated far away from the pole.              ",
+  "                                                                                 ",
   "   --verbose                  Will print out running time message when this      ",
   "                              option is set. Otherwise the run will be silent    ",
   "                              when there is no error.                            ",
@@ -566,6 +570,7 @@ int main(int argc, char* argv[])
   char entry[MAXBOUNDS*STRINGLEN];
   int n, errflg, c, i;
   int option_index;
+  int    rotate_poly=0;
 
   static struct option long_options[] = {
                                          {"grid_type",       required_argument, NULL, 'a'},
@@ -605,6 +610,7 @@ int main(int argc, char* argv[])
                                          {"no_length_angle", no_argument,       NULL, 'M'},
                                          {"angular_midpoint", no_argument,      NULL, 'N'},
                                          {"help",            no_argument,       NULL, 'h'},
+                                         {"rotate_poly",     no_argument,       NULL, 'n'},
                                          {"verbose",         no_argument,       NULL, 'v'},
 
                                          {0, 0, 0, 0},
@@ -744,6 +750,9 @@ int main(int argc, char* argv[])
     case 'N':
       use_angular_midpoint = 1;
       break;
+    case 'n':
+      rotate_poly = 1;
+      break;
     case 'v':
       verbose = 1;
       break;
@@ -769,6 +778,8 @@ int main(int argc, char* argv[])
     strcat(history, " ");
     strcat(history, argv[i]);
   }
+
+  if(rotate_poly) set_rotate_poly_true();
 
   if(mpp_pe() == mpp_root_pe() && verbose) printf("==>NOTE: the grid type is %s\n",grid_type);
 

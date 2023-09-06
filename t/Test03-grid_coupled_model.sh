@@ -76,7 +76,7 @@ load test_utils
 		--vgrid ocean_vgrid.nc \
 		--output topog_parallel.nc
 
-       nccmp -md topog.nc topog_parallel.nc
+    run_and_check  nccmp -md topog.nc topog_parallel.nc
   fi
 
 
@@ -113,8 +113,9 @@ load test_utils
 		--ocean_topog  ../topog.nc \
 		--mosaic_name grid_spec  \
 		--area_ratio_thresh 1.e-10
+
       # compare any created files to non-parallel (exclude directory differences)
-      nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir \
+      run_and_check nccmp -md --exclude=atm_mosaic_dir --exclude=lnd_mosaic_dir --exclude=ocn_mosaic_dir \
                 --exclude=ocn_topog_dir grid_spec.nc ../grid_spec.nc
   fi
 }
