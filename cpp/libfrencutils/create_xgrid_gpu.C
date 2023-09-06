@@ -19,11 +19,19 @@
 #include "BBox3D.h"
 #include "Polygon.h"
 #include "BoxedObj.h"
-//#include "mosaic_util.h"
 #include "create_xgrid.h"
-//#include "create_xgrid_aux.h"
 
-#include "cartesian_product.hpp"
+//#include "cartesian_product.hpp"
+
+/**
+ * README  IMPORTANT
+ * Most of the functions in this file are direct copies of those from the
+ * create_xgrid.C file. The reason is that the nvc++ compiler using C++ std
+ * parallelism requires many functions to be defined in the same file as the
+ * function targeted for GPU execution (e.g. create_xgrid_2dx2d_order2_bfwbb
+ * near the bottom of this file). The amount of source copying within this file
+ * will be improved ASAP.
+ */
 
 using std::sin;
 using std::vector;
@@ -32,7 +40,6 @@ using std::array;
 
 using BBox_t = nct::BBox3D;
 using BPair_t = nct::BoxAndId;
-//using Poly_t = nct::MeshPolygon<double>;
 using Point_t = nct::Point3D<double>;
 
 
@@ -44,25 +51,17 @@ using Point_t = nct::Point3D<double>;
 
 #define AREA_RATIO_THRESH (1.e-6)
 #define MASK_THRESH (0.5)
-// #define EPSLN8            (1.e-8)
 #define EPSLN30 (1.0e-30)
-// #define EPSLN10           (1.0e-10)
 
 constexpr double MU_TOLORENCE{1.e-6};
 constexpr double SMALL_VALUE_PA{1.0E-10};
 
 //TODO: place elsewhere
-//Note three of these below are negative, and one is positive
-//constexpr float FILL_VALUE_FLOAT{ -std::numeric_limits<float>::max()};
+//NOTE: some of these are are negative values:
 constexpr double FILL_VALUE_DOUBLE{ -std::numeric_limits<double>::max()};
 constexpr int FILL_VALUE_INT{ std::numeric_limits<int>::max() };
 constexpr size_t FILL_VALUE_SIZE_T{ std::numeric_limits<size_t>::max() };
 
-//constexpr unsigned int MAX_NN{10}; //MAX_near neighbors per cell
-
-
-// These functions are defined here as they were moved from the .C file to the the h
-// file in order to use the std parallelization for GPUs with nvc++ 23.x compiers:
 
 void gpu_error(const string& str)
 {
@@ -730,23 +729,23 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
   std::cout << "BBox array sizes: " << boxes_1.size() << " ; " << boxes_2.size() << std::endl;
 
   vector<std::tuple<int,int>> nn_pairs;
-  for (int i2 = 0; i2 < nx2; i2++) {  ////
+  for (int i2 = 0; i2 < nx2; i2++) {
     vector<int> nn_pairs1(max_grid_nns, FILL_VALUE_INT);
     //An iota that generates all the continuous integers in [0, nxy1 * nx2):
-    auto g12_ids = std::views::iota((int) 0, (int) (nxy1 * ny2)); //TODO: try with an actual array
-    std::copy_if(std::execution::par,  //TODO: change 'seq' to 'par'
+    auto g12_ids = std::views::iota((int) 0, (int) (nxy1 * ny2));
+    std::copy_if(std::execution::par,  //TODO: experiment with par_unseq
                  g12_ids.begin(), g12_ids.end(),
                  nn_pairs1.begin(),
                  [=, boxes_1 = boxes_1.data(), boxes_2 = boxes_2.data()](auto ij12) {
-                   auto [ij1, j2] = index_pair_from_combo(ij12, ny2);///
-                   auto ij2 = j2 * nx2 + i2;///
+                   auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
+                   auto ij2 = j2 * nx2 + i2;
                    return (nct::BBox3D::intersect(boxes_1[ij1], boxes_2[ij2]));
                  });
 
     //TRIM nn_pairs to only hold the real pairs.
     for (auto &ij12: nn_pairs1) {
       if (ij12 == FILL_VALUE_INT) break;
-      auto [ij1, j2] = index_pair_from_combo(ij12, ny2);////
+      auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
       int ij2 = j2 * nx2 + i2;
       nn_pairs.push_back({(int)ij1, ij2});
     }
@@ -777,7 +776,9 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
   vector<size_t>j_in_v(max_grid_nns, FILL_VALUE_INT);
   vector<size_t>i_out_v(max_grid_nns, FILL_VALUE_INT);
   vector<size_t>j_out_v(max_grid_nns, FILL_VALUE_INT);
-  //TODO: parallelize
+
+  //NOTE: Parallelizing the loop below may not buy much since size of nn_pairs should
+  // already be linear in the size of the larger grid.
   for(size_t ij = 0; ij < nn_pairs.size(); ij++) {
     auto [ij1, ij2] = nn_pairs[ij];
    // auto [ij1, ij2] = index_pair_from_combo(nn_pairs[ij], ny2);
@@ -823,7 +824,6 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
       } //else leave in the FILL_VALUE
     }
   }
-  std::cout << "*** S5 ***" <<std::endl;
 
   //Save final answers (though copy_if can be used again); but don't use more memory than needed.
   auto nxgrid = count_if(xarea_v.begin(), xarea_v.end(), [](double x) { return x > 0; });
@@ -846,11 +846,10 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
       j_in.emplace_back(j_in_v[i]);
       i_out .emplace_back(i_out_v[i]);
       j_out.emplace_back(j_out_v[i]);
-      ///  ++i;
     }
   }
 
-  std::cout <<"create_xgrid_2dx2d_order2_bff2 end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
+  std::cout <<"create_xgrid_2dx2d_order2_bff2 end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
   // return nxgrid;
 }
 //if desired to do
