@@ -728,16 +728,18 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
 
   std::cout << "BBox array sizes: " << boxes_1.size() << " ; " << boxes_2.size() << std::endl;
 
-  vector<std::tuple<int,int>> nn_pairs;
-  for (int i2 = 0; i2 < nx2; i2++) {
+  //NOTE: using std::tuple in liu of std::pair may ne needed when switch
+  // to cartesian product.
+  vector<std::pair<int,int>> nn_pairs;
+  for (int j2 = 0; j2 < ny2; j2++) {
     vector<int> nn_pairs1(max_grid_nns, FILL_VALUE_INT);
     //An iota that generates all the continuous integers in [0, nxy1 * nx2):
-    auto g12_ids = std::views::iota((int) 0, (int) (nxy1 * ny2));
+    auto g12_ids = std::views::iota((int) 0, (int) (nxy1 * nx2));
     std::copy_if(std::execution::par,  //TODO: experiment with par_unseq
                  g12_ids.begin(), g12_ids.end(),
                  nn_pairs1.begin(),
                  [=, boxes_1 = boxes_1.data(), boxes_2 = boxes_2.data()](auto ij12) {
-                   auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
+                   auto [ij1, i2] = index_pair_from_combo(ij12, nx2);
                    auto ij2 = j2 * nx2 + i2;
                    return (nct::BBox3D::intersect(boxes_1[ij1], boxes_2[ij2]));
                  });
@@ -745,23 +747,27 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
     //TRIM nn_pairs to only hold the real pairs.
     for (auto &ij12: nn_pairs1) {
       if (ij12 == FILL_VALUE_INT) break;
-      auto [ij1, j2] = index_pair_from_combo(ij12, ny2);
+      auto [ij1, i2] = index_pair_from_combo(ij12, nx2);
       int ij2 = j2 * nx2 + i2;
       nn_pairs.push_back({(int)ij1, ij2});
     }
   }
 
-  //NOTE For reproducibility with baseline, results are ordered by increasing : i1; j1; ij2
-  auto iidx_cmp = [](const std::tuple<int,int>& a, const std::tuple<int,int>& b) -> bool
-  {
-    if(std::get<0>(a) == std::get<0>(b)){
-      return  std::get<1>(a) < std::get<1>(b);
+  // NOTE For reproducibility with baseline, results are ordered by increasing : i1; j1; ij2
+
+  // auto iidx_cmp = [](const std::tuple<int,int>& a, const std::tuple<int,int>& b) -> bool {
+  // if(std::get<0>(a) == std::get<0>(b)){ return  std::get<1>(a) < std::get<1>(b);
+  //  }else{ return std::get<0>(a) < std::get<0>(b); }
+  //};
+  auto iidx_cmp = [](const std::pair<int,int>& a, const std::pair<int,int>& b) -> bool {
+    if(a.first == b.first){
+      return  a.second < b.second;
     }else{
-      return std::get<0>(a) < std::get<0>(b);
+      return a.first < b.first;
     }
   };
-  std::sort(nn_pairs.begin(), nn_pairs.end(), iidx_cmp);
 
+  std::sort(nn_pairs.begin(), nn_pairs.end(), iidx_cmp); //TODO: parallelize ?
 
   //std::cout << "nn_pairs1[0]= " << nn_pairs1[0] << " nn_pairs1[size()-1]"<< nn_pairs1[nn_pairs1.size()-1] << std::endl;
   //std::cout << "nn_pairs[0]= " << nn_pairs[0] << " nn_pairs[size()-1]"<< nn_pairs[nn_pairs.size()-1] << std::endl;
@@ -769,13 +775,13 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
 
   //Given the initial neighbor pairs, calculate the final pair intersections.
 
-  std::vector<double> xarea_v(max_grid_nns, FILL_VALUE_DOUBLE);
-  std::vector<double> clon_v(max_grid_nns, FILL_VALUE_DOUBLE);
-  std::vector<double> clat_v(max_grid_nns, FILL_VALUE_DOUBLE);
-  vector<size_t>i_in_v(max_grid_nns, FILL_VALUE_INT);
-  vector<size_t>j_in_v(max_grid_nns, FILL_VALUE_INT);
-  vector<size_t>i_out_v(max_grid_nns, FILL_VALUE_INT);
-  vector<size_t>j_out_v(max_grid_nns, FILL_VALUE_INT);
+  std::vector<double> xarea_v( nn_pairs.size(), FILL_VALUE_DOUBLE);
+  std::vector<double> clon_v( nn_pairs.size(), FILL_VALUE_DOUBLE);
+  std::vector<double> clat_v( nn_pairs.size(), FILL_VALUE_DOUBLE);
+  vector<size_t>i_in_v( nn_pairs.size(), FILL_VALUE_INT);
+  vector<size_t>j_in_v( nn_pairs.size(), FILL_VALUE_INT);
+  vector<size_t>i_out_v( nn_pairs.size(), FILL_VALUE_INT);
+  vector<size_t>j_out_v( nn_pairs.size(), FILL_VALUE_INT);
 
   //NOTE: Parallelizing the loop below may not buy much since size of nn_pairs should
   // already be linear in the size of the larger grid.
@@ -836,7 +842,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
   xgrid_clon.reserve(nxgrid);
   xgrid_clat.reserve(nxgrid);
 
-  //auto ir = 0;
+
   for(int i = 0; i  < nn_pairs.size(); i ++) {
     if (xarea_v[i] > 0.0) {
       xgrid_area.emplace_back(xarea_v[ i ]);
