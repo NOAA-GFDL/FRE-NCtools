@@ -95,11 +95,6 @@ namespace nct {
             return true;
           }
         }
-      inline static bool intersect_gpu(const BBox3D &A, const BBox3D &B) {
-          int r = bool(A.lo[0] > B.hi[0]) + bool( A.lo[1] > B.hi[1]) + bool (A.lo[2] > B.hi[2])
-           + bool( A.hi[0] < B.lo[0]) + bool (A.hi[1] < B.lo[1]) + bool (A.hi[2] < B.lo[2]);
-         return (r == 0);
-      }
 
         inline static bool intersect(const BBox3D &A, DistanceInterval<float> &di, const int dim) {
           if (A.lo[dim] > di.getFar() || A.hi[dim] < di.getNear()) {
@@ -144,6 +139,7 @@ namespace nct {
        inline void expand_xy_by_kf(float kf = 0.000001) {
         for (int i = 0; i < 3; i++) {
           auto diff = kf * (hi[i] - lo[i]);
+          //diff = std::max((float)10000.0, diff);
           hi[i] += diff;
           lo[i] -= diff;
         }
