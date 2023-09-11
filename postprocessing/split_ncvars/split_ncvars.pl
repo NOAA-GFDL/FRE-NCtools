@@ -139,7 +139,7 @@ foreach my $file (@ifiles) {
     # generate variable list (if not user supplied)
     if (!@varlist) {
         if (!$Opt{STATIC}) {
-	    print tailname($list_ncvars)." -t0123 $file\n" if $Opt{VERBOSE} > 1;
+	    print tailname($list_ncvars)." -t01234 $file\n" if $Opt{VERBOSE} > 1;
 	    @varlist = split /\n/, `$list_ncvars -t01234 $file`;
         } else {
 	    print tailname($list_ncvars)." -s0123 $file\n" if $Opt{VERBOSE} > 1;
