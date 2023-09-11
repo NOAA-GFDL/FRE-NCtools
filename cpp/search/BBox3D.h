@@ -139,6 +139,7 @@ namespace nct {
        inline void expand_xy_by_kf(float kf = 0.000001) {
         for (int i = 0; i < 3; i++) {
           auto diff = kf * (hi[i] - lo[i]);
+          //diff = std::max((float)10000.0, diff);
           hi[i] += diff;
           lo[i] -= diff;
         }
