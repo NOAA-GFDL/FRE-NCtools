@@ -214,7 +214,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
               interp[n].j_in [i] = j_in [i-nxgrid_prev];
               interp[n].i_out[i] = i_out[i-nxgrid_prev];
               interp[n].j_out[i] = j_out[i-nxgrid_prev];
-              interp[n].area [i] = xgrid_area[i];
+              interp[n].area [i] = xgrid_area[i-nxgrid_prev];
             }
             if(opcode & CONSERVE_ORDER2) {
               tmp_di_in  = interp[n].di_in;
