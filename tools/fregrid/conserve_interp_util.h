@@ -22,6 +22,10 @@
 #include "globals.h"
 
 void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
-		      Interp_config *interp, unsigned int opcode);
+                      Interp_config *interp, unsigned int opcode);
+
+void malloc_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
+                    double **xgrid_area, double **xgrid_clon, double **xgrid_clat );
+
 
 #endif
