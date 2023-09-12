@@ -50,7 +50,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   size_t nxgrid, nxgrid2, nxgrid_prev;
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
-  double *tmp_di_in, *tmp_dj_in;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
 
   typedef struct{
@@ -208,22 +207,20 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             interp[n].j_out  = (int    *)realloc(interp[n].j_out, interp[n].nxgrid*sizeof(int   ));
             interp[n].area   = (double *)realloc(interp[n].area,  interp[n].nxgrid*sizeof(double));
             interp[n].t_in   = (int    *)realloc(interp[n].t_in,  interp[n].nxgrid*sizeof(int   ));
-            for(i=nxgrid_prev; i<nxgrid; i++) {
-              interp[n].t_in [i] = m;
-              interp[n].i_in [i] = i_in [i-nxgrid_prev];
-              interp[n].j_in [i] = j_in [i-nxgrid_prev];
-              interp[n].i_out[i] = i_out[i-nxgrid_prev];
-              interp[n].j_out[i] = j_out[i-nxgrid_prev];
-              interp[n].area [i] = xgrid_area[i-nxgrid_prev];
+            for(i=0; i<nxgrid; i++) {
+              interp[n].t_in [nxgrid_prev+i] = m;
+              interp[n].i_in [nxgrid_prev+i] = i_in [i];
+              interp[n].j_in [nxgrid_prev+i] = j_in [i];
+              interp[n].i_out[nxgrid_prev+i] = i_out[i];
+              interp[n].j_out[nxgrid_prev+i] = j_out[i];
+              interp[n].area [nxgrid_prev+i] = xgrid_area[i];
             }
             if(opcode & CONSERVE_ORDER2) {
-              tmp_di_in  = interp[n].di_in;
-              tmp_dj_in  = interp[n].dj_in;
               interp[n].di_in   = (double *)realloc(interp[n].di_in, interp[n].nxgrid*sizeof(double));
               interp[n].dj_in   = (double *)realloc(interp[n].dj_in, interp[n].nxgrid*sizeof(double));
-              for(i=nxgrid_prev; i<nxgrid; i++) {
-                interp[n].di_in [i] = xgrid_clon[i-nxgrid_prev]/xgrid_area[i-nxgrid_prev];
-                interp[n].dj_in [i] = xgrid_clat[i-nxgrid_prev]/xgrid_area[i-nxgrid_prev];
+              for(i=0; i<nxgrid; i++) {
+                interp[n].di_in [i+nxgrid_prev] = xgrid_clon[i]/xgrid_area[i];
+                interp[n].dj_in [i+nxgrid_prev] = xgrid_clat[i]/xgrid_area[i];
               }
             }
           }
@@ -377,8 +374,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     for(n=0; n<ntiles_out; n++) {
       for(i=0; i<nx1*ny1; i++) area2[i] = 0;
       for(i=0; i<interp[n].nxgrid; i++) {
-  ii = interp[n].j_out[i]*nx1 + interp[n].i_out[i];
-  area2[ii] +=  interp[n].area[i];
+        ii = interp[n].j_out[i]*nx1 + interp[n].i_out[i];
+        area2[ii] +=  interp[n].area[i];
       }
       max_ratio = 0;
       max_i = 0;
