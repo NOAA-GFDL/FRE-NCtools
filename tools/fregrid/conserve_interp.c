@@ -67,13 +67,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     read_remap_file(ntiles_in,ntiles_out, grid_out, interp, opcode);
   }
   else {
-    //i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    //j_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    //i_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    //j_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    //xgrid_area = (double *)malloc(MAXXGRID   * sizeof(double));
-    //xgrid_clon = (double *)malloc(MAXXGRID   * sizeof(double));
-    //xgrid_clat = (double *)malloc(MAXXGRID   * sizeof(double));;
     cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
     for(m=0; m<ntiles_in; m++) {
       nx_in = grid_in[m].nx;
@@ -209,59 +202,30 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             }
           }
           else {
-            tmp_i_in  = interp[n].i_in;
-            tmp_j_in  = interp[n].j_in;
-            tmp_i_out = interp[n].i_out;
-            tmp_j_out = interp[n].j_out;
-            tmp_area  = interp[n].area;
-            tmp_t_in  = interp[n].t_in;
-            interp[n].i_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-            interp[n].j_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-            interp[n].i_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-            interp[n].j_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-            interp[n].area   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-            interp[n].t_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-            for(i=0; i<nxgrid_prev; i++) {
-              interp[n].t_in [i] = tmp_t_in [i];
-              interp[n].i_in [i] = tmp_i_in [i];
-              interp[n].j_in [i] = tmp_j_in [i];
-              interp[n].i_out[i] = tmp_i_out[i];
-              interp[n].j_out[i] = tmp_j_out[i];
-              interp[n].area [i] = tmp_area [i];
-            }
-            for(i=0; i<nxgrid; i++) {
-              ii = i + nxgrid_prev;
-              interp[n].t_in [ii] = m;
-              interp[n].i_in [ii] = i_in [i];
-              interp[n].j_in [ii] = j_in [i];
-              interp[n].i_out[ii] = i_out[i];
-              interp[n].j_out[ii] = j_out[i];
-              interp[n].area [ii] = xgrid_area[i];
+            interp[n].i_in   = (int    *)realloc(interp[n].i_in,  interp[n].nxgrid*sizeof(int   ));
+            interp[n].j_in   = (int    *)realloc(interp[n].j_in,  interp[n].nxgrid*sizeof(int   ));
+            interp[n].i_out  = (int    *)realloc(interp[n].i_out, interp[n].nxgrid*sizeof(int   ));
+            interp[n].j_out  = (int    *)realloc(interp[n].j_out, interp[n].nxgrid*sizeof(int   ));
+            interp[n].area   = (double *)realloc(interp[n].area,  interp[n].nxgrid*sizeof(double));
+            interp[n].t_in   = (int    *)realloc(interp[n].t_in,  interp[n].nxgrid*sizeof(int   ));
+            for(i=nxgrid_prev; i<nxgrid; i++) {
+              interp[n].t_in [i] = m;
+              interp[n].i_in [i] = i_in [i-nxgrid_prev];
+              interp[n].j_in [i] = j_in [i-nxgrid_prev];
+              interp[n].i_out[i] = i_out[i-nxgrid_prev];
+              interp[n].j_out[i] = j_out[i-nxgrid_prev];
+              interp[n].area [i] = xgrid_area[i];
             }
             if(opcode & CONSERVE_ORDER2) {
               tmp_di_in  = interp[n].di_in;
               tmp_dj_in  = interp[n].dj_in;
-              interp[n].di_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-              interp[n].dj_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-              for(i=0; i<nxgrid_prev; i++) {
-                interp[n].di_in [i] = tmp_di_in [i];
-                interp[n].dj_in [i] = tmp_dj_in [i];
+              interp[n].di_in   = (double *)realloc(interp[n].di_in, interp[n].nxgrid*sizeof(double));
+              interp[n].dj_in   = (double *)realloc(interp[n].dj_in, interp[n].nxgrid*sizeof(double));
+              for(i=nxgrid_prev; i<nxgrid; i++) {
+                interp[n].di_in [i] = xgrid_clon[i-nxgrid_prev]/xgrid_area[i-nxgrid_prev];
+                interp[n].dj_in [i] = xgrid_clat[i-nxgrid_prev]/xgrid_area[i-nxgrid_prev];
               }
-              for(i=0; i<nxgrid; i++) {
-                ii = i + nxgrid_prev;
-                jj = j_in [i]*nx_in+i_in [i];
-                interp[n].di_in [ii] = xgrid_clon[i]/xgrid_area[i];
-                interp[n].dj_in [ii] = xgrid_clat[i]/xgrid_area[i];
-              }
-              free(tmp_di_in);
-              free(tmp_dj_in);
             }
-            free(tmp_t_in);
-            free(tmp_i_in);
-            free(tmp_j_in);
-            free(tmp_i_out);
-            free(tmp_j_out);
-            free(tmp_area);
           }
         }  /* if(nxgrid>0) */
       } // ntiles_in
