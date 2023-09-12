@@ -115,14 +115,15 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
 }//end read_regrid_weights
 
 
-void malloc_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
-                    double **xgrid_area, double **xgrid_clon, double **xgrid_clat )
+void malloc_arrays( int nsize, int *i_in, int *j_in, int *i_out, int *j_out,
+                    double *xgrid_area, double *xgrid_clon, double *xgrid_clat )
 {
-  *i_in       = (int *) malloc(nsize * sizeof(int   ));
-  *j_in       = (int *) malloc(nsize * sizeof(int   ));
-  *i_out      = (int *) malloc(nsize * sizeof(int   ));
-  *j_out      = (int *) malloc(nsize * sizeof(int   ));
-  *xgrid_area = (double *) malloc(nsize * sizeof(double));
-  *xgrid_clon = (double *) malloc(nsize * sizeof(double));
-  *xgrid_clat = (double *) malloc(nsize * sizeof(double));
+
+  i_in       = (int *) malloc(nsize * sizeof(int   ));
+  j_in       = (int *) malloc(nsize * sizeof(int   ));
+  i_out      = (int *) malloc(nsize * sizeof(int   ));
+  j_out      = (int *) malloc(nsize * sizeof(int   ));
+  xgrid_area = (double *) malloc(nsize * sizeof(double));
+  xgrid_clon = (double *) malloc(nsize * sizeof(double));
+  xgrid_clat = (double *) malloc(nsize * sizeof(double));
 }
