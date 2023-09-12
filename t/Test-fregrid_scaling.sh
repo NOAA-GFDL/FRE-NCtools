@@ -1,0 +1,132 @@
+#!/bin/sh
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+# Performs scaling tests for the serial, GPU-accelerated, and MPI parallel(if available)
+# regridding performance
+
+# builddir gets substituted during configuration
+build_dir="/home/Mikyung.Lee/FRE-NCTools/gpu_work"
+
+fregrid="${build_dir}/tools/fregrid/fregrid"
+fregrid_gpu="${build_dir}/tools/fregrid/fregrid_gpu"
+fregrid_parallel="${build_dir}/tools/fregrid/fregrid_parallel"
+make_hgrid="${build_dir}/tools/make_hgrid/make_hgrid"
+make_solo_mosaic="${build_dir}/tools/make_solo_mosaic/make_solo_mosaic"
+
+# creates new directory with timestamp for each run
+testDir="fregrid_scaling_test.$(date +%s)"
+logFile="fregrid_timings.log"
+
+# profiling tools, just taking time for now
+# could use nsys or something else
+profiler="time"
+gpu_profiler="time"
+mpi_profiler="time"
+
+# no output during input creation unless debug set
+exec 3>/dev/null
+test $DEBUG && exec 3>&1
+
+# functions to create inputs and run each fregrid
+make_input_mosaic(){
+  CSIZE=$1
+  supergrid=$( echo "$CSIZE *2" | bc )
+
+  $make_hgrid --grid_type gnomonic_ed \
+              --nlon $supergrid \
+              --grid_name C$CSIZE >&3 2>&1
+
+  $make_solo_mosaic --num_tiles 6 \
+                    --dir ./ \
+                    --mosaic C"$CSIZE"_mosaic \
+                    --tile_file C$CSIZE.tile1.nc,C$CSIZE.tile2.nc,C$CSIZE.tile3.nc,C$CSIZE.tile4.nc,C$CSIZE.tile5.nc,C$CSIZE.tile6.nc >&3 2>&1
+}
+
+run_fregrid(){
+  NLON=$1
+  NLAT=$2
+  CSIZE=$3
+
+  $profiler $fregrid \
+                --input_mosaic C${CSIZE}_mosaic.nc \
+                --nlon $NLON \
+                --nlat $NLAT \
+                --interp_method conserve_order2 \
+                --output_dir ./ \
+                --check_conserve \
+                --remap_file C${CSIZE}_to_latlon_remap_cpu.nc
+
+  $gpu_profiler $fregrid_gpu \
+                --input_mosaic C${CSIZE}_mosaic.nc \
+                --nlon $NLON \
+                --nlat $NLAT \
+                --interp_method conserve_order2 \
+                --output_dir ./ \
+                --check_conserve \
+                --remap_file C${CSIZE}_to_latlon_remap_gpu.nc
+
+  # mpi test is only run if also built
+  if [ -e "$fregrid_parallel" ]; then
+
+    echo "Running fregrid_parallel"
+    $mpi_profiler mpirun -n 4 $fregrid_parallel \
+                  --input_mosaic C${CSIZE}_mosaic.nc \
+                  --nlon $NLON \
+                  --nlat $NLAT \
+                  --interp_method conserve_order2 \
+                  --output_dir ./ \
+                  --check_conserve \
+                  --remap_file C${CSIZE}_to_latlon_remap_mpi.nc
+  fi
+}
+
+check_output(){
+  cSize=$1
+  nccmp -c 1 -d -m ./C${cSize}_to_latlon_remap_gpu.nc ./C${cSize}_to_latlon_remap_cpu.nc
+
+  if [ -e "$fregrid_parallel" ]; then
+    nccmp -c 1 -d -m ./C${cSize}_to_latlon_remap_cpu.nc ./C${cSize}_to_latlon_remap_mpi.nc
+  fi
+
+}
+
+
+# loop through sizes, create input and regrid
+
+mkdir $testDir && cd $testDir
+
+remap_sizes="c96->288x180 c192->576x360 c384->1152x720 c768->2304x1440 c1536->4608x2880"
+for remap_spec in $remap_sizes
+do
+  cSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==1'`"
+  latSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==2'`"
+  lonSize="`echo $remap_spec | grep -o '[0-9]*' | awk 'NR==3'`"
+
+  mkdir c${cSize}_files && pushd c${cSize}_files
+
+  echo "Creating input for $remap_spec"
+  make_input_mosaic $cSize
+
+  echo "Regridding $remap_spec"
+  run_fregrid $lonSize $latSize $cSize |& tee ${remap_spec}.log
+
+  check_output $cSize
+  popd
+done
