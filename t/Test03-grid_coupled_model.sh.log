@@ -1,3 +1,0 @@
-1..1
-ok 1 Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
-PASS: Test03-grid_coupled_model.sh 1 Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree tripolar grid)
