@@ -94,7 +94,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         mask = (double *)malloc(nx_in*ny_in*sizeof(double));
         for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
-        malloc_arrays(MAXXGRID, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+        malloc_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
         if(opcode & GREAT_CIRCLE) {
           nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                              grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
@@ -119,7 +119,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
           ny_now = jend-jstart+1;
 
           if(opcode & CONSERVE_ORDER1) {
-            malloc_arrays(MAXXGRID, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+            malloc_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
             nxgrid = create_xgrid_2dx2d_order1(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
@@ -131,7 +131,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             double *g_area, *g_clon, *g_clat;
 
             time_start = clock();
-            malloc_arrays(MAXXGRID, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon ,xgrid_clat);
+            malloc_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
             nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
