@@ -1,0 +1,3 @@
+1..1
+ok 1 Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region
+PASS: Test04-grid_coupled_nest.sh 1 Test grid for coupled nest model (land are C48 and ocean is 1 degree tripolar grid, atmosphere is C48 with nested region
