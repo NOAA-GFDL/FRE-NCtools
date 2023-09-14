@@ -26,6 +26,7 @@
 #include "constant.h"
 #include "globals.h"
 #include "create_xgrid.h"
+#include "create_xgrid_acc.h"
 #include "create_xgrid_util.h"
 #include "mosaic_util.h"
 #include "conserve_interp.h"
@@ -131,16 +132,21 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
           } //opcode CONSERVE_ORDER1
           else if(opcode & CONSERVE_ORDER2) {
-            int g_nxgrid;
-            int    *g_i_in, *g_j_in;
+            int g_nxgrid, *g_i_in, *g_j_in;
             double *g_area, *g_clon, *g_clat;
 
             time_start = clock();
             mxxgrid=get_maxxgrid();
             malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+#ifdef _OPENACC
+            nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+                                                   grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
+                                                   mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+#else
             nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+#endif
             if(DEBUG) printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
             time_end = clock();
             time_nxgrid += 1.0 * (time_end - time_start)/CLOCKS_PER_SEC;
