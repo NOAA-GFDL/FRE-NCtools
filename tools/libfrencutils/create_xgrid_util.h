@@ -26,26 +26,38 @@
 #define MV 50
 /* this value is small compare to earth area */
 
+void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
+                          double **xgrid_area, double **xgrid_clon, double **xgrid_clat );
+
 #pragma acc routine seq
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
+
 #pragma acc routine seq
 double poly_ctrlat(const double lon[], const double lat[], int n);
+
 double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon);
+
 double box_ctrlat(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
-int get_maxxgrid(void);
+                  int get_maxxgrid(void);
+
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 //void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+
 void get_grid_area_no_adjust(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+
 #pragma acc routine seq
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
-	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
+   double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
+
 void pimod(double x[],int nn);
 #pragma acc routine seq
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
-	       const double lon2_in[], const double lat2_in[], int n2_in,
-	       double lon_out[], double lat_out[]);
+         const double lon2_in[], const double lat2_in[], int n2_in,
+         double lon_out[], double lat_out[]);
+
 int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
-			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
-			    double x_out[], double y_out[], double z_out[]);
+          const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
+          double x_out[], double y_out[], double z_out[]);
 #endif

@@ -27,7 +27,11 @@
 #include "mpp_io.h"
 #include "read_mosaic.h"
 #include "conserve_interp_util.h"
-
+/*******************************************************************************
+  void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
+                        Interp_config *interp, unsigned int opcode)
+  Reads in the weight/remap file if provided
+*******************************************************************************/
 void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
           Interp_config *interp, unsigned int opcode){
 
@@ -113,50 +117,3 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
   if(mpp_pe() == mpp_root_pe())printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
 
 }//end read_regrid_weights
-
-
-void malloc_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
-                    double **xgrid_area, double **xgrid_clon, double **xgrid_clat )
-{
-
-  // free if malloc-ed
-  if(*i_in!=NULL) {
-    free(*i_in);
-    *i_in=NULL;
-  }
-  if(*j_in!=NULL) {
-    free(*j_in);
-    *j_in=NULL;
-  }
-  if(*i_out!=NULL) {
-    free(*i_out);
-    *i_out=NULL;
-  }
-  if(*j_out!=NULL) {
-    free(*j_out);
-    *j_out=NULL;
-  }
-  if(*xgrid_area!=NULL) {
-    free(*xgrid_area);
-    *xgrid_area=NULL;
-  }
-  if(*xgrid_clon!=NULL) {
-    free(*xgrid_clon);
-    *xgrid_clon=NULL;
-  }
-  if(*xgrid_clat!=NULL) {
-    free(*xgrid_clat);
-    *xgrid_clat=NULL;
-  }
-
-  if(nsize>0) {
-    *i_in       = (int *) malloc(nsize * sizeof(int   ));
-    *j_in       = (int *) malloc(nsize * sizeof(int   ));
-    *i_out      = (int *) malloc(nsize * sizeof(int   ));
-    *j_out      = (int *) malloc(nsize * sizeof(int   ));
-    *xgrid_area = (double *) malloc(nsize * sizeof(double));
-    *xgrid_clon = (double *) malloc(nsize * sizeof(double));
-    *xgrid_clat = (double *) malloc(nsize * sizeof(double));
-  }
-
-}
