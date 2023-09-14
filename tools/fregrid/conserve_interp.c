@@ -52,6 +52,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
+  int mxxgrid;
 
   typedef struct{
     double *area;
@@ -95,7 +96,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         mask = (double *)malloc(nx_in*ny_in*sizeof(double));
         for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
-        malloc_xgrid_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
+        mxxgrid=get_maxxgrid();
+        malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
         if(opcode & GREAT_CIRCLE) {
           nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                              grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
@@ -120,7 +122,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
           ny_now = jend-jstart+1;
 
           if(opcode & CONSERVE_ORDER1) {
-            malloc_xgrid_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
+            mxxgrid=get_maxxgrid();
+            malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
             nxgrid = create_xgrid_2dx2d_order1(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
@@ -132,7 +135,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             double *g_area, *g_clon, *g_clat;
 
             time_start = clock();
-            malloc_xgrid_arrays(MAXXGRID, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+            mxxgrid=get_maxxgrid();
+            malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
             nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
