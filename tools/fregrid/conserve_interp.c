@@ -53,6 +53,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
   int mxxgrid;
+  int zero=0;
 
   typedef struct{
     double *area;
@@ -407,13 +408,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
   }
 
-  free(i_in);
-  free(j_in);
-  free(i_out);
-  free(j_out);
-  free(xgrid_area);
-  if(xgrid_clon) free(xgrid_clon);
-  if(xgrid_clat) free(xgrid_clat);
+  malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
 
 }; /* setup_conserve_interp */
 

@@ -39,6 +39,7 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
   int *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
   int n, i;
+  int zero=0;
   size_t nxgrid;
   double garea;
 
@@ -50,7 +51,7 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
       int fid, vid;
 
       nxgrid     = read_mosaic_xgrid_size(interp[n].remap_file);
-      malloc_xgrid_arrays(nxgrid, *i_in, *j_in, *i_out, *j_out, *xgrid_area, *xgrid_clon, *xgrid_clat);
+      malloc_xgrid_arrays(nxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
       t_in       = (int    *)malloc(nxgrid*sizeof(int   ));
       ind        = (int    *)malloc(nxgrid*sizeof(int   ));
       if(opcode & CONSERVE_ORDER1)
@@ -96,7 +97,7 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
       }
       free(t_in);
       free(ind);
-      malloc_xgrid_arrays(0, *i_in, *j_in, *i_out, *j_out, *xgrid_area, *xgrid_clon, *xgrid_clat);
+      malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
     }//if read from file
   } // ntiles
   if(mpp_pe() == mpp_root_pe())printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
