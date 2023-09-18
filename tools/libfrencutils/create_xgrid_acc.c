@@ -36,18 +36,18 @@
   create_xgrid_2dx2d_order2 OPENACC version
 *******************************************************************************/
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *lon_out_min_list, const double *lon_out_max_list, const double *lon_out_avg,
+                                  const double *lat_out_min_list, const double *lat_out_max_list, const int *n2_list,
+                                  const double *lon_out_list, const double *lat_out_list,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
 #define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
   int ij, i1, j1;
-  double *lon_out_min_list=NULL,*lon_out_max_list=NULL,*lon_out_avg=NULL,*lat_out_min_list=NULL,*lat_out_max_list=NULL;
-  double *lon_out_list=NULL, *lat_out_list=NULL;
-  int    *n2_list=NULL;
   int mxxgrid;
   int n=0;
 
@@ -65,31 +65,17 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
 
   nxgrid = 0;
-  n=nx2*ny2;
-  malloc_minmaxavg_lists(n, &lon_out_min_list, &lon_out_max_list,
-                         &lat_out_min_list, &lat_out_max_list, &n2_list,
-                         &lon_out_avg, &lon_out_list, &lat_out_list);
 
-#pragma acc enter data copyin(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)])
-#pragma acc enter data create(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2],	\
-                              lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2], \
-                              lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2], \
-                              lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])
-
-get_minmaxavg_lists(nx2, ny2, lon_out, lat_out,
-                    lon_out_min_list, lon_out_max_list, lat_out_min_list, lat_out_max_list,
-                    n2_list, lon_out_avg, lon_out_list, lat_out_list);
-
-#pragma acc data copyin(mask_in[0:nx1*ny1], area_in[0:nx1*ny1], area_out[0:nx2*ny2],\
-                        lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)])
 #pragma acc data present(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)])
+#pragma acc data present(lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)], mask_in[0:nx1*ny1])
 #pragma acc data present(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2],	\
                          lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2], \
                          lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2], \
                          lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])
-#pragma acc kernels copyout(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
-                            i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid]) \
-  copy(nxgrid)
+#pragma acc data present(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+                         i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
+#pragma acc data copyin(area_in[0:nx1*ny1], area_out[0:nx2*ny2])
+#pragma acc kernels copy(nxgrid)
 {
 #pragma acc loop independent collapse(2) //reduction(+:nxgrid)
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
@@ -165,16 +151,6 @@ get_minmaxavg_lists(nx2, ny2, lon_out, lat_out,
       }
     }
  }
-
-#pragma acc exit data delete(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2],	\
-                             lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2], \
-                             lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2], \
-                             lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])
-
- n=0;
- malloc_minmaxavg_lists(n, &lon_out_min_list, &lon_out_max_list,
-                        &lat_out_min_list, &lat_out_max_list, &n2_list,
-                        &lon_out_avg, &lon_out_list, &lat_out_list);
 
   free(area_in);
   free(area_out);
