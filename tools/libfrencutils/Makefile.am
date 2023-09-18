@@ -19,20 +19,20 @@
 #***********************************************************************
 noinst_LIBRARIES = libfrencutils.a
 if WITH_MPI
-  noinst_LIBRARIES += libfrencutils_mpi.a
+	noinst_LIBRARIES += libfrencutils_mpi.a
 endif
 if WITH_OPENACC
-  noinst_LIBRARIES += libfrencutils_gpu.a
-  libfrencutils_gpu_a_SOURCES = $(libfrencutils_a_SOURCES)
-  libfrencutils_gpu_a_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
+	noinst_LIBRARIES += libfrencutils_gpu.a
+	libfrencutils_gpu_a_SOURCES = $(libfrencutils_a_SOURCES)
+	libfrencutils_gpu_a_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
 endif
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
 
 libfrencutils_a_SOURCES = affinity.c \
-    			  constant.h \
-			  create_xgrid.c \
-			  create_xgrid.h \
+			  constant.h \
+		          create_xgrid.c \
+		          create_xgrid.h \
 			  create_xgrid_util.c \
 		          create_xgrid_util.h \
 			  create_xgrid_acc.c \
@@ -46,11 +46,11 @@ libfrencutils_a_SOURCES = affinity.c \
 			  mpp_domain.c \
 			  mpp_domain.h \
 			  mpp_io.c \
-		 	  mpp_io.h \
+			  mpp_io.h \
 			  mpp.c \
-		          mpp.h \
+			  mpp.h \
 			  read_mosaic.c \
-			  read_mosaic.h \
+		          read_mosaic.h \
 			  tool_util.c \
 			  tool_util.h
 

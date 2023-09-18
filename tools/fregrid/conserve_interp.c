@@ -96,7 +96,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 #pragma acc enter data copyin(grid_out[n].lonc[0:(nx_out+1)*(ny_out+1)], \
                               grid_out[n].latc[0:(nx_out+1)*(ny_out+1)])
 
-      //allocate memory for the lists; creates space on GPU
+      //allocate memory for the lists
       malloc_minmaxavg_lists(nx_out*ny_out, &lon_out_min_list, &lon_out_max_list,
                              &lat_out_min_list, &lat_out_max_list, &n2_list,
                              &lon_out_avg, &lon_out_list, &lat_out_list);
@@ -116,8 +116,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       for(m=0; m<ntiles_in; m++) {
         double *mask, y_min, y_max, yy;
         int jstart, jend, ny_now, j;
-
-        printf("HERE\n");
 
         nx_in = grid_in[m].nx;
         ny_in = grid_in[m].ny;
