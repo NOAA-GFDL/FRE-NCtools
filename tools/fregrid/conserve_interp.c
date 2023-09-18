@@ -70,19 +70,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     read_remap_file(ntiles_in,ntiles_out, grid_out, interp, opcode);
   }
   else {
-    cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
-    for(m=0; m<ntiles_in; m++) {
-      nx_in = grid_in[m].nx;
-      ny_in = grid_in[m].ny;
-      cell_in[m].area = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clon = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clat = (double *)malloc(nx_in*ny_in*sizeof(double));
-      for(n=0; n<nx_in*ny_in; n++) {
-        cell_in[m].area[n] = 0;
-        cell_in[m].clon[n] = 0;
-        cell_in[m].clat[n] = 0;
-      }
-    }
     for(n=0; n<ntiles_out; n++) {
       nx_out    = grid_out[n].nxc;
       ny_out    = grid_out[n].nyc;
@@ -242,6 +229,20 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     if(DEBUG) print_time("time_nxgrid", time_nxgrid);
 
     if(opcode & CONSERVE_ORDER2) {
+
+      cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
+      for(m=0; m<ntiles_in; m++) {
+        nx_in = grid_in[m].nx;
+        ny_in = grid_in[m].ny;
+        cell_in[m].area = (double *)malloc(nx_in*ny_in*sizeof(double));
+        cell_in[m].clon = (double *)malloc(nx_in*ny_in*sizeof(double));
+        cell_in[m].clat = (double *)malloc(nx_in*ny_in*sizeof(double));
+        for(n=0; n<nx_in*ny_in; n++) {
+          cell_in[m].area[n] = 0;
+          cell_in[m].clon[n] = 0;
+          cell_in[m].clat[n] = 0;
+        }
+      }
       /* subtrack the grid_in clon and clat to get the distance between xgrid and grid_in */
       for(n=0; n<ntiles_in; n++) {
         double x1_in[50], y1_in[50], lon_in_avg, clon, clat;

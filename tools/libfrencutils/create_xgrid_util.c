@@ -29,13 +29,112 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
+#define MAX_V 8
+#define MV 50
+
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
-			  const double *x2, const double *y2, const double *z2, int n2);
+        const double *x2, const double *y2, const double *z2, int n2);
 int inside_edge(double x0, double y0, double x1, double y1, double x, double y);
 int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double *q3,
-		         double *intersect, double *u_a, double *u_q, int *inbound);
+             double *intersect, double *u_a, double *u_q, int *inbound);
 
+/*******************************************************************************
+  void malloc_minmaxavg_lists
+  allocates lists to hold min, max, avg values of lat/lon coordinates
+*******************************************************************************/
+void malloc_minmaxavg_lists(const int n,
+                            double **lon_min_list, double **lon_max_list, double **lat_min_list, double **lat_max_list,
+                            int **n_list, double **lon_avg, double **lon_list, double **lat_list)
+{
+
+  if(*lon_min_list!=NULL){
+    free(*lon_min_list) ; *lon_min_list=NULL;
+  }
+  if(*lon_max_list!=NULL){
+    free(*lon_max_list) ; *lon_max_list=NULL;
+  }
+  if(*lat_min_list!=NULL){
+    free(*lat_min_list) ; *lat_min_list=NULL;
+  }
+  if(*lat_max_list!=NULL){
+    free(*lat_max_list) ; *lat_max_list=NULL;
+  }
+  if(*n_list!=NULL){
+    free(*n_list) ; *n_list=NULL;
+  }
+  if(*lon_avg!=NULL){
+    free(*lon_avg) ; *lon_avg=NULL;
+  }
+  if(*lon_list!=NULL){
+    free(*lon_list) ; *lon_list=NULL;
+  }
+  if(*lat_list!=NULL){
+    free(*lat_list) ; *lat_list=NULL;
+  }
+
+  if(n>0){
+    *lon_min_list=(double *)malloc(n*sizeof(double));
+    *lon_max_list=(double *)malloc(n*sizeof(double));
+    *lat_min_list=(double *)malloc(n*sizeof(double));
+    *lat_max_list=(double *)malloc(n*sizeof(double));
+    *n_list=(int *)malloc(n*sizeof(int));
+    *lon_avg=(double *)malloc(n*sizeof(double));
+    *lon_list=(double *)malloc(MAX_V*n*sizeof(double));
+    *lat_list=(double *)malloc(MAX_V*n*sizeof(double));
+  }
+
+}//malloc_minmaxavg_lists
+
+/*******************************************************************************
+  void get_minmaxavg_lists
+  computes lists to hold min, max, avg values of lat/lon coordinates
+*******************************************************************************/
+void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat,
+                         double *lon_min_list, double *lon_max_list, double *lat_min_list, double *lat_max_list,
+                         int *n_list, double *lon_avg, double *lon_list, double *lat_list)
+{
+
+  int nxp, nyp;
+
+  nxp = nx+1;
+  nyp = ny+1;
+
+#pragma acc data present(lon[0:nxp*nyp], lat[0:nxp*nyp], lon_min_list[0:nx*ny], lon_max_list[0:nx*ny],\
+                         lat_min_list[0:nx*ny], lat_max_list[0:nx*ny], n_list[0:nx*ny],\
+                         lon_avg[0:nx*ny], lon_list[0:MAX_V*nx*ny], lat_list[0:MAX_V*nx*ny])
+#pragma acc parallel loop independent
+  for(int ij=0; ij<nx*ny; ij++){
+    int i, j, n, n0, n1, n2, n3, n_in, l;
+    double x_in[MV], y_in[MV];
+
+    i = ij%nx;
+    j = ij/nx;
+    n = j*nx+i;
+    n0 = j*nxp+i; n1 = j*nxp+i+1;
+    n2 = (j+1)*nxp+i+1; n3 = (j+1)*nxp+i;
+
+    x_in[0] = lon[n0]; y_in[0] = lat[n0];
+    x_in[1] = lon[n1]; y_in[1] = lat[n1];
+    x_in[2] = lon[n2]; y_in[2] = lat[n2];
+    x_in[3] = lon[n3]; y_in[3] = lat[n3];
+
+    lat_min_list[n] = minval_double(4, y_in);
+    lat_max_list[n] = maxval_double(4, y_in);
+    n_in = fix_lon(x_in, y_in, 4, M_PI);
+    //if(n2_in > MAX_V) error_handler("create_xgrid.c: n_in is greater than MAX_V");
+    lon_min_list[n] = minval_double(n_in, x_in);
+    lon_max_list[n] = maxval_double(n_in, x_in);
+    lon_avg[n] = avgval_double(n_in, x_in);
+    n_list[n] = n_in;
+#pragma acc loop independent
+    for(l=0; l<n_in; l++) {
+      lon_list[n*MAX_V+l] = x_in[l];
+      lat_list[n*MAX_V+l] = y_in[l];
+    }
+  }
+
+}// get_minmaxavg_list
 
 /*******************************************************************************
   int get_maxxgrid
@@ -1346,8 +1445,8 @@ int main(int argc, char* argv[])
       lon1_in[3] = 24; lat1_in[3] =-89;
 
       for(i=0; i<n2_in; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
+  lon2_in[i] = lon1_in[i];
+  lat2_in[i] = lat1_in[i];
       }
       break;
 
@@ -1373,8 +1472,8 @@ int main(int argc, char* argv[])
       lon2_in[3] = 152.5; lat2_in[3] = 88;
       /*
       for(i=0; i<4; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
+  lon2_in[i] = lon1_in[i];
+  lat2_in[i] = lat1_in[i];
       }
       */
       break;
@@ -1483,7 +1582,7 @@ int main(int argc, char* argv[])
       ****************************************************************/
       n1_in = 4; n2_in = 4;
       /* first a simple lat-lo
-	 n grid box to clip another lat-lon grid box */
+   n grid box to clip another lat-lon grid box */
       lon1_in[0] = 350.0; lat1_in[0] = -45;
       lon1_in[1] = 350.0; lat1_in[1] = -43.43;
       lon1_in[2] = 352.1; lat1_in[2] = -43.41;
@@ -1657,12 +1756,12 @@ int main(int argc, char* argv[])
 
       /* first a simple lat-lon grid box to clip another lat-lon grid box */
       for(j=0; j<=nlat1; j++) for(i=0; i<=nlon1; i++){
-	lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
-	lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
+  lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
+  lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
       }
        for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++){
-	lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
-	lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
+  lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
+  lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
       }
 
       break;
@@ -1700,8 +1799,8 @@ int main(int argc, char* argv[])
 /*       lon1_in[3] = 277.5; lat1_in[3] = -87.615232005344637; */
 
 /*       for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++) { */
-/* 	lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
-/* 	lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
+/*  lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
+/*  lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
 /*       } */
       lon1_in[0] = 120.369397984526174; lat1_in[0] = 16.751543427495864;
       lon1_in[1] = 119.999999999999986; lat1_in[1] = 16.751871929590038;
@@ -1781,8 +1880,8 @@ int main(int argc, char* argv[])
 
     case 17:
       /*Must give the second square
-	 -30, -2.252, 60, 60, -30,
-	 89.891, 89.876, 89.942, 90, 90,
+   -30, -2.252, 60, 60, -30,
+   89.891, 89.876, 89.942, 90, 90,
       */
       n1_in = 6; n2_in = 5;
       lon1_in[0]=82.400;  lon1_in[1]=82.400; lon1_in[2]=262.400; lon1_in[3]=262.400; lon1_in[4]=326.498; lon1_in[5]=379.641;
@@ -1865,7 +1964,7 @@ int main(int argc, char* argv[])
 
     case 26:
       /*Side crosses SP (Right cell).
-	Must give same box
+  Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_22[] = {209.68793552504,158.60256162113,82.40000000000,262.40000000000};
@@ -1881,7 +1980,7 @@ int main(int argc, char* argv[])
 
     case 23:
       /*Side does not cross SP (Right cell).
-	Must give same box
+  Must give same box
       */
 
       n1_in = 4; n2_in = 4;
@@ -1898,7 +1997,7 @@ int main(int argc, char* argv[])
 
     case 24:
       /*Side crosses SP (Left cell). Added twin poles.
-	Must give the same box
+  Must give the same box
       */
       n1_in = 6; n2_in = 6;
       double lon1_24[] = {262.40000000000,262.40000000000,82.4,82.4,6.19743837887,-44.88793552504};
@@ -1913,7 +2012,7 @@ int main(int argc, char* argv[])
       break;
     case 25:
       /*Side crosses SP (Left cell).
-	Must givethe same box
+  Must givethe same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_25[] = {262.40000000000,82.4,6.19743837887,-44.88793552504};
@@ -1928,7 +2027,7 @@ int main(int argc, char* argv[])
       break;
     case 22:
       /*Side does not cross SP (Left cell).
-	Must give same box
+  Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_26[] = {82.4,82.4,43.60348402380,6.19743837887};
@@ -1976,8 +2075,8 @@ int main(int argc, char* argv[])
       for(i=0; i<nlon1*nlat1; i++) mask1[i] = 1.0;
 
       nxgrid = create_xgrid_great_circle(&nlon1, &nlat1, &nlon2, &nlat2, lon1_in, lat1_in,
-					 lon2_in, lat2_in, mask1, i1, j1, i2, j2,
-					 xarea, xclon, xclat);
+           lon2_in, lat2_in, mask1, i1, j1, i2, j2,
+           xarea, xclon, xclat);
       printf("     First input grid box longitude, latitude   \n");
       for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
 
@@ -1986,25 +2085,25 @@ int main(int argc, char* argv[])
 
       printf("  Number of exchange grid is %d\n", nxgrid);
       for(i=0; i<nxgrid; i++) {
-	printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
-	       i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
+  printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
+         i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
       }
 
       /* comparing the area sum of exchange grid and grid1 area */
       {
-	double *x1, *y1, *z1, *area1;
-	double area_sum;
-	int    i;
-	area_sum = 0.0;
+  double *x1, *y1, *z1, *area1;
+  double area_sum;
+  int    i;
+  area_sum = 0.0;
 
-	for(i=0; i<nxgrid; i++) {
-	  area_sum+= xarea[i];
-	}
+  for(i=0; i<nxgrid; i++) {
+    area_sum+= xarea[i];
+  }
 
-	area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
-	get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
+  area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
+  get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
 
-	printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
+  printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
       }
 
       printf("\n");
@@ -2063,7 +2162,7 @@ int main(int argc, char* argv[])
       latlon2xyz(n2_in, lon2_in, lat2_in, x2_in, y2_in, z2_in);
 
       n_out = clip_2dx2d_great_circle(x1_in, y1_in, z1_in, 4, x2_in, y2_in, z2_in, n2_in,
-				      x_out, y_out,  z_out);
+              x_out, y_out,  z_out);
       xyz2latlon(n_out, x_out, y_out, z_out, lon_out, lat_out);
 
       printf("\n*********************************************************\n");
