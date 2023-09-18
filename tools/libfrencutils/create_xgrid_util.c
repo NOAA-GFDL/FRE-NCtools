@@ -48,32 +48,6 @@ void malloc_minmaxavg_lists(const int n,
                             int **n_list, double **lon_avg, double **lon_list, double **lat_list)
 {
 
-  if(n>0){
-    *lon_min_list=(double *)malloc(n*sizeof(double));
-    *lon_max_list=(double *)malloc(n*sizeof(double));
-    *lat_min_list=(double *)malloc(n*sizeof(double));
-    *lat_max_list=(double *)malloc(n*sizeof(double));
-    *n_list=(int *)malloc(n*sizeof(int));
-    *lon_avg=(double *)malloc(n*sizeof(double));
-    *lon_list=(double *)malloc(MAX_V*n*sizeof(double));
-    *lat_list=(double *)malloc(MAX_V*n*sizeof(double));
-  }
-
-#pragma acc enter data create(lon_list[0:MAX_V*n], lat_list[0:MAX_V*n], \
-                              lat_min_list[0:n], lat_max_list[0:n], \
-                              lon_min_list[0:n], lon_max_list[0:n], \
-                              lon_avg[0:n], n_list[0:n])
-
-}//malloc_minmaxavg_lists
-
-/*******************************************************************************
-  void free_minmaxavg_lists
-  free lists that hold min, max, avg values of lat/lon coordinates
-*******************************************************************************/
-void free_minmaxavg_lists(double **lon_min_list, double **lon_max_list, double **lat_min_list, double **lat_max_list,
-                          int **n_list, double **lon_avg, double **lon_list, double **lat_list)
-{
-
   if(*lon_min_list!=NULL){
     free(*lon_min_list) ; *lon_min_list=NULL;
   }
@@ -98,10 +72,19 @@ void free_minmaxavg_lists(double **lon_min_list, double **lon_max_list, double *
   if(*lat_list!=NULL){
     free(*lat_list) ; *lat_list=NULL;
   }
-#pragma acc exit data delete(lon_min_list, lon_max_list, lat_min_list, \
-                             lat_max_list, n_list, lon_avg, lon_list, lat_list)
 
-}
+  if(n>0){
+    *lon_min_list=(double *)malloc(n*sizeof(double));
+    *lon_max_list=(double *)malloc(n*sizeof(double));
+    *lat_min_list=(double *)malloc(n*sizeof(double));
+    *lat_max_list=(double *)malloc(n*sizeof(double));
+    *n_list=(int *)malloc(n*sizeof(int));
+    *lon_avg=(double *)malloc(n*sizeof(double));
+    *lon_list=(double *)malloc(MAX_V*n*sizeof(double));
+    *lat_list=(double *)malloc(MAX_V*n*sizeof(double));
+  }
+
+}//malloc_minmaxavg_lists
 
 /*******************************************************************************
   void get_minmaxavg_lists

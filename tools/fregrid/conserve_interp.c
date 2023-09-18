@@ -101,6 +101,12 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                              &lat_out_min_list, &lat_out_max_list, &n2_list,
                              &lon_out_avg, &lon_out_list, &lat_out_list);
 
+#define MAX_V 8
+#pragma acc enter data create(lon_out_list[0:MAX_V*nx_out*ny_out], lat_out_list[0:MAX_V*nx_out*ny_out], \
+                              lat_out_min_list[0:nx_out*ny_out], lat_out_max_list[0:nx_out*ny_out], \
+                              lon_out_min_list[0:nx_out*ny_out], lon_out_max_list[0:nx_out*ny_out], \
+                              lon_out_avg[0:nx_out*ny_out], n2_list[0:nx_out*ny_out])
+
       //compute the list values
       get_minmaxavg_lists(nx_out, ny_out, grid_out[n].lonc, grid_out[n].latc,
                           lon_out_min_list, lon_out_max_list, lat_out_min_list, lat_out_max_list,
@@ -131,6 +137,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                                              mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
+
           y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
           y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
           jstart = ny_in; jend = -1;
@@ -155,7 +162,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
-            free(mask)
+            free(mask);
           } //opcode CONSERVE_ORDER1
 
           else if(opcode & CONSERVE_ORDER2) {
@@ -276,9 +283,11 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
 #pragma acc exit data delete(grid_in[m].latc, grid_in[m].lonc)
       } // ntiles_in
-      free_minmaxavg_lists(&lon_out_min_list, &lon_out_max_list,
-                           &lat_out_min_list, &lat_out_max_list, &n2_list,
-                           &lon_out_avg, &lon_out_list, &lat_out_list);
+      malloc_minmaxavg_lists(zero, &lon_out_min_list, &lon_out_max_list,
+                             &lat_out_min_list, &lat_out_max_list, &n2_list,
+                             &lon_out_avg, &lon_out_list, &lat_out_list);
+#pragma acc exit data delete(lon_out_min_list, lon_out_max_list, lat_out_min_list, \
+                             lat_out_max_list, n2_list, lon_out_avg, lon_out_list, lat_out_list)
 #pragma acc exit data delete(grid_out[n].latc, grid_out[n].lonc)
     } // ntimes_out
 
