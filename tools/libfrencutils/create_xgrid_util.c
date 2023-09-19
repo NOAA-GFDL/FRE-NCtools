@@ -29,13 +29,112 @@
 #define EPSLN8            (1.e-8)
 #define EPSLN30           (1.0e-30)
 #define EPSLN10           (1.0e-10)
+#define MAX_V 8
+#define MV 50
+
 double grid_box_radius(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
-			  const double *x2, const double *y2, const double *z2, int n2);
+        const double *x2, const double *y2, const double *z2, int n2);
 int inside_edge(double x0, double y0, double x1, double y1, double x, double y);
 int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double *q3,
-		         double *intersect, double *u_a, double *u_q, int *inbound);
+             double *intersect, double *u_a, double *u_q, int *inbound);
 
+/*******************************************************************************
+  void malloc_minmaxavg_lists
+  allocates lists to hold min, max, avg values of lat/lon coordinates
+*******************************************************************************/
+void malloc_minmaxavg_lists(const int n,
+                            double **lon_min_list, double **lon_max_list, double **lat_min_list, double **lat_max_list,
+                            int **n_list, double **lon_avg, double **lon_list, double **lat_list)
+{
+
+  if(*lon_min_list!=NULL){
+    free(*lon_min_list) ; *lon_min_list=NULL;
+  }
+  if(*lon_max_list!=NULL){
+    free(*lon_max_list) ; *lon_max_list=NULL;
+  }
+  if(*lat_min_list!=NULL){
+    free(*lat_min_list) ; *lat_min_list=NULL;
+  }
+  if(*lat_max_list!=NULL){
+    free(*lat_max_list) ; *lat_max_list=NULL;
+  }
+  if(*n_list!=NULL){
+    free(*n_list) ; *n_list=NULL;
+  }
+  if(*lon_avg!=NULL){
+    free(*lon_avg) ; *lon_avg=NULL;
+  }
+  if(*lon_list!=NULL){
+    free(*lon_list) ; *lon_list=NULL;
+  }
+  if(*lat_list!=NULL){
+    free(*lat_list) ; *lat_list=NULL;
+  }
+
+  if(n>0){
+    *lon_min_list=(double *)malloc(n*sizeof(double));
+    *lon_max_list=(double *)malloc(n*sizeof(double));
+    *lat_min_list=(double *)malloc(n*sizeof(double));
+    *lat_max_list=(double *)malloc(n*sizeof(double));
+    *n_list=(int *)malloc(n*sizeof(int));
+    *lon_avg=(double *)malloc(n*sizeof(double));
+    *lon_list=(double *)malloc(MAX_V*n*sizeof(double));
+    *lat_list=(double *)malloc(MAX_V*n*sizeof(double));
+  }
+
+}//malloc_minmaxavg_lists
+
+/*******************************************************************************
+  void get_minmaxavg_lists
+  computes lists to hold min, max, avg values of lat/lon coordinates
+*******************************************************************************/
+void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat,
+                         double *lon_min_list, double *lon_max_list, double *lat_min_list, double *lat_max_list,
+                         int *n_list, double *lon_avg, double *lon_list, double *lat_list)
+{
+
+  int nxp, nyp;
+
+  nxp = nx+1;
+  nyp = ny+1;
+
+#pragma acc data present(lon[0:nxp*nyp], lat[0:nxp*nyp], lon_min_list[0:nx*ny], lon_max_list[0:nx*ny],\
+                         lat_min_list[0:nx*ny], lat_max_list[0:nx*ny], n_list[0:nx*ny],\
+                         lon_avg[0:nx*ny], lon_list[0:MAX_V*nx*ny], lat_list[0:MAX_V*nx*ny])
+#pragma acc parallel loop independent
+  for(int ij=0; ij<nx*ny; ij++){
+    int i, j, n, n0, n1, n2, n3, n_in, l;
+    double x_in[MV], y_in[MV];
+
+    i = ij%nx;
+    j = ij/nx;
+    n = j*nx+i;
+    n0 = j*nxp+i; n1 = j*nxp+i+1;
+    n2 = (j+1)*nxp+i+1; n3 = (j+1)*nxp+i;
+
+    x_in[0] = lon[n0]; y_in[0] = lat[n0];
+    x_in[1] = lon[n1]; y_in[1] = lat[n1];
+    x_in[2] = lon[n2]; y_in[2] = lat[n2];
+    x_in[3] = lon[n3]; y_in[3] = lat[n3];
+
+    lat_min_list[n] = minval_double(4, y_in);
+    lat_max_list[n] = maxval_double(4, y_in);
+    n_in = fix_lon(x_in, y_in, 4, M_PI);
+    //if(n2_in > MAX_V) error_handler("create_xgrid.c: n_in is greater than MAX_V");
+    lon_min_list[n] = minval_double(n_in, x_in);
+    lon_max_list[n] = maxval_double(n_in, x_in);
+    lon_avg[n] = avgval_double(n_in, x_in);
+    n_list[n] = n_in;
+#pragma acc loop independent
+    for(l=0; l<n_in; l++) {
+      lon_list[n*MAX_V+l] = x_in[l];
+      lat_list[n*MAX_V+l] = y_in[l];
+    }
+  }
+
+}// get_minmaxavg_list
 
 /*******************************************************************************
   int get_maxxgrid
@@ -190,7 +289,7 @@ void get_grid_area_no_adjust(const int *nlon, const int *nlat, const double *lon
 *******************************************************************************/
 
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
-	 double ur_lon, double ur_lat, double lon_out[], double lat_out[])
+   double ur_lon, double ur_lat, double lon_out[], double lat_out[])
 {
   double x_tmp[MV], y_tmp[MV], x_last, y_last;
   int i_in, i_out, n_out, inside_last, inside;
@@ -299,8 +398,8 @@ int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, 
 #pragma acc routine seq
 #endif
 int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
-	 const double lon2_in[], const double lat2_in[], int n2_in,
-	 double lon_out[], double lat_out[])
+   const double lon2_in[], const double lat2_in[], int n2_in,
+   double lon_out[], double lat_out[])
 {
   double lon_tmp[MV], lat_tmp[MV];
   double x1_0, y1_0, x1_1, y1_1, x2_0, y2_0, x2_1, y2_1;
@@ -308,7 +407,7 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
   int i_out, n_out, inside_last, inside, i1, i2;
   // used by pimod update
   double lon2_tmp[MV], lat2_tmp[MV];
-  int gttwopi=0; 
+  int gttwopi=0;
 
   /* clip polygon with each boundary of the polygon */
   /* We treat lon1_in/lat1_in as clip polygon and lon2_in/lat2_in as subject polygon */
@@ -350,26 +449,26 @@ int clip_2dx2d(const double lon1_in[], const double lat1_in[], int n1_in,
         /* there is intersection, the line between <x1_0,y1_0> and  <x1_1,y1_1>
            should not parallel to the line between <x2_0,y2_0> and  <x2_1,y2_1>
            may need to consider truncation error */
-	dy1 = y1_1-y1_0;
-	dy2 = y2_1-y2_0;
-	dx1 = x1_1-x1_0;
-	dx2 = x2_1-x2_0;
-	ds1 = y1_0*x1_1 - y1_1*x1_0;
-	ds2 = y2_0*x2_1 - y2_1*x2_0;
-	determ = dy2*dx1 - dy1*dx2;
+  dy1 = y1_1-y1_0;
+  dy2 = y2_1-y2_0;
+  dx1 = x1_1-x1_0;
+  dx2 = x2_1-x2_0;
+  ds1 = y1_0*x1_1 - y1_1*x1_0;
+  ds2 = y2_0*x2_1 - y2_1*x2_0;
+  determ = dy2*dx1 - dy1*dx2;
         if(fabs(determ) < EPSLN30) {
           // TODO error handling needs to be openacc friendly
           //error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
           //              "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
-	}
-	lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
-	lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
+  }
+  lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
+  lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
 
 
       }
       if(inside) {
-	lon_out[i_out]   = x1_1;
-	lat_out[i_out++] = y1_1;
+  lon_out[i_out]   = x1_1;
+  lat_out[i_out++] = y1_1;
       }
       x1_0 = x1_1;
       y1_0 = y1_1;
@@ -410,8 +509,8 @@ void pimod(double x[],int nn)
 *******************************************************************************/
 
 int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
-			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
-			    double x_out[], double y_out[], double z_out[])
+          const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
+          double x_out[], double y_out[], double z_out[])
 {
   struct Node *grid1List=NULL;
   struct Node *grid2List=NULL;
@@ -553,47 +652,47 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
 #endif
       if( line_intersect_2D_3D(p1_0, p1_1, p2_0, p2_1, p2_2, intersect, &u1, &u2, &inbound) ) {
 
-	/* from the value of u1, u2 and inbound, we can partially decide if a point is inside or outside of polygon */
+  /* from the value of u1, u2 and inbound, we can partially decide if a point is inside or outside of polygon */
 
-	/* add the intersection into intersetList, The intersection might already be in
-	   intersectList and will be taken care addIntersect
-	*/
-	if(addIntersect(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
-	  /* add the intersection into the grid1List */
+  /* add the intersection into intersetList, The intersection might already be in
+     intersectList and will be taken care addIntersect
+  */
+  if(addIntersect(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
+    /* add the intersection into the grid1List */
 
-	  if(u1 == 1) {
-	    insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
-	  }
-	  else
-	    insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
-	  /* when u1 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
-	  if(u1==1) {
-	    p1_1[0] = intersect[0];
-	    p1_1[1] = intersect[1];
-	    p1_1[2] = intersect[2];
-	  }
-	  else if(u1 == 0) {
-	    p1_0[0] = intersect[0];
-	    p1_0[1] = intersect[1];
-	    p1_0[2] = intersect[2];
-	  }
-	  /* add the intersection into the grid2List */
-	  if(u2==1)
-	    insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
-	  else
-	    insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
-	  /* when u2 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
-	  if(u2==1) {
-	    p2_1[0] = intersect[0];
-	    p2_1[1] = intersect[1];
-	    p2_1[2] = intersect[2];
-	  }
-	  else if(u2 == 0) {
-	    p2_0[0] = intersect[0];
-	    p2_0[1] = intersect[1];
-	    p2_0[2] = intersect[2];
-	  }
-	}
+    if(u1 == 1) {
+      insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
+    }
+    else
+      insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
+    /* when u1 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
+    if(u1==1) {
+      p1_1[0] = intersect[0];
+      p1_1[1] = intersect[1];
+      p1_1[2] = intersect[2];
+    }
+    else if(u1 == 0) {
+      p1_0[0] = intersect[0];
+      p1_0[1] = intersect[1];
+      p1_0[2] = intersect[2];
+    }
+    /* add the intersection into the grid2List */
+    if(u2==1)
+      insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
+    else
+      insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
+    /* when u2 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
+    if(u2==1) {
+      p2_1[0] = intersect[0];
+      p2_1[1] = intersect[1];
+      p2_1[2] = intersect[2];
+    }
+    else if(u2 == 0) {
+      p2_0[0] = intersect[0];
+      p2_0[1] = intersect[1];
+      p2_0[2] = intersect[2];
+    }
+  }
       }
     }
   }
@@ -679,44 +778,44 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
       iter2  = 0;
       /* Loop until find the next intersection */
       while( iter2 < maxiter2 ) {
-	int temp2IsIntersect;
+  int temp2IsIntersect;
 
-	temp2IsIntersect = 0;
-	if( isIntersect( *temp2 ) ) { /* copy the point and switch to the grid2List */
-	  struct Node *temp3;
+  temp2IsIntersect = 0;
+  if( isIntersect( *temp2 ) ) { /* copy the point and switch to the grid2List */
+    struct Node *temp3;
 
-	  /* first check if temp2 is the firstIntersect */
-	  if( sameNode( *temp2, *firstIntersect) ) {
-	    found1 = 1;
-	    break;
-	  }
+    /* first check if temp2 is the firstIntersect */
+    if( sameNode( *temp2, *firstIntersect) ) {
+      found1 = 1;
+      break;
+    }
 
-	  temp3 = temp2->Next;
-	  if( temp3 == NULL) temp3 = curList;
-	  if( temp3 == NULL) error_handler("creat_xgrid.c: temp3 can not be NULL");
-	  found2 = 1;
-	  /* if next node is inside or an intersection,
-	     need to keep on curList
-	  */
-	  temp2IsIntersect = 1;
-	  if( isIntersect(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
-	}
-	if(found2) {
-	  copyNode(curIntersect, *temp2);
-	  break;
-	}
-	else {
-	  addNode(polyList, *temp2);
+    temp3 = temp2->Next;
+    if( temp3 == NULL) temp3 = curList;
+    if( temp3 == NULL) error_handler("creat_xgrid.c: temp3 can not be NULL");
+    found2 = 1;
+    /* if next node is inside or an intersection,
+       need to keep on curList
+    */
+    temp2IsIntersect = 1;
+    if( isIntersect(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
+  }
+  if(found2) {
+    copyNode(curIntersect, *temp2);
+    break;
+  }
+  else {
+    addNode(polyList, *temp2);
 #ifdef debug_test_create_xgrid
-	  printNode(polyList, "polyList at stage 2");
+    printNode(polyList, "polyList at stage 2");
 #endif
-	  if(temp2IsIntersect) {
-	    nintersect--;
-	  }
-	}
-	temp2 = temp2->Next;
-	if( temp2 == NULL ) temp2 = curList;
-	iter2 ++;
+    if(temp2IsIntersect) {
+      nintersect--;
+    }
+  }
+  temp2 = temp2->Next;
+  if( temp2 == NULL ) temp2 = curList;
+  iter2 ++;
       }
       if(found1) break;
 
@@ -724,8 +823,8 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
 
       /* if find the first intersection, the poly found */
       if( sameNode( *curIntersect, *firstIntersect) ) {
-	found1 = 1;
-	break;
+  found1 = 1;
+  break;
       }
 
       /* add curIntersect to polyList and remove it from intersectList and curList */
@@ -738,12 +837,12 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
 
       /* switch curList */
       if( curListNum == 0) {
-	curList = grid2List;
-	curListNum = 1;
+  curList = grid2List;
+  curListNum = 1;
       }
       else {
-	curList = grid1List;
-	curListNum = 0;
+  curList = grid1List;
+  curListNum = 0;
       }
       iter1++;
     }
@@ -780,9 +879,9 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
     while(temp) {
       if(temp->intersect != 1) {
 #ifdef debug_test_create_xgrid
-	printf("grid1->isInside = %d\n", temp->isInside);
+  printf("grid1->isInside = %d\n", temp->isInside);
 #endif
-	if( temp->isInside == 1) n1in2++;
+  if( temp->isInside == 1) n1in2++;
       }
       temp = getNextNode(temp);
     }
@@ -791,9 +890,9 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
       n = 0;
       temp = grid1List;
       while( temp ) {
-	getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
-	n++;
-	temp = getNextNode(temp);
+  getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
+  n++;
+  temp = getNextNode(temp);
       }
     }
     if(n_out>0) return n_out;
@@ -811,9 +910,9 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
     while(temp) {
       if(temp->intersect != 1) {
 #ifdef debug_test_create_xgrid
-	printf("grid2->isInside = %d\n", temp->isInside);
+  printf("grid2->isInside = %d\n", temp->isInside);
 #endif
-	if( temp->isInside == 1) n2in1++;
+  if( temp->isInside == 1) n2in1++;
       }
       temp = getNextNode(temp);
     }
@@ -823,9 +922,9 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
       n = 0;
       temp = grid2List;
       while( temp ) {
-	getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
-	n++;
-	temp = getNextNode(temp);
+  getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
+  n++;
+  temp = getNextNode(temp);
       }
 
     }
@@ -845,7 +944,7 @@ int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const do
 */
 
 int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double *q3,
-			 double *intersect, double *u_a, double *u_q, int *inbound){
+       double *intersect, double *u_a, double *u_q, int *inbound){
 
   /* Do this intersection by reprsenting the line a1 to a2 as a plane through the
      two line points and the origin of the sphere (0,0,0). This is the
@@ -1133,13 +1232,13 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
     }
     else {
       if(dphi1 > 0.0)
-	fac = M_PI;
+  fac = M_PI;
       else
-	fac = -M_PI;
+  fac = -M_PI;
       fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
-	+ 0.5*fac*(dphi1+dphi2)*fint;
-	}
+  + 0.5*fac*(dphi1+dphi2)*fint;
+  }
 
   }
   return (ctrlon*RADIUS*RADIUS);
@@ -1201,12 +1300,12 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
     }
     else {
       if(dphi1 > 0.0)
-	fac = M_PI;
+  fac = M_PI;
       else
-	fac = -M_PI;
+  fac = -M_PI;
       fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
-	+ 0.5*fac*(dphi1+dphi2)*fint;
+  + 0.5*fac*(dphi1+dphi2)*fint;
     }
   }
   return (ctrlon*RADIUS*RADIUS);
@@ -1237,12 +1336,12 @@ double grid_box_radius(const double *x, const double *y, const double *z, int n)
 
 /*******************************************************************************
   double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
-			    const double *x2, const double *y2, const double *z2, int n2);
+          const double *x2, const double *y2, const double *z2, int n2);
   Find the distance between any two grid boxes. The distance is defined by the maximum
   distance between any vertices of these two box
 *******************************************************************************/
 double dist_between_boxes(const double *x1, const double *y1, const double *z1, int n1,
-			  const double *x2, const double *y2, const double *z2, int n2)
+        const double *x2, const double *y2, const double *z2, int n2)
 {
   double dist;
   int i, j;
@@ -1346,8 +1445,8 @@ int main(int argc, char* argv[])
       lon1_in[3] = 24; lat1_in[3] =-89;
 
       for(i=0; i<n2_in; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
+  lon2_in[i] = lon1_in[i];
+  lat2_in[i] = lat1_in[i];
       }
       break;
 
@@ -1373,8 +1472,8 @@ int main(int argc, char* argv[])
       lon2_in[3] = 152.5; lat2_in[3] = 88;
       /*
       for(i=0; i<4; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
+  lon2_in[i] = lon1_in[i];
+  lat2_in[i] = lat1_in[i];
       }
       */
       break;
@@ -1483,7 +1582,7 @@ int main(int argc, char* argv[])
       ****************************************************************/
       n1_in = 4; n2_in = 4;
       /* first a simple lat-lo
-	 n grid box to clip another lat-lon grid box */
+   n grid box to clip another lat-lon grid box */
       lon1_in[0] = 350.0; lat1_in[0] = -45;
       lon1_in[1] = 350.0; lat1_in[1] = -43.43;
       lon1_in[2] = 352.1; lat1_in[2] = -43.41;
@@ -1657,12 +1756,12 @@ int main(int argc, char* argv[])
 
       /* first a simple lat-lon grid box to clip another lat-lon grid box */
       for(j=0; j<=nlat1; j++) for(i=0; i<=nlon1; i++){
-	lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
-	lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
+  lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
+  lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
       }
        for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++){
-	lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
-	lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
+  lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
+  lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
       }
 
       break;
@@ -1700,8 +1799,8 @@ int main(int argc, char* argv[])
 /*       lon1_in[3] = 277.5; lat1_in[3] = -87.615232005344637; */
 
 /*       for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++) { */
-/* 	lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
-/* 	lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
+/*  lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
+/*  lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
 /*       } */
       lon1_in[0] = 120.369397984526174; lat1_in[0] = 16.751543427495864;
       lon1_in[1] = 119.999999999999986; lat1_in[1] = 16.751871929590038;
@@ -1781,8 +1880,8 @@ int main(int argc, char* argv[])
 
     case 17:
       /*Must give the second square
-	 -30, -2.252, 60, 60, -30,
-	 89.891, 89.876, 89.942, 90, 90,
+   -30, -2.252, 60, 60, -30,
+   89.891, 89.876, 89.942, 90, 90,
       */
       n1_in = 6; n2_in = 5;
       lon1_in[0]=82.400;  lon1_in[1]=82.400; lon1_in[2]=262.400; lon1_in[3]=262.400; lon1_in[4]=326.498; lon1_in[5]=379.641;
@@ -1865,7 +1964,7 @@ int main(int argc, char* argv[])
 
     case 26:
       /*Side crosses SP (Right cell).
-	Must give same box
+  Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_22[] = {209.68793552504,158.60256162113,82.40000000000,262.40000000000};
@@ -1881,7 +1980,7 @@ int main(int argc, char* argv[])
 
     case 23:
       /*Side does not cross SP (Right cell).
-	Must give same box
+  Must give same box
       */
 
       n1_in = 4; n2_in = 4;
@@ -1898,7 +1997,7 @@ int main(int argc, char* argv[])
 
     case 24:
       /*Side crosses SP (Left cell). Added twin poles.
-	Must give the same box
+  Must give the same box
       */
       n1_in = 6; n2_in = 6;
       double lon1_24[] = {262.40000000000,262.40000000000,82.4,82.4,6.19743837887,-44.88793552504};
@@ -1913,7 +2012,7 @@ int main(int argc, char* argv[])
       break;
     case 25:
       /*Side crosses SP (Left cell).
-	Must givethe same box
+  Must givethe same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_25[] = {262.40000000000,82.4,6.19743837887,-44.88793552504};
@@ -1928,7 +2027,7 @@ int main(int argc, char* argv[])
       break;
     case 22:
       /*Side does not cross SP (Left cell).
-	Must give same box
+  Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_26[] = {82.4,82.4,43.60348402380,6.19743837887};
@@ -1976,8 +2075,8 @@ int main(int argc, char* argv[])
       for(i=0; i<nlon1*nlat1; i++) mask1[i] = 1.0;
 
       nxgrid = create_xgrid_great_circle(&nlon1, &nlat1, &nlon2, &nlat2, lon1_in, lat1_in,
-					 lon2_in, lat2_in, mask1, i1, j1, i2, j2,
-					 xarea, xclon, xclat);
+           lon2_in, lat2_in, mask1, i1, j1, i2, j2,
+           xarea, xclon, xclat);
       printf("     First input grid box longitude, latitude   \n");
       for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
 
@@ -1986,25 +2085,25 @@ int main(int argc, char* argv[])
 
       printf("  Number of exchange grid is %d\n", nxgrid);
       for(i=0; i<nxgrid; i++) {
-	printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
-	       i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
+  printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
+         i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
       }
 
       /* comparing the area sum of exchange grid and grid1 area */
       {
-	double *x1, *y1, *z1, *area1;
-	double area_sum;
-	int    i;
-	area_sum = 0.0;
+  double *x1, *y1, *z1, *area1;
+  double area_sum;
+  int    i;
+  area_sum = 0.0;
 
-	for(i=0; i<nxgrid; i++) {
-	  area_sum+= xarea[i];
-	}
+  for(i=0; i<nxgrid; i++) {
+    area_sum+= xarea[i];
+  }
 
-	area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
-	get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
+  area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
+  get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
 
-	printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
+  printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
       }
 
       printf("\n");
@@ -2063,7 +2162,7 @@ int main(int argc, char* argv[])
       latlon2xyz(n2_in, lon2_in, lat2_in, x2_in, y2_in, z2_in);
 
       n_out = clip_2dx2d_great_circle(x1_in, y1_in, z1_in, 4, x2_in, y2_in, z2_in, n2_in,
-				      x_out, y_out,  z_out);
+              x_out, y_out,  z_out);
       xyz2latlon(n_out, x_out, y_out, z_out, lon_out, lat_out);
 
       printf("\n*********************************************************\n");

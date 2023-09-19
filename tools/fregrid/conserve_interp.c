@@ -26,6 +26,7 @@
 #include "constant.h"
 #include "globals.h"
 #include "create_xgrid.h"
+#include "create_xgrid_acc.h"
 #include "create_xgrid_util.h"
 #include "mosaic_util.h"
 #include "conserve_interp.h"
@@ -48,12 +49,10 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
          Grid_config *grid_out, Interp_config *interp, unsigned int opcode)
 {
   int    n, m, i, ii, jj, nx_in, ny_in, nx_out, ny_out, tile;
-  size_t nxgrid, nxgrid2, nxgrid_prev;
+  size_t nxgrid, nxgrid_prev;
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
-  int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
-  double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
-  int mxxgrid;
-  int zero=0;
+  double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
+  int mxxgrid, zero=0;
 
   typedef struct{
     double *area;
@@ -82,13 +81,40 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         cell_in[m].clat[n] = 0;
       }
     }
+    //START NTILES_OUT
     for(n=0; n<ntiles_out; n++) {
-      nx_out    = grid_out[n].nxc;
-      ny_out    = grid_out[n].nyc;
+
+      double *lon_out_min_list=NULL, *lon_out_max_list=NULL, *lon_out_avg=NULL;
+      double *lat_out_min_list=NULL, *lat_out_max_list=NULL;
+      double *lon_out_list=NULL, *lat_out_list=NULL;
+      int *n2_list=NULL;
+
+      nx_out = grid_out[n].nxc;
+      ny_out = grid_out[n].nyc;
       interp[n].nxgrid = 0;
+
+#pragma acc enter data copyin(grid_out[n].lonc[0:(nx_out+1)*(ny_out+1)], \
+                              grid_out[n].latc[0:(nx_out+1)*(ny_out+1)])
+
+      //allocate memory for the lists
+      malloc_minmaxavg_lists(nx_out*ny_out, &lon_out_min_list, &lon_out_max_list,
+                             &lat_out_min_list, &lat_out_max_list, &n2_list,
+                             &lon_out_avg, &lon_out_list, &lat_out_list);
+
+#define MAX_V 8
+#pragma acc enter data create(lon_out_list[0:MAX_V*nx_out*ny_out], lat_out_list[0:MAX_V*nx_out*ny_out], \
+                              lat_out_min_list[0:nx_out*ny_out], lat_out_max_list[0:nx_out*ny_out], \
+                              lon_out_min_list[0:nx_out*ny_out], lon_out_max_list[0:nx_out*ny_out], \
+                              lon_out_avg[0:nx_out*ny_out], n2_list[0:nx_out*ny_out])
+
+      //compute the list values
+      get_minmaxavg_lists(nx_out, ny_out, grid_out[n].lonc, grid_out[n].latc,
+                          lon_out_min_list, lon_out_max_list, lat_out_min_list, lat_out_max_list,
+                          n2_list, lon_out_avg, lon_out_list, lat_out_list);
+
+      //START NTILES_IN
       for(m=0; m<ntiles_in; m++) {
-        double *mask;
-        double y_min, y_max, yy;
+        double *mask, y_min, y_max, yy;
         int jstart, jend, ny_now, j;
 
         nx_in = grid_in[m].nx;
@@ -97,14 +123,19 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         mask = (double *)malloc(nx_in*ny_in*sizeof(double));
         for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
-        mxxgrid=get_maxxgrid();
-        malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
+//CHECK THIS, might not be from 0
+#pragma acc enter data copyin(grid_in[m].latc[0:(nx_in+1)*(ny_in+1)], \
+                              grid_in[m].lonc[0:(nx_in+1)*(ny_in+1)], mask[0:nx_in*ny_in])
+
         if(opcode & GREAT_CIRCLE) {
+          mxxgrid=get_maxxgrid();
+          malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
           nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                              grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
                                              mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
+
           y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
           y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
           jstart = ny_in; jend = -1;
@@ -129,21 +160,40 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
+            free(mask);
           } //opcode CONSERVE_ORDER1
+
           else if(opcode & CONSERVE_ORDER2) {
-            int g_nxgrid;
-            int    *g_i_in, *g_j_in;
+            int g_nxgrid, *g_i_in, *g_j_in;
             double *g_area, *g_clon, *g_clat;
 
             time_start = clock();
+
             mxxgrid=get_maxxgrid();
             malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+
+#pragma acc enter data create(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+                              i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
+#ifdef _OPENACC
+            nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+                                                   grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
+                                                   lon_out_min_list, lon_out_max_list, lon_out_avg,
+                                                   lat_out_min_list, lat_out_max_list, n2_list,
+                                                   lon_out_list, lat_out_list, mask,
+                                                   i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+#else
             nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                                mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+#endif
             if(DEBUG) printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
             time_end = clock();
             time_nxgrid += 1.0 * (time_end - time_start)/CLOCKS_PER_SEC;
+
+            free(mask);
+#pragma acc exit data delete(mask)
+#pragma acc exit data copyout(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
+                              i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
 
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
 
@@ -167,18 +217,15 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                 cell_in[m].clon[ii] += g_clon[i];
                 cell_in[m].clat[ii] += g_clat[i];
               }
-              free(g_i_in);
-              free(g_j_in);
-              free(g_area);
-              free(g_clon);
-              free(g_clat);
+              free(g_i_in); free(g_j_in); free(g_area); free(g_clon); free(g_clat);
             } // if g_nxgrid > 0
           }
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
         } //opcode CONSERVE_ORDER2
 
-        free(mask);
+
+//for all opcodes
         if(nxgrid > 0) {
           nxgrid_prev = interp[n].nxgrid;
           interp[n].nxgrid += nxgrid;
@@ -231,8 +278,17 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             }
           }
         }  /* if(nxgrid>0) */
+        malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+#pragma acc exit data delete(grid_in[m].latc, grid_in[m].lonc)
       } // ntiles_in
+      malloc_minmaxavg_lists(zero, &lon_out_min_list, &lon_out_max_list,
+                             &lat_out_min_list, &lat_out_max_list, &n2_list,
+                             &lon_out_avg, &lon_out_list, &lat_out_list);
+#pragma acc exit data delete(lon_out_min_list, lon_out_max_list, lat_out_min_list, \
+                             lat_out_max_list, n2_list, lon_out_avg, lon_out_list, lat_out_list)
+#pragma acc exit data delete(grid_out[n].latc, grid_out[n].lonc)
     } // ntimes_out
+
     if(DEBUG) print_time("time_nxgrid", time_nxgrid);
 
     if(opcode & CONSERVE_ORDER2) {

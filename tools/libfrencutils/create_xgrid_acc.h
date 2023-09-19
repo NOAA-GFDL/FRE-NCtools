@@ -17,14 +17,14 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef CONSERVE_INTERP_UTIL_H_
-#define CONSERVE_INTERP_UTIL_H_
-#include "globals.h"
+#ifndef CREATE_XGRID_VER_H_
+#define CREATE_XGRID_VER_H_
 
-void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
-                      Interp_config *interp, unsigned int opcode);
-
-void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
-                          double **xgrid_area, double **xgrid_clon, double **xgrid_clat );
-
+int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+            const double *lon_out_min_list, const double *lon_out_max_list, const double *lon_out_avg,
+            const double *lat_out_min_list, const double *lat_out_max_list, const int *n2_list,
+            const double *lon_out_list, const double *lat_out_list,
+            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+            double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 #endif

@@ -35,6 +35,8 @@ libfrencutils_a_SOURCES = affinity.c \
                           create_xgrid.h \
                           create_xgrid_util.c \
                           create_xgrid_util.h \
+                          create_xgrid_acc.c \
+                          create_xgrid_acc.h \
                           gradient_c2l.c \
                           gradient_c2l.h \
                           interp.c \
