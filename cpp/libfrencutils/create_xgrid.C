@@ -67,6 +67,20 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, const double *area)
   return the grid area.
 *******************************************************************************/
+
+
+
+template <typename First>
+void reaquire_memory(const size_t sz, First *& first){
+  if (first != nullptr)
+    free(first);
+    first = (First *) malloc(sz * sizeof(First));
+}
+template <typename First, typename... Rest>
+void reaquire_memory(const size_t sz, First*& first, Rest*&... rest){
+  reaquire_memory( sz, first );
+  reaquire_memory( sz, rest... );
+}
 #ifndef __AIX
 void get_grid_area_(const int nlon, const int nlat, const double *lon, const double *lat, double *area)
 {
@@ -287,7 +301,7 @@ int create_xgrid_1dx2d_order1(const int nlon_in, const int nlat_in, const int nl
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
 	}
       }
     }
@@ -388,7 +402,7 @@ int create_xgrid_1dx2d_order2(const int nlon_in, const int nlat_in, const int nl
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
 	}
       }
     }
@@ -487,7 +501,7 @@ int create_xgrid_2dx1d_order1(const int nlon_in, const int nlat_in, const int nl
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
 	}
       }
     }
@@ -593,7 +607,7 @@ int create_xgrid_2dx1d_order2(const int nlon_in, const int nlat_in, const int nl
 	  i_out[nxgrid] = i2;
 	  j_out[nxgrid] = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
 	}
       }
     }
@@ -629,8 +643,8 @@ int create_xgrid_2dx2d_order1_(const int nlon_in, const int nlat_in, const int n
 #endif
 int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out,
-                              int *j_out, double *xgrid_area)
+                              const double *mask_in, int *&i_in, int *&j_in, int *&i_out,
+                              int *&j_out, double *&xgrid_area)
 {
 
 #define MAX_V 8
@@ -646,6 +660,8 @@ int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nl
   double *pxgrid_area=NULL;
   int    *n2_list;
   int nthreads, nxgrid_block_max;
+
+  reaquire_memory(get_MAXXGRID(), i_in, j_in, i_out, j_out, xgrid_area );
 
   nx1 = nlon_in;
   ny1 = nlat_in;
@@ -673,7 +689,7 @@ int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nl
   pstart = (int *)malloc(nblocks*sizeof(int));
   pnxgrid = (int *)malloc(nblocks*sizeof(int));
 
-  nxgrid_block_max = MAXXGRID/nblocks;
+  nxgrid_block_max = get_MAXXGRID()/nblocks;
 
   for(m=0; m<nblocks; m++) {
     pnxgrid[m] = 0;
@@ -688,11 +704,11 @@ int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nl
     pxgrid_area = xgrid_area;
   }
   else {
-    pi_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
+    pi_in = (int *)malloc(get_MAXXGRID()*sizeof(int));
+    pj_in = (int *)malloc(get_MAXXGRID()*sizeof(int));
+    pi_out = (int *)malloc(get_MAXXGRID()*sizeof(int));
+    pj_out = (int *)malloc(get_MAXXGRID()*sizeof(int));
+    pxgrid_area = (double *)malloc(get_MAXXGRID()*sizeof(double));
   }
 
   npts_left = nx2*ny2;
@@ -815,7 +831,7 @@ nxgrid = 0;
 	  min_area = std::min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
+            if(pnxgrid[m]>= get_MAXXGRID()/nthreads)
 	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
 	    nn = pstart[m] + pnxgrid[m]-1;
 
@@ -945,7 +961,7 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
   pstart = (int *) malloc(nblocks * sizeof(int));
   pnxgrid = (int *) malloc(nblocks * sizeof(int));
 
-  nxgrid_block_max = MAXXGRID / nblocks;
+  nxgrid_block_max = get_MAXXGRID() / nblocks;
 
   for (m = 0; m < nblocks; m++) {
     pnxgrid[m] = 0;
@@ -961,13 +977,13 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
     pxgrid_clon = xgrid_clon;
     pxgrid_clat = xgrid_clat;
   } else {
-    pi_in = (int *) malloc(MAXXGRID * sizeof(int));
-    pj_in = (int *) malloc(MAXXGRID * sizeof(int));
-    pi_out = (int *) malloc(MAXXGRID * sizeof(int));
-    pj_out = (int *) malloc(MAXXGRID * sizeof(int));
-    pxgrid_area = (double *) malloc(MAXXGRID * sizeof(double));
-    pxgrid_clon = (double *) malloc(MAXXGRID * sizeof(double));
-    pxgrid_clat = (double *) malloc(MAXXGRID * sizeof(double));
+    pi_in = (int *) malloc(get_MAXXGRID() * sizeof(int));
+    pj_in = (int *) malloc(get_MAXXGRID() * sizeof(int));
+    pi_out = (int *) malloc(get_MAXXGRID() * sizeof(int));
+    pj_out = (int *) malloc(get_MAXXGRID() * sizeof(int));
+    pxgrid_area = (double *) malloc(get_MAXXGRID() * sizeof(double));
+    pxgrid_clon = (double *) malloc(get_MAXXGRID() * sizeof(double));
+    pxgrid_clat = (double *) malloc(get_MAXXGRID() * sizeof(double));
   }
 
   npts_left = nx2 * ny2;
@@ -1090,7 +1106,7 @@ int create_xgrid_2dx2d_order2_legacy(const int nlon_in, const int nlat_in, const
               min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
               if (xarea / min_area > AREA_RATIO_THRESH) {
                 pnxgrid[m]++;
-                if (pnxgrid[m] >= MAXXGRID / nthreads)
+                if (pnxgrid[m] >= get_MAXXGRID() / nthreads)
                   error_handler(
                           "nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
                 nn = pstart[m] + pnxgrid[m] - 1;
@@ -1371,8 +1387,8 @@ int create_xgrid_great_circle_(const int *nlon_in, const int *nlat_in, const int
 
 int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+			      const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
+			      double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat)
 {
 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, ny1p, ny2p, nxgrid, n1_in, n2_in;
@@ -1384,6 +1400,9 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
   double *x2=NULL, *y2=NULL, *z2=NULL;
 
   double *area1, *area2, min_area;
+
+  //TODO: switch to use std::vector
+  reaquire_memory(get_MAXXGRID(), i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
 
   nx1 = *nlon_in;
   ny1 = *nlat_in;
@@ -1449,7 +1468,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid]      = i2;
 	  j_out[nxgrid]      = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
 	}
       }
     }
@@ -2662,13 +2681,6 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
   std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
-extern 
-int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
-
-
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
  * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
@@ -2676,32 +2688,26 @@ int create_xgrid_2dx2d_order2_legacy_gpu(const int nlon_in, const int nlat_in, c
  */
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat) {
+                              const double *mask_in, int *& i_in, int *& j_in, int *& i_out, int *& j_out,
+                              double *& xgrid_area, double *& xgrid_clon, double *& xgrid_clat) {
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
-  bool use_legacy_gpu{false};
+  bool use_gpu{false};
   bool check_with_legacy_cpu{false};
+  //TODO: use #ifdef use_libMPI use_GPU
 
-  if (use_legacy_gpu){
-    auto nxgrid_l = create_xgrid_2dx2d_order2_legacy_gpu(nlon_in, nlat_in, nlon_out, nlat_out,
-                                                         lon_in, lat_in, lon_out, lat_out, mask_in,
-                                                         i_in, j_in, i_out, j_out,
-                                                         xgrid_area, xgrid_clon, xgrid_clat);
-  return nxgrid_l;
-
-  }else{
-
-    /*create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                                 lon_in, lat_in, lon_out, lat_out, mask_in,
-                                 i_in_r, j_in_r, i_out_r, j_out_r,
-                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r);*/
-
+  if (use_gpu){
     create_xgrid_2dx2d_order2_bfwbb(nlon_in, nlat_in, nlon_out, nlat_out,
+                                    lon_in, lat_in, lon_out, lat_out, mask_in,
+                                    i_in_r, j_in_r, i_out_r, j_out_r,
+                                    xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+  }else {
+    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                  lon_in, lat_in, lon_out, lat_out, mask_in,
                                  i_in_r, j_in_r, i_out_r, j_out_r,
                                  xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+  }
 
     if (check_with_legacy_cpu) {
       create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
@@ -2715,6 +2721,18 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
     int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
     //Copy the results in the way original code expects.
     if (!xgrid_area_r.empty()) {
+      reaquire_memory(nxgrid, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+      /*
+      assert(xgrid_area == nullptr);
+      i_in = (int *) malloc(nxgrid * sizeof(int));
+      j_in = (int *) malloc(nxgrid * sizeof(int));
+      i_out = (int *) malloc(nxgrid * sizeof(int));
+      j_out = (int *) malloc(nxgrid * sizeof(int));
+      xgrid_area = (double *) malloc(nxgrid * sizeof(double));
+      xgrid_clon = (double *) malloc(nxgrid * sizeof(double));
+      xgrid_clat = (double *) malloc(nxgrid * sizeof(double));;
+*/
+
       //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
       std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
       std::memcpy(xgrid_clon, xgrid_clon_r.data(), nxgrid * sizeof(double));
@@ -2737,9 +2755,9 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
         j_out[i] = static_cast<int>(j_out_r[i]);
       }
     }
-    return nxgrid;
-  }
+  return nxgrid;
 }
+
 
 //TODO: this is to be removed:
 void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
@@ -3524,13 +3542,13 @@ int main(int argc, char* argv[])
       double *xarea, *xclon, *xclat, *mask1;
 
       mask1 = (double *)malloc(nlon1*nlat1*sizeof(double));
-      i1    = (int    *)malloc(MAXXGRID*sizeof(int));
-      j1    = (int    *)malloc(MAXXGRID*sizeof(int));
-      i2    = (int    *)malloc(MAXXGRID*sizeof(int));
-      j2    = (int    *)malloc(MAXXGRID*sizeof(int));
-      xarea = (double *)malloc(MAXXGRID*sizeof(double));
-      xclon = (double *)malloc(MAXXGRID*sizeof(double));
-      xclat = (double *)malloc(MAXXGRID*sizeof(double));
+      i1    = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+      j1    = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+      i2    = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+      j2    = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+      xarea = (double *)malloc(get_MAXXGRID()*sizeof(double));
+      xclon = (double *)malloc(get_MAXXGRID()*sizeof(double));
+      xclat = (double *)malloc(get_MAXXGRID()*sizeof(double));
 
       for(i=0; i<nlon1*nlat1; i++) mask1[i] = 1.0;
 

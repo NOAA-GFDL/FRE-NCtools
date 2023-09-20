@@ -44,9 +44,7 @@ using Point_t = nct::Point3D<double>;
 
 
 #include "constant.h"
-#ifndef MAXXGRID
-#define MAXXGRID (1e7)
-#endif
+
 #define MV 50
 
 #define AREA_RATIO_THRESH (1.e-6)

@@ -32,9 +32,12 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ##if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 ##endif()
 
+option(use_libMPI "Use legacy MPI and legacy create_xgrid in fregrid build" OFF)
+option(use_GPU "Compile for GPU. Only use with nvc++" OFF )
+## These experimental options are only being used by developers:
+option(USE_SYCL "Use EXPERIMTAL SYCL compiling search and other components" OFF)
+option(USE_NEXTAFTER "Use EXPERIMENTAL nextafter expanded bounding intervals" OFF)
 #find_package(IntelSYCL REQUIRED)
-option(USE_SYCL "Use SYCL compiling search and other components" OFF)
-option(USE_NEXTAFTER "Use nextafter expanded bounding intervals" OFF)
 
 ##Location of some libs is external to this project.
 #include_directories(/home/mzuniga/NetCdCPP/install/include)
@@ -54,8 +57,6 @@ add_subdirectory(fregrid)
 if(USE_SYCL)
     add_subdirectory(sycl_tests)
 endif(USE_SYCL)
-
-#add_subdirectory(vendor/edlib EXCLUDE_FROM_ALL)
 
 add_dependencies(searchtest.x libSearch)
 add_dependencies(fregrid.x libSearch libFrencu)

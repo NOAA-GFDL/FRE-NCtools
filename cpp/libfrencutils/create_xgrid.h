@@ -19,9 +19,6 @@
  **********************************************************************/
 #ifndef CREATE_XGRID_H_
 #define CREATE_XGRID_H_
-#ifndef MAXXGRID
-#define MAXXGRID 1e7
-#endif
 
 #include <vector>
 #include <array>
@@ -35,6 +32,13 @@ using std::vector;
 
 
 /* this value is small compare to earth area */
+
+//inline constexpr unsigned int get_MAXXGRID(){
+inline const unsigned int get_MAXXGRID(){
+  std::cout << "Hi from get_MAXXDRID" << std::endl;
+  return 10000000;
+}
+
 
 
 
@@ -72,19 +76,19 @@ int create_xgrid_2dx1d_order2(const int nlon_in, const int nlat_in, const int nl
                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out,
-                              int *j_out, double *xgrid_area);
+                              const double *mask_in, int *&i_in, int *&j_in, int *&i_out,
+                              int *&j_out, double *&xgrid_area);
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                              const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                              double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+                              const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
+                              double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat);
 int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in, 
 			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in, 
 			    double x_out[], double y_out[], double z_out[]);
 int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+			      const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
+			      double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat);
 
 void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v);
 std::array<size_t, 4>
@@ -121,6 +125,9 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
                                    const double *mask_in, std::vector<size_t>& i_in, std::vector<size_t>& j_in,
                                    std::vector<size_t>& i_out, std::vector<size_t>& j_out, std::vector<double>& xgrid_area,
                                    std::vector<double>& xgrid_clon, std::vector<double>& xgrid_clat);
+
+
+
 
 
 #endif

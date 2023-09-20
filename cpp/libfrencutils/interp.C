@@ -262,11 +262,11 @@ void conserve_interp(int nx_src, int ny_src, int nx_dst, int ny_dst, const doubl
   double *xgrid_area, *dst_area, *area_frac;
 
   /* get the exchange grid between source and destination grid. */
-  xgrid_i1   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_j1   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_i2   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_j2   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
+  xgrid_i1   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_j1   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_i2   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_j2   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_area = (double *)malloc(get_MAXXGRID()*sizeof(double));
   dst_area   = (double *)malloc(nx_dst*ny_dst*sizeof(double));
   nxgrid = create_xgrid_2dx2d_order1(nx_src, ny_src, nx_dst, ny_dst, x_src, y_src, x_dst, y_dst, mask_src,
 	                       xgrid_i1, xgrid_j1, xgrid_i2, xgrid_j2, xgrid_area );
@@ -312,13 +312,13 @@ void conserve_interp_great_circle(int nx_src, int ny_src, int nx_dst, int ny_dst
   double *xgrid_area, *dst_area, *area_frac, *xgrid_di, *xgrid_dj;
 
   /* get the exchange grid between source and destination grid. */
-  xgrid_i1   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_j1   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_i2   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_j2   = (int    *)malloc(MAXXGRID*sizeof(int));
-  xgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
-  xgrid_di   = (double *)malloc(MAXXGRID*sizeof(double));
-  xgrid_dj   = (double *)malloc(MAXXGRID*sizeof(double));
+  xgrid_i1   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_j1   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_i2   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_j2   = (int    *)malloc(get_MAXXGRID()*sizeof(int));
+  xgrid_area = (double *)malloc(get_MAXXGRID()*sizeof(double));
+  xgrid_di   = (double *)malloc(get_MAXXGRID()*sizeof(double));
+  xgrid_dj   = (double *)malloc(get_MAXXGRID()*sizeof(double));
   dst_area   = (double *)malloc(nx_dst*ny_dst*sizeof(double));
   nxgrid = create_xgrid_great_circle(&nx_src, &ny_src, &nx_dst, &ny_dst, x_src, y_src, x_dst, y_dst, mask_src,
 				     xgrid_i1, xgrid_j1, xgrid_i2, xgrid_j2, xgrid_area, xgrid_di, xgrid_dj );

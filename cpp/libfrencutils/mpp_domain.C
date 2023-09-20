@@ -708,7 +708,7 @@ void mpp_gather_field_int(int lsize, int *ldata, int *gdata)
 
   rsize = (int *)malloc(npes*sizeof(int));
 
-  
+
   for(p = 0; p<npes; p++) {
     if(pe != p) { /* send to other pe. */
       mpp_send_int(&lsize, 1, p);
