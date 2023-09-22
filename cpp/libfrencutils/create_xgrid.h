@@ -26,6 +26,7 @@
 
 #define MV 50
 
+#include "constant.h"
 #include "BBox3D.h"
 using std::vector;
 
@@ -34,13 +35,11 @@ using std::vector;
 /* this value is small compare to earth area */
 
 //inline constexpr unsigned int get_MAXXGRID(){
-inline const unsigned int get_MAXXGRID(){
-  std::cout << "Hi from get_MAXXDRID" << std::endl;
+inline
+unsigned int get_MAXXGRID(){
+  std::cout << std::endl << "*** Hi from get_MAXXDRID*** " << std::endl;
   return 10000000;
 }
-
-
-
 
 
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
@@ -105,26 +104,47 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
                                    std::vector<size_t>& i_out, std::vector<size_t>& j_out, std::vector<double>& xgrid_area,
                                    std::vector<double>& xgrid_clon, std::vector<double>& xgrid_clat, int order);
 
-void create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                        const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                        const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, int nxgrid1);
-
-void create_xgrid_2dx2d_order2_check(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                                double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
-                                std::vector<size_t>& i_in_r, std::vector<size_t>& j_in_r,
-                                std::vector<size_t>& i_out_r, std::vector<size_t>& j_out_r,
-                                std::vector<double>& xgrid_area_r);
-
 template<class T>
 void printPolygon(std::ostream &os, std::span<T> lonv, std::span<T> latv) ;
 
-void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                                    const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                   const double *mask_in, std::vector<size_t>& i_in, std::vector<size_t>& j_in,
-                                   std::vector<size_t>& i_out, std::vector<size_t>& j_out, std::vector<double>& xgrid_area,
-                                   std::vector<double>& xgrid_clon, std::vector<double>& xgrid_clat);
+                                   const double *mask_in, std::vector<size_t> &i_in, std::vector<size_t> &j_in,
+                                   std::vector<size_t> &i_out, std::vector<size_t> &j_out, std::vector<double> &xgrid_area,
+                                   std::vector<double> &xgrid_clon, std::vector<double> &xgrid_clat);
+
+
+inline
+void latlon2xyz(const double lat, const double lon,  std::array<double,3> &  v){
+  v[0] = RADIUS * cos(lat) * cos(lon );
+  v[1] = RADIUS * cos(lat) * sin(lon);
+  v[2] = RADIUS * sin(lat);
+}
+
+inline
+size_t pt_idx(const size_t i, const size_t j,  const size_t nx) {
+  return ( j * nx + i);
+}
+
+/**
+ *  Generate four indices into a 1D array of points; such that the data of these
+ *  four points represent a counter-clockwise grid cell. The 1D array of points
+ *  can be though of as a mesh of 2D (lat-long) grid points.
+ *  array.
+ * @param i  i lon index of the lower left cell
+ * @param j  j or lat index of the lower left cell
+ * @param NX  With in number of points in the 2D grid.
+ * @return an array of the indices
+ */
+inline std::array<size_t, 4>
+get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx) {
+  std::array<size_t, 4> idxs;
+  idxs[0] = pt_idx(i, j, nx); //ll
+  idxs[1] = pt_idx(i + 1, j , nx); //lr
+  idxs[2] = pt_idx(i + 1, j + 1, nx); //ur
+  idxs[3] = pt_idx(i, j + 1, nx);//ul
+  return idxs;
+}
 
 
 
