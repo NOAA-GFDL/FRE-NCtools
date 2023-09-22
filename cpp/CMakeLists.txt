@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_subdirectory(dependencies)
 
 #Testing:
-#NOTE: The inital framework are Catch2 + ApprovalTest. This should provide easy
+#NOTE: The initial framework are Catch2 + ApprovalTest. This should provide easy
 # unit testing, acceptance testing, and micro benchmarking. However, it may be
 # convenient to directly use and add cmakes Catch via "include(Catch)". E.g.
 # can nccmp be directly called?"
@@ -32,12 +32,21 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ##if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 ##endif()
 
-option(use_libMPI "Use legacy MPI and legacy create_xgrid in fregrid build" OFF)
-option(use_GPU "Compile for GPU. Only use with nvc++" OFF )
+##with-mpi option not yet available in the C++ codebase
+##option(with-mpi "Use legacy MPI and legacy create_xgrid in fregrid build" OFF)
+option(with-gpu "Compile for GPU. Only use with nvc++" OFF )
 ## These experimental options are only being used by developers:
-option(USE_SYCL "Use EXPERIMTAL SYCL compiling search and other components" OFF)
-option(USE_NEXTAFTER "Use EXPERIMENTAL nextafter expanded bounding intervals" OFF)
+##TODO: remove SYCL use from the C++ codebase
+option(with-sycl "Compile with  SYCL *** WARNING: EXPERIMENTAL *** " OFF)
 #find_package(IntelSYCL REQUIRED)
+
+if(with-gpu)
+    add_definitions(-DWITH_GPU)
+endif()
+
+if(with-sycl)
+    add_definitions(-DWITH_SYCL)
+endif()
 
 ##Location of some libs is external to this project.
 #include_directories(/home/mzuniga/NetCdCPP/install/include)
@@ -54,9 +63,10 @@ add_subdirectory(common)
 add_subdirectory(search)
 add_subdirectory(libfrencutils)
 add_subdirectory(fregrid)
-if(USE_SYCL)
+
+if(with-sycl)
     add_subdirectory(sycl_tests)
-endif(USE_SYCL)
+endif(with-sycl)
 
 add_dependencies(searchtest.x libSearch)
 add_dependencies(fregrid.x libSearch libFrencu)

@@ -660,7 +660,7 @@ index_pair_from_combo( const int idx_pair, const int nxy2){
  *     use size_t, but unfortunately that does not compile with nvc++.
  * C) To make sure the combine ints fit into one int, an outer loop was introduced. So now a
  *   combine int is made up of ij1 and i2.
- *   TODO: Change to the C++23 cartesian_product when avaialble.
+ *   TODO: Change to the C++23 cartesian_product when available.
  *   NOTE: Recall C++ is row-major order, so column index (J) should be outer index.
  */
 
@@ -684,7 +684,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
     //gpu_error("Grids too big nxy1 * ny2 ) >= std::numeric_limits<int>::max())");
   }
   const int max_grid_nns = get_max_grid_nns(nx1, nx2, ny1, ny2);
-  std::cout << "max_grid_nns estimated at :" << max_grid_nns << std::endl;
+  //std::cout << "max_grid_nns estimated at :" << max_grid_nns << std::endl;
 
   std::vector<double> area_in(nx1 * ny1);
   std::vector<double> area_out(nx2 * ny2);
@@ -714,7 +714,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
                     boxes_1[ij] = getBoxForSphericalPolygon_gpu(lat_in, lon_in, ip);
                   });
 
-  std::cout << "BBox array sizes: " << boxes_1.size() << " ; " << boxes_2.size() << std::endl;
+  //std::cout << "BBox array sizes: " << boxes_1.size() << " ; " << boxes_2.size() << std::endl;
 
   //NOTE: using std::tuple in liu of std::pair may be needed when switch
   // to cartesian product.
@@ -850,5 +850,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
     }
   }
 
-  std::cout <<"create_xgrid_2dx2d_order2_bff2 end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
+  std::cout <<"create_xgrid_2dx2d_order2_bfwbb end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
 }
+
+
