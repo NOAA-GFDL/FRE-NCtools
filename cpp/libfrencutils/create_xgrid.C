@@ -641,7 +641,7 @@ int create_xgrid_2dx2d_order1_(const int nlon_in, const int nlat_in, const int n
 
 };
 #endif
-int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+int create_xgrid_2dx2d_order1_legacy(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                               const double *mask_in, int *&i_in, int *&j_in, int *&i_out,
                               int *&j_out, double *&xgrid_area)
@@ -2572,15 +2572,15 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
                                    const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                    const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
                                    vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
-                                   vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
+                                   vector<double>& xgrid_clon, vector<double>& xgrid_clat, int order) {
   const size_t nx1 {(size_t) nlon_in}, nx2{(size_t)nlon_out}, ny1{(size_t)nlat_in}, ny2{(size_t)nlat_out};
   const size_t nx1p{nx1 + 1};
   const size_t nx2p{nx2 + 1};
 
   const std::source_location location = std::source_location::current();
-  string fName = location.function_name();
-  fName = fName.substr(0, fName.find("("));
-  std::cout << format("Entered {}", fName) << std::endl;
+  //string fName = location.function_name();
+  //fName = fName.substr(0, fName.find("("));
+  //std::cout << format("Entered {}", fName) << std::endl;
 
   //Set "b" is to be inserted in the tree; set "a" will be used to make query
   //boxes. Note that "b" corresponds to "2" and "out" (in the earlier version of
@@ -2665,21 +2665,24 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
           auto xarea = poly_area(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
           auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
           if (xarea / min_area > AREA_RATIO_THRESH) {
-            xgrid_area.push_back(xarea);
-            xgrid_clon.push_back(poly_ctrlon(x_out, y_out, n_out, lon_in_avg));
-            xgrid_clat.push_back(poly_ctrlat(x_out, y_out, n_out));
             i_in.push_back(i1); //stores the lower corner of poly
             j_in.push_back(j1);
             i_out.push_back(i2);
             j_out.push_back(j2);
+            xgrid_area.push_back(xarea);
+            if(order == 2) {
+              xgrid_clon.push_back(poly_ctrlon(x_out, y_out, n_out, lon_in_avg));
+              xgrid_clat.push_back(poly_ctrlat(x_out, y_out, n_out));
+            }
           }
         }
       }
     }
   }
-  std::cout << "tree search stats:" << std::endl << tree.perfs << std::endl;
-  std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
+  //std::cout << "tree search stats:" << std::endl << tree.perfs << std::endl;
+  //std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
+
 
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
@@ -2693,21 +2696,19 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
-  bool use_gpu{false};
-  bool check_with_legacy_cpu{false};
-  //TODO: use #ifdef use_libMPI use_GPU
+  bool check_with_legacy_cpu{false};//this option for debugging only
 
-  if (use_gpu){
+#ifdef WITH_GPU
     create_xgrid_2dx2d_order2_bfwbb(nlon_in, nlat_in, nlon_out, nlat_out,
                                     lon_in, lat_in, lon_out, lat_out, mask_in,
                                     i_in_r, j_in_r, i_out_r, j_out_r,
                                     xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
-  }else {
+#else
     create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                  lon_in, lat_in, lon_out, lat_out, mask_in,
                                  i_in_r, j_in_r, i_out_r, j_out_r,
-                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
-  }
+                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 2);
+#endif
 
     if (check_with_legacy_cpu) {
       create_xgrid_2dx2d_order2_check(nlon_in, nlat_in, nlon_out, nlat_out,
@@ -2731,7 +2732,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
       xgrid_area = (double *) malloc(nxgrid * sizeof(double));
       xgrid_clon = (double *) malloc(nxgrid * sizeof(double));
       xgrid_clat = (double *) malloc(nxgrid * sizeof(double));;
-*/
+      */
 
       //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
       std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
@@ -2755,6 +2756,62 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
         j_out[i] = static_cast<int>(j_out_r[i]);
       }
     }
+  return nxgrid;
+}
+
+
+/*
+ * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
+ * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
+ * legacy function to perform some checks, as well as the gpu version of the legacy function.
+ */
+int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                              const double *mask_in, int *& i_in, int *& j_in, int *& i_out, int *& j_out,
+                              double *& xgrid_area) {
+  vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
+  vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
+
+  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
+                               lon_in, lat_in, lon_out, lat_out, mask_in,
+                               i_in_r, j_in_r, i_out_r, j_out_r,
+                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 1);
+
+
+
+  int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
+  //Copy the results in the way original code expects.
+  if (!xgrid_area_r.empty()) {
+    reaquire_memory(nxgrid, i_in, j_in, i_out, j_out, xgrid_area);
+    /*
+    assert(xgrid_area == nullptr);
+    i_in = (int *) malloc(nxgrid * sizeof(int));
+    j_in = (int *) malloc(nxgrid * sizeof(int));
+    i_out = (int *) malloc(nxgrid * sizeof(int));
+    j_out = (int *) malloc(nxgrid * sizeof(int));
+    xgrid_area = (double *) malloc(nxgrid * sizeof(double));
+    */
+
+    //xgrid_area = reinterpret_cast<double *>(std::malloc(nxgrid * sizeof(double)));
+    std::memcpy(xgrid_area, xgrid_area_r.data(), nxgrid * sizeof(double));
+
+    //TODO: eventually replace assignment with memcpy below:
+    //For the mean time its not possible fast memcpy as above since the caller expects
+    // arrays of ints instead of arrays of size_t for these four:
+    /*
+    std::memcpy(i_in, i_in_r.data(), nxgrid * sizeof(int));
+    std::memcpy(j_in, j_in_r.data(), nxgrid * sizeof(int));
+    std::memcpy(i_out, i_out_r.data(), nxgrid * sizeof(int));
+    std::memcpy(j_out, j_out_r.data(), nxgrid * sizeof(int));
+    */
+    //And so ...
+    for (int i = 0; i < nxgrid; i++) {
+      i_in[i] = static_cast<int>(i_in_r[i]);
+      j_in[i] = static_cast<int>(j_in_r[i]);
+      i_out[i] = static_cast<int>(i_out_r[i]);
+      j_out[i] = static_cast<int>(j_out_r[i]);
+    }
+  }
   return nxgrid;
 }
 
@@ -2825,7 +2882,7 @@ create_xgrid_2dx2d_order2_ws_check(const int nlon_in, const int nlat_in, const i
   create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                lon_in, lat_in, lon_out, lat_out, mask_in,
                                i_in_r, j_in_r, i_out_r, j_out_r,
-                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 2);
 
   int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
   //Copy the results in the way original code expects.
