@@ -7,8 +7,7 @@ include_directories(include)
 
 #find_package(fmt REQUIRED)
 
-#link with tbb?
-target_link_libraries(bbox_tests libFrencu Catch2WithMain )
+target_link_libraries(bbox_tests libFrencu Catch2WithMain tbb)
 include_directories(${CMAKE_SOURCE_DIR}/libfrencutils)
 
 

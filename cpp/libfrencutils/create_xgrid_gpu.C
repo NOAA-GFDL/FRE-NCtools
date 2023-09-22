@@ -14,6 +14,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <numeric>
 
 #include "mpp.h"
 #include "BBox3D.h"
@@ -24,13 +25,20 @@
 //#include "cartesian_product.hpp"
 
 /**
- * README  IMPORTANT
- * Most of the functions in this file are direct copies of those from the
- * create_xgrid.C file. The reason is that the nvc++ compiler using C++ std
- * parallelism requires many functions to be defined in the same file as the
- * function targeted for GPU execution (e.g. create_xgrid_2dx2d_order2_bfwbb
- * near the bottom of this file). The amount of source copying within this file
- * will be improved ASAP.
+ * *** README  IMPORTANT ****
+ * TODO: Move function create_xgrid_2dx2d_order2_bf to create_grid.C is C++23 compliant; then delete
+ *    other functions
+ *
+ * Most of the functions in this file are temporary (part of a workaround) and are direct copies of
+ * those from the create_xgrid.C file, but with the suffix _gpu added. The reasons are two-fold:
+ * 1) nvc++ compiler (versions 23.5 and 23.7) is incompatible with some of the C++ 23 libs
+ * this project added to the C++20 project standard and which are used in create_xgrid.C.
+ * 2) using C++ std parallelism algorithms with nvc++ for GPU compilation requires some auxiliary
+ * (i.e. called) functions to be in the same file as function targeted for GPU execution
+ * (e.g. create_xgrid_2dx2d_order2_bf)
+ *
+ * When nvc++ becomes c++23 compliant, create_xgrid_2dx2d_order2_bf should be moved to
+ * create_xgrid.C and naturally most of rest of the functions in this file can be deleted.
  */
 
 using std::sin;
@@ -58,8 +66,6 @@ constexpr double SMALL_VALUE_PA{1.0E-10};
 //NOTE: some of these are are negative values:
 constexpr double FILL_VALUE_DOUBLE{ -std::numeric_limits<double>::max()};
 constexpr int FILL_VALUE_INT{ std::numeric_limits<int>::max() };
-constexpr size_t FILL_VALUE_SIZE_T{ std::numeric_limits<size_t>::max() };
-
 
 void gpu_error(const string& str)
 {
@@ -72,14 +78,6 @@ void gpu_error(const char * str)
   fprintf(stderr, "Error from  GPU: %s\n",  str );
   //exit(1);  //TODO:
 }
-
-
-void latlon2xyz_gpu(const double lat, const double lon,  std::array<double,3> &  v){
-  v[0] = RADIUS * cos(lat) * cos(lon );
-  v[1] = RADIUS * cos(lat) * sin(lon);
-  v[2] = RADIUS * sin(lat);
-}
-
 
 size_t  latlons_outside_ccd_domain_gpu(const unsigned int NV4, const double *yv, double *xv) {
   size_t count {0};
@@ -94,56 +92,10 @@ size_t  latlons_outside_ccd_domain_gpu(const unsigned int NV4, const double *yv,
   }
   return count;
 }
-extern double maxval_double_gpu(int size, const double *data) {
-  int n;
-  double maxval;
-
-  maxval = data[0];
-  for (n = 1; n < size; n++) {
-    if (data[n] > maxval) maxval = data[n];
-  }
-
-  return maxval;
-}
-
-/*******************************************************************************
-  double minval_double(int size, double *data)
-  get the minimum value of double array
-*******************************************************************************/
-extern double minval_double_gpu(int size, const double *data) {
-  int n;
-  double minval;
-
-  minval = data[0];
-  for (n = 1; n < size; n++) {
-    if (data[n] < minval) minval = data[n];
-  }
-
-  return minval;
-}
-
-extern double avgval_double_gpu(int size, const double *data) {
-  int n;
-  double avgval;
-
-  avgval = 0;
-  for (n = 0; n < size; n++) avgval += data[n];
-  avgval /= size;
-
-  return avgval;
-}
 
 extern void error_handler_gpu(const char *msg) {
-#ifdef use_libMPI
-  MPI_Abort(MPI_COMM_WORLD, -1);
-#else
   fprintf(stderr, "FATAL Error: %s\n", msg);
   // exit(1); exit not usable with nvc++ par execution polify on GPU
-#endif
-}
-
-extern void error_handler_gpu(const std::string &msg) {
-  error_handler_gpu(msg.c_str());
 }
 
 void v_print_gpu(double x[], double y[], int n) {
@@ -155,7 +107,6 @@ int delete_vtx_gpu(double x[], double y[], int n, int n_del) {
     x[n_del] = x[n_del + 1];
     y[n_del] = y[n_del + 1];
   }
-
   return (n - 1);
 }
 
@@ -492,37 +443,6 @@ int clip_2dx2d_gpu(const double lon1_in[], const double lat1_in[], int n1_in,
   return (n_out);
 }
 
-
-inline
-size_t pt_idx_gpu(const size_t i, const size_t j,  const size_t nx) {
-  return ( j * nx + i);
-}
-std::array<size_t, 4>
-get_cell_idxs_ccw_4_gpu(const size_t i, const size_t j, const size_t nx) {
-  std::array<size_t, 4> idxs;
-  idxs[0] = pt_idx_gpu(i, j, nx); //ll
-  idxs[1] = pt_idx_gpu(i + 1, j , nx); //lr
-  idxs[2] = pt_idx_gpu(i + 1, j + 1, nx); //ur
-  idxs[3] = pt_idx_gpu(i, j + 1, nx);//ul
-  return idxs;
-}
-
-std::tuple<double, double>
- getPolygonMinMax_gpu(const double lat_m[], const double lon_m[],
-                      const array<size_t, 4> &is, bool debugf=false) {
-  constexpr unsigned int NV4{4};
-  auto tempy = lat_m[is[0]];
-  double maxl = tempy;
-  double minl = tempy;
-  for (auto i = 1; i < NV4; i++) {
-    tempy = lat_m[is[i]];
-    if (tempy > maxl) maxl = tempy;
-    if (tempy < minl) minl = tempy;
-  }
-  return {minl, maxl};
-}
-
-
 BBox_t getBoxForSphericalPolygon_gpu(const double lat_m[], const double lon_m[],
                                  const array<size_t, 4> &is, bool debugf=false) {
   constexpr unsigned int NV4{4};
@@ -550,24 +470,24 @@ BBox_t getBoxForSphericalPolygon_gpu(const double lat_m[], const double lon_m[],
   const auto [minx_it, maxx_it] = std::minmax_element(std::begin(xv), std::end(xv));
   const double minx = *minx_it;
   const double maxx = *maxx_it;
-  latlon2xyz_gpu( miny, minx, pt);
+  latlon2xyz( miny, minx, pt);
   box.expand( pt );
-  latlon2xyz_gpu( maxy, minx, pt);
+  latlon2xyz( maxy, minx, pt);
   box.expand( pt );
-  latlon2xyz_gpu( miny, maxx, pt);
+  latlon2xyz( miny, maxx, pt);
   box.expand( pt );
-  latlon2xyz_gpu( maxy, maxx, pt);
+  latlon2xyz( maxy, maxx, pt);
   box.expand( pt );
 
   //For case where a pole is inside a polygon. Note that
   // any Z=k plane of the bbox calculated from above
   // (or even from the actual vertices)
   // would be sufficient to determine this:
-  latlon2xyz_gpu(M_PI_2, 0.0, pt); //the north pole
+  latlon2xyz(M_PI_2, 0.0, pt); //the north pole
   if (BBox_t::contains_zk(box, pt) && (yv[0] >=  0)){
     box.expand(pt);
   }
-  latlon2xyz_gpu(-M_PI_2, 0.0, pt); //the south pole
+  latlon2xyz(-M_PI_2, 0.0, pt); //the south pole
   if (BBox_t::contains_zk(box, pt) && (yv[0] < 0)){
     box.expand(pt);
   }
@@ -579,9 +499,9 @@ BBox_t getBoxForSphericalPolygon_gpu(const double lat_m[], const double lon_m[],
     auto t2 = yv[(i + 1) % NV4];
     if (std::signbit(t1) != std::signbit(t2 )) {
       crosses_equator = true;
-      latlon2xyz_gpu(equator_lat, xv[i], pt);
+      latlon2xyz(equator_lat, xv[i], pt);
       box.expand(pt);
-      latlon2xyz_gpu(equator_lat,  xv[(i + 1) % NV4], pt);
+      latlon2xyz(equator_lat,  xv[(i + 1) % NV4], pt);
       box.expand(pt);
     }
   }
@@ -592,12 +512,12 @@ BBox_t getBoxForSphericalPolygon_gpu(const double lat_m[], const double lon_m[],
     auto t2 = xv[(i + 1) % NV4];
     for (const auto &xang: xlons) {
       if (std::signbit(t1 - xang) != std::signbit(t2 - xang)) {
-        latlon2xyz_gpu(yv[i], xang, pt);
+        latlon2xyz(yv[i], xang, pt);
         box.expand(pt);
-        latlon2xyz_gpu(yv[(i + 1) % NV4], xang, pt);
+        latlon2xyz(yv[(i + 1) % NV4], xang, pt);
         box.expand(pt);
         if(crosses_equator) {
-          latlon2xyz_gpu(0.0, xang, pt);
+          latlon2xyz(0.0, xang, pt);
           box.expand(pt);
         }
       }
@@ -623,13 +543,6 @@ size_t
 get_max_grid_nns(const size_t nx1, const size_t nx2, const size_t ny1, const size_t ny2)
 { return 3 * (nx1 * ny1 +  nx2 * ny2); }
 
-
-void print(std::tuple<int,int> t)
-{
-  const auto& [a, b] = t;
-  std::cout << '(' << a << ' ' << b <<  ')' << std::endl;
-}
-
 std::tuple<int, int>
 index_pair_from_combo( const int idx_pair, const int nxy2){
   int ij1 = idx_pair / nxy2; //First index
@@ -638,7 +551,7 @@ index_pair_from_combo( const int idx_pair, const int nxy2){
 }
 
 /*
- * Function create_xgrid_2dx2d_order2_bfwbb
+ * Function create_xgrid_2dx2d_order2_bf
  * This function uses the std::copy_if function to collect the [ij1 , ij2]  pairs of indexes of
  * those polygons that pass the "is near neighbors" filters. The filters are bounding-box intersections
  * (and (possibly TBD) also lat/lon overlap tests). The sole purpose of using copy_if
@@ -664,11 +577,11 @@ index_pair_from_combo( const int idx_pair, const int nxy2){
  *   NOTE: Recall C++ is row-major order, so column index (J) should be outer index.
  */
 
-void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                       const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
-                                       vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
-                                       vector<double>& xgrid_clon, vector<double>& xgrid_clat) {
+void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, vector<size_t> &i_in, vector<size_t> &j_in,
+                                   vector<size_t> &i_out, vector<size_t> &j_out, vector<double> &xgrid_area,
+                                   vector<double> &xgrid_clon, vector<double> &xgrid_clat) {
 #define MAX_V 8
   const int nx1{ nlon_in}, nx2{nlon_out}, ny1{ nlat_in}, ny2{nlat_out};
   const int nx1p{nx1 + 1};
@@ -676,7 +589,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
 
   //These two are sized int because their use in copy_if
   const int nxy1{nx1 * ny1};
-  const int nxy2{nx2 * ny2};
+  // const int nxy2{nx2 * ny2};
 
   if (((size_t) nxy1)* ((size_t)ny2) >= std::numeric_limits<int>::max()) {
     // Grids are too big - but only for the current 23.7 nvc++ limitations on
@@ -700,7 +613,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
                   [=, boxes_2 = boxes_2.data()](int ij) {
                     auto i2 = ij % nx2;
                     auto j2 = ij / nx2;
-                    auto ip = get_cell_idxs_ccw_4_gpu(i2, j2, nx2p);
+                    auto ip = get_cell_idxs_ccw_4(i2, j2, nx2p);
                     boxes_2[ij] = getBoxForSphericalPolygon_gpu(lat_out, lon_out, ip);
                   });
   //The "in" or source pairs
@@ -710,7 +623,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
                   [=, boxes_1 = boxes_1.data()](int ij) {
                     auto i1 = ij % nx1;
                     auto j1 = ij / nx1;
-                    auto ip = get_cell_idxs_ccw_4_gpu(i1, j1, nx1p);
+                    auto ip = get_cell_idxs_ccw_4(i1, j1, nx1p);
                     boxes_1[ij] = getBoxForSphericalPolygon_gpu(lat_in, lon_in, ip);
                   });
 
@@ -782,13 +695,13 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
       if (mask_in[j1 * nx1 + i1] > MASK_THRESH) {//NOTE: continue not allowed by ncv++ on GPU;
 
         double x1_in[MAX_V], y1_in[MAX_V], x2_in[MAX_V], y2_in[MAX_V], x_out[MAX_V], y_out[MAX_V];
-        auto idxs_1 = get_cell_idxs_ccw_4_gpu(i1, j1, nx1p);
+        auto idxs_1 = get_cell_idxs_ccw_4(i1, j1, nx1p);
         for (int i = 0; i < 4; i++) {
           x1_in[i] = lon_in[idxs_1[i]];
           y1_in[i] = lat_in[idxs_1[i]];
         }
 
-        auto idxs_2 = get_cell_idxs_ccw_4_gpu(i2, j2, nx2p);
+        auto idxs_2 = get_cell_idxs_ccw_4(i2, j2, nx2p);
         for (int i = 0; i < 4; i++) {
           x2_in[i] = lon_out[idxs_2[i]];
           y2_in[i] = lat_out[idxs_2[i]];
@@ -796,9 +709,9 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
 
         //Some polys require "fixing" before calling area (and clipping) function.
         auto n1_in = fix_lon_gpu(x1_in, y1_in, 4, M_PI);
-        auto lon_in_avg = avgval_double_gpu(n1_in, x1_in);
+        auto lon_in_avg =  std::reduce(x1_in, x1_in + n1_in, 0.0) / n1_in; //avgval_double_gpu(n1_in, x1_in);
         auto n2_in = fix_lon_gpu(x2_in, y2_in, 4, M_PI);
-        auto lon_out_avg = avgval_double_gpu(n2_in, x2_in);
+        auto lon_out_avg =  std::reduce(x2_in, x2_in + n2_in, 0.0) / n2_in; //avgval_double_gpu(n2_in, x2_in);
 
         auto dx = lon_out_avg - lon_in_avg;
         if (dx < -M_PI) {
@@ -850,7 +763,7 @@ void  create_xgrid_2dx2d_order2_bfwbb(const int nlon_in, const int nlat_in, cons
     }
   }
 
-  std::cout <<"create_xgrid_2dx2d_order2_bfwbb end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
+  std::cout <<"create_xgrid_2dx2d_order2_bf end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
 }
 
 

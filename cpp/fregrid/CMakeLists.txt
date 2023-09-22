@@ -25,6 +25,6 @@ add_executable(searchtest.x searchtest.C)
 #add_sycl_to_target(TARGET searchtest.x SOURCES  searchtest.C) #in the future, may require other .C files
 
 #add tbb ?
-target_link_libraries(searchtest.x libSearch)
-target_link_libraries(fregrid.x  libFrencu libSearch netcdf)
+target_link_libraries(searchtest.x libSearch tbb)
+target_link_libraries(fregrid.x  libFrencu libSearch netcdf tbb)
 
