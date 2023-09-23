@@ -581,7 +581,8 @@ void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const i
                                    const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                    const double *mask_in, vector<size_t> &i_in, vector<size_t> &j_in,
                                    vector<size_t> &i_out, vector<size_t> &j_out, vector<double> &xgrid_area,
-                                   vector<double> &xgrid_clon, vector<double> &xgrid_clat) {
+                                   vector<double> &xgrid_clon, vector<double> &xgrid_clat,
+                                   int order) {
 #define MAX_V 8
   const int nx1{ nlon_in}, nx2{nlon_out}, ny1{ nlat_in}, ny2{nlat_out};
   const int nx1p{nx1 + 1};
@@ -727,13 +728,15 @@ void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const i
           auto xarea = poly_area_gpu(x_out, y_out, n_out) * mask_in[j1 * nx1 + i1];
           auto min_area = std::min(area_in[j1 * nx1 + i1], area_out[j2 * nx2 + i2]);
           if (xarea / min_area > AREA_RATIO_THRESH) {
-            xarea_v[ij] = xarea;
-            clon_v[ij] = poly_ctrlon_gpu(x_out, y_out, n_out, lon_in_avg);
-            clat_v[ij] = poly_ctrlat_gpu(x_out, y_out, n_out);
             i_in_v[ij] = i1; //stores the lower corner of poly
             j_in_v[ij] = j1;
             i_out_v[ij] = i2;
             j_out_v[ij] = j2;
+            xarea_v[ij] = xarea;
+            if(order == 2) {
+              clon_v[ij] = poly_ctrlon_gpu(x_out, y_out, n_out, lon_in_avg);
+              clat_v[ij] = poly_ctrlat_gpu(x_out, y_out, n_out);
+            }
           } //else leave in the FILL_VALUE
         }
       }

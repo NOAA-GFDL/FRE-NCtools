@@ -1874,8 +1874,12 @@ void printPolygon(std::ostream &os, span<T> lonv, span<T> latv) {
 size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, double *xv) {
   size_t count {0};
   for (unsigned int i = 0; i < NV4; i++) {
+    //Note only fixes the obvious simple to fix cases.
     if (xv[i] == 2 * M_PI) xv[i] = 0;
-    if (xv[i] >= 2 * M_PI || xv[i] < 0.) {
+    if (xv[i] > TPI) xv[i] -= TPI;
+    if (xv[i] <0 ) xv[i] += TPI;
+   //still outside? record count:
+    if (xv[i] >= TPI || xv[i] < 0.) {
       string errmsg = std::format(
               "xv[i] > 2 * M_PI | xv[i] < 0. xv[i]: {} ", xv[i]);
       cerr << errmsg << endl;
@@ -1890,6 +1894,7 @@ size_t  latlons_outside_ccd_domain(const unsigned int NV4, const double *yv, dou
   }
   return count;
 }
+
 /**
  * Find the 3D (XYZ) axis-aligned bounding box of a spherical polygon.
  * The six values that define the bounding box are the extremas on the
@@ -2159,7 +2164,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
     create_xgrid_2dx2d_order2_bf(nlon_in, nlat_in, nlon_out, nlat_out,
                                     lon_in, lat_in, lon_out, lat_out, mask_in,
                                     i_in_r, j_in_r, i_out_r, j_out_r,
-                                    xgrid_area_r, xgrid_clon_r, xgrid_clat_r);
+                                    xgrid_area_r, xgrid_clon_r, xgrid_clat_r,2);
 #else
     create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                  lon_in, lat_in, lon_out, lat_out, mask_in,
@@ -2220,11 +2225,19 @@ int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nl
   vector<double> xgrid_area_r, xgrid_clon_r, xgrid_clat_r;
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
+
+#ifdef WITH_GPU
+  create_xgrid_2dx2d_order2_bf(nlon_in, nlat_in, nlon_out, nlat_out,
+                                    lon_in, lat_in, lon_out, lat_out, mask_in,
+                                    i_in_r, j_in_r, i_out_r, j_out_r,
+                                    xgrid_area_r, xgrid_clon_r, xgrid_clat_r,1);
+#else
+
   create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
                                lon_in, lat_in, lon_out, lat_out, mask_in,
                                i_in_r, j_in_r, i_out_r, j_out_r,
                                xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 1);
-
+#endif
 
 
   int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
