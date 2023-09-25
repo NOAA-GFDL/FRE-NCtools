@@ -2011,9 +2011,9 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
 
 
 /**
- * Generate the exchange grid between two grids for the 2nd order
-  * conservative interpolation. This version explicitly uses a search
-  * data structure for faster finding of potentially overlapping grid cells
+ * Generate the exchange grid between two grids; Can handle both 2nd order
+  * and first order conservative interpolation. This version explicitly uses a
+  * search tree (st) data structure for faster finding of potentially overlapping grid cells
   * between the two grids.
 
  * @param nlon_in number of longitudes for the "in" grid cell
@@ -2032,12 +2032,13 @@ BBox_t getBoxForSphericalPolygon(const double lat_m[], const double lon_m[],
  * @param xgrid_area
  * @param xgrid_clon
  * @param xgrid_clat
+ * @param order - use 1 for order 1; use 2 for order 2;
  */
-void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                   const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
-                                   vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
-                                   vector<double>& xgrid_clon, vector<double>& xgrid_clat, int order) {
+void  create_xgrid_2dx2d_st(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                            const double *mask_in, vector<size_t>& i_in, vector<size_t>& j_in,
+                            vector<size_t>& i_out, vector<size_t>& j_out, vector<double>& xgrid_area,
+                            vector<double>& xgrid_clon, vector<double>& xgrid_clat, int order) {
   const size_t nx1 {(size_t) nlon_in}, nx2{(size_t)nlon_out}, ny1{(size_t)nlat_in}, ny2{(size_t)nlat_out};
   const size_t nx1p{nx1 + 1};
   const size_t nx2p{nx2 + 1};
@@ -2144,13 +2145,13 @@ void  create_xgrid_2dx2d_order2_ws(const int nlon_in, const int nlat_in, const i
     }
   }
   //std::cout << "tree search stats:" << std::endl << tree.perfs << std::endl;
-  //std::cout <<"create_xgrid_2dx2d_order2_ws end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
+  //std::cout <<"create_xgrid_2dx2d_st end; xgrid_are.size= " << xgrid_area.size() <<std::endl;
 }
 
 
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
- * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
+ * to create_xgrid_2dx2d_st, which is the new search algorithm.  May also call the
  * legacy function to perform some checks, as well as the gpu version of the legacy function.
  */
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
@@ -2161,15 +2162,15 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
   vector<size_t> i_in_r, j_in_r, i_out_r, j_out_r;
 
 #ifdef WITH_GPU
-    create_xgrid_2dx2d_order2_bf(nlon_in, nlat_in, nlon_out, nlat_out,
+    create_xgrid_2dx2d_bf(nlon_in, nlat_in, nlon_out, nlat_out,
                                     lon_in, lat_in, lon_out, lat_out, mask_in,
                                     i_in_r, j_in_r, i_out_r, j_out_r,
                                     xgrid_area_r, xgrid_clon_r, xgrid_clat_r,2);
 #else
-    create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                                 lon_in, lat_in, lon_out, lat_out, mask_in,
-                                 i_in_r, j_in_r, i_out_r, j_out_r,
-                                 xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 2);
+  create_xgrid_2dx2d_st(nlon_in, nlat_in, nlon_out, nlat_out,
+                        lon_in, lat_in, lon_out, lat_out, mask_in,
+                        i_in_r, j_in_r, i_out_r, j_out_r,
+                        xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 2);
 #endif
 
     int nxgrid = static_cast<int> ( xgrid_area_r.size()); //TODO: return as size_t
@@ -2215,7 +2216,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
 
 /*
  * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
- * to create_xgrid_2dx2d_order2_ws, which is the new search algorithm.  May also call the
+ * to create_xgrid_2dx2d_st, which is the new search algorithm.  May also call the
  * legacy function to perform some checks, as well as the gpu version of the legacy function.
  */
 int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
@@ -2227,16 +2228,16 @@ int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nl
 
 
 #ifdef WITH_GPU
-  create_xgrid_2dx2d_order2_bf(nlon_in, nlat_in, nlon_out, nlat_out,
+  create_xgrid_2dx2d_bf(nlon_in, nlat_in, nlon_out, nlat_out,
                                     lon_in, lat_in, lon_out, lat_out, mask_in,
                                     i_in_r, j_in_r, i_out_r, j_out_r,
                                     xgrid_area_r, xgrid_clon_r, xgrid_clat_r,1);
 #else
 
-  create_xgrid_2dx2d_order2_ws(nlon_in, nlat_in, nlon_out, nlat_out,
-                               lon_in, lat_in, lon_out, lat_out, mask_in,
-                               i_in_r, j_in_r, i_out_r, j_out_r,
-                               xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 1);
+  create_xgrid_2dx2d_st(nlon_in, nlat_in, nlon_out, nlat_out,
+                        lon_in, lat_in, lon_out, lat_out, mask_in,
+                        i_in_r, j_in_r, i_out_r, j_out_r,
+                        xgrid_area_r, xgrid_clon_r, xgrid_clat_r, 1);
 #endif
 
 
