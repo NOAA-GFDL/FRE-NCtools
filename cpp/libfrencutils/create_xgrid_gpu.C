@@ -26,7 +26,7 @@
 
 /**
  * *** README  IMPORTANT ****
- * TODO: Move function create_xgrid_2dx2d_order2_bf to create_grid.C is C++23 compliant; then delete
+ * TODO: Move function create_xgrid_2dx2d_bf to create_grid.C is C++23 compliant; then delete
  *    other functions
  *
  * Most of the functions in this file are temporary (part of a workaround) and are direct copies of
@@ -35,9 +35,9 @@
  * this project added to the C++20 project standard and which are used in create_xgrid.C.
  * 2) using C++ std parallelism algorithms with nvc++ for GPU compilation requires some auxiliary
  * (i.e. called) functions to be in the same file as function targeted for GPU execution
- * (e.g. create_xgrid_2dx2d_order2_bf)
+ * (e.g. create_xgrid_2dx2d_bf)
  *
- * When nvc++ becomes c++23 compliant, create_xgrid_2dx2d_order2_bf should be moved to
+ * When nvc++ becomes c++23 compliant, create_xgrid_2dx2d_bf should be moved to
  * create_xgrid.C and naturally most of rest of the functions in this file can be deleted.
  */
 
@@ -551,15 +551,17 @@ index_pair_from_combo( const int idx_pair, const int nxy2){
 }
 
 /*
- * Function create_xgrid_2dx2d_order2_bf
+ * Function create_xgrid_2dx2d_bf generates the exchange grid between two grids. This version can
+ *  perform both 2nd order and first order conservative interpolation.
  * This function uses the std::copy_if function to collect the [ij1 , ij2]  pairs of indexes of
- * those polygons that pass the "is near neighbors" filters. The filters are bounding-box intersections
+ * those polygons that pass the "is near neighbors" filters; and this is for determining the set of
+ * potentially overlapping grid cells between the two grids. The filters are bounding-box intersections
  * (and (possibly TBD) also lat/lon overlap tests). The sole purpose of using copy_if
  * is to parallelize the brute-force (O(n1 x n2) ) computations. Note that copy_if is merely (with the
  * cartesian_product class or the iota class) generating the possible index pairs and copying (or saving)
  * only those pairs that pass the neighbors tests.
  * NOTE: This function was written to be compiled for running on GPUS, and complies with the
- *  various restrictions nvc++ 23.7 places on C++ std parallelism usage for GPUS.
+ *  various restrictions that nvc++ 23.7 places on C++ std parallelism usage for GPUs.
  * NOTE: these two triplets are grid suffix synonyms used since the original code. Keeping them in
  * mind may help in understanding: target/'2'/out and source'1'/in.
  *
@@ -577,12 +579,12 @@ index_pair_from_combo( const int idx_pair, const int nxy2){
  *   NOTE: Recall C++ is row-major order, so column index (J) should be outer index.
  */
 
-void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                   const double *mask_in, vector<size_t> &i_in, vector<size_t> &j_in,
-                                   vector<size_t> &i_out, vector<size_t> &j_out, vector<double> &xgrid_area,
-                                   vector<double> &xgrid_clon, vector<double> &xgrid_clat,
-                                   int order) {
+void  create_xgrid_2dx2d_bf(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                            const double *mask_in, vector<size_t> &i_in, vector<size_t> &j_in,
+                            vector<size_t> &i_out, vector<size_t> &j_out, vector<double> &xgrid_area,
+                            vector<double> &xgrid_clon, vector<double> &xgrid_clat,
+                            int order) {
 #define MAX_V 8
   const int nx1{ nlon_in}, nx2{nlon_out}, ny1{ nlat_in}, ny2{nlat_out};
   const int nx1p{nx1 + 1};
@@ -766,7 +768,7 @@ void  create_xgrid_2dx2d_order2_bf(const int nlon_in, const int nlat_in, const i
     }
   }
 
-  std::cout <<"create_xgrid_2dx2d_order2_bf end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
+  std::cout <<"create_xgrid_2dx2d_bf end; xgrid_area.size= " << xgrid_area.size() <<std::endl;
 }
 
 
