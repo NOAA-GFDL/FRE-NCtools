@@ -16,8 +16,11 @@ add_subdirectory(dependencies)
 # unit testing, acceptance testing, and micro benchmarking. However, it may be
 # convenient to directly use and add cmakes Catch via "include(Catch)". E.g.
 # can nccmp be directly called?"
-enable_testing()
-add_subdirectory(test)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif(BUILD_TESTS)
+
 
 
 # The " {CMAKE_SOURCE_DIR}/include" directories below is only temporary as

@@ -2150,9 +2150,7 @@ void  create_xgrid_2dx2d_st(const int nlon_in, const int nlat_in, const int nlon
 
 
 /*
- * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
- * to create_xgrid_2dx2d_st, which is the new search algorithm.  May also call the
- * legacy function to perform some checks, as well as the gpu version of the legacy function.
+ * Just a wrapper for calling create_xgrid_2dx2d_[st|bf] functions.
  */
 int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
@@ -2215,9 +2213,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
 
 
 /*
- * Just a wrapper for calling create_xgrid_2dx2d_order2 functions. Normally its just a call
- * to create_xgrid_2dx2d_st, which is the new search algorithm.  May also call the
- * legacy function to perform some checks, as well as the gpu version of the legacy function.
+ * Just a wrapper for calling create_xgrid_2dx2d_[st|bf} functions.
  */
 int create_xgrid_2dx2d_order1(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,

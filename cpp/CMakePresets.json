@@ -1,0 +1,68 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "gcc-debug-pr",
+      "displayName": "GCC-DEBUG",
+      "description": "Debug build options for GCC",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build_gcc_debug_pr",
+      "toolchainFile":"${sourceDir}/gcc_toolchain",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INIT": "-g -O0 -Wall  -Wpedantic -Wextra"
+      }
+    },
+    {
+      "name": "gcc-release-pr",
+      "displayName": "GCC-RELEASE",
+      "description": "Release build options for GCC",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build_gcc_release_pr",
+      "toolchainFile":"${sourceDir}/gcc_toolchain",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INT": "-g -O2 -Wall  -Wpedantic -Wextra"
+      }
+    },
+    {
+      "name": "gpu-nvhpc-pr",
+      "displayName": "GPU-NVHPC",
+      "description": "NVC++ build option for gpu with std::par",
+      "generator": "Unix Makefiles",
+      pwd,
+
+      "binaryDir": "${sourceDir}/build_gpu_nvhpc_pr",
+      "toolchainFile":"${sourceDir}/nvhpc_toolchain",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_INIT": "-O2 -std=c++20 -stdpar=gpu"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-debug-build-pr",
+      "displayName": "GCC-DEBUG-BUILD",
+      "targets": [ "fregrid.x"],
+      "verbose": true,
+      "configurePreset": "gcc-debug-pr"
+    },
+    {
+      "name": "gcc-release-build-pr",
+      "displayName": "GCC-RELEASE-BUILD",
+      "targets": ["fregrid.x"],
+      "verbose": true,
+      "configurePreset": "gcc-release-pr"
+    },
+    {
+      "name": "gpu-nvhpc-build-pr",
+      "displayName": "GPU-NVHPC-BUILD",
+      "targets": ["fregrid.x"],
+      "verbose": true,
+      "configurePreset": "gpu-nvhpc-pr"
+    }
+  ]
+}
