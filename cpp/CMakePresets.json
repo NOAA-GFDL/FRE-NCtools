@@ -33,12 +33,10 @@
       "displayName": "GPU-NVHPC",
       "description": "NVC++ build option for gpu with std::par",
       "generator": "Unix Makefiles",
-      pwd,
-
       "binaryDir": "${sourceDir}/build_gpu_nvhpc_pr",
       "toolchainFile":"${sourceDir}/nvhpc_toolchain",
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS_INIT": "-O2 -std=c++20 -stdpar=gpu"
+        "CMAKE_CXX_FLAGS_INIT": "-O2 -std=c++20 -stdpar=gpu --gcc-toolchain=/opt/gcc/12.3.0 -I/opt/gcc/12.3.0/include/c++/12.3.0 -I/opt/netcdf/4.9.2/NVHPC/23.7/include -I/opt/hdf5/1.14.1-2/NVHPC/23.7/include"
       }
     }
   ],
