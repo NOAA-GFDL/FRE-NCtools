@@ -48,10 +48,12 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                            Grid_config *grid_out, Interp_config *interp, unsigned int opcode) {
   int n, m, ii, nx_in, ny_in, nx_out, ny_out, tile;
   size_t nxgrid, nxgrid_prev;
-  int *i_in = NULL, *j_in = NULL, *i_out = NULL, *j_out = NULL;
   int *tmp_t_in = NULL, *tmp_i_in = NULL, *tmp_j_in = NULL, *tmp_i_out = NULL, *tmp_j_out = NULL;
   double *tmp_di_in, *tmp_dj_in;
-  double *xgrid_area = NULL, *tmp_area = NULL, *xgrid_clon = NULL, *xgrid_clat = NULL;
+
+  int *i_in{nullptr}, *j_in{nullptr}, *i_out{nullptr}, *j_out{nullptr};
+  double *xgrid_area{nullptr}, *xgrid_clon{nullptr}, *xgrid_clat{nullptr}, *tmp_area{nullptr};
+
 
   double garea;
   typedef struct {
@@ -129,14 +131,14 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     }
     if (mpp_pe() == mpp_root_pe())
       printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
-  } else {
-    i_in = (int *) malloc(MAXXGRID * sizeof(int));
-    j_in = (int *) malloc(MAXXGRID * sizeof(int));
-    i_out = (int *) malloc(MAXXGRID * sizeof(int));
-    j_out = (int *) malloc(MAXXGRID * sizeof(int));
-    xgrid_area = (double *) malloc(MAXXGRID * sizeof(double));
-    xgrid_clon = (double *) malloc(MAXXGRID * sizeof(double));
-    xgrid_clat = (double *) malloc(MAXXGRID * sizeof(double));;
+  } else { //Calculate the xgrid instead of reading it in.
+    //Note: The newer create_xgrid_2dx2d_... algorithms (e.g. create_xgrid_2dx2d_order2
+    // with search tree or GPU) allocates only the needed memory. So routines called here
+    // were modified to allocate their own memory. Eventaully, all of them should be modified
+    // to use std::vector (vs malloc arrays) for fields like xgrid_area, i_in, and j_out, etc.
+    // This may be particularly easy if MPI version of the code can be removed altogether
+    // for fields like xgrid_area, i_in, j_out etc.
+
     cell_in = (CellStruct *) malloc(ntiles_in * sizeof(CellStruct));
     for (m = 0; m < ntiles_in; m++) {
       nx_in = grid_in[m].nx;
@@ -334,7 +336,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         nx_in = grid_in[n].nx;
         ny_in = grid_in[n].ny;
         for (j = 0; j < ny_in; j++)
-          for (size_t i = 0; i < (size_t)nx_in; i++) {
+          for (size_t i = 0; i < (size_t) nx_in; i++) {
             ii = j * nx_in + i;
             if (cell_in[n].area[ii] > 0) {
               if (fabs(cell_in[n].area[ii] - grid_in[n].cell_area[ii]) / grid_in[n].cell_area[ii] <
@@ -488,8 +490,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       max_i = 0;
       max_j = 0;
       /* comparing area1 and area2 */
-      for (unsigned int  j = 0; j < static_cast<unsigned int>(ny1); j++)
-        for (unsigned int  i = 0; i < static_cast<unsigned int>(nx1); i++) {
+      for (unsigned int j = 0; j < static_cast<unsigned int>(ny1); j++)
+        for (unsigned int i = 0; i < static_cast<unsigned int>(nx1); i++) {
           ii = j * nx1 + i;
           ratio_change = fabs(grid_out[n].cell_area[ii] - area2[ii]) / grid_out[n].cell_area[ii];
           if (ratio_change > max_ratio) {
@@ -507,9 +509,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
              grid_out[n].cell_area[ii], area2[ii]);
 
     }
-
     free(area2);
-
   }
 
   free(i_in);

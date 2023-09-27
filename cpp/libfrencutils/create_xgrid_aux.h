@@ -20,7 +20,7 @@
 #include "mosaic_util.h"
 
 
-bool checkBBoxViaPolySamples(std::span<double> yv, std::span<double> xv,
+static bool checkBBoxViaPolySamples(std::span<double> yv, std::span<double> xv,
                               nct::BBox3D & box, unsigned int npoints1D = 5 ) {
   bool passed = true;
   std::array<double, 3> pt{};
