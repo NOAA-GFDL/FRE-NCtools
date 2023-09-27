@@ -1,3 +1,3 @@
-set(tools /usr)
+set(tools /opt/gcc/12.3.0)
 set(CMAKE_C_COMPILER ${tools}/bin/gcc)
 set(CMAKE_CXX_COMPILER ${tools}/bin/g++)
