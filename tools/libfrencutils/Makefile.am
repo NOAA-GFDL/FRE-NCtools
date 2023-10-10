@@ -27,7 +27,7 @@ if WITH_OPENACC
   libfrencutils_gpu_a_CFLAGS = $(CC_OPENACC_FLAGS) $(AM_CFLAGS)
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/fregrid
 
 libfrencutils_a_SOURCES = affinity.c \
                           constant.h \

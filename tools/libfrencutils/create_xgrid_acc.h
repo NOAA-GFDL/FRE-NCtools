@@ -20,11 +20,10 @@
 #ifndef CREATE_XGRID_VER_H_
 #define CREATE_XGRID_VER_H_
 
+#include "globals.h"
+
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *lon_out_min_list, const double *lon_out_max_list, const double *lon_out_avg,
-            const double *lat_out_min_list, const double *lat_out_max_list, const int *n2_list,
-            const double *lon_out_list, const double *lat_out_list,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+            Minmaxavglists *out_minmaxavglists, const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
             double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 #endif
