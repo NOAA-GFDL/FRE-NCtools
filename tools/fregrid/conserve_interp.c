@@ -86,11 +86,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
       Minmaxavglists out_minmaxavglists;
 
-      double *lon_out_min_list=NULL, *lon_out_max_list=NULL, *lon_out_avg=NULL;
-      double *lat_out_min_list=NULL, *lat_out_max_list=NULL;
-      double *lon_out_list=NULL, *lat_out_list=NULL;
-      int *n2_list=NULL;
-
       nx_out = grid_out[n].nxc;
       ny_out = grid_out[n].nyc;
       interp[n].nxgrid = 0;
