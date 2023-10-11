@@ -47,6 +47,15 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
 void malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists)
 {
 
+  if( !minmaxavglists->lon_min_list ) free(minmaxavglists->lon_min_list);
+  if( !minmaxavglists->lon_max_list ) free(minmaxavglists->lon_max_list);
+  if( !minmaxavglists->lat_min_list ) free(minmaxavglists->lat_min_list);
+  if( !minmaxavglists->lat_max_list ) free(minmaxavglists->lat_max_list);
+  if( !minmaxavglists->n_list)   free(minmaxavglists->n_list);
+  if( !minmaxavglists->lon_avg)  free(minmaxavglists->lon_avg);
+  if( !minmaxavglists->lon_list) free(minmaxavglists->lon_list);
+  if( !minmaxavglists->lat_list) free(minmaxavglists->lat_list);
+
   if(n>0){
     minmaxavglists->lon_min_list=(double *)malloc(n*sizeof(double));
     minmaxavglists->lon_max_list=(double *)malloc(n*sizeof(double));
