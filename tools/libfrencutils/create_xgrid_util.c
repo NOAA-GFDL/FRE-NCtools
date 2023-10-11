@@ -44,7 +44,7 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
   void malloc_minmaxavg_lists
   allocates lists to hold min, max, avg values of lat/lon coordinates
 *******************************************************************************/
-Minmaxavglists malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists)
+void malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists)
 {
 
   if(n>0){

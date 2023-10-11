@@ -95,7 +95,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
 
       //allocate memory for the lists
-      out_minmaxavglists = malloc_minmaxavg_lists(nx_out*ny_out, &out_minmaxavglists);
+      malloc_minmaxavg_lists(nx_out*ny_out, &out_minmaxavglists);
 
 #define MAX_V 8
 #pragma acc enter data create(out_minmaxavglists)
