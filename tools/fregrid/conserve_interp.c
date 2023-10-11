@@ -93,6 +93,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 #pragma acc enter data copyin(grid_out[n].lonc[0:(nx_out+1)*(ny_out+1)], \
                               grid_out[n].latc[0:(nx_out+1)*(ny_out+1)])
 
+
       //allocate memory for the lists
       out_minmaxavglists = malloc_minmaxavg_lists(nx_out*ny_out, &out_minmaxavglists);
 
@@ -160,6 +161,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
             free(mask);
+#pragma acc exit data delete(mask)
           } //opcode CONSERVE_ORDER1
 
           else if(opcode & CONSERVE_ORDER2) {
@@ -176,7 +178,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 #ifdef _OPENACC
             nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                    grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                                   &out_minmaxavglists, mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                                   &out_minmaxavglists, mask, i_in, j_in, i_out, j_out,
+                                                   xgrid_area, xgrid_clon, xgrid_clat);
 #else
             nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,

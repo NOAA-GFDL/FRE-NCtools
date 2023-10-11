@@ -73,9 +73,10 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 #pragma acc data present(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
                          i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
 #pragma acc data copyin(area_in[0:nx1*ny1], area_out[0:nx2*ny2])
-#pragma acc kernels copy(nxgrid)
+#pragma acc data copy(nxgrid)
+#pragma acc kernels
 {
-#pragma acc loop independent collapse(2) reduction(+:nxgrid)
+#pragma acc loop independent collapse(2) //reduction(+:nxgrid)
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
       int n0, n1, n2, n3, n1_in;
       double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
@@ -92,7 +93,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
       lon_in_min = minval_double(n1_in, x1_in);
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
-#pragma acc loop independent reduction(+:nxgrid)
+#pragma acc loop independent //reduction(+:nxgrid)
       for(ij=0; ij<nx2*ny2; ij++) {
         int n_out, i2, j2, n2_in, l;
         double xarea, dx, lon_out_min, lon_out_max;
