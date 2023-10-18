@@ -245,6 +245,6 @@ typedef struct{
   double *lon_list;
   double *lat_list;
   int *n_list;
-} Minmaxavglists;
+} Minmaxavg_lists;
 
 #endif

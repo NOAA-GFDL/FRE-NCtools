@@ -28,8 +28,8 @@
 #define MV 50
 /* this value is small compare to earth area */
 
-void malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists);
-void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat, Minmaxavglists *minmaxavglists);
+void malloc_minmaxavg_lists(const int n, Minmaxavg_lists *minmaxavg_lists);
+void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat, Minmaxavg_lists *minmaxavg_lists);
 #pragma acc routine seq
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
 #pragma acc routine seq

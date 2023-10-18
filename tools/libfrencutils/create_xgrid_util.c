@@ -44,30 +44,28 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
   void malloc_minmaxavg_lists
   allocates lists to hold min, max, avg values of lat/lon coordinates
 *******************************************************************************/
-void malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists)
+void malloc_minmaxavg_lists(const int n, Minmaxavg_lists *minmaxavg_lists)
 {
 
-  if( !minmaxavglists->lon_min_list ) free(minmaxavglists->lon_min_list);
-  if( !minmaxavglists->lon_max_list ) free(minmaxavglists->lon_max_list);
-  if( !minmaxavglists->lat_min_list ) free(minmaxavglists->lat_min_list);
-  if( !minmaxavglists->lat_max_list ) free(minmaxavglists->lat_max_list);
-  if( !minmaxavglists->n_list)   free(minmaxavglists->n_list);
-  if( !minmaxavglists->lon_avg)  free(minmaxavglists->lon_avg);
-  if( !minmaxavglists->lon_list) free(minmaxavglists->lon_list);
-  if( !minmaxavglists->lat_list) free(minmaxavglists->lat_list);
+  if( !minmaxavg_lists->lon_min_list ) free(minmaxavg_lists->lon_min_list);
+  if( !minmaxavg_lists->lon_max_list ) free(minmaxavg_lists->lon_max_list);
+  if( !minmaxavg_lists->lat_min_list ) free(minmaxavg_lists->lat_min_list);
+  if( !minmaxavg_lists->lat_max_list ) free(minmaxavg_lists->lat_max_list);
+  if( !minmaxavg_lists->n_list)   free(minmaxavg_lists->n_list);
+  if( !minmaxavg_lists->lon_avg)  free(minmaxavg_lists->lon_avg);
+  if( !minmaxavg_lists->lon_list) free(minmaxavg_lists->lon_list);
+  if( !minmaxavg_lists->lat_list) free(minmaxavg_lists->lat_list);
 
   if(n>0){
-    minmaxavglists->lon_min_list=(double *)malloc(n*sizeof(double));
-    minmaxavglists->lon_max_list=(double *)malloc(n*sizeof(double));
-    minmaxavglists->lat_min_list=(double *)malloc(n*sizeof(double));
-    minmaxavglists->lat_max_list=(double *)malloc(n*sizeof(double));
-    minmaxavglists->n_list=(int *)malloc(n*sizeof(int));
-    minmaxavglists->lon_avg=(double *)malloc(n*sizeof(double));
-    minmaxavglists->lon_list=(double *)malloc(MAX_V*n*sizeof(double));
-    minmaxavglists->lat_list=(double *)malloc(MAX_V*n*sizeof(double));
+    minmaxavg_lists->lon_min_list=(double *)malloc(n*sizeof(double));
+    minmaxavg_lists->lon_max_list=(double *)malloc(n*sizeof(double));
+    minmaxavg_lists->lat_min_list=(double *)malloc(n*sizeof(double));
+    minmaxavg_lists->lat_max_list=(double *)malloc(n*sizeof(double));
+    minmaxavg_lists->n_list=(int *)malloc(n*sizeof(int));
+    minmaxavg_lists->lon_avg=(double *)malloc(n*sizeof(double));
+    minmaxavg_lists->lon_list=(double *)malloc(MAX_V*n*sizeof(double));
+    minmaxavg_lists->lat_list=(double *)malloc(MAX_V*n*sizeof(double));
   }
-
-  return *minmaxavglists;
 
 }//malloc_minmaxavg_lists
 
@@ -76,7 +74,7 @@ void malloc_minmaxavg_lists(const int n, Minmaxavglists *minmaxavglists)
   computes lists to hold min, max, avg values of lat/lon coordinates
 *******************************************************************************/
 void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat,
-                         Minmaxavglists *minmaxavglists)
+                         Minmaxavg_lists *minmaxavg_lists)
 {
 
   int nxp, nyp;
@@ -85,10 +83,10 @@ void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const do
   nyp = ny+1;
 
 #pragma acc data present(lon[0:nxp*nyp], lat[0:nxp*nyp])
-#pragma acc data present(minmaxavglists->lon_list[0:MAX_V*nx*ny], minmaxavglists->lat_list[0:MAX_V*nx*ny])
-#pragma acc data present(minmaxavglists->n_list[0:nx*ny], minmaxavglists->lon_avg[0:nx*ny])
-#pragma acc data present(minmaxavglists->lat_min_list[0:nx*ny], minmaxavglists->lat_max_list[0:nx*ny])
-#pragma acc data present(minmaxavglists->lon_min_list[0:nx*ny], minmaxavglists->lon_max_list[0:nx*ny])
+#pragma acc data present(minmaxavg_lists->lon_list[0:MAX_V*nx*ny], minmaxavg_lists->lat_list[0:MAX_V*nx*ny])
+#pragma acc data present(minmaxavg_lists->n_list[0:nx*ny], minmaxavg_lists->lon_avg[0:nx*ny])
+#pragma acc data present(minmaxavg_lists->lat_min_list[0:nx*ny], minmaxavg_lists->lat_max_list[0:nx*ny])
+#pragma acc data present(minmaxavg_lists->lon_min_list[0:nx*ny], minmaxavg_lists->lon_max_list[0:nx*ny])
 
 #pragma acc parallel loop independent
   for(int ij=0; ij<nx*ny; ij++){
@@ -106,19 +104,19 @@ void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const do
     x_in[2] = lon[n2]; y_in[2] = lat[n2];
     x_in[3] = lon[n3]; y_in[3] = lat[n3];
 
-    minmaxavglists->lat_min_list[n] = minval_double(4, y_in);
-    minmaxavglists->lat_max_list[n] = maxval_double(4, y_in);
+    minmaxavg_lists->lat_min_list[n] = minval_double(4, y_in);
+    minmaxavg_lists->lat_max_list[n] = maxval_double(4, y_in);
     n_in = fix_lon(x_in, y_in, 4, M_PI);
     //Commented out for now.  OpenACC does not like error_handler
     //if(n2_in > MAX_V) error_handler("create_xgrid.c: n_in is greater than MAX_V");
-    minmaxavglists->lon_min_list[n] = minval_double(n_in, x_in);
-    minmaxavglists->lon_max_list[n] = maxval_double(n_in, x_in);
-    minmaxavglists->lon_avg[n] = avgval_double(n_in, x_in);
-    minmaxavglists->n_list[n] = n_in;
+    minmaxavg_lists->lon_min_list[n] = minval_double(n_in, x_in);
+    minmaxavg_lists->lon_max_list[n] = maxval_double(n_in, x_in);
+    minmaxavg_lists->lon_avg[n] = avgval_double(n_in, x_in);
+    minmaxavg_lists->n_list[n] = n_in;
 #pragma acc loop independent
     for(l=0; l<n_in; l++) {
-      minmaxavglists->lon_list[n*MAX_V+l] = x_in[l];
-      minmaxavglists->lat_list[n*MAX_V+l] = y_in[l];
+      minmaxavg_lists->lon_list[n*MAX_V+l] = x_in[l];
+      minmaxavg_lists->lat_list[n*MAX_V+l] = y_in[l];
     }
   }
 
