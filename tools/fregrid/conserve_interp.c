@@ -189,34 +189,13 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
             /* For the purpose of bitiwise reproducing, the following operation is needed. */
             get_CellStruct(m,nx_in, nxgrid, i_in, j_in, xgrid_area, xgrid_clon, xgrid_clat, cell_in);
-            /*g_nxgrid = nxgrid;
-            mpp_sum_int(1, &g_nxgrid);
-            if(g_nxgrid > 0) {
-              g_i_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
-              g_j_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
-              g_area = (double *)malloc(g_nxgrid*sizeof(double));
-              g_clon = (double *)malloc(g_nxgrid*sizeof(double));
-              g_clat = (double *)malloc(g_nxgrid*sizeof(double));
-              mpp_gather_field_int   (nxgrid, i_in,       g_i_in);
-              mpp_gather_field_int   (nxgrid, j_in,       g_j_in);
-              mpp_gather_field_double(nxgrid, xgrid_area, g_area);
-              mpp_gather_field_double(nxgrid, xgrid_clon, g_clon);
-              mpp_gather_field_double(nxgrid, xgrid_clat, g_clat);
-              for(i=0; i<g_nxgrid; i++) {
-                ii = g_j_in[i]*nx_in+g_i_in[i];
-                cell_in[m].area[ii] += g_area[i];
-                cell_in[m].clon[ii] += g_clon[i];
-                cell_in[m].clat[ii] += g_clat[i];
-              }
-              free(g_i_in); free(g_j_in); free(g_area); free(g_clon); free(g_clat);
-            } // if g_nxgrid > 0*/
-          }
+
+          } //opcode CONSERVE_ORDER2
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
-        } //opcode CONSERVE_ORDER2
+        } // opcode GREAT_CIRCLE or CONSERVE_ORDERs
 
 
-//for all opcodes
         if(nxgrid > 0) {
           nxgrid_prev = interp[n].nxgrid;
           interp[n].nxgrid += nxgrid;

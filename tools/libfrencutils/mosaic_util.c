@@ -62,7 +62,6 @@ void set_rotate_poly_true(void){
     void error_handler(char *str)
     error handler: will print out error message and then abort
 ***********************************************************/
-#pragma acc routine seq
 void error_handler(const char *msg)
 {
 
@@ -75,17 +74,17 @@ void error_handler(const char *msg)
   exit(1);
 #endif //ifdef use_libMPI
 
-#else 
+#else
 
   printf("Fatal Error: %s\n", msg);
-#ifdef use_libMPI
-  MPI_Abort(MPI_COMM_WORLD, -1);
-#else
-  //exit statements do not exist for OpenACC yet.
-#endif
+  //IMPERATIVE.  Must incorporate error handling
+  //#ifdef use_libMPI
+  //  MPI_Abort(MPI_COMM_WORLD, -1);
+  //#else
+  //  exit statements do not exist for OpenACC yet.
+  //#endif
 
 #endif //ifndef _OPENACC
-
 
 
 } /* error_handler */
@@ -219,7 +218,7 @@ double minval_double(int size, const double *data)
   double avgval_double(int size, double *data)
   get the average value of double array
 *******************************************************************************/
-#pragma acc routine seq 
+#pragma acc routine seq
 double avgval_double(int size, const double *data)
 {
   int n;

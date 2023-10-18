@@ -45,7 +45,6 @@ struct Node{
   struct Node *Next;
 };
 
-#pragma acc routine seq
 void error_handler(const char *msg);
 int nearest_index(double value, const double *array, int ia);
 int lon_fix(double *x, double *y, int n_in, double tlon);
