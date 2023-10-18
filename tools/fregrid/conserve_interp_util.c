@@ -154,3 +154,45 @@ void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **
   }
 
 }
+
+/*******************************************************************************
+  void get_CellStruct
+  populate CellStruct
+*******************************************************************************/
+void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
+                    double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
+                    CellStruct *cell_in)
+{
+
+  int g_nxgrid;
+  int *g_i_in, *g_j_in;
+  double *g_area, *g_clon, *g_clat;
+
+  g_nxgrid = nxgrid;
+  mpp_sum_int(1, &g_nxgrid);
+  if(g_nxgrid > 0) {
+    g_i_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
+    g_j_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
+    g_area = (double *)malloc(g_nxgrid*sizeof(double));
+    g_clon = (double *)malloc(g_nxgrid*sizeof(double));
+    g_clat = (double *)malloc(g_nxgrid*sizeof(double));
+    mpp_gather_field_int   (nxgrid, i_in,       g_i_in);
+    mpp_gather_field_int   (nxgrid, j_in,       g_j_in);
+    mpp_gather_field_double(nxgrid, xgrid_area, g_area);
+    mpp_gather_field_double(nxgrid, xgrid_clon, g_clon);
+    mpp_gather_field_double(nxgrid, xgrid_clat, g_clat);
+    for(int i=0; i<g_nxgrid; i++) {
+      int ii;
+      ii = g_j_in[i]*nx_in+g_i_in[i];
+      cell_in[tile_in].area[ii] += g_area[i];
+      cell_in[tile_in].clon[ii] += g_clon[i];
+      cell_in[tile_in].clat[ii] += g_clat[i];
+    }
+    free(g_i_in);
+    free(g_j_in);
+    free(g_area);
+    free(g_clon);
+    free(g_clat);
+  }
+
+}

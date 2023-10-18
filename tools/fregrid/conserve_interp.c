@@ -54,11 +54,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
   int mxxgrid, zero=0;
 
-  typedef struct{
-    double *area;
-    double *clon;
-    double *clat;
-  } CellStruct;
   CellStruct *cell_in;
 
   double time_nxgrid=0;
@@ -72,15 +67,11 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     for(m=0; m<ntiles_in; m++) {
       nx_in = grid_in[m].nx;
       ny_in = grid_in[m].ny;
-      cell_in[m].area = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clon = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clat = (double *)malloc(nx_in*ny_in*sizeof(double));
-      for(n=0; n<nx_in*ny_in; n++) {
-        cell_in[m].area[n] = 0;
-        cell_in[m].clon[n] = 0;
-        cell_in[m].clat[n] = 0;
-      }
+      cell_in[m].area = (double *)calloc(nx_in*ny_in,sizeof(double));
+      cell_in[m].clon = (double *)calloc(nx_in*ny_in,sizeof(double));
+      cell_in[m].clat = (double *)calloc(nx_in*ny_in,sizeof(double));
     }
+
     //START NTILES_OUT
     for(n=0; n<ntiles_out; n++) {
 
@@ -197,7 +188,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
 
             /* For the purpose of bitiwise reproducing, the following operation is needed. */
-            g_nxgrid = nxgrid;
+            get_CellStruct(m,nx_in, nxgrid, i_in, j_in, xgrid_area, xgrid_clon, xgrid_clat, cell_in);
+            /*g_nxgrid = nxgrid;
             mpp_sum_int(1, &g_nxgrid);
             if(g_nxgrid > 0) {
               g_i_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
@@ -217,7 +209,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                 cell_in[m].clat[ii] += g_clat[i];
               }
               free(g_i_in); free(g_j_in); free(g_area); free(g_clon); free(g_clat);
-            } // if g_nxgrid > 0
+            } // if g_nxgrid > 0*/
           }
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");

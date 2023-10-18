@@ -27,4 +27,8 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
 void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
                           double **xgrid_area, double **xgrid_clon, double **xgrid_clat );
 
+void get_CellStruct(const tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
+                    double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
+                    CellStruct *cell_in);
+
 #endif
