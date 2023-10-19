@@ -39,19 +39,19 @@
   and lon_in,lat_in are 1-D grid bounds, lon_out,lat_out are geographic grid location of grid cell bounds.
 *******************************************************************************/
 int create_xgrid_1dx2d_order1_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
                                const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_1dx2d_order1(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-             i_in, j_in, i_out, j_out, xgrid_area);
+                                     i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 
 int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-       			      const double *lat_in, const double *lon_out, const double *lat_out,
+                              const double *lat_in, const double *lon_out, const double *lat_out,
                               const double *mask_in, int *i_in, int *j_in, int *i_out,
                               int *j_out, double *xgrid_area)
 {
@@ -103,9 +103,9 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
       y_in[2] = lat_out[(j2+1)*nx2p+i2+1];
       y_in[3] = lat_out[(j2+1)*nx2p+i2];
       if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
-      && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
+            && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
       if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
-      && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
+            && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
 
       x_in[0] = lon_out[j2*nx2p+i2];
       x_in[1] = lon_out[j2*nx2p+i2+1];
@@ -114,17 +114,17 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
       n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
 
       if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
-  Xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-  if( Xarea/min_area > AREA_RATIO_THRESH ) {
+        Xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+        min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+        if( Xarea/min_area > AREA_RATIO_THRESH ) {
           xgrid_area[nxgrid] = Xarea;
-    i_in[nxgrid]    = i1;
-    j_in[nxgrid]    = j1;
-    i_out[nxgrid]   = i2;
-    j_out[nxgrid]   = j2;
-    ++nxgrid;
-    if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-  }
+          i_in[nxgrid]    = i1;
+          j_in[nxgrid]    = j1;
+          i_out[nxgrid]   = i2;
+          j_out[nxgrid]   = j2;
+          ++nxgrid;
+          if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+        }
       }
     }
   }
