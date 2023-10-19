@@ -47,14 +47,38 @@ int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double 
 void malloc_minmaxavg_lists(const int n, Minmaxavg_lists *minmaxavg_lists)
 {
 
-  if( !minmaxavg_lists->lon_min_list ) free(minmaxavg_lists->lon_min_list);
-  if( !minmaxavg_lists->lon_max_list ) free(minmaxavg_lists->lon_max_list);
-  if( !minmaxavg_lists->lat_min_list ) free(minmaxavg_lists->lat_min_list);
-  if( !minmaxavg_lists->lat_max_list ) free(minmaxavg_lists->lat_max_list);
-  if( !minmaxavg_lists->n_list)   free(minmaxavg_lists->n_list);
-  if( !minmaxavg_lists->lon_avg)  free(minmaxavg_lists->lon_avg);
-  if( !minmaxavg_lists->lon_list) free(minmaxavg_lists->lon_list);
-  if( !minmaxavg_lists->lat_list) free(minmaxavg_lists->lat_list);
+  if( minmaxavg_lists->lon_min_list != NULL ) {
+    free(minmaxavg_lists->lon_min_list);
+    minmaxavg_lists-> lon_min_list = NULL;
+  }
+  if( minmaxavg_lists->lon_max_list != NULL ) {
+    free(minmaxavg_lists->lon_max_list);
+    minmaxavg_lists->lon_max_list = NULL;
+  }
+  if( minmaxavg_lists->lat_min_list != NULL ) {
+    free(minmaxavg_lists->lat_min_list);
+    minmaxavg_lists->lat_min_list = NULL;
+  }
+  if( minmaxavg_lists->lat_max_list != NULL ) {
+    free(minmaxavg_lists->lat_max_list);
+    minmaxavg_lists->lat_max_list = NULL;
+  }
+  if( minmaxavg_lists->n_list != NULL ) {
+    free(minmaxavg_lists->n_list);
+    minmaxavg_lists->n_list = NULL;
+  }
+  if( minmaxavg_lists->lon_avg != NULL ) {
+    free(minmaxavg_lists->lon_avg);
+    minmaxavg_lists->lon_avg = NULL;
+  }
+  if( minmaxavg_lists->lon_list != NULL ) {
+    free(minmaxavg_lists->lon_list);
+    minmaxavg_lists->lon_list = NULL;
+  }
+  if( minmaxavg_lists->lat_list != NULL ) {
+    free(minmaxavg_lists->lat_list);
+    minmaxavg_lists->lat_list = NULL;
+  }
 
   if(n>0){
     minmaxavg_lists->lon_min_list=(double *)malloc(n*sizeof(double));
