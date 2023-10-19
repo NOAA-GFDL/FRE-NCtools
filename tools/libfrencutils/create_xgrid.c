@@ -39,8 +39,8 @@
   and lon_in,lat_in are 1-D grid bounds, lon_out,lat_out are geographic grid location of grid cell bounds.
 *******************************************************************************/
 int create_xgrid_1dx2d_order1_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-             const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
+                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                               const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
