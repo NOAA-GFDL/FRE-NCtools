@@ -63,6 +63,8 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     read_remap_file(ntiles_in,ntiles_out, grid_out, interp, opcode);
   }
   else {
+
+    //only needed for order2?
     cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
     for(m=0; m<ntiles_in; m++) {
       nx_in = grid_in[m].nx;
@@ -156,8 +158,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
           } //opcode CONSERVE_ORDER1
 
           else if(opcode & CONSERVE_ORDER2) {
-            int g_nxgrid, *g_i_in, *g_j_in;
-            double *g_area, *g_clon, *g_clat;
 
             time_start = clock();
 
