@@ -150,14 +150,14 @@ int create_xgrid_1dx2d_order2_(const int *nlon_in, const int *nlat_in, const int
 {
   int nxgrid;
   nxgrid = create_xgrid_1dx2d_order2(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+             j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
 
 };
 int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -214,7 +214,7 @@ int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 
       if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
   xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-        min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
   if(xarea/min_area > AREA_RATIO_THRESH ) {
     xgrid_area[nxgrid] = xarea;
     xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
@@ -244,21 +244,21 @@ int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   mask is on grid lon_in/lat_in.
 *******************************************************************************/
 int create_xgrid_2dx1d_order1_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-             const double *mask_in, int *i_in, int *j_in, int *i_out,
-             int *j_out, double *xgrid_area)
+       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+       const double *mask_in, int *i_in, int *j_in, int *i_out,
+       int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_2dx1d_order1(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-             i_in, j_in, i_out, j_out, xgrid_area);
+       i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 int create_xgrid_2dx1d_order1(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-            const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out,
-            int *j_out, double *xgrid_area)
+      const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out,
+      int *j_out, double *xgrid_area)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -317,7 +317,7 @@ int create_xgrid_2dx1d_order1(const int *nlon_in, const int *nlat_in, const int 
   Xarea = poly_area ( x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
   min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
   if( Xarea/min_area > AREA_RATIO_THRESH ) {
-          xgrid_area[nxgrid] = Xarea;
+    xgrid_area[nxgrid] = Xarea;
     i_in[nxgrid]    = i1;
     j_in[nxgrid]    = j1;
     i_out[nxgrid]   = i2;
@@ -345,21 +345,21 @@ int create_xgrid_2dx1d_order1(const int *nlon_in, const int *nlat_in, const int 
   mask is on grid lon_in/lat_in.
 ********************************************************************************/
 int create_xgrid_2dx1d_order2_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-             const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-             double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+       double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_2dx1d_order2(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+             j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
 
 };
 
 int create_xgrid_2dx1d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -451,22 +451,22 @@ int create_xgrid_2dx1d_order2(const int *nlon_in, const int *nlat_in, const int 
 *******************************************************************************/
 #ifndef __AIX
 int create_xgrid_2dx2d_order1_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-             const double *mask_in, int *i_in, int *j_in, int *i_out,
-             int *j_out, double *xgrid_area)
+       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+       const double *mask_in, int *i_in, int *j_in, int *i_out,
+       int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_2dx2d_order1(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-             i_in, j_in, i_out, j_out, xgrid_area);
+       i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 #endif
 int create_xgrid_2dx2d_order1(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out,
-            int *j_out, double *xgrid_area)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out,
+      int *j_out, double *xgrid_area)
 {
 
 #define MAX_V 8
@@ -553,8 +553,8 @@ int create_xgrid_2dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nx2,ny2,nx2p,lon_out,lat_out,lat_out_min_list, \
-                                              lat_out_max_list,lon_out_min_list,lon_out_max_list, \
-                                              lon_out_avg,n2_list,lon_out_list,lat_out_list)
+                lat_out_max_list,lon_out_min_list,lon_out_max_list, \
+                lon_out_avg,n2_list,lon_out_list,lat_out_list)
 #endif
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
@@ -587,10 +587,10 @@ nxgrid = 0;
 
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
-                                              istart2,iend2,nx2,lat_out_min_list,lat_out_max_list, \
-                                              n2_list,lon_out_list,lat_out_list,lon_out_min_list, \
-                                              lon_out_max_list,lon_out_avg,area_in,area_out, \
-                                              pxgrid_area,pnxgrid,pi_in,pj_in,pi_out,pj_out,pstart,nthreads)
+                istart2,iend2,nx2,lat_out_min_list,lat_out_max_list, \
+                n2_list,lon_out_list,lat_out_list,lon_out_min_list, \
+                lon_out_max_list,lon_out_avg,area_in,area_out, \
+                pxgrid_area,pnxgrid,pi_in,pj_in,pi_out,pj_out,pstart,nthreads)
 #endif
   for(m=0; m<nblocks; m++) {
     int i1, j1, ij;
@@ -628,13 +628,13 @@ nxgrid = 0;
   }
   lon_out_min = lon_out_min_list[ij];
   lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
+  dx = lon_out_avg[ij] - lon_in_avg;
   if(dx < -M_PI ) {
     lon_out_min += TPI;
     lon_out_max += TPI;
     for (l=0; l<n2_in; l++) x2_in[l] += TPI;
   }
-        else if (dx >  M_PI) {
+  else if (dx >  M_PI) {
     lon_out_min -= TPI;
     lon_out_max -= TPI;
     for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
@@ -645,14 +645,14 @@ nxgrid = 0;
   */
   if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
   if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
+    double min_area;
     int    nn;
     xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
     min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
     if( xarea/min_area > AREA_RATIO_THRESH ) {
       pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-        error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+      if(pnxgrid[m]>= MAXXGRID/nthreads)
+  error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
       nn = pstart[m] + pnxgrid[m]-1;
 
       pxgrid_area[nn] = xarea;
@@ -722,22 +722,22 @@ nxgrid = 0;
 ********************************************************************************/
 #ifndef __AIX
 int create_xgrid_2dx2d_order2_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-             const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-             double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+       double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_2dx2d_order2(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+             j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
 
 };
 #endif
 #ifdef _OPENACC
 int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
 #define MAX_V 8
@@ -848,14 +848,14 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   }
   lon_out_min = lon_out_min_list[ij];
   lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
+  dx = lon_out_avg[ij] - lon_in_avg;
   if(dx < -M_PI ) {
     lon_out_min += TPI;
     lon_out_max += TPI;
 #pragma acc loop seq
     for (l=0; l<n2_in; l++) x2_in[l] += TPI;
   }
-        else if (dx >  M_PI) {
+  else if (dx >  M_PI) {
     lon_out_min -= TPI;
     lon_out_max -= TPI;
 #pragma acc loop seq
@@ -868,7 +868,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
   n_out = 1;
   if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
+    double min_area;
     xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
     min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
     if( xarea/min_area > AREA_RATIO_THRESH ) {
@@ -904,9 +904,9 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 };/* get_xgrid_2Dx2D_order2 */
 #else
 int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
 #define MAX_V 8
@@ -997,8 +997,8 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
   lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
 #pragma omp parallel for default(none) shared(nx2,ny2,nx2p,lon_out,lat_out,lat_out_min_list, \
-                                              lat_out_max_list,lon_out_min_list,lon_out_max_list, \
-                                              lon_out_avg,n2_list,lon_out_list,lat_out_list)
+                lat_out_max_list,lon_out_min_list,lon_out_max_list, \
+                lon_out_avg,n2_list,lon_out_list,lat_out_list)
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
     double x2_in[MV], y2_in[MV];
@@ -1029,11 +1029,11 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 nxgrid = 0;
 
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
-                                              istart2,iend2,nx2,lat_out_min_list,lat_out_max_list, \
-                                              n2_list,lon_out_list,lat_out_list,lon_out_min_list, \
-                                              lon_out_max_list,lon_out_avg,area_in,area_out, \
-                                              pxgrid_area,pnxgrid,pxgrid_clon,pxgrid_clat,pi_in, \
-                                              pj_in,pi_out,pj_out,pstart,nthreads)
+                istart2,iend2,nx2,lat_out_min_list,lat_out_max_list, \
+                n2_list,lon_out_list,lat_out_list,lon_out_min_list, \
+                lon_out_max_list,lon_out_avg,area_in,area_out, \
+                pxgrid_area,pnxgrid,pxgrid_clon,pxgrid_clat,pi_in, \
+                pj_in,pi_out,pj_out,pstart,nthreads)
   for(m=0; m<nblocks; m++) {
     int i1, j1, ij;
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
@@ -1070,13 +1070,13 @@ nxgrid = 0;
   }
   lon_out_min = lon_out_min_list[ij];
   lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
+  dx = lon_out_avg[ij] - lon_in_avg;
   if(dx < -M_PI ) {
     lon_out_min += TPI;
     lon_out_max += TPI;
     for (l=0; l<n2_in; l++) x2_in[l] += TPI;
   }
-        else if (dx >  M_PI) {
+  else if (dx >  M_PI) {
     lon_out_min -= TPI;
     lon_out_max -= TPI;
     for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
@@ -1087,14 +1087,14 @@ nxgrid = 0;
  *      */
   if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
   if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
+    double min_area;
     int nn;
     xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
     min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
     if( xarea/min_area > AREA_RATIO_THRESH ) {
       pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-        error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+      if(pnxgrid[m]>= MAXXGRID/nthreads)
+  error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
       nn = pstart[m] + pnxgrid[m]-1;
       pxgrid_area[nn] = xarea;
       pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
@@ -1163,22 +1163,22 @@ nxgrid = 0;
 
 #ifndef __AIX
 int create_xgrid_great_circle_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_great_circle(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out,
-            mask_in, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+      mask_in, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
 
   return nxgrid;
 };
 #endif
 
 int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, ny1p, ny2p, nxgrid, n1_in, n2_in;
@@ -1240,7 +1240,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
       x2_in[3] = x2[n3]; y2_in[3] = y2[n3]; z2_in[3] = z2[n3];
 
       if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
-                x_out, y_out, z_out)) > 0) {
+    x_out, y_out, z_out)) > 0) {
   xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
   min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
   if( xarea/min_area > AREA_RATIO_THRESH ) {
