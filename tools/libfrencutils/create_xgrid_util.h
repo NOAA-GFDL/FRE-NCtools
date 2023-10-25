@@ -23,15 +23,13 @@
 #define MAXXGRID 1e6
 #endif
 
+#include "globals.h"
+
 #define MV 50
 /* this value is small compare to earth area */
 
-void malloc_minmaxavg_lists(const int n,
-                            double **lon_min_list, double **lon_max_list, double **lat_min_list, double **lat_max_list,
-                            int **n_list, double **lon_avg, double **lon_list, double **lat_list);
-void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat,
-                         double *lon_min_list, double *lon_max_list, double *lat_min_list, double *lat_max_list,
-                         int *n_list, double *lon_avg, double *lon_list, double *lat_list);
+void malloc_minmaxavg_lists(const int n, Minmaxavg_lists *minmaxavg_lists);
+void get_minmaxavg_lists(const int nx, const int ny, const double *lon, const double *lat, Minmaxavg_lists *minmaxavg_lists);
 #pragma acc routine seq
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
 #pragma acc routine seq

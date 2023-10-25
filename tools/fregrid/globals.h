@@ -96,7 +96,7 @@ typedef struct {
   char   area_name[STRING];
   int    do_regrid;
   int    is_axis_data;
-  int    dimsize[5];  
+  int    dimsize[5];
 } Var_config;
 
 typedef struct {
@@ -121,11 +121,11 @@ typedef struct {
   int  bndid;
   int  size;
   nc_type type;
-  char cart; 
+  char cart;
   int  bndtype;
   int  is_defined;
   double *bnddata;
-  double *data; 
+  double *data;
 } Axis_config;
 
 typedef struct {
@@ -235,5 +235,16 @@ typedef struct{
   double *f_max;
   double *f_min;
 } Monotone_config;
+
+typedef struct{
+  double *lat_min_list;
+  double *lat_max_list;
+  double *lon_min_list;
+  double *lon_max_list;
+  double *lon_avg;
+  double *lon_list;
+  double *lat_list;
+  int *n_list;
+} Minmaxavg_lists;
 
 #endif

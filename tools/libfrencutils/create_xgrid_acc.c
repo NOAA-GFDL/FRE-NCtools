@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "globals.h"
 #include "mosaic_util.h"
 #include "create_xgrid.h"
 #include "create_xgrid_util.h"
@@ -37,10 +38,8 @@
 *******************************************************************************/
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                  const double *lon_out_min_list, const double *lon_out_max_list, const double *lon_out_avg,
-                                  const double *lat_out_min_list, const double *lat_out_max_list, const int *n2_list,
-                                  const double *lon_out_list, const double *lat_out_list,
-                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  Minmaxavg_lists *out_minmaxavg_lists, const double *mask_in,
+                                  int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
@@ -68,14 +67,15 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
 #pragma acc data present(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)])
 #pragma acc data present(lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)], mask_in[0:nx1*ny1])
-#pragma acc data present(lon_out_list[0:MAX_V*nx2*ny2], lat_out_list[0:MAX_V*nx2*ny2],	\
-                         lat_out_min_list[0:nx2*ny2], lat_out_max_list[0:nx2*ny2], \
-                         lon_out_min_list[0:nx2*ny2], lon_out_max_list[0:nx2*ny2], \
-                         lon_out_avg[0:nx2*ny2], n2_list[0:nx2*ny2])
+#pragma acc data present(out_minmaxavg_lists->lon_list[0:MAX_V*nx2*ny2], out_minmaxavg_lists->lat_list[0:MAX_V*nx2*ny2])
+#pragma acc data present(out_minmaxavg_lists->n_list[0:nx2*ny2], out_minmaxavg_lists->lon_avg[0:nx2*ny2])
+#pragma acc data present(out_minmaxavg_lists->lat_min_list[0:nx2*ny2], out_minmaxavg_lists->lat_max_list[0:nx2*ny2])
+#pragma acc data present(out_minmaxavg_lists->lon_min_list[0:nx2*ny2], out_minmaxavg_lists->lon_max_list[0:nx2*ny2])
 #pragma acc data present(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
                          i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
 #pragma acc data copyin(area_in[0:nx1*ny1], area_out[0:nx2*ny2])
-#pragma acc kernels copy(nxgrid)
+#pragma acc data copy(nxgrid)
+#pragma acc kernels
 {
 #pragma acc loop independent collapse(2) //reduction(+:nxgrid)
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
@@ -103,17 +103,17 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
         i2 = ij%nx2;
         j2 = ij/nx2;
 
-        if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
+        if(out_minmaxavg_lists->lat_min_list[ij] >= lat_in_max || out_minmaxavg_lists->lat_max_list[ij] <= lat_in_min ) continue;
         /* adjust x2_in according to lon_in_avg*/
-        n2_in = n2_list[ij];
+        n2_in = out_minmaxavg_lists->n_list[ij];
 #pragma acc loop seq
         for(l=0; l<n2_in; l++) {
-          x2_in[l] = lon_out_list[ij*MAX_V+l];
-          y2_in[l] = lat_out_list[ij*MAX_V+l];
+          x2_in[l] = out_minmaxavg_lists->lon_list[ij*MAX_V+l];
+          y2_in[l] = out_minmaxavg_lists->lat_list[ij*MAX_V+l];
         }
-        lon_out_min = lon_out_min_list[ij];
-        lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
+        lon_out_min = out_minmaxavg_lists->lon_min_list[ij];
+        lon_out_max = out_minmaxavg_lists->lon_max_list[ij];
+        dx = out_minmaxavg_lists->lon_avg[ij] - lon_in_avg;
         if(dx < -M_PI ) {
           lon_out_min += TPI;
           lon_out_max += TPI;
