@@ -27,8 +27,17 @@ void read_remap_file( int ntiles_in, int ntiles_out, Grid_config *grid_out,
 void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **j_out,
                           double **xgrid_area, double **xgrid_clon, double **xgrid_clat );
 
-void get_CellStruct(const tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
+void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
                     double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
                     CellStruct *cell_in);
+
+void get_interp( const int opcode, const int nxgrid, Interp_config *interp, const int m, const int n,
+                 const int *i_in, const int *j_in, const int *i_out, const int *j_out,
+                 const double *xgrid_clon, const double *xgrid_clat, const double *xgrid_area ) ;
+
+void get_jstart_jend( const int nx_out, const int ny_out, const int nx_in, const int ny_in,
+                      const double *lat_out, const double *lat_in,
+                      int *jstart, int *jend, int *ny_now ) ;
+
 
 #endif

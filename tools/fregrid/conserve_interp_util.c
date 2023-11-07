@@ -1,4 +1,4 @@
-/***********************************************************************
+ /***********************************************************************
  *                   GNU Lesser General Public License
  *
  * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
@@ -26,6 +26,7 @@
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
+#include "mosaic_util.h"
 #include "conserve_interp_util.h"
 
 /*******************************************************************************
@@ -194,5 +195,99 @@ void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i
     free(g_clon);
     free(g_clat);
   }
+
+}
+/*******************************************************************************
+void get_interp
+********************************************************************************/
+void get_interp( const int opcode, const int nxgrid, Interp_config *interp, const int m, const int n,
+                 const int *i_in, const int *j_in, const int *i_out, const int *j_out,
+                 const double *xgrid_clon, const double *xgrid_clat, const double *xgrid_area )
+{
+
+  int nxgrid_prev;
+  int i;
+
+  if(nxgrid > 0) {
+    nxgrid_prev = interp[n].nxgrid;
+    interp[n].nxgrid += nxgrid;
+    if(nxgrid_prev == 0 ) {
+      interp[n].i_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
+      interp[n].j_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
+      interp[n].i_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
+      interp[n].j_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
+      interp[n].area   = (double *)malloc(interp[n].nxgrid*sizeof(double));
+      interp[n].t_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
+      for(i=0; i<interp[n].nxgrid; i++) {
+        interp[n].t_in [i] = m;
+        interp[n].i_in [i] = i_in [i];
+        interp[n].j_in [i] = j_in [i];
+        interp[n].i_out[i] = i_out[i];
+        interp[n].j_out[i] = j_out[i];
+        interp[n].area[i]  = xgrid_area[i];
+      }
+      if(opcode & CONSERVE_ORDER2) {
+        interp[n].di_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
+        interp[n].dj_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
+        for(i=0; i<interp[n].nxgrid; i++) {
+          interp[n].di_in [i] = xgrid_clon[i]/xgrid_area[i];
+          interp[n].dj_in [i] = xgrid_clat[i]/xgrid_area[i];
+        }
+      }
+    }
+    else {
+      interp[n].i_in   = (int    *)realloc(interp[n].i_in,  interp[n].nxgrid*sizeof(int   ));
+      interp[n].j_in   = (int    *)realloc(interp[n].j_in,  interp[n].nxgrid*sizeof(int   ));
+      interp[n].i_out  = (int    *)realloc(interp[n].i_out, interp[n].nxgrid*sizeof(int   ));
+      interp[n].j_out  = (int    *)realloc(interp[n].j_out, interp[n].nxgrid*sizeof(int   ));
+      interp[n].area   = (double *)realloc(interp[n].area,  interp[n].nxgrid*sizeof(double));
+      interp[n].t_in   = (int    *)realloc(interp[n].t_in,  interp[n].nxgrid*sizeof(int   ));
+      for(i=0; i<nxgrid; i++) {
+        interp[n].t_in [nxgrid_prev+i] = m;
+        interp[n].i_in [nxgrid_prev+i] = i_in [i];
+        interp[n].j_in [nxgrid_prev+i] = j_in [i];
+        interp[n].i_out[nxgrid_prev+i] = i_out[i];
+        interp[n].j_out[nxgrid_prev+i] = j_out[i];
+        interp[n].area [nxgrid_prev+i] = xgrid_area[i];
+      }
+      if(opcode & CONSERVE_ORDER2) {
+        interp[n].di_in   = (double *)realloc(interp[n].di_in, interp[n].nxgrid*sizeof(double));
+        interp[n].dj_in   = (double *)realloc(interp[n].dj_in, interp[n].nxgrid*sizeof(double));
+        for(i=0; i<nxgrid; i++) {
+          interp[n].di_in [i+nxgrid_prev] = xgrid_clon[i]/xgrid_area[i];
+          interp[n].dj_in [i+nxgrid_prev] = xgrid_clat[i]/xgrid_area[i];
+        }
+      }
+    }
+  }  /* if(nxgrid>0) */
+
+}
+/*******************************************************************************
+void get_jstart_jend
+********************************************************************************/
+void get_jstart_jend( const int nx_out, const int ny_out, const int nx_in, const int ny_in,
+                      const double *lat_out, const double *lat_in,
+                      int *jstart, int *jend, int *ny_now )
+{
+
+  double y_min, y_max, yy ;
+  int i, j;
+
+  y_min = minval_double((nx_out+1)*(ny_out+1), lat_out);
+  y_max = maxval_double((nx_out+1)*(ny_out+1), lat_out);
+  *jstart = ny_in; *jend = -1;
+  for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
+      yy = lat_in[j*(nx_in+1)+i];
+      if( yy > y_min ) {
+        if(j < *jstart ) *jstart = j;
+      }
+      if( yy < y_max ) {
+        if(j > *jend ) *jend = j;
+      }
+
+    }
+  *jstart = max(0, *jstart-1);
+  *jend   = min(ny_in-1, *jend+1);
+  *ny_now = *jend-*jstart+1;
 
 }
