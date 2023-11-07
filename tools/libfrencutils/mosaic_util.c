@@ -74,16 +74,6 @@ void error_handler(const char *msg)
   exit(1);
 #endif //ifdef use_libMPI
 
-#else
-
-  printf("Fatal Error: %s\n", msg);
-  //IMPERATIVE.  Must incorporate error handling
-  //#ifdef use_libMPI
-  //  MPI_Abort(MPI_COMM_WORLD, -1);
-  //#else
-  //  exit statements do not exist for OpenACC yet.
-  //#endif
-
 #endif //ifndef _OPENACC
 
 
