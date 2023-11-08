@@ -158,7 +158,9 @@ void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **
 
 /*******************************************************************************
   void get_CellStruct
-  populate CellStruct
+  Gathers exchange grid information from all ranks and
+  stores information in cell_in structure.
+  Cell_in holds stores exchange grid information for each input parent cell
 *******************************************************************************/
 void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
                     double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
@@ -198,7 +200,8 @@ void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i
 
 }
 /*******************************************************************************
-void get_interp
+  void get_interp
+  stores exchange grid information to the interp structure
 ********************************************************************************/
 void get_interp( const int opcode, const int nxgrid, Interp_config *interp, const int m, const int n,
                  const int *i_in, const int *j_in, const int *i_out, const int *j_out,
@@ -263,7 +266,9 @@ void get_interp( const int opcode, const int nxgrid, Interp_config *interp, cons
 
 }
 /*******************************************************************************
-void get_jstart_jend
+  void get_jstart_jend
+  get the starting and ending indices of the input grid that
+  overlaps with the output grid
 ********************************************************************************/
 void get_jstart_jend( const int nx_out, const int ny_out, const int nx_in, const int ny_in,
                       const double *lat_out, const double *lat_in,
