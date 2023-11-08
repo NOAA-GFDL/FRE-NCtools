@@ -139,22 +139,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
           get_jstart_jend( nx_out, ny_out, nx_in, ny_in,
                            grid_out[n].latc, grid_in[m].latc, &jstart, &jend, &ny_now);
-          /*y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-          y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-          jstart = ny_in; jend = -1;
-          for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
-              yy = grid_in[m].latc[j*(nx_in+1)+i];
-              if( yy > y_min ) {
-                if(j < jstart ) jstart = j;
-              }
-              if( yy < y_max ) {
-                if(j > jend ) jend = j;
-              }
-
-            }
-          jstart = max(0, jstart-1);
-          jend   = min(ny_in-1, jend+1);
-          ny_now = jend-jstart+1;*/
 
           if(opcode & CONSERVE_ORDER1) {
             mxxgrid=get_maxxgrid();
