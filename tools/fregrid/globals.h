@@ -237,7 +237,7 @@ typedef struct{
 } Monotone_config;
 
 
-/* Structure that stores exchange grid information
+/* Structure that stores exchange grid information */
 typedef struct{
   double *area;
   double *clon;
