@@ -160,7 +160,7 @@ void malloc_xgrid_arrays( int nsize, int **i_in, int **j_in, int **i_out, int **
   void get_CellStruct
   Gathers exchange grid information from all ranks and
   stores information in cell_in structure.
-  Cell_in holds stores exchange grid information for each input parent cell
+  Cell_in stores exchange grid information corresponding to each input parent cell
 *******************************************************************************/
 void get_CellStruct(const int tile_in, const int nx_in, const int nxgrid, int *i_in, int *j_in,
                     double *xgrid_area, double *xgrid_clon, double *xgrid_clat,
