@@ -236,6 +236,14 @@ typedef struct{
   double *f_min;
 } Monotone_config;
 
+
+/* Structure that stores exchange grid information */
+typedef struct{
+  double *area;
+  double *clon;
+  double *clat;
+  } CellStruct;
+
 typedef struct{
   double *lat_min_list;
   double *lat_max_list;
