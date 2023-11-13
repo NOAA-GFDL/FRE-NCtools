@@ -135,10 +135,10 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         }
         else {
           if(opcode & CONSERVE_ORDER1) {
-            do_create_xgrid_order1;
+            do_create_xgrid_order1(n, m, grid_in, grid_out, interp, opcode);
           }
           else if(opcode & CONSERVE_ORDER2) {
-            do_create_xgrid_order2;
+            do_create_xgrid_order2(n, m, grid_in, grid_out, cell_in, interp, opcode);
           }
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
