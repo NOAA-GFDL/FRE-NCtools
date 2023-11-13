@@ -134,6 +134,10 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
           nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                              grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
                                              mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+          get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
+                      xgrid_clon, xgrid_clat, xgrid_area );
+          malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+
         }
         else {
 
@@ -148,7 +152,10 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
                                                mask, i_in, j_in, i_out, j_out, xgrid_area);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
             free(mask);
-#pragma acc exit data delete(mask)
+            get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
+                        xgrid_clon, xgrid_clat, xgrid_area );
+            malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+
           } //opcode CONSERVE_ORDER1
 
           else if(opcode & CONSERVE_ORDER2) {
@@ -183,17 +190,17 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
             /* For the purpose of bitiwise reproducing, the following operation is needed. */
             get_CellStruct(m,nx_in, nxgrid, i_in, j_in, xgrid_area, xgrid_clon, xgrid_clat, cell_in);
+            get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
+                        xgrid_clon, xgrid_clat, xgrid_area );
+
+            malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+
 
           } //opcode CONSERVE_ORDER2
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
         } // opcode GREAT_CIRCLE or CONSERVE_ORDERs
 
-
-        get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
-                    xgrid_clon, xgrid_clat, xgrid_area );
-
-        malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
 #pragma acc exit data delete(grid_in[m].latc, grid_in[m].lonc)
 
       } // ntiles_in
