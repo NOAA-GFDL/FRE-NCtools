@@ -114,8 +114,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
       //START NTILES_IN
       for(m=0; m<ntiles_in; m++) {
-        double *mask, y_min, y_max, yy;
-        int jstart, jend, ny_now, j;
+        double *mask;
 
         nx_in = grid_in[m].nx;
         ny_in = grid_in[m].ny;
