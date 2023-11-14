@@ -22,6 +22,11 @@
 
 #include "globals.h"
 
+int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+                                          const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                          Minmaxavg_lists *out_minmaxavg_lists, const double *mask_in,
+                                          int *counts_per_ij2, int *ij2_start, int *ij2_end, int nxgrid) ;
+
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
             Minmaxavg_lists *out_minmaxavg_lists, const double *mask_in,
