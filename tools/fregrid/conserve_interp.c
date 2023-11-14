@@ -50,8 +50,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 {
   int    n, m, i, ii, jj, nx_in, ny_in, nx_out, ny_out, tile;
   size_t nxgrid, nxgrid_prev;
-  int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
-  double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
   int mxxgrid, zero=0;
 
   CellStruct *cell_in;
@@ -126,7 +124,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
             do_create_xgrid_order1(n, m, grid_in, grid_out, interp, opcode);
           }
           else if(opcode & CONSERVE_ORDER2) {
-            do_create_xgrid_order2(n, m, grid_in, grid_out, cell_in, interp, opcode);
+            do_create_xgrid_order2(n, m, grid_in, grid_out, &out_minmaxavg_lists, cell_in, interp, opcode);
           }
           else
             mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
@@ -313,8 +311,6 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     free(area2);
 
   }
-
-  malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
 
 }; /* setup_conserve_interp */
 
@@ -867,7 +863,8 @@ void do_create_xgrid_order1( const int n, const int m,
 }
 
 void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_in, const Grid_config *grid_out,
-                             CellStruct *cell_in, Interp_config *interp, unsigned int opcode )
+                             Minmaxavg_lists *out_minmaxavg_lists, CellStruct *cell_in, Interp_config *interp,
+                             unsigned int opcode )
 {
 
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL ;
@@ -905,7 +902,7 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
 #ifdef _OPENACC
   nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                          grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                         &out_minmaxavg_lists, mask, i_in, j_in, i_out, j_out,
+                                         out_minmaxavg_lists, mask, i_in, j_in, i_out, j_out,
                                          xgrid_area, xgrid_clon, xgrid_clat);
 #else
   nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
