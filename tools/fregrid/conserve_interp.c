@@ -114,23 +114,12 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 
       //START NTILES_IN
       for(m=0; m<ntiles_in; m++) {
-        double *mask;
 
         nx_in = grid_in[m].nx;
         ny_in = grid_in[m].ny;
 
         if(opcode & GREAT_CIRCLE) {
-          mask = (double *)malloc(nx_in*ny_in*sizeof(double));
-          for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
-          mxxgrid=get_maxxgrid();
-          malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
-          nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
-                                             grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
-                                             mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-          get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
-                      xgrid_clon, xgrid_clat, xgrid_area );
-          malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
-
+          do_great_circle(n, m, grid_in, grid_out, interp, opcode) ;
         }
         else {
           if(opcode & CONSERVE_ORDER1) {
@@ -935,12 +924,42 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   for(int i=0; i<nxgrid; i++) j_in[i] += jstart;
 
   /* For the purpose of bitiwise reproducing, the following operation is needed. */
-  get_CellStruct(m,nx_in, nxgrid, i_in, j_in, xgrid_area, xgrid_clon, xgrid_clat, cell_in);
+  get_CellStruct(m, nx_in, nxgrid, i_in, j_in, xgrid_area, xgrid_clon, xgrid_clat, cell_in);
   get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
               xgrid_clon, xgrid_clat, xgrid_area );
 
   malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
 
 #pragma acc exit data delete(grid_in[m].latc, grid_in[m].lonc)
+
+}
+
+void do_great_circle( const int n, const int m, const Grid_config *grid_in, const Grid_config *grid_out,
+                      Interp_config *interp, unsigned int opcode)
+{
+
+  int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL ;
+  double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL ;
+  double *mask;
+
+  int nx_out, ny_out, nx_in, ny_in ;
+  int mxxgrid, nxgrid;
+  int zero=0;
+
+  nx_out = grid_out[n].nxc;
+  ny_out = grid_out[n].nyc;
+  nx_in = grid_in[m].nx;
+  ny_in = grid_in[m].ny;
+
+  mask = (double *)malloc(nx_in*ny_in*sizeof(double));
+  for(int i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
+  mxxgrid=get_maxxgrid();
+  malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
+  nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
+                                     grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
+                                     mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+  get_interp( opcode, nxgrid, interp, m, n, i_in, j_in, i_out, j_out,
+              xgrid_clon, xgrid_clat, xgrid_area );
+  malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
 
 }
