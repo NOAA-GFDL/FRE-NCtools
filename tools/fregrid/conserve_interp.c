@@ -871,12 +871,14 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL ;
   double *mask;
 
-  int mxxgrid, nxgrid;
+  int mxxgrid, nxgrid, approx_nxgrid;
   int nx_out, ny_out, nx_in, ny_in ;
   int jstart, jend, ny_now;
 
   int zero=0;
   clock_t time_start, time_end, time_nxgrid;
+
+  int *counts_per_ij1, *ij2_start, *ij2_end;
 
   time_start = clock();
 
@@ -885,29 +887,43 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   nx_in = grid_in[m].nx;
   ny_in = grid_in[m].ny;
 
+  get_jstart_jend( nx_out, ny_out, nx_in, ny_in,
+                   grid_out[n].latc, grid_in[m].latc, &jstart, &jend, &ny_now);
+
   mask = (double *)malloc(nx_in*ny_in*sizeof(double));
   for(int i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
-  get_jstart_jend( nx_out, ny_out, nx_in, ny_in,
-                   grid_out[n].latc, grid_in[m].latc, &jstart, &jend, &ny_now);
-  mxxgrid=get_maxxgrid();
-  malloc_xgrid_arrays(mxxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+  counts_per_ij1 = (int *)malloc( nx_in*ny_in*sizeof(int) );
+  ij2_start = (int *)malloc( nx_in*ny_in*sizeof(int) );
+  ij2_end = (int *)malloc( nx_in*ny_in*sizeof(int) );
 
-//CHECK THIS, might not be from 0
 #pragma acc enter data copyin(grid_in[m].latc[0:(nx_in+1)*(ny_in+1)], \
                               grid_in[m].lonc[0:(nx_in+1)*(ny_in+1)], mask[0:nx_in*ny_in])
 #pragma acc enter data create(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
                               i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
+#pragma acc enter data create(counts_per_ij1[0:nx_in*ny_in], ij2_start[0:nx_in*ny_in], ij2_end[0:nx_in*ny_in])
 
 #ifdef _OPENACC
+
+  approx_nxgrid = prepare_create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+                                                 grid_in[m].latc+jstart*(nx_in+1), grid_out[n].lonc, grid_out[n].latc,
+                                                 out_minmaxavg_lists, mask, counts_per_ij1, ij2_start, ij2_end );
+
+  printf("acc1 %d\n", approx_nxgrid);
+
   nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
-                                         grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                         out_minmaxavg_lists, mask, i_in, j_in, i_out, j_out,
-                                         xgrid_area, xgrid_clon, xgrid_clat);
+                                         grid_in[m].latc+jstart*(nx_in+1), grid_out[n].lonc, grid_out[n].latc,
+                                         out_minmaxavg_lists, mask, approx_nxgrid, counts_per_ij1, ij2_start, ij2_end,
+                                         i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+
+  printf("acc2 %d\n", nxgrid);
+
 #else
+
   nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                      grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
                                      mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+
 #endif
   if(DEBUG) printf("nxgrid, m, & n is: %d %d %d\n",nxgrid, m, n);
   time_end = clock();
