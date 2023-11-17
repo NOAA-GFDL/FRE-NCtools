@@ -871,14 +871,14 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL ;
   double *mask;
 
-  int mxxgrid, nxgrid, approx_nxgrid;
+  int nxgrid, approx_nxgrid;
   int nx_out, ny_out, nx_in, ny_in ;
   int jstart, jend, ny_now;
 
   int zero=0;
   clock_t time_start, time_end, time_nxgrid;
 
-  int *counts_per_ij1, *ij2_start, *ij2_end;
+  int *counts_per_ij1=NULL, *ij2_start=NULL, *ij2_end=NULL;
 
   time_start = clock();
 
