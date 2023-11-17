@@ -45,7 +45,7 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
 
 #define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p;
-  size_t nxgrid;
+  size_t approx_nxgrid;
 
   nx1 = *nlon_in;
   ny1 = *nlat_in;
@@ -54,7 +54,7 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
 
-  nxgrid = 0;
+  approx_nxgrid = 0;
 
 #pragma acc data present(lon_out[0:(nx2+1)*(ny2+1)], lat_out[0:(nx2+1)*(ny2+1)])
 #pragma acc data present(lon_in[0:(nx1+1)*(ny1+1)], lat_in[0:(nx1+1)*(ny1+1)], mask_in[0:nx1*ny1])
@@ -63,10 +63,10 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
 #pragma acc data present(out_minmaxavg_lists->lat_min_list[0:nx2*ny2], out_minmaxavg_lists->lat_max_list[0:nx2*ny2])
 #pragma acc data present(out_minmaxavg_lists->lon_min_list[0:nx2*ny2], out_minmaxavg_lists->lon_max_list[0:nx2*ny2])
 #pragma acc data present(counts_per_ij1[0:nx1*ny1], ij2_start[0:nx1*ny1], ij2_end[0:nx1*ny1])
-#pragma acc data copy(nxgrid)
+#pragma acc data copy(approx_nxgrid)
 #pragma acc parallel
 {
-#pragma acc loop independent reduction(+:nxgrid)
+#pragma acc loop independent reduction(+:approx_nxgrid)
   for( int ij1=0 ; ij1 < nx1*ny1 ; ij1++) {
 
     int i1, j1;
@@ -97,7 +97,7 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
       lon_in_max = maxval_double(n1_in, x1_in);
       lon_in_avg = avgval_double(n1_in, x1_in);
 
-#pragma acc loop independent reduction(+:nxgrid) reduction(+:icount) reduction(min:ij2_min) reduction(max:ij2_max)
+#pragma acc loop independent reduction(+:approx_nxgrid) reduction(+:icount) reduction(min:ij2_min) reduction(max:ij2_max)
       for(int ij2=0; ij2<nx2*ny2; ij2++) {
 
         int i2, j2, l;
@@ -127,7 +127,7 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
         /* x2_in should in the same range as x1_in after lon_fix, so no need to consider cyclic condition */
         if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
 
-        nxgrid++;
+        approx_nxgrid++;
         icount++;
         ij2_min = min(ij2_min, ij2);
         ij2_max = max(ij2_max, ij2);
@@ -142,7 +142,7 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
   } //ij1
 } //kernel
 
-  return nxgrid;
+  return approx_nxgrid;
 
 }
 
