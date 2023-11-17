@@ -906,18 +906,11 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   approx_nxgrid = prepare_create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                  grid_in[m].latc+jstart*(nx_in+1), grid_out[n].lonc, grid_out[n].latc,
                                                  out_minmaxavg_lists, mask, counts_per_ij1, ij2_start, ij2_end );
-  malloc_xgrid_arrays(approx_nxgrid, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
-#pragma acc enter data create(xgrid_area[0:approx_nxgrid], xgrid_clon[0:approx_nxgrid], xgrid_clat[0:approx_nxgrid], \
-                              i_in[0:approx_nxgrid], j_in[0:approx_nxgrid], i_out[0:approx_nxgrid],j_out[0:approx_nxgrid])
-
-  printf("approx_nxgrid %d\n", approx_nxgrid);
 
   nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                          grid_in[m].latc+jstart*(nx_in+1), grid_out[n].lonc, grid_out[n].latc,
                                          out_minmaxavg_lists, mask, approx_nxgrid, counts_per_ij1, ij2_start, ij2_end,
-                                         i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-  printf("nxgrid %d\n", nxgrid);
-
+                                         &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon, &xgrid_clat);
 #else
 
   nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
@@ -929,11 +922,6 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
   time_end = clock();
   time_nxgrid += 1.0 * (time_end - time_start)/CLOCKS_PER_SEC;
 
-  free(mask);
-#pragma acc exit data delete(mask)
-#pragma acc exit data copyout(xgrid_area[0:mxxgrid], xgrid_clon[0:mxxgrid], xgrid_clat[0:mxxgrid], \
-                              i_in[0:mxxgrid], j_in[0:mxxgrid], i_out[0:mxxgrid],j_out[0:mxxgrid])
-
   for(int i=0; i<nxgrid; i++) j_in[i] += jstart;
 
   /* For the purpose of bitiwise reproducing, the following operation is needed. */
@@ -942,8 +930,14 @@ void do_create_xgrid_order2( const int n, const int m, const Grid_config *grid_i
               xgrid_clon, xgrid_clat, xgrid_area );
 
   malloc_xgrid_arrays(zero, &i_in, &j_in, &i_out, &j_out, &xgrid_area, &xgrid_clon , &xgrid_clat);
+  free(mask);
+  free(counts_per_ij1);
+  free(ij2_start);
+  free(ij2_end);
 
 #pragma acc exit data delete(grid_in[m].latc, grid_in[m].lonc)
+#pragma acc exit data delete(mask)
+#pragma acc exit data delete(counts_per_ij1, ij2_start, ij2_end)
 
 }
 
