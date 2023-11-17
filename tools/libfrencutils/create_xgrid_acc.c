@@ -127,6 +127,9 @@ int prepare_create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in
         /* x2_in should in the same range as x1_in after lon_fix, so no need to consider cyclic condition */
         if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
 
+
+        //Note, the check for AREA_RATIO_THRESH has been removed
+        //Thus, the computed value of approx_nxgrid will be equal to or greater than nxgrid
         approx_nxgrid++;
         icount++;
         ij2_min = min(ij2_min, ij2);
@@ -175,6 +178,9 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
 
+  //Temporarily holds information about exchange grid cells.
+  //Not all elements of these arrays will be filled in because
+  //approx_nxgrid >= nxgrid
   i_in2 = (int *)malloc(approx_nxgrid*sizeof(int));
   j_in2 = (int *)malloc(approx_nxgrid*sizeof(int));
   i_out2 = (int *)malloc(approx_nxgrid*sizeof(int));
@@ -232,6 +238,8 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
       lon_in_avg = avgval_double(n1_in, x1_in);
 
       ixgrid=0;
+      // ij1_start, the total number of exchange grid cells computed for input cell ij1
+      // is an approximation.
       ij1_start=0;
       if(ij1>0) {
 #pragma acc loop seq
@@ -298,6 +306,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
  free(area_in);
  free(area_out);
 
+ // record data
  *i_in=(int *)malloc(nxgrid*sizeof(int));
  *j_in=(int *)malloc(nxgrid*sizeof(int));
  *i_out=(int *)malloc(nxgrid*sizeof(int));
