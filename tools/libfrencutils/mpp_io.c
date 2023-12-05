@@ -1025,7 +1025,6 @@ void mpp_def_var_att_double(int fid, int vid, const char *attname, double attval
 void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shuffle) {
     // return if user is requesting no deflation
     if (user_deflation == 0) {
-        //printf("Not compressing due to option\n");
         return;
     }
 
@@ -1038,9 +1037,7 @@ void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shu
         sprintf(errmsg, "mpp_io(mpp_set_deflation): Error in getting determining netcdf version");
         netcdf_error(errmsg, status);
     }
-    //printf("Input: filename=%s, nvar=%i, format=%i\n", files[fid_in].name, files[fid_in].nvar, format);
     if (format == NC_FORMAT_CLASSIC || format == NC_FORMAT_64BIT) {
-        //printf("Not compressing because input file is NetCDF3\n");
         return;
     }
 
@@ -1064,7 +1061,6 @@ void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shu
                 sprintf(errmsg, "mpp_io(mpp_set_deflation): Error in getting deflation level");
                 netcdf_error(errmsg, status);
             }
-            //printf("Input: var=%s, shuffle=%i, deflate=%i, deflation=%i\n", files[fid_in].var[vid_in].name, shuffle_in, deflate_in, deflation_in);
 
             if (user_deflation == -1)
                 deflation_out = deflation_in;
@@ -1082,7 +1078,6 @@ void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shu
         }
 
         // set compression level
-        //printf("Output: var=%s, shuffle=%i, deflation=%i\n", files[fid_out].var[vid_out].name, shuffle_out, deflation_out);
         status = nc_def_var_deflate(files[fid_out].ncid, files[fid_out].var[vid_out].fldid, shuffle_out, deflation_out, deflation_out);
         if (status != NC_NOERR) {
             sprintf(errmsg, "mpp_io(mpp_set_deflation): Error in setting deflation level");
