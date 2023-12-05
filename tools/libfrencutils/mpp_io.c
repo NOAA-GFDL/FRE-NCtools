@@ -1056,6 +1056,9 @@ void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shu
             mpp_get_varname(fid_in, vid_out, varname);
             vid_in = mpp_get_varid(fid_in, varname);
 
+            // Note: MPP variable IDs, such as vid_in above, are not the same as the netCDF variable ID
+            // used in native netCDF routines such as nc_inq_var_deflate below.
+            // The fldid (field id, probably) data structure contains the netCDF variable ID.
             status = nc_inq_var_deflate(files[fid_in].ncid, files[fid_in].var[vid_in].fldid, &shuffle_in, &deflate_in, &deflation_in);
             if (status != NC_NOERR) {
                 sprintf(errmsg, "mpp_io(mpp_set_deflation): Error in getting deflation level");
