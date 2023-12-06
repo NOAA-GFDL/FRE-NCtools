@@ -27,6 +27,7 @@
 #include "mpp_domain.h"
 #include "mpp_io.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 
 char *usage[] = {
   "",
@@ -42,7 +43,7 @@ char *usage[] = {
   "                                                                             ",
   "--input_file input_file  The file name of previous version grid.             ",
   "                                                                             ",
-  NULL};  
+  NULL};
 const int MAXBOUNDS = 100;
 const int STRINGLEN = 255;
 
@@ -52,8 +53,8 @@ const int SHORTSTRING = 32;
 const char mosaic_version[] = "0.2";
 
 #define PI M_PI
-  
-double *x, *y, *dx, *dy, *area, *angle_dx, *angle_dy; 
+
+double *x, *y, *dx, *dy, *area, *angle_dx, *angle_dy;
 int nx, ny, nxp, nyp;
 char *old_file = NULL;
 
@@ -79,22 +80,22 @@ int main(int argc, char* argv[])
   char atmos_name[128]="atmos", land_name[128]="land", ocean_name[128]="ocean";
   char agrid_file[128], lgrid_file[128], ogrid_file[128];
 
-  int is_coupled_grid = 0, is_ocean_only =1; 
+  int is_coupled_grid = 0, is_ocean_only =1;
   int interp_order=1;
-  
+
   int option_index;
   static struct option long_options[] = {
     {"input_file",       required_argument, NULL, 'o'},
-    {"mosaic_dir",       required_argument, NULL, 'd'},    
+    {"mosaic_dir",       required_argument, NULL, 'd'},
     {NULL, 0, NULL, 0}
   };
 
 /* ----------------------------- */
 
-  mpp_init(&argc, &argv); /* Initilize */ 
+  mpp_init(&argc, &argv); /* Initilize */
   /*mpp_domain_init();  */
   errflg = (argc == 1);
-  
+
   while ((c = getopt_long(argc, argv, "h", long_options, &option_index) ) != -1)
     switch (c) {
       case 'o':
@@ -104,20 +105,20 @@ int main(int argc, char* argv[])
         strcpy(mosaic_dir, optarg);
 	break;
       case '?':
-      errflg++;	
+      errflg++;
     }
 
   if(errflg || !old_file) {
     char **u = usage;
     while (*u) { fprintf(stderr, "%s\n", *u); u++; }
-    exit(2);      
+    exit(2);
   }
 
   for(n=0; n<MAXCONTACT; n++) {
     contact_tile1[n]=0; contact_tile2[n]=0;
   }
-			  
-  
+
+
   if(mpp_field_exist(old_file, "AREA_ATMxOCN") ) is_coupled_grid = 1;
   if(mpp_field_exist(old_file, "AREA_ATM") ) is_ocean_only = 0;
   if(mpp_field_exist(old_file, "DI_ATMxOCN") ) interp_order= 2;
@@ -127,20 +128,20 @@ int main(int argc, char* argv[])
 {
   int nx_C, ny_C, nx_T, ny_T, nvertex;
   int fid_old, vid;
-  
+
   double *x_C, *y_C, *x_T, *y_T;
   double *x_vert_T, *y_vert_T;
   char xaxis_name[255], yaxis_name[255];
-  
 
-  double *ds_00_02_C, *ds_00_20_C, *ds_01_11_C, *ds_01_21_C, *ds_02_22_C, 
-         *ds_10_11_C, *ds_10_12_C, *ds_11_21_C, *ds_11_12_C, *ds_20_22_C, 
-         *ds_01_11_T, *ds_01_21_T, *ds_02_22_T, *ds_10_11_T, *ds_10_12_T, 
+
+  double *ds_00_02_C, *ds_00_20_C, *ds_01_11_C, *ds_01_21_C, *ds_02_22_C,
+         *ds_10_11_C, *ds_10_12_C, *ds_11_21_C, *ds_11_12_C, *ds_20_22_C,
+         *ds_01_11_T, *ds_01_21_T, *ds_02_22_T, *ds_10_11_T, *ds_10_12_T,
          *ds_11_12_T, *ds_11_21_T, *ds_20_22_T, *ds_01_21_E, *ds_10_12_N,
          *ds_00_10_T, *ds_10_20_T, *ds_20_21_T, *ds_21_22_T, *angle_C,
          *angle_T, *angle_E, *angle_N, *x_E, *y_E, *x_N, *y_N;
 
- 
+
   int i,j,k, i1, i2, j1, j2, k0, k1, k2, k3;
   int ji, ji0, ji1, ji2, ji3;
   int j1i1, j1i2, j2i1, j2i2;
@@ -158,58 +159,58 @@ int main(int argc, char* argv[])
   nx_C = nx_T;
   ny_C = ny_T;
 
-  printf("\nReading file: %s \n", old_file); 
+  printf("\nReading file: %s \n", old_file);
 
 
 /* Reading Ocean Grid Variables */
-  x_C = (double *) malloc(ny_C * nx_C * sizeof(double)); 
+  x_C = (double *) malloc(ny_C * nx_C * sizeof(double));
   y_C = (double *) malloc(ny_C * nx_C * sizeof(double));
   x_T = (double *) malloc(ny_T * nx_T * sizeof(double));
   y_T = (double *) malloc(ny_T * nx_T * sizeof(double));
-  x_E = (double *) malloc(ny_C * nx_C * sizeof(double)); 
+  x_E = (double *) malloc(ny_C * nx_C * sizeof(double));
   y_E = (double *) malloc(ny_C * nx_C * sizeof(double));
-  x_N = (double *) malloc(ny_C * nx_C * sizeof(double)); 
-  y_N = (double *) malloc(ny_C * nx_C * sizeof(double));  
+  x_N = (double *) malloc(ny_C * nx_C * sizeof(double));
+  y_N = (double *) malloc(ny_C * nx_C * sizeof(double));
   x_vert_T = (double *) malloc(nvertex*ny_T*nx_T*sizeof(double));
   y_vert_T = (double *) malloc(nvertex*ny_T*nx_T*sizeof(double));
-  ds_01_11_C = (double *) malloc(ny_C * nx_C * sizeof(double)); 
-  ds_10_11_C = (double *) malloc(ny_C * nx_C * sizeof(double)); 
-  ds_11_21_C = (double *) malloc(ny_C * nx_C * sizeof(double)); 
-  ds_11_12_C = (double *) malloc(ny_C * nx_C * sizeof(double)); 
-  ds_01_11_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
-  ds_10_11_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
-  ds_11_12_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
+  ds_01_11_C = (double *) malloc(ny_C * nx_C * sizeof(double));
+  ds_10_11_C = (double *) malloc(ny_C * nx_C * sizeof(double));
+  ds_11_21_C = (double *) malloc(ny_C * nx_C * sizeof(double));
+  ds_11_12_C = (double *) malloc(ny_C * nx_C * sizeof(double));
+  ds_01_11_T = (double *) malloc(ny_T * nx_T * sizeof(double));
+  ds_10_11_T = (double *) malloc(ny_T * nx_T * sizeof(double));
+  ds_11_12_T = (double *) malloc(ny_T * nx_T * sizeof(double));
   ds_11_21_T = (double *) malloc(ny_T * nx_T * sizeof(double));
-  ds_02_22_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
+  ds_02_22_T = (double *) malloc(ny_T * nx_T * sizeof(double));
   ds_20_22_T = (double *) malloc(ny_T * nx_T * sizeof(double));
-  ds_00_10_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
+  ds_00_10_T = (double *) malloc(ny_T * nx_T * sizeof(double));
   ds_10_20_T = (double *) malloc(ny_T * nx_T * sizeof(double));
   ds_20_21_T = (double *) malloc(ny_T * nx_T * sizeof(double));
-  ds_21_22_T = (double *) malloc(ny_T * nx_T * sizeof(double));  
+  ds_21_22_T = (double *) malloc(ny_T * nx_T * sizeof(double));
 
   angle_C    = (double *) malloc(ny_C * nx_C * sizeof(double));
   angle_T    = (double *) malloc(ny_C * nx_C * sizeof(double));
   angle_E    = (double *) malloc(ny_C * nx_C * sizeof(double));
   angle_N    = (double *) malloc(ny_C * nx_C * sizeof(double));
-  
+
   vid = mpp_get_varid(fid_old, "x_C"); mpp_get_var_value(fid_old, vid, x_C);
   vid = mpp_get_varid(fid_old, "y_C"); mpp_get_var_value(fid_old, vid, y_C);
   vid = mpp_get_varid(fid_old, "x_T"); mpp_get_var_value(fid_old, vid, x_T);
   vid = mpp_get_varid(fid_old, "y_T"); mpp_get_var_value(fid_old, vid, y_T);
   vid = mpp_get_varid(fid_old, "x_vert_T"); mpp_get_var_value(fid_old, vid, x_vert_T);
   vid = mpp_get_varid(fid_old, "y_vert_T"); mpp_get_var_value(fid_old, vid, y_vert_T);
-  vid = mpp_get_varid(fid_old, "ds_01_11_C"); mpp_get_var_value(fid_old, vid, ds_01_11_C);  
-  vid = mpp_get_varid(fid_old, "ds_11_21_C"); mpp_get_var_value(fid_old, vid, ds_11_21_C);    
-  vid = mpp_get_varid(fid_old, "ds_01_11_T"); mpp_get_var_value(fid_old, vid, ds_01_11_T);  
+  vid = mpp_get_varid(fid_old, "ds_01_11_C"); mpp_get_var_value(fid_old, vid, ds_01_11_C);
+  vid = mpp_get_varid(fid_old, "ds_11_21_C"); mpp_get_var_value(fid_old, vid, ds_11_21_C);
+  vid = mpp_get_varid(fid_old, "ds_01_11_T"); mpp_get_var_value(fid_old, vid, ds_01_11_T);
   vid = mpp_get_varid(fid_old, "ds_10_11_T"); mpp_get_var_value(fid_old, vid, ds_10_11_T);
-  vid = mpp_get_varid(fid_old, "ds_11_21_T"); mpp_get_var_value(fid_old, vid, ds_11_21_T);    
-  vid = mpp_get_varid(fid_old, "ds_11_12_T"); mpp_get_var_value(fid_old, vid, ds_11_12_T);  
-  vid = mpp_get_varid(fid_old, "ds_02_22_T"); mpp_get_var_value(fid_old, vid, ds_02_22_T);    
-  vid = mpp_get_varid(fid_old, "ds_20_22_T"); mpp_get_var_value(fid_old, vid, ds_20_22_T);  
+  vid = mpp_get_varid(fid_old, "ds_11_21_T"); mpp_get_var_value(fid_old, vid, ds_11_21_T);
+  vid = mpp_get_varid(fid_old, "ds_11_12_T"); mpp_get_var_value(fid_old, vid, ds_11_12_T);
+  vid = mpp_get_varid(fid_old, "ds_02_22_T"); mpp_get_var_value(fid_old, vid, ds_02_22_T);
+  vid = mpp_get_varid(fid_old, "ds_20_22_T"); mpp_get_var_value(fid_old, vid, ds_20_22_T);
   vid = mpp_get_varid(fid_old, "angle_C"); mpp_get_var_value(fid_old, vid, angle_C);
   if(mpp_var_exist(fid_old, "ds_20_21_T")) {
     exist_ds_20_21_T = 1;
-    vid = mpp_get_varid(fid_old, "ds_20_21_T"); mpp_get_var_value(fid_old, vid, ds_20_21_T);  
+    vid = mpp_get_varid(fid_old, "ds_20_21_T"); mpp_get_var_value(fid_old, vid, ds_20_21_T);
   }
   else {
     exist_ds_20_21_T = 0;
@@ -217,35 +218,35 @@ int main(int argc, char* argv[])
   }
   if(mpp_var_exist(fid_old, "ds_21_22_T")) {
     exist_ds_21_22_T = 1;
-    vid = mpp_get_varid(fid_old, "ds_21_22_T"); mpp_get_var_value(fid_old, vid, ds_21_22_T);  
+    vid = mpp_get_varid(fid_old, "ds_21_22_T"); mpp_get_var_value(fid_old, vid, ds_21_22_T);
   }
   else {
     exist_ds_21_22_T = 0;
     vid = mpp_get_varid(fid_old, "ds_10_11_C"); mpp_get_var_value(fid_old, vid, ds_10_11_C);
-  }  
+  }
   if(mpp_var_exist(fid_old, "x_E")) {
     vid = mpp_get_varid(fid_old, "x_E"); mpp_get_var_value(fid_old, vid, x_E);
     vid = mpp_get_varid(fid_old, "y_E"); mpp_get_var_value(fid_old, vid, y_E);
   }
   else if(mpp_var_exist(fid_old, "geolon_e")) {
     vid = mpp_get_varid(fid_old, "geolon_e"); mpp_get_var_value(fid_old, vid, x_E);
-    vid = mpp_get_varid(fid_old, "geolat_e"); mpp_get_var_value(fid_old, vid, y_E);    
+    vid = mpp_get_varid(fid_old, "geolat_e"); mpp_get_var_value(fid_old, vid, y_E);
   }
   else
     mpp_error("transfer_to_mosaic: both x_E and geolon_e does not exist in the input file");
-    
+
   if(mpp_var_exist(fid_old, "x_N")) {
     vid = mpp_get_varid(fid_old, "x_N"); mpp_get_var_value(fid_old, vid, x_N);
     vid = mpp_get_varid(fid_old, "y_N"); mpp_get_var_value(fid_old, vid, y_N);
   }
   else if(mpp_var_exist(fid_old, "geolon_n")) {
     vid = mpp_get_varid(fid_old, "geolon_n"); mpp_get_var_value(fid_old, vid, x_N);
-    vid = mpp_get_varid(fid_old, "geolat_n"); mpp_get_var_value(fid_old, vid, y_N);    
+    vid = mpp_get_varid(fid_old, "geolat_n"); mpp_get_var_value(fid_old, vid, y_N);
   }
   else
     mpp_error("transfer_to_mosaic: both x_N and geolon_n does not exist in the input file");
-  
- 
+
+
   if(mpp_var_exist(fid_old, "angle_T")) {
     vid = mpp_get_varid(fid_old, "angle_T"); mpp_get_var_value(fid_old, vid, angle_T);
   }
@@ -277,9 +278,9 @@ int main(int argc, char* argv[])
   else {
     for(i=0; i<nx_C; i++) ds_10_20_T[i] = unknown;
   }
-  
+
   mpp_close(fid_old);
-  
+
   nx = 2*nx_T;  nxp = nx +1;
   ny = 2*ny_T;  nyp = ny +1;
   x = (double *) malloc(nxp*nyp * sizeof(double));
@@ -294,7 +295,7 @@ int main(int argc, char* argv[])
 
 	i2=2*(i+1); i1=i2-1;   j2=2*(j+1); j1=j2-1;
 
-  	j1i1=j1*nxp+i1; j1i2=j1*nxp+i2; j2i2=j2*nxp+i2; j2i1=j2*nxp+i1; 
+  	j1i1=j1*nxp+i1; j1i2=j1*nxp+i2; j2i2=j2*nxp+i2; j2i1=j2*nxp+i1;
 	ji=j*nx_T+i;
 	ji0=ji; ji1=ji0+nx_T*ny_T; ji2=ji1+nx_T*ny_T; ji3=ji2+nx_T*ny_T;
 
@@ -310,7 +311,7 @@ int main(int argc, char* argv[])
 
 /*      Mapping distance to new mosaic grid format from old grid
 
-	       dx(1,1)=                  dx(2,1)=           
+	       dx(1,1)=                  dx(2,1)=
    Ci-1,j------ds_11_21_C(i-1,j)---+-----ds_01_11_C(i,j)--------Ci,j
 	|                          |                            |
 	|                          |                            |
@@ -344,7 +345,7 @@ int main(int argc, char* argv[])
 	   else
 	     dy[(2*j  )*nxp + (2*i+2)]   = ds_11_12_C[(j-1)*nx_T + i];
 	}
-	if(exist_ds_21_22_T) 
+	if(exist_ds_21_22_T)
 	  dy[(2*j+1)*nxp + (2*i+2)]   = ds_21_22_T[j*nx_T + i];
 	else
 	  dy[(2*j+1)*nxp + (2*i+2)]   = ds_10_11_C[j*nx_T + i];
@@ -352,7 +353,7 @@ int main(int argc, char* argv[])
 	angle_dx[(2*j+1)*nxp + 2*i+1] = angle_T[j*nx_C + i ];
 	angle_dx[(2*j+1)*nxp + 2*i+2] = angle_E[j*nx_C + i ];
 	angle_dx[(2*j+2)*nxp + 2*i+1] = angle_N[j*nx_C + i ];
-	angle_dx[(2*j+2)*nxp + 2*i+2] = angle_C[j*nx_C + i ]; 
+	angle_dx[(2*j+2)*nxp + 2*i+2] = angle_C[j*nx_C + i ];
 
 	if (j==0) {
            x[i1] = 0.5*(x_vert_T[ji0]+x_vert_T[ji1]);
@@ -388,7 +389,7 @@ int main(int argc, char* argv[])
   }
   for(j=0; j<ny; j++) dy[j*nxp] = dy[j*nxp+nx];
 
-  
+
   /* calculate cell area */
   {
     int    i;
@@ -420,10 +421,10 @@ int main(int argc, char* argv[])
     char tile_spec_version[] = "0.2", geometry[] = "spherical", discretization[] = "logically_rectangular", conformal[]="true";
     char outfile[128] = "", tilename[128]="";
     size_t start[4], nwrite[4];
-    
+
 	  sprintf(outfile, "%s_hgrid.nc",ocean_name);
 	  printf("Writing %s\n", outfile);
-          printf("\t nx_C=%d, ny_C=%d, x_T=%d, ny_T=%d \n", nx_C, ny_C,nx_T, ny_T); 
+          printf("\t nx_C=%d, ny_C=%d, x_T=%d, ny_T=%d \n", nx_C, ny_C,nx_T, ny_T);
           sprintf(tilename, "tile%d", 1);
           fid = mpp_open(outfile, MPP_WRITE);
 
@@ -488,24 +489,24 @@ if(is_coupled_grid) {
   nyba = mpp_get_dimlen(fid_old, "yba");
   nxta = mpp_get_dimlen(fid_old, "xta");
   nyta = mpp_get_dimlen(fid_old, "yta");
-  xba = (double *) malloc(nxba * sizeof(double)); 
-  yba = (double *) malloc(nyba * sizeof(double)); 
-  xta = (double *) malloc(nxta * sizeof(double)); 
-  yta = (double *) malloc(nyta * sizeof(double)); 
+  xba = (double *) malloc(nxba * sizeof(double));
+  yba = (double *) malloc(nyba * sizeof(double));
+  xta = (double *) malloc(nxta * sizeof(double));
+  yta = (double *) malloc(nyta * sizeof(double));
   vid = mpp_get_varid(fid_old, "xba"); mpp_get_var_value(fid_old, vid, xba);
   vid = mpp_get_varid(fid_old, "yba"); mpp_get_var_value(fid_old, vid, yba);
   vid = mpp_get_varid(fid_old, "xta"); mpp_get_var_value(fid_old, vid, xta);
   vid = mpp_get_varid(fid_old, "yta"); mpp_get_var_value(fid_old, vid, yta);
   mpp_close(fid_old);
-  
-  nxap = nxba + nxta; nyap = nyba + nyta; 
+
+  nxap = nxba + nxta; nyap = nyba + nyta;
   x_atmos = (double *) malloc(nxap*nyap * sizeof(double));
   y_atmos = (double *) malloc(nxap*nyap * sizeof(double));
 
-  for(i = 0; i<nxba; i++) x_atmos[2*i]   = xba[i]; for(i = 0; i<nxta; i++) x_atmos[2*i+1]   = xta[i]; 
+  for(i = 0; i<nxba; i++) x_atmos[2*i]   = xba[i]; for(i = 0; i<nxta; i++) x_atmos[2*i+1]   = xta[i];
 
-  for(j = 0; j<nyba; j++) y_atmos[2*j*nxap]   = yba[j]; 
-  for(j = 0; j<nyta; j++) y_atmos[(2*j+1)*nxap]   = yta[j]; 
+  for(j = 0; j<nyba; j++) y_atmos[2*j*nxap]   = yba[j];
+  for(j = 0; j<nyta; j++) y_atmos[(2*j+1)*nxap]   = yta[j];
 
   for(j = 1; j<nyap; j++) for(i = 0; i<nxap; i++) x_atmos[j*nxap + i]   = x_atmos[i];
   for(i = 1; i<nxap; i++) for(j = 0; j<nyap; j++) y_atmos[j*nxap + i]   = y_atmos[j*nxap];
@@ -517,10 +518,10 @@ if(is_coupled_grid) {
     char tile_spec_version[] = "0.2", geometry[] = "spherical", discretization[] = "logically_rectangular", conformal[]="true";
     char outfile[128] = "", tilename[128]="";
     size_t start[4], nwrite[4];
-    
+
           sprintf(outfile, "%s_hgrid.nc", atmos_name);
 	  printf("Writing %s\n", outfile);
-          printf("\t nxba=%d, nyba=%d, nxta=%d, nyta=%d \n", nxba, nyba,nxta, nyta); 
+          printf("\t nxba=%d, nyba=%d, nxta=%d, nyta=%d \n", nxba, nyba,nxta, nyta);
 
           sprintf(tilename, "tile%d", 1);
           fid = mpp_open(outfile, MPP_WRITE);
@@ -529,7 +530,7 @@ if(is_coupled_grid) {
           dimlist[2] = mpp_def_dim(fid, "nyp", nyap);
           dimlist[3] = mpp_def_dim(fid, "nx", nxap-1);
           dimlist[4] = mpp_def_dim(fid, "ny", nyap-1);
-          id_tile = mpp_def_var(fid, "tile", MPP_CHAR, 1, dimlist, 5, "standard_name", "grid_tile_spec", "tile_spec_version", 
+          id_tile = mpp_def_var(fid, "tile", MPP_CHAR, 1, dimlist, 5, "standard_name", "grid_tile_spec", "tile_spec_version",
 			tile_spec_version, "geometry", geometry, "discretization", discretization, "conformal", conformal );
           dims[0] = dimlist[2]; dims[1] = dimlist[1];
           id_x = mpp_def_var(fid, "x", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_longitude", "units", "degree_east");
@@ -568,35 +569,35 @@ if(is_coupled_grid){
   int i,j, fid_old, vid;
 
   fid_old = mpp_open(old_file, MPP_READ);
-  
+
   nxbl = mpp_get_dimlen(fid_old, "xbl");
   nybl = mpp_get_dimlen(fid_old, "ybl");
   nxtl = mpp_get_dimlen(fid_old, "xtl");
   nytl = mpp_get_dimlen(fid_old, "ytl");
-  xbl = (double *) malloc(nxbl * sizeof(double)); 
-  ybl = (double *) malloc(nybl * sizeof(double)); 
-  xtl = (double *) malloc(nxtl * sizeof(double)); 
-  ytl = (double *) malloc(nytl * sizeof(double)); 
+  xbl = (double *) malloc(nxbl * sizeof(double));
+  ybl = (double *) malloc(nybl * sizeof(double));
+  xtl = (double *) malloc(nxtl * sizeof(double));
+  ytl = (double *) malloc(nytl * sizeof(double));
   vid = mpp_get_varid(fid_old, "xbl"); mpp_get_var_value(fid_old, vid, xbl);
   vid = mpp_get_varid(fid_old, "ybl"); mpp_get_var_value(fid_old, vid, ybl);
   vid = mpp_get_varid(fid_old, "xtl"); mpp_get_var_value(fid_old, vid, xtl);
   vid = mpp_get_varid(fid_old, "ytl"); mpp_get_var_value(fid_old, vid, ytl);
   mpp_close(fid_old);
-  
-  nxlp = nxbl + nxtl; nylp = nybl + nytl; 
+
+  nxlp = nxbl + nxtl; nylp = nybl + nytl;
   x_land  = (double *) malloc(nxlp*nylp * sizeof(double));
   y_land  = (double *) malloc(nxlp*nylp * sizeof(double));
-  
-  for(i = 0; i<nxbl; i++) x_land[2*i]   = xbl[i]; 
-  for(i = 0; i<nxtl; i++) x_land[2*i+1]   = xtl[i]; 
 
-  for(j = 0; j<nybl; j++) y_land[2*j*nxlp]   = ybl[j]; 
-  for(j = 0; j<nytl; j++) y_land[(2*j+1)*nxlp]   = ytl[j]; 
+  for(i = 0; i<nxbl; i++) x_land[2*i]   = xbl[i];
+  for(i = 0; i<nxtl; i++) x_land[2*i+1]   = xtl[i];
+
+  for(j = 0; j<nybl; j++) y_land[2*j*nxlp]   = ybl[j];
+  for(j = 0; j<nytl; j++) y_land[(2*j+1)*nxlp]   = ytl[j];
 
   for(j = 1; j<nylp; j++) for(i = 0; i<nxlp; i++) x_land[j*nxlp + i]   = x_land[i];
 
-  for(i = 1; i<nxlp; i++) 
-	for(j = 0; j<nylp; j++) 
+  for(i = 1; i<nxlp; i++)
+	for(j = 0; j<nylp; j++)
 		y_land[j*nxlp + i]   = y_land[j*nxlp];
 
   /* write Land-grid data */
@@ -606,10 +607,10 @@ if(is_coupled_grid){
     char tile_spec_version[] = "0.2", geometry[] = "spherical", discretization[] = "logically_rectangular", conformal[]="true";
     char outfile[128] = "", tilename[128]="";
     size_t start[4], nwrite[4];
-    
+
           sprintf(outfile, "%s_hgrid.nc",land_name);
 	  printf("Writing %s\n", outfile);
-          printf("\t nxbl=%d, nybl=%d, nxtl=%d, nytl=%d \n", nxbl, nybl,nxtl, nytl); 
+          printf("\t nxbl=%d, nybl=%d, nxtl=%d, nytl=%d \n", nxbl, nybl,nxtl, nytl);
 
           sprintf(tilename, "tile%d", 1);
         fid = mpp_open(outfile, MPP_WRITE);
@@ -618,7 +619,7 @@ if(is_coupled_grid){
           dimlist[2] = mpp_def_dim(fid, "nyp", nylp);
           dimlist[3] = mpp_def_dim(fid, "nx", nxlp-1);
           dimlist[4] = mpp_def_dim(fid, "ny", nylp-1);
-          id_tile = mpp_def_var(fid, "tile", MPP_CHAR, 1, dimlist, 5, "standard_name", "grid_tile_spec", "tile_spec_version", 
+          id_tile = mpp_def_var(fid, "tile", MPP_CHAR, 1, dimlist, 5, "standard_name", "grid_tile_spec", "tile_spec_version",
 			tile_spec_version, "geometry", geometry, "discretization", discretization, "conformal", conformal );
           dims[0] = dimlist[2]; dims[1] = dimlist[1];
           id_x = mpp_def_var(fid, "x", MPP_DOUBLE, 2, dims, 2, "standard_name", "geographic_longitude", "units", "degree_east");
@@ -647,23 +648,23 @@ if(is_coupled_grid){
   free(xbl); free(ybl); free(xtl); free(ytl);  free(x_land); free(y_land);
 }
 /*-------------------------------ocean_vgrid.nc----------------------------------*/
-{ 
+{
   double *z, *zb, *zt;
   int nzb, nzt, nz, i,j, fid_old, vid;
 
   fid_old = mpp_open(old_file, MPP_READ);
   nzb = mpp_get_dimlen(fid_old, "zb");
   nzt = mpp_get_dimlen(fid_old, "zt");
-  zb = (double *) malloc(nzb * sizeof(double)); 
-  zt = (double *) malloc(nzt * sizeof(double)); 
+  zb = (double *) malloc(nzb * sizeof(double));
+  zt = (double *) malloc(nzt * sizeof(double));
   vid = mpp_get_varid(fid_old, "zb"); mpp_get_var_value(fid_old, vid, zb);
   vid = mpp_get_varid(fid_old, "zt"); mpp_get_var_value(fid_old, vid, zt);
   mpp_close(fid_old);
-  
-  nz = nzb + nzt + 1; 
+
+  nz = nzb + nzt + 1;
   z = (double *) malloc(nz * sizeof(double));
-  z[0]=0.0; 
-  for(i = 0; i<nzt; i++) { z[2*i + 1]   = zt[i]; z[2*i+2]   = zb[i]; } 
+  z[0]=0.0;
+  for(i = 0; i<nzt; i++) { z[2*i + 1]   = zt[i]; z[2*i+2]   = zb[i]; }
 
   {
     int fid, dim, varid;
@@ -671,7 +672,7 @@ if(is_coupled_grid){
 
     	sprintf(outfile, "%s_vgrid.nc",ocean_name);
 	printf("Writing %s\n", outfile);
-        printf("\t nzb=%d, nzt=%d\n", nzb, nzt); 
+        printf("\t nzb=%d, nzt=%d\n", nzb, nzt);
 
     	fid = mpp_open(outfile, MPP_WRITE);
     	  dim  = mpp_def_dim(fid, "nzv", nz);
@@ -684,11 +685,11 @@ if(is_coupled_grid){
 }
 
 /*-------------------------------topog.nc----------------------------------*/
-{ 
+{
   double *depth_t;
   int nx, ny, ntiles, i,j, fid_old, vid;
   char xaxis_name[255], yaxis_name[255];
-  
+
   fid_old = mpp_open(old_file, MPP_READ);
   vid = mpp_get_varid(fid_old, "depth_t");
   mpp_get_var_dimname(fid_old, vid, 1, xaxis_name);
@@ -698,7 +699,7 @@ if(is_coupled_grid){
   depth_t= (double *) malloc(nx*ny* sizeof(double));
   vid = mpp_get_varid(fid_old, "depth_t");  mpp_get_var_value(fid_old, vid, depth_t);
   mpp_close(fid_old);
-  
+
   {
     int fid, dim[2], varid, ntiles = 1, dim_ntile;
     char outfile[128] = "";
@@ -714,7 +715,7 @@ if(is_coupled_grid){
 	mpp_put_var_value(fid, varid, depth_t);
 	mpp_close(fid);
   }
-  free(depth_t); 
+  free(depth_t);
 }
 /*................atmos_mosaic.nc............................ */
  if(is_coupled_grid)  {
@@ -725,7 +726,7 @@ if(is_coupled_grid){
     size_t start[4], nwrite[4];
 
     /*--------Initilize values --------------*/
-    ntiles = 1, ncontact = 0; 
+    ntiles = 1, ncontact = 0;
 
     sprintf(mosaic_name, "%s_mosaic",atmos_name);
     sprintf(outfile, "%s.nc", mosaic_name);
@@ -735,10 +736,10 @@ if(is_coupled_grid){
     sprintf(tilefile[0], "%s_hgrid.nc",atmos_name);
     fid = mpp_open(outfile, MPP_WRITE);
 
-    contact_tile1_istart[0]=nxba-1; contact_tile1_iend[0]=nxba-1; 
-    contact_tile1_jstart[0]=1; contact_tile1_jend[0]=nyba-1; 
+    contact_tile1_istart[0]=nxba-1; contact_tile1_iend[0]=nxba-1;
+    contact_tile1_jstart[0]=1; contact_tile1_jend[0]=nyba-1;
 
-    contact_tile2_istart[0]=1; contact_tile2_iend[0]=1; 
+    contact_tile2_istart[0]=1; contact_tile2_iend[0]=1;
     contact_tile2_jstart[0]=1; contact_tile2_jend[0]=nyba-1;
     /*--------Initilize values --------------*/
 
@@ -808,13 +809,13 @@ if(is_coupled_grid){
     size_t start[4], nwrite[4];
 
     /*--------Initilize values --------------*/
-    ntiles = 1, ncontact = 1; 
+    ntiles = 1, ncontact = 1;
     contact_tile1_istart[1]=1; contact_tile1_iend[1]=1;
     contact_tile1_jstart[1]=1; contact_tile1_jend[1]=nytl;
 
     contact_tile2_istart[1]=nxtl; contact_tile2_iend[1]=nxtl;
     contact_tile2_jstart[1]=1;    contact_tile2_jend[1]=nytl;
-    
+
     sprintf(mosaic_name, "%s_mosaic",land_name);
     sprintf(outfile, "%s.nc", mosaic_name);
     printf("Writing %s\n", outfile);
@@ -823,10 +824,10 @@ if(is_coupled_grid){
     sprintf(tilefile[0], "%s_hgrid.nc",land_name);
     fid = mpp_open(outfile, MPP_WRITE);
 
-    contact_tile1_istart[0]=nxbl-1; contact_tile1_iend[0]=nxbl-1; 
-    contact_tile1_jstart[0]=1; contact_tile1_jend[0]=nybl-1; 
+    contact_tile1_istart[0]=nxbl-1; contact_tile1_iend[0]=nxbl-1;
+    contact_tile1_jstart[0]=1; contact_tile1_jend[0]=nybl-1;
 
-    contact_tile2_istart[0]=1; contact_tile2_iend[0]=1; 
+    contact_tile2_istart[0]=1; contact_tile2_iend[0]=1;
     contact_tile2_jstart[0]=1; contact_tile2_jend[0]=nybl-1;
     /*--------Initilize values --------------*/
 
@@ -896,7 +897,7 @@ if(is_coupled_grid){
     size_t start[4], nwrite[4];
 
     /*--------Initilize values --------------*/
-    ntiles = 1, ncontact = 0; 
+    ntiles = 1, ncontact = 0;
 
     sprintf(mosaic_name, "%s_mosaic",ocean_name);
     sprintf(outfile, "%s.nc", mosaic_name);
@@ -904,24 +905,24 @@ if(is_coupled_grid){
 
     sprintf(tile_name[0], "tile%d", 1);
     sprintf(tilefile[0], "%s_hgrid.nc", ocean_name);
-    
+
     /* ........... Read Boundary Type ................ */
     fid_old = mpp_open(old_file, MPP_READ);
     mpp_get_global_att(fid_old, "x_boundary_type",x_boundary_type1);
     mpp_get_global_att(fid_old, "y_boundary_type",y_boundary_type1);
     mpp_close(fid_old);
     if (strcmp(x_boundary_type1, "cyclic")==0) {
-	n = ncontact; ncontact = ncontact + 1; 
-    	contact_tile1_istart[n]=360; contact_tile1_iend[n]=360; 
-    	contact_tile1_jstart[n]=1; contact_tile1_jend[n]=180; 
+	n = ncontact; ncontact = ncontact + 1;
+    	contact_tile1_istart[n]=360; contact_tile1_iend[n]=360;
+    	contact_tile1_jstart[n]=1; contact_tile1_jend[n]=180;
 
-    	contact_tile2_istart[n]=1; contact_tile2_iend[n]=1; 
+    	contact_tile2_istart[n]=1; contact_tile2_iend[n]=1;
     	contact_tile2_jstart[n]=1; contact_tile2_jend[n]=180;
 	printf("\t x_boundary_type = %s, ncontact=%d \n",x_boundary_type1,ncontact);
     }
-    
+
     if (strcmp(y_boundary_type1, "fold_north_edge")==0) {
-	n = ncontact; ncontact = ncontact + 1; 
+	n = ncontact; ncontact = ncontact + 1;
         contact_tile1_istart[n]=1; contact_tile1_iend[n]=180;
         contact_tile1_jstart[n]=180; contact_tile1_jend[n]=180;
 
@@ -987,7 +988,7 @@ if(is_coupled_grid){
       nwrite[1] = strlen(str);
       mpp_put_var_value_block(fid, id_contact_index, start, nwrite, str);
     }
-    
+
  mpp_close(fid);
   }
 
@@ -1001,7 +1002,7 @@ if(is_coupled_grid)  {
   char atile_name[255], ltile_name[255], otile_name[255];
   char amosaic_name[255], lmosaic_name[255], omosaic_name[255];
   int  fid_old, vid;
-  
+
   strcpy(atile_name,"tile1"); strcpy(ltile_name,"tile1"); strcpy(otile_name,"tile1");
   strcpy(amosaic_name,"atmos"); strcpy(lmosaic_name,"land"); strcpy(omosaic_name,"ocean");
 
@@ -1018,16 +1019,16 @@ if(is_coupled_grid)  {
   fid_old = mpp_open(old_file, MPP_READ);
   naxl = mpp_get_dimlen(fid_old, "i_atmXlnd");
   /*----------------*/
- 
+
   /* write out atmXlnd data*/
   if(naxl>0) {
     size_t start[4], nwrite[4];
-                                                                                                                                                          
+
     int fid, dim_string, dim_ncells, dim_two, dims[4];
     int id_xgrid_area, id_contact, n;
     int id_tile1_cell, id_tile2_cell, id_tile1_dist, id_tile2_dist;
     char contact[STRING];
-                                                                                                                                                          
+
     for(i=0; i<4; i++) {
       start[i] = 0; nwrite[i] = 1;
     }
@@ -1050,7 +1051,7 @@ if(is_coupled_grid)  {
 			       "contact_spec_version", version, "contact_type", "exchange", "parent1_cell",
 			       "tile1_cell", "parent2_cell", "tile2_cell", "xgrid_area_field", "xgrid_area");
     }
-                                                                                                                                                          
+
     dims[0] = dim_ncells; dims[1] = dim_two;
     id_tile1_cell = mpp_def_var(fid, "tile1_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic1");
     id_tile2_cell = mpp_def_var(fid, "tile2_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic2");
@@ -1067,18 +1068,18 @@ if(is_coupled_grid)  {
     mpp_put_var_value_block(fid, id_contact, start, nwrite, contact);
     nwrite[0] = naxl;
 
-    atmxlnd_area = (double *)malloc(naxl*sizeof(double)); 
-    atmxlnd_ia   = (int    *)malloc(naxl*sizeof(int   )); 
-    atmxlnd_ja   = (int    *)malloc(naxl*sizeof(int   )); 
-    atmxlnd_il   = (int    *)malloc(naxl*sizeof(int   )); 
-    atmxlnd_jl   = (int    *)malloc(naxl*sizeof(int   )); 
+    atmxlnd_area = (double *)malloc(naxl*sizeof(double));
+    atmxlnd_ia   = (int    *)malloc(naxl*sizeof(int   ));
+    atmxlnd_ja   = (int    *)malloc(naxl*sizeof(int   ));
+    atmxlnd_il   = (int    *)malloc(naxl*sizeof(int   ));
+    atmxlnd_jl   = (int    *)malloc(naxl*sizeof(int   ));
     vid = mpp_get_varid(fid_old, "AREA_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_area);
     vid = mpp_get_varid(fid_old, "I_ATM_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_ia);
     vid = mpp_get_varid(fid_old, "J_ATM_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_ja);
     vid = mpp_get_varid(fid_old, "I_LND_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_il);
     vid = mpp_get_varid(fid_old, "J_LND_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_jl);
-	  
-    for(i=0;i<naxl;i++)atmxlnd_area[i] = atmxlnd_area[i] * 4.0 * PI * RADIUS * RADIUS; 
+
+    for(i=0;i<naxl;i++)atmxlnd_area[i] = atmxlnd_area[i] * 4.0 * PI * RADIUS * RADIUS;
 
     mpp_put_var_value(fid, id_xgrid_area, atmxlnd_area);
     mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, atmxlnd_ia);
@@ -1087,8 +1088,8 @@ if(is_coupled_grid)  {
     mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, atmxlnd_ja);
     mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, atmxlnd_jl);
     if(interp_order == 2) {
-      atmxlnd_di = (double *)malloc(naxl*sizeof(double)); 
-      atmxlnd_dj = (double *)malloc(naxl*sizeof(double)); 
+      atmxlnd_di = (double *)malloc(naxl*sizeof(double));
+      atmxlnd_dj = (double *)malloc(naxl*sizeof(double));
       vid = mpp_get_varid(fid_old, "DI_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_di);
       vid = mpp_get_varid(fid_old, "DJ_ATMxLND"); mpp_get_var_value(fid_old, vid, atmxlnd_dj);
       start[1] = 0;
@@ -1096,7 +1097,7 @@ if(is_coupled_grid)  {
       start[1] = 1;
       mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, atmxlnd_dj);
     }
-	  
+
     mpp_close(fid);
     free(atmxlnd_area);
   }
@@ -1133,16 +1134,16 @@ if(is_coupled_grid)  {
     fid_old = mpp_open(old_file, MPP_READ);
     naxo = mpp_get_dimlen(fid_old, "i_atmXocn");
     /*----------------*/
- 
+
       /* write out atmXlnd data*/
         if(naxo>0) {
           size_t start[4], nwrite[4];
-                                                                                                                                                          
+
           int fid, dim_string, dim_ncells, dim_two, dims[4];
           int id_xgrid_area, id_contact, n;
           int id_tile1_cell, id_tile2_cell, id_tile1_dist, id_tile2_dist;
           char contact[STRING];
-                                                                                                                                                          
+
           for(i=0; i<4; i++) {
             start[i] = 0; nwrite[i] = 1;
           }
@@ -1165,7 +1166,7 @@ if(is_coupled_grid)  {
                                      "contact_spec_version", version, "contact_type", "exchange", "parent1_cell",
                                      "tile1_cell", "parent2_cell", "tile2_cell", "xgrid_area_field", "xgrid_area");
           }
-                                                                                                                                                          
+
           dims[0] = dim_ncells; dims[1] = dim_two;
           id_tile1_cell = mpp_def_var(fid, "tile1_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic1");
           id_tile2_cell = mpp_def_var(fid, "tile2_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic2");
@@ -1182,18 +1183,18 @@ if(is_coupled_grid)  {
           mpp_put_var_value_block(fid, id_contact, start, nwrite, contact);
           nwrite[0] = naxo;
 
-          atmxocn_area = (double *)malloc(naxo*sizeof(double)); 
-          atmxocn_ia   = (int    *)malloc(naxo*sizeof(int   )); 
-          atmxocn_ja   = (int    *)malloc(naxo*sizeof(int   )); 
-          atmxocn_io   = (int    *)malloc(naxo*sizeof(int   )); 
-          atmxocn_jo   = (int    *)malloc(naxo*sizeof(int   )); 
+          atmxocn_area = (double *)malloc(naxo*sizeof(double));
+          atmxocn_ia   = (int    *)malloc(naxo*sizeof(int   ));
+          atmxocn_ja   = (int    *)malloc(naxo*sizeof(int   ));
+          atmxocn_io   = (int    *)malloc(naxo*sizeof(int   ));
+          atmxocn_jo   = (int    *)malloc(naxo*sizeof(int   ));
 	  vid = mpp_get_varid(fid_old, "AREA_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_area);
 	  vid = mpp_get_varid(fid_old, "I_ATM_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_ia);
 	  vid = mpp_get_varid(fid_old, "J_ATM_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_ja);
 	  vid = mpp_get_varid(fid_old, "I_OCN_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_io);
 	  vid = mpp_get_varid(fid_old, "J_OCN_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_jo);
-	  
-          for(i=0;i<naxo;i++)atmxocn_area[i] = atmxocn_area[i] * 4.0 * PI * RADIUS * RADIUS; 
+
+          for(i=0;i<naxo;i++)atmxocn_area[i] = atmxocn_area[i] * 4.0 * PI * RADIUS * RADIUS;
 
           mpp_put_var_value(fid, id_xgrid_area, atmxocn_area);
           mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, atmxocn_ia);
@@ -1202,8 +1203,8 @@ if(is_coupled_grid)  {
           mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, atmxocn_ja);
           mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, atmxocn_jo);
           if(interp_order == 2) {
-            atmxocn_di = (double *)malloc(naxo*sizeof(double)); 
-            atmxocn_dj = (double *)malloc(naxo*sizeof(double)); 
+            atmxocn_di = (double *)malloc(naxo*sizeof(double));
+            atmxocn_dj = (double *)malloc(naxo*sizeof(double));
 	    vid = mpp_get_varid(fid_old, "DI_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_di);
 	    vid = mpp_get_varid(fid_old, "DJ_ATMxOCN"); mpp_get_var_value(fid_old, vid, atmxocn_dj);
             start[1] = 0;
@@ -1247,16 +1248,16 @@ if(is_coupled_grid)  {
     fid_old = mpp_open(old_file, MPP_READ);
     nlxo = mpp_get_dimlen(fid_old , "i_lndXocn");
     /*----------------*/
- 
+
       /* write out lndXocn data*/
         if(nlxo>0) {
           size_t start[4], nwrite[4];
-                                                                                                                                                          
+
           int fid, dim_string, dim_ncells, dim_two, dims[4];
           int id_xgrid_area, id_contact, n;
           int id_tile1_cell, id_tile2_cell, id_tile1_dist, id_tile2_dist;
           char contact[STRING];
-                                                                                                                                                          
+
           for(i=0; i<4; i++) {
             start[i] = 0; nwrite[i] = 1;
           }
@@ -1279,7 +1280,7 @@ if(is_coupled_grid)  {
                                      "contact_spec_version", version, "contact_type", "exchange", "parent1_cell",
                                      "tile1_cell", "parent2_cell", "tile2_cell", "xgrid_area_field", "xgrid_area");
           }
-                                                                                                                                                          
+
           dims[0] = dim_ncells; dims[1] = dim_two;
           id_tile1_cell = mpp_def_var(fid, "tile1_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic1");
           id_tile2_cell = mpp_def_var(fid, "tile2_cell", MPP_INT, 2, dims, 1, "standard_name", "parent_cell_indices_in_mosaic2");
@@ -1296,18 +1297,18 @@ if(is_coupled_grid)  {
           mpp_put_var_value_block(fid, id_contact, start, nwrite, contact);
           nwrite[0] = nlxo;
 
-          lndxocn_area = (double *)malloc(nlxo*sizeof(double)); 
-          lndxocn_il   = (int    *)malloc(nlxo*sizeof(int   )); 
-          lndxocn_jl   = (int    *)malloc(nlxo*sizeof(int   )); 
-          lndxocn_io   = (int    *)malloc(nlxo*sizeof(int   )); 
-          lndxocn_jo   = (int    *)malloc(nlxo*sizeof(int   )); 
+          lndxocn_area = (double *)malloc(nlxo*sizeof(double));
+          lndxocn_il   = (int    *)malloc(nlxo*sizeof(int   ));
+          lndxocn_jl   = (int    *)malloc(nlxo*sizeof(int   ));
+          lndxocn_io   = (int    *)malloc(nlxo*sizeof(int   ));
+          lndxocn_jo   = (int    *)malloc(nlxo*sizeof(int   ));
 	  vid = mpp_get_varid(fid_old, "AREA_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_area);
 	  vid = mpp_get_varid(fid_old, "I_LND_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_il);
 	  vid = mpp_get_varid(fid_old, "J_LND_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_jl);
 	  vid = mpp_get_varid(fid_old, "I_OCN_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_io);
 	  vid = mpp_get_varid(fid_old, "J_OCN_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_jo);
-	  
-          for(i=0;i<nlxo;i++)lndxocn_area[i] = lndxocn_area[i] * 4.0 * PI * RADIUS * RADIUS; 
+
+          for(i=0;i<nlxo;i++)lndxocn_area[i] = lndxocn_area[i] * 4.0 * PI * RADIUS * RADIUS;
 
           mpp_put_var_value(fid, id_xgrid_area, lndxocn_area);
           mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, lndxocn_il);
@@ -1316,8 +1317,8 @@ if(is_coupled_grid)  {
           mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, lndxocn_jl);
           mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, lndxocn_jo);
           if(interp_order == 2) {
-            lndxocn_di = (double *)malloc(nlxo*sizeof(double)); 
-            lndxocn_dj = (double *)malloc(nlxo*sizeof(double)); 
+            lndxocn_di = (double *)malloc(nlxo*sizeof(double));
+            lndxocn_dj = (double *)malloc(nlxo*sizeof(double));
 	    vid = mpp_get_varid(fid_old, "DI_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_di);
 	    vid = mpp_get_varid(fid_old, "DJ_LNDxOCN"); mpp_get_var_value(fid_old, vid, lndxocn_dj);
             start[1] = 0;
@@ -1346,7 +1347,7 @@ if(is_coupled_grid)  {
     int id_xgrids_dir, id_axo_file, id_lxo_file, id_axl_file;
     int id_amosaic, id_lmosaic, id_omosaic;
 
-    int nfile_axo = 1, nfile_axl = 1, nfile_lxo = 1; 
+    int nfile_axo = 1, nfile_axl = 1, nfile_lxo = 1;
 
     strcpy(mosaic_file,"mosaic.nc");
     printf("Writing %s\n", mosaic_file);
@@ -1395,9 +1396,9 @@ strcpy(otopog_file,"topog.nc");
 sprintf(amosaic_name,"%s_mosaic",atmos_name); sprintf(lmosaic_name,"%s_mosaic",land_name); sprintf(omosaic_name,"%s_mosaic",ocean_name);
 sprintf(amosaic_file,"%s.nc",amosaic_name); sprintf(lmosaic_file,"%s.nc",lmosaic_name); sprintf(omosaic_file,"%s.nc",omosaic_name);
 
-sprintf(axl_file,"%sX%s.nc", amosaic_name, lmosaic_name); 
-sprintf(axo_file,"%sX%s.nc", amosaic_name, omosaic_name); 
-sprintf(lxo_file,"%sX%s.nc", lmosaic_name, omosaic_name); 
+sprintf(axl_file,"%sX%s.nc", amosaic_name, lmosaic_name);
+sprintf(axo_file,"%sX%s.nc", amosaic_name, omosaic_name);
+sprintf(lxo_file,"%sX%s.nc", lmosaic_name, omosaic_name);
 
     for(i=0; i<4; i++) { start[i] = 0; nwrite[i] = 1; }
     nwrite[0] = strlen(mosaic_dir);
@@ -1439,6 +1440,5 @@ sprintf(lxo_file,"%sX%s.nc", lmosaic_name, omosaic_name);
   mpp_end();
 
   return 0;
-  
-};  /* end of main */
 
+};  /* end of main */
