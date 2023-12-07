@@ -51,6 +51,7 @@
 #include "mpp_domain.h"
 #include "mosaic_util.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 #include "read_mosaic.h"
 #define print_grid 0
 

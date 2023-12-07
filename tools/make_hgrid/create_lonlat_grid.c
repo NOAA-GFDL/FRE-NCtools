@@ -29,7 +29,7 @@
 #include "constant.h"
 #include "create_hgrid.h"
 #include "create_xgrid.h"
-
+#include "create_xgrid_util.h"
 
 /*********************************************************************************
    some private routines used in this file

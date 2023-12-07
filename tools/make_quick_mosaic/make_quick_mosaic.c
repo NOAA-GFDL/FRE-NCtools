@@ -30,6 +30,7 @@
 #include "read_mosaic.h"
 #include "mosaic_util.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 #define AREA_RATIO_THRESH (1.e-6)
 #define AREA_RATIO_THRESH2 (1.e-4)
 
