@@ -1,15 +1,39 @@
-﻿Runscript
+﻿# The NCTools app fregrid_parallel is the parallel version of fregrid, and
+# it is particularly useful for processing with large grids. fregrid will
+# generate this message when grids are too large for it :
+#
+#   FATAL Error: nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease
+#       nthreads, or increase number of MPI ranks
+#
+# fregrid_parallel should instead be used if such an error is encountered. However,
+# it also can generate the same error if run with insufficient computational resources.
+# Below (after the dashed line) is an example runscript configured for using
+# fregrid_parallel with a sufficiently large number of ranks and cores to avoid the fatal
+# error and successfully complete the generation of the regridding weight file for a common
+# "extreme fregrid" case. This configuration runs in about 43 minutes on Gaea C5.
+# The tail end of the runs output follows:
+#
+#> NOTE: done calculating index and weight for conservative interpolation
+#> Memuse(MB) at After setup interp, min=4814.17, max=4881.2, avg=4834.05
+#> Running time for get_input_grid, min=2.35723, max=4.71106, avg=4.4872
+#> Running time for get_output_grid, min=0.000376, max=0.000725, avg=0.000484754
+#> Running time for setup_interp, min=2517.68, max=2571.2, avg=2558.28
+#> NOTE: Successfully running fregrid and the following files which
+#>  store weight information are generated.
+#> ****lg_remap_C3072_11520x5760.nc
+
+--------------------------------------------------------------------------------
 #!/bin/csh -f
 #SBATCH -J Run_Script
-#SBATCH --nodes=61
-#SBATCH --time 8:00:00
-#SBATCH --cluster=c4
+#SBATCH --nodes=41
+#SBATCH --time 4:00:00
+#SBATCH --cluster=c5
 #SBATCH --partition=batch
 #SBATCH --qos=normal
 #SBATCH --account=gfdl_f
 
-source /opt/modules/default/init/tcsh
-module load fre/bronx-19
+source $MODULESHOME/init/tcsh
+module load fre/bronx-20
 
 set echo=on
 
@@ -17,40 +41,17 @@ set echo=on
 # coalescing of the exchange grid-based remap file to the first rank for output
 # The remaining mpi-ranks can share nodes and may need to be run on a reduced set
 # to allow for memory pressure amongst the worker nodes
+
 set nt1=1
-set cpt1=36
-set nt2=540
+set cpt1=64
+set nt2=640
 set cpt2=4
 
-srun-multi --ntasks=$nt1 --cpus-per-task=$cpt1 \
-  fregrid_parallel --input_mosaic C3072_mosaic.nc --nlon 11520 --nlat 5760 \'
+srun --ntasks=$nt1 --cpus-per-task=$cpt1 \
+  fregrid_parallel --input_mosaic C3072_mosaic.nc --nlon 11520 --nlat 5760 \
   --remap_file lg_remap_C3072_11520x5760.nc --interp_method conserve_order1 --debug \
   : \
   --ntasks $nt2 --cpus-per-task=$cpt2 \
   fregrid_parallel --input_mosaic C3072_mosaic.nc --nlon 11520 --nlat 5760 \
-  --remap_file lg_remap_C3072_11520x5760.nc --interp_method  conserve_order1 --debug
-
-Script output from gaea:
-set nt1=1
-set cpt1=36
-set nt2=540
-set cpt2=4
-srun-multi --ntasks=1 --cpus-per-task=36 fregrid_parallel --input_mosaic C3072_mosaic.nc --nlon 11520 --nlat 5760 --remap_file lg_remap_C3072_11520x5760.nc --interp_method conserve_order1 --debug : --ntasks 540 --cpus-per-task=4 fregrid_parallel --input_mosaic C3072_mosaic.nc --nlon 11520 --nlat 5760 --remap_file lg_remap_C3072_11520x5760.nc --interp_method conserve_order1 --debug
-****fregrid: first order conservative scheme will be used for regridding.
-NOTE: No input file specified in this run, no data file will be regridded and only weight information is calculated.
-Memuse(MB) at Before calling get_input_grid, min=17.9961, max=20.2305, avg=18.6771
-Memuse(MB) at After calling get_input_grid, min=1461.04, max=1462.97, avg=1461.62
-Memuse(MB) at After calling get_output_grid, min=1461.04, max=1462.97, avg=1461.62
-Memuse(MB) at After get_input_output_cell_area, min=1463.56, max=1465.75, avg=1464.28
-NOTE: done calculating index and weight for conservative interpolation
-Memuse(MB) at After setup interp, min=4677.54, max=4714.79, avg=4688.48  
-Running time for get_input_grid, min=3.75677, max=4.31201, avg=4.07478
-Running time for get_output_grid, min=0.000969, max=0.001346, avg=0.00117746
-Running time for setup_interp, min=13238.7, max=13244.7, avg=13243
-NOTE: Successfully running fregrid and the following files which store weight information are generated.
-****lg_remap_C3072_11520x5760.nc
-
-Key things to note
-fregrid_parallel indicates a memory use of 4.7GB and requires a runtime of 3.7 hours.  This suggests we could change cpt2 from 4 to 3 and cut overall node usage from 61 to 46 with the same elapsed time.  Regardless, this can be used as a guideline for guesstimating resource requirements as we continue to get these extreme remapping requests.  We have to see how much memory actually applying the remap file to data will consume. 
-
+  --remap_file lg_remap_C3072_11520x5760.nc --interp_method conserve_order1 --debug
 
