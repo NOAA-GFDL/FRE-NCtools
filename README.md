@@ -62,21 +62,21 @@ The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_g
 
 
 ### User Documentation
-Documentation on using individual tools may be obtained by running
-the tool without arguments or with the `-h` or `--help` options. Generally
-this provides a list of the legal command line arguments, and frequently with
-examples and explanations.
+Documentation on using individual tools may be obtained by running the tool without
+arguments or with the `-h` or `--help` options. Usually this provides  a list of the
+legal command line arguments, definitions of the arguments, a summary of the tool, and
+examples.
 
 Many of the tools are commonly used in conjunction with other tools or as part of a
 workflow. The directory FRE-NCtools/t has numerous test scripts that exercise
-some possible workflows. As an example, consider the script for CI test #3
-(file Test03-grid_coupled_model.sh) for creating grids and mosaics for a coupled model.
-As a second example, script Test20-fregrid.sh creates a target mosaic
-(file latlon_grid.nc) and then uses fregrid to remap an existing file
-(--input_file ocean_temp_salt.res.nc) of a known mosaic (CM2.1_mosaic.nc)
-to the target mosaic.
+some possible workflows and can provide context for use of the tools. As an example,
+consider the script for CI test #3 (file Test03-grid_coupled_model.sh) : via a detailed
+example this script shows the use order of make_coupler_mosaic, make_solo_mosaic,
+make_hgrid, make_vgrid and make_topog for creating grids and mosaics for a coupled
+model. The docs directory contains a summary catalog of some of additional workflow
+test scripts.
 
-Additional documentation may be found in the documentation directory
+Additional documentation can be found in the documentation directory
 ( FRE-NCtools/docs ) and the
 [FRE-NCTools wiki](https://github.com/NOAA-GFDL/FRE-NCtools/wiki/)
 
