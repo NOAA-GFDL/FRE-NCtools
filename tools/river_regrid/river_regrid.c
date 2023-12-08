@@ -26,6 +26,7 @@
 #include "mpp.h"
 #include "mpp_io.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 #include "constant.h"
 #include "mosaic_util.h"
 #include "tool_util.h"
@@ -1573,6 +1574,3 @@ void qsort_index(double array[], int start, int end, int rank[])
       }
    }
 }
-
-
-

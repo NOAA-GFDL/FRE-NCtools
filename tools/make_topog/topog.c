@@ -22,6 +22,7 @@
 #include <math.h>
 #include "constant.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 #include "mosaic_util.h"
 #include "interp.h"
 #include "mpp_io.h"
@@ -45,7 +46,7 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
 		  int tripolar_grid, int cyclic_x, int cyclic_y, int full_cell,
 		  int flat_bottom, int adjust_topo, int fill_isolated_cells,
 		  double min_thickness, int open_very_this_cell, double fraction_full_cell, int round_shallow,
-		  int deepen_shallow, int fill_shallow, int dont_change_landmask, int kmt_min, 
+		  int deepen_shallow, int fill_shallow, int dont_change_landmask, int kmt_min,
 		  domain2D domain, int debug );
 int kmin(int ni, int *kmt, int i, int j);
 double hmin(int ni, double *ht, int i, int j);
@@ -79,12 +80,12 @@ void create_bowl_topog(int nx, int ny, const double *x, const double *y, double 
 
   nxp = nx+1;
   nyp = ny+1;
-  
+
   for(j=0;j<ny;j++){
     for(i=0;i<nx;i++){
       xx = (x[j*nxp+i]+x[j*nxp+i+1]+x[(j+1)*nxp+i]+x[(j+1)*nxp+i+1])*0.25;
-      yy = (y[j*nxp+i]+y[j*nxp+i+1]+y[(j+1)*nxp+i]+y[(j+1)*nxp+i+1])*0.25;	    
-      if (xx <= bowl_west  || xx >= bowl_east || yy <= bowl_south || yy >= bowl_north)            
+      yy = (y[j*nxp+i]+y[j*nxp+i+1]+y[(j+1)*nxp+i]+y[(j+1)*nxp+i+1])*0.25;
+      if (xx <= bowl_west  || xx >= bowl_east || yy <= bowl_south || yy >= bowl_north)
 	bottom = min_depth;
       else
 	bottom = min_depth + bottom_depth*(1.0-exp(-pow((yy-bowl_south)/2.0,2)))
@@ -118,7 +119,7 @@ void create_gaussian_topog(int nx, int ny, const double *x, const double *y, dou
       yt[j*nx+i] = (y[j*nxp+i] + y[j*nxp+i+1] + y[(j+1)*nxp+i] + y[(j+1)*nxp+i+1])*0.25;
     }
   }
-  
+
   xw = xt[0];
   ys = yt[0];
   xe = xw;
@@ -151,7 +152,7 @@ void create_gaussian_topog(int nx, int ny, const double *x, const double *y, dou
 
   free(xt);
   free(yt);
-  
+
 }; /* create_gaussian_topog */
 
 
@@ -181,13 +182,13 @@ void create_idealized_topog( int nx, int ny, const double *x, const double *y,
   for(j=0;j<ny;j++){
     for(i=0;i<nx;i++) depth[j*nx+i]=bottom_depth;
   }
-  
+
   //antarctica
   xbnd = (double *)malloc(nx*sizeof(double));
   ybnd = (double *)malloc(ny*sizeof(double));
   for(i=0; i<nx; i++) xbnd[i] = (x[i]+x[i+1])*0.5;
   for(j=0; j<ny; j++) ybnd[j] = (y[j*nxp]+y[(j+1)*nxp])*0.5;
-  
+
   set_depth (nx, ny, xbnd, ybnd, -90.0, 0.0, 360.0, -80.0, 0.0, 360.0, 0.0, depth);
   set_depth (nx, ny, xbnd, ybnd, -80.0, 360.0-25.0, 360.0, -70.0, 360.0, 360.0, 0.0, depth);
   set_depth (nx, ny, xbnd, ybnd, -80.0, 0.0, 360.0, -70.0, 0.0, 170.0, 0.0, depth);
@@ -260,7 +261,7 @@ void create_idealized_topog( int nx, int ny, const double *x, const double *y,
     for(i=0;i<nx;i++){
       if (depth[j*nx+i] > 0.0 ) {
 	arg = bottom_depth*(1-0.4*fabs(cos(((j+1)*M_PI)/nyp)*sin(((i+1)*2*M_PI)/nxp)));
-        arg = max(arg, min_depth);      
+        arg = max(arg, min_depth);
         depth[j*nx+i] = arg;
       }
     }
@@ -269,18 +270,18 @@ void create_idealized_topog( int nx, int ny, const double *x, const double *y,
   // add "idealized" ridges
 
   arg = 0.666*bottom_depth;
-  
+
   set_depth (nx, ny, xbnd, ybnd, -20.0, 360.0-20.0, 360.0-10.0, 30.0, 360.0-45.0, 360.0-35.0, arg, depth);
   set_depth (nx, ny, xbnd, ybnd, 30.0, 360.0-45.0, 360.0-35.0, 60.0, 360.0-20.0,  360.0-30.0, arg, depth);
   set_depth (nx, ny, xbnd, ybnd, -60.0,360.0-100.0, 360.0-130.0, 40.0, 360.0-160.0, 180.0, arg, depth);
 
   arg = 0.5*bottom_depth;
-  
+
   set_depth (nx, ny, xbnd, ybnd, -50.0, 360.0-120.0, 360.0-120.0, 30.0, 190.0, 190.0, arg, depth);
 
   free(xbnd);
   free(ybnd);
-  
+
 } /* create_idealized_topog */
 
 /*********************************************************************
@@ -289,9 +290,9 @@ void create_idealized_topog( int nx, int ny, const double *x, const double *y,
         set the topography depth "depth[i][j](i,j)" = "depth_in" within the area of
         the trapezoid bounded by vertices:
         (alat1,slon1), (alat1,elon1), (alat2,slon2), and (alat2,elon2)
-   
+
         inputs:
-   
+
         alat1 = southern latitude of trapezoid (degrees)
         slon1 = starting longitude of southern edge of trapezoid (deg)
         elon1 = ending longitude of southern edge of trapezoid (deg)
@@ -299,14 +300,14 @@ void create_idealized_topog( int nx, int ny, const double *x, const double *y,
         slon2 = starting longitude of northern edge of trapezoid (deg)
         elon2 = ending longitude of northern edge of trapezoid (deg)
         depth_in = constant depth value
-   
+
  ********************************************************************/
 void set_depth(int nx, int ny, const double *xbnd, const double *ybnd, double alat1, double slon1, double elon1, double alat2,
                       double slon2, double elon2, double depth_in, double *depth)
 {
   double rdj, d;
   int i, j, i1, i2, j1, j2, is, ie, js, je, is1, ie1, is2, ie2;
-  
+
   j1 = nearest_index(alat1, ybnd, ny );
   j2 = nearest_index(alat2, ybnd, ny );
   js = min(j1,j2);
@@ -329,7 +330,7 @@ void set_depth(int nx, int ny, const double *xbnd, const double *ybnd, double al
   // the nudging of 1.e-5 is to insure that the test case resolution
   // generates the same topography and geometry on various computers.
 
-  if (js == je) 
+  if (js == je)
     rdj = 1.0;
   else
     rdj = 1.0/(je-js);
@@ -350,9 +351,9 @@ void set_depth(int nx, int ny, const double *xbnd, const double *ybnd, double al
    void create_realistic_topog( )
    reading data from source data file topog_file and remap it onto current grid
  ********************************************************************/
-void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const double *y_dst, const char *vgrid_file, 
+void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const double *y_dst, const char *vgrid_file,
 			    const char* topog_file, const char* topog_field, double scale_factor,
-			    int tripolar_grid, int cyclic_x, int cyclic_y, 
+			    int tripolar_grid, int cyclic_x, int cyclic_y,
 			    int fill_first_row, int filter_topog, int num_filter_pass,
 			    int smooth_topo_allow_deepening, int round_shallow, int fill_shallow,
 			    int deepen_shallow, int full_cell, int flat_bottom, int adjust_topo,
@@ -387,7 +388,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
     for(k=0; k<nk; k++) zw[k] = zeta[2*(k+1)];
     free(zeta);
   }
-    
+
   /* first read source topography data to get source grid and source topography */
   fid = mpp_open(topog_file, MPP_READ);
   vid = mpp_get_varid(fid, topog_field);
@@ -409,7 +410,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
   vid = mpp_get_varid(fid, yname);
   mpp_get_var_value(fid, vid, yt_src);
 
-  
+
   for(i=1; i<nx_src; i++) xc_src[i] = (xt_src[i-1] + xt_src[i])*0.5;
   xc_src[0] = 2*xt_src[0] - xc_src[1];
   xc_src[nx_src] = 2*xt_src[nx_src-1] - xc_src[nx_src-1];
@@ -417,7 +418,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
   for(j=1; j<ny_src; j++) yc_src[j] = (yt_src[j-1] + yt_src[j])*0.5;
   yc_src[0] = 2*yt_src[0] - yc_src[1];
   yc_src[ny_src] = 2*yt_src[ny_src-1] - yc_src[ny_src-1];
-    
+
 
   /* scale grid to radius */
   for(i=0; i<nxp_src; i++) xc_src[i] = xc_src[i]*D2R;
@@ -429,7 +430,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
     x_out[i] = x_dst[i]*D2R;
     y_out[i] = y_dst[i]*D2R;
   }
-  
+
   /* doing the conservative interpolation */
   y_min = minval_double((nx_dst+1)*(ny_dst+1), y_out);
   y_max = maxval_double((nx_dst+1)*(ny_dst+1), y_out);
@@ -469,7 +470,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
      nc_type vartype;
      int *depth_int=NULL;
      vartype = mpp_get_var_type(fid, vid);
-     switch (vartype) { 
+     switch (vartype) {
      case NC_DOUBLE:case NC_FLOAT:
         mpp_get_var_value_block(fid, vid, start, nread, depth_src);
         break;
@@ -497,17 +498,17 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
 	mask_src[i] = 1.0;
     }
   }
-  
-  if(use_great_circle_algorithm)  
+
+  if(use_great_circle_algorithm)
     conserve_interp_great_circle(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
 		    x_out, y_out, mask_src, depth_src, depth );
   else
     conserve_interp(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
 		    x_out, y_out, mask_src, depth_src, depth );
-  
+
   if (filter_topog) filter_topo(nx_dst, ny_dst, num_filter_pass, smooth_topo_allow_deepening, depth, domain);
   if(debug) show_deepest(nk, zw, depth, domain);
-  
+
   /* make first row of ocean model all land points for ice model */
 
   if(fill_first_row) {
@@ -519,7 +520,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
 			      full_cell, flat_bottom, adjust_topo, fill_isolated_cells, min_thickness,
 			      open_very_this_cell, fraction_full_cell, round_shallow, deepen_shallow, fill_shallow,
 			      dont_change_landmask, kmt_min, domain, debug );
-  
+
   free(depth_src);
   free(mask_src);
   free(x_src);
@@ -530,14 +531,14 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
   free(yt_src);
   free(x_out);
   free(y_out);
-  
+
 }; /* create_realistic_topog */
 
 void process_topo(int nk, double *depth, int *num_levels, const double *zw,
 		  int tripolar_grid, int cyclic_x, int cyclic_y, int full_cell,
 		  int flat_bottom, int adjust_topo, int fill_isolated_cells,
 		  double min_thickness, int open_very_this_cell, double fraction_full_cell, int round_shallow,
-		  int deepen_shallow, int fill_shallow, int dont_change_landmask, int kmt_min, 
+		  int deepen_shallow, int fill_shallow, int dont_change_landmask, int kmt_min,
 		  domain2D domain, int debug )
 {
   int i,j, isc, iec, jsc, jec, nxc, nyc, nip, njp, ni, nj;
@@ -550,7 +551,7 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
   mpp_get_global_domain2d( domain, &ni, &nj);
   nxc = iec-isc+1;
   nyc = jec-jsc+1;
-  
+
   nip = ni + 2;
   njp = nj + 2;
   ht  = (double *)malloc(nip*njp*sizeof(double));
@@ -563,7 +564,7 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
   mpp_global_field_all_double(domain, nxc, nyc, depth, tmp);
   for(j=1; j<=nj; j++) for(i=1; i<=ni; i++) ht[j*nip+i] = tmp[(j-1)*ni+i-1];
   free(tmp);
-  
+
   for(j=1; j<=nj; j++) for(i=1; i<=ni; i++) {
     if( ht[j*nip+i] > 0 ) {
       kmt[j*nip+i] = nearest_index( ht[j*nip+i], zw, nk);
@@ -640,8 +641,8 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
   }
   free(ht);
   free(kmt);
-  
-  if (adjust_topo) {  
+
+  if (adjust_topo) {
     restrict_partial_cells(nxc, nyc, nk, zw, depth, num_levels, min_thickness,
 			   open_very_this_cell, fraction_full_cell, debug);
     enforce_min_depth(nxc, nyc, nk, zw, round_shallow, deepen_shallow, fill_shallow,
@@ -649,9 +650,9 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
   }
 
   for(i=0; i<nxc*nyc; i++) num_levels[i]++;
-  
+
   /* do some analysis. This will be added in the future if necessary
-    if(debug) analyze_topographic_slopes(dxte, dytn, geolon_t, geolat_t, ht(1:ni,1:nj), kmt(1:ni,1:nj), nk) 
+    if(debug) analyze_topographic_slopes(dxte, dytn, geolon_t, geolat_t, ht(1:ni,1:nj), kmt(1:ni,1:nj), nk)
 */
 
 }
@@ -663,7 +664,7 @@ void process_topo(int nk, double *depth, int *num_levels, const double *zw,
     void filter_topo( int nx, int ny, int num_pass, double *depth)
 
        smooth topographic depth "d" with "num_pass" applications of a 2D
-       version of a shapiro filter (weights = 1/4, 1/2, 1/4) . 
+       version of a shapiro filter (weights = 1/4, 1/2, 1/4) .
        allow filtering to decrease the bottom depth but not increase it.
        do not allow original geometry to change.
        note: depth "d" should be on a grid of uniformly constant spacing
@@ -677,14 +678,14 @@ void filter_topo( int nx, int ny, int num_pass, int smooth_topo_allow_deepening,
   int n1, n2, i, j, n, m, ip, jp;
   size_t *dims;
   int is, ie, js, je, nxg, nyg, pos;
-  
-  
+
+
   mpp_get_compute_domain2d(domain, &is, &ie, &js, &je);
   if( ie-is+1 != nx && je-js+1 !=ny ) mpp_error("topog.c: nx and ny does not match compute domain");
   mpp_get_global_domain2d(domain, &nxg, &nyg);
   depth_global = (double *)malloc(nxg*nyg*sizeof(double));
   mpp_global_field_all_double(domain, nx, ny, depth, depth_global);
-  
+
   rmask = (double *)malloc(nxg*nyg*sizeof(double));
   s     = (double *)malloc(nxg*nyg*sizeof(double));
 
@@ -699,7 +700,7 @@ void filter_topo( int nx, int ny, int num_pass, int smooth_topo_allow_deepening,
   f[6] = 1.0/16.0;
   f[7] = 1.0/8.0;
   f[8] = 1.0/16.0;
-  
+
   /* geometry mask */
   for(i=0; i<nxg*nyg; i++) {
     s[i] = depth_global[i];
@@ -717,7 +718,7 @@ void filter_topo( int nx, int ny, int num_pass, int smooth_topo_allow_deepening,
 	for(ip=-1;ip<=1;ip++) {
 	  for(jp=-1;jp<=1;jp++) {
 	    m = (ip+1)*3 + jp+1;
-	    if (rmask[(j+jp)*nxg+i+ip] == 0.0) 
+	    if (rmask[(j+jp)*nxg+i+ip] == 0.0)
 	      s[j*nxg+i] = s[j*nxg+i] + depth_global[j*nxg+i]*f[m];
             else
 	      s[j*nxg+i] = s[j*nxg+i] + depth_global[(j+jp)*nxg+i+ip]*f[m];
@@ -742,7 +743,7 @@ void filter_topo( int nx, int ny, int num_pass, int smooth_topo_allow_deepening,
   free(depth_global);
   free(rmask);
   free(s);
-  
+
 }; /* filter_topog */
 
 int min4_int(int d1, int d2, int d3, int d4)
@@ -798,7 +799,7 @@ double max4_double(double d1, double d2, double d3, double d4)
   int nip;
   nip = ni + 2;
   return min4_double(ht[j*nip+i], ht[j*nip+i+1], ht[(j+1)*nip+i], ht[(j+1)*nip+i+1]);
-}  
+}
 
 /* get the minimum levels of surrounding cells
    it is assumed the data ht has halo = 1
@@ -808,7 +809,7 @@ double max4_double(double d1, double d2, double d3, double d4)
   int nip;
   nip = ni + 2;
   return min4_double(kmt[j*nip+i], kmt[j*nip+i+1], kmt[(j+1)*nip+i], kmt[(j+1)*nip+i+1]);
-}  
+}
 
 
 /*--- remove isolated cells */
@@ -826,7 +827,7 @@ void remove_isolated_cells(int ni, int nj, double *ht, int *kmt, int tripolar_gr
   else
     nj_max = nj;
   nip = ni+2;
-  
+
   if(fill_isolated_cells) {
     /*  fill isolated cells (potholes and trenches) at all levels in kmt.
         filled kmt array is the maximum of the surrounding kmt levels.
@@ -856,7 +857,7 @@ void remove_isolated_cells(int ni, int nj, double *ht, int *kmt, int tripolar_gr
 
   }
   else
-    if(debug) printf("remove_isolated_cells: Not filling isolated T cells...\n"); 
+    if(debug) printf("remove_isolated_cells: Not filling isolated T cells...\n");
 }
 
 /* Restricting partial cells, there will be no halo for data ht and kmt */
@@ -874,7 +875,7 @@ void restrict_partial_cells(int ni, int nj, int nk, const double *zw, double *ht
     for(k=0; k<nk; k++) p_cell_min[k] = min(50.0, zw[0]);
   else {
     p_cell_min[0] = fraction_full_cell*zw[0];
-    for(k=1; k<nk; k++) p_cell_min[k] = max(fraction_full_cell*(zw[k]-zw[k-1]),min_thickness); 
+    for(k=1; k<nk; k++) p_cell_min[k] = max(fraction_full_cell*(zw[k]-zw[k-1]),min_thickness);
   }
   if(debug) {
     printf("Partial cell restriction\n");
@@ -903,14 +904,14 @@ void restrict_partial_cells(int ni, int nj, int nk, const double *zw, double *ht
 	  tmp1 = ht[j*ni+i]-zw[k-1];
 	  tmp2 = zw[k-1] + p_cell_min[k] - ht[j*ni+i];
 	  if (tmp2 > tmp1) {
-	    itmp = kmt[j*ni+i] - 1; 
+	    itmp = kmt[j*ni+i] - 1;
 	    tmp = zw[k-1];
 	    if(debug)printf("restrict_partial_cells: Resetting kmt at (%d,%d) from %d to %d\n", i,j,kmt[j*ni+i],itmp);
 	    kmt[j*ni+i] = itmp;
 	  }
 	  else
 	    tmp = zw[k-1] + p_cell_min[k];
-	  if(debug)printf("restrict_partial_cells: Resetting depth at (%d,%d) from %g to %g\n", i,j,ht[j*ni+i],tmp);  
+	  if(debug)printf("restrict_partial_cells: Resetting depth at (%d,%d) from %g to %g\n", i,j,ht[j*ni+i],tmp);
 	  ht[j*ni+i] = tmp;
 	  n++;
 	}
@@ -932,14 +933,14 @@ void show_deepest(int nk, const double *zw, const double *depth, domain2D domain
   int  i, isc, iec, jsc, jec, nxc, nyc, ni, nj;
   double deepest;
   double *ht;
-  
+
   mpp_get_compute_domain2d( domain, &isc, &iec, &jsc, &jec);
   mpp_get_global_domain2d( domain, &ni, &nj);
   nxc = iec-isc+1;
   nyc = jec-jsc+1;
   ht = (double *)malloc(ni*nj*sizeof(double));
   mpp_global_field_double(domain, nxc, nyc, depth, ht);
-  
+
   if(mpp_pe() == mpp_root_pe()) {
     deepest = 0.0;
     for(i=0; i<ni*nj; i++) {
@@ -964,18 +965,18 @@ void show_deepest(int nk, const double *zw, const double *depth, domain2D domain
     }
   }
 }
-    
+
 /*********************************************************************
   void enforce_min_depth()
-  ! limit the minimum value of depth, depth should be >= min_depth. 
+  ! limit the minimum value of depth, depth should be >= min_depth.
  ********************************************************************/
 void enforce_min_depth(int nx, int ny, int nk, const double *zw, int round_shallow, int deepen_shallow,
 		       int fill_shallow, double *depth, int *kmt, int kmt_min, int debug)
 {
   int i, j, n, l, count, kmt_shallow, kmt_min_local;
   char errmsg[256];
-  
-  
+
+
   if(debug) printf(" Enforcing the minimum number of ocean cells in the vertical to be %d\n", kmt_min);
   if(nk < kmt_min) {
     sprintf(errmsg, "topog: number of vertical cells=%d, is less than kmt_min=%d", nk, kmt_min);
@@ -983,13 +984,13 @@ void enforce_min_depth(int nx, int ny, int nk, const double *zw, int round_shall
   }
 
   kmt_min_local = kmt_min-1;
-  
+
   count = 0;
   if(round_shallow) count++;
   if(fill_shallow) count++;
   if(deepen_shallow) count++;
   if(count > 1) mpp_error("topog: at most one of round_shallow/deepen_shallow/fill_shallow can be set to true");
-  
+
   n = 0;
   for(j=0;j<ny;j++){
     for(i=0;i<nx;i++){
@@ -997,7 +998,7 @@ void enforce_min_depth(int nx, int ny, int nk, const double *zw, int round_shall
       if (depth[l] > 0 && kmt[l] < kmt_min_local) {
 	n = n + 1;
 	kmt_shallow = kmt[l];
-	if( round_shallow || (!deepen_shallow && !fill_shallow) ) {    
+	if( round_shallow || (!deepen_shallow && !fill_shallow) ) {
 	  if (zw[kmt[l]] < 0.5*zw[kmt_min_local]) {
 	    if(debug) printf("Making location i,j,kmt= %d,%d,%d to land.\n",i, j, kmt[l]);
 	    depth[l] = 0.0;
@@ -1022,14 +1023,14 @@ void enforce_min_depth(int nx, int ny, int nk, const double *zw, int round_shall
       }
     }
   }
-  
+
   if(debug) {
     if(n>0)
       printf("enforce_min_depth: Modified %d shallow cells\n", n);
     else
       printf("enforce_min_depth: No modifications needed\n");
   }
-    
+
 }; /* enforce_min_depth */
 
 
@@ -1056,7 +1057,7 @@ void create_box_channel_topog(int nx, int ny, double basin_depth,
   /* east boundary */
   for(j=0; j<jeast_south; j++) depth[j*nx+nx-1] = 0;
   for(j=jeast_north; j<ny; j++) depth[j*nx+nx-1] = 0;
-  
+
 }
 
 /******************************************************************************
@@ -1064,10 +1065,10 @@ void create_dome_topog(int nx, int ny, const double *x, const double *y, double 
 		       double dome_bottom, double dome_embayment_west, double dome_embayment_east,
 		       double dome_embayment_south, double dome_embayment_depth, double *depth)
 
-Construct a domain similar to the DOME configuration used in 
-      Legg, Hallberg, and Girton (2005) Ocean Modelling.  
-  
-  
+Construct a domain similar to the DOME configuration used in
+      Legg, Hallberg, and Girton (2005) Ocean Modelling.
+
+
                          |     |
                          |     |
                         /|     |
@@ -1078,9 +1079,9 @@ Construct a domain similar to the DOME configuration used in
        |           /     |     |
                   /      |     |
   ---------------/-------|-----|
-       --->north 
-  
-  
+       --->north
+
+
 *******************************************************************************/
 void create_dome_topog(int nx, int ny, const double *x, const double *y, double dome_slope,
 		       double dome_bottom, double dome_embayment_west, double dome_embayment_east,
@@ -1096,14 +1097,14 @@ void create_dome_topog(int nx, int ny, const double *x, const double *y, double 
   ys = y[0];
   xe = xw;
   yn = ys;
-  
+
   for(i=0; i<nx*ny; i++) {
     xw = min(x[i], xw);
     xe = max(x[i], xe);
     ys = min(y[i], ys);
     yn = max(y[i], yn);
   }
-  
+
   /* define embayment location */
   xw_embay = dome_embayment_west;
   xe_embay = dome_embayment_east;
@@ -1143,7 +1144,7 @@ void create_dome_topog(int nx, int ny, const double *x, const double *y, double 
   printf("slope of the dome configuration             = %10.4f\n", dome_slope);
   printf("northern boundary (latitude) of slope       = %10.4f\n", yn_slope);
   printf("southern boundary (latitude) of slope       = %10.4f\n", ys_slope);
-  
+
   /* define flat bottom */
   for(i=0; i<nx*ny; i++) depth[i] = dome_bottom;
 
@@ -1154,7 +1155,7 @@ void create_dome_topog(int nx, int ny, const double *x, const double *y, double 
       depth[i] = dome_bottom - height;
     }
   }
-    
+
   /* define shelf */
   for(i=0; i<nx*ny; i++) {
     if( y[i] >= yn_slope ) depth[i] = 0.0;
@@ -1166,7 +1167,5 @@ void create_dome_topog(int nx, int ny, const double *x, const double *y, double 
 	y[i] >= ys_embay && y[i] <= yn_embay )
       depth[i] = dome_embayment_depth;
   }
-  
+
 }
-
-

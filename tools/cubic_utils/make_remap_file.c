@@ -55,6 +55,7 @@
 #include "mosaic_util.h"
 #include "tool_util.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 
 #define EPSLN (1.e-10)
 #define D2R (M_PI/180)
@@ -556,6 +557,3 @@ int main(int argc, char* argv[])
   return 0;
 
 } /* end of main */
-
-
-
