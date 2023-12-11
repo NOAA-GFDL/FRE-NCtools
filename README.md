@@ -69,12 +69,12 @@ examples.
 
 Many of the tools are commonly used in conjunction with other tools or as part of a
 workflow. The directory FRE-NCtools/t has numerous test scripts that exercise
-some possible workflows and can provide context for use of the tools. As an example,
+some possible workflows and can provide context for use of the tools, and
+the docs directory contains a summary catalog of them. As an example,
 consider the script for CI test #3 (file Test03-grid_coupled_model.sh) : via a detailed
 example this script shows the use order of make_coupler_mosaic, make_solo_mosaic,
 make_hgrid, make_vgrid and make_topog for creating grids and mosaics for a coupled
-model. The docs directory contains a summary catalog of some of additional workflow
-test scripts.
+model.
 
 Additional documentation can be found in the documentation directory
 ( FRE-NCtools/docs ) and the
