@@ -58,7 +58,11 @@ The tools available in FRE-NCtools are:
 
 
 ### Other Tools
-The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator) can be copied or cloned from its GFDL homepage.
+There are several tools that have parallel versions and can overcome memory and cpu constrains of the serial conterpart.
+E.g. fregrid_parallel is used to generate remapping weights for high resolution grids (for further information, see the
+"extreme fregrid" document).
+The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator) can be copied or
+cloned from its GFDL homepage.
 
 
 ### User Documentation
