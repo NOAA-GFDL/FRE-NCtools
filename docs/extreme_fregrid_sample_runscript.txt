@@ -3,17 +3,21 @@
 # generate this message when the remapping weights file is not available and
 # grids are too large for it to process:
 #
-#   FATAL Error: nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease
-#       nthreads, or increase number of MPI ranks
+#   FATAL Error: The xgrid size is too large for resources.
+#    nxgrid is greater than MAXXGRID/nthreads; increase MAXXGRID,
+#    decrease nthreads, or increase number of MPI ranks.
 #
-# fregrid_parallel should instead be used if such an error is encountered. fregrid_parallel
-# can be used to generate the weights file, and the file is subsequently reused (usually
-# as an input file to the serial fregrid) for regridding the fields. However, even
-# fregrid_parallel can generate the same error if run with insufficient computational
-# resources. Below (after the dashed line) is an example runscript configured for using
-# fregrid_parallel with a sufficiently large number of ranks and cores to avoid the fatal
-# error for a common "extreme fregrid" case. This configuration runs in about 43 minutes
-# on Gaea . The tail end of the runs output follows:
+# fregrid_parallel should instead be used if such an error is encountered. Like the
+# serial version, it can be used to perform the remapping; but commonly it is used
+# to perform only the compute intensive operations - the generation of the remapping
+# weights file. The weights file is saved and in turn it is then used (and re-used)
+# as an input file to the serial fregrid to quickly perform the remapping. However,
+# even fregrid_parallel can generate the same error if run with insufficient
+# computational resources. Below (after the dashed line) is an example runscript
+# configured for running fregrid_parallel with a sufficiently large number of ranks
+# and cores to avoid the fatal error for a common "extreme fregrid" case. This
+# configuration runs in about 43 minutes on Gaea C5. The tail end of the runs output
+# follows:
 #
 #> NOTE: done calculating index and weight for conservative interpolation
 #> Memuse(MB) at After setup interp, min=4814.17, max=4881.2, avg=4834.05
