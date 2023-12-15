@@ -24,7 +24,7 @@ endif
 
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/fregrid
+            $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 make_hgrid_SOURCES = create_conformal_cubic_grid.c \
