@@ -20,7 +20,7 @@
 bin_PROGRAMS = make_quick_mosaic
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/fregrid
+            $(NETCDF_CFLAGS)
 LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)  $(RPATH_FLAGS)
 
