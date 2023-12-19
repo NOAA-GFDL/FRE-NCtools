@@ -50,6 +50,7 @@
 #include "mpp_io.h"
 #include "mpp_domain.h"
 #include "create_xgrid.h"
+#include "create_xgrid_util.h"
 #include "tool_util.h"
 
 #define  EPSLN10 (1.e-10)
@@ -761,4 +762,3 @@ void nearest(int nlon, int nlat, double *mask, const double *lon, const double *
 
 
 /*   } */
-
