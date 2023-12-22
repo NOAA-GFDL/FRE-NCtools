@@ -23,8 +23,7 @@ if WITH_MPI
 endif
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS) \
-            -I$(top_srcdir)/tools/fregrid
+            $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)  $(RPATH_FLAGS)
 
 make_coupler_mosaic_SOURCES = make_coupler_mosaic.c
