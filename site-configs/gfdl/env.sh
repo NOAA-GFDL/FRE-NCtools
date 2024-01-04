@@ -32,11 +32,11 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Variables to control versions used
-env_version=2023.01
-gcc_version=11.2.0
-ncc_version=4.9.0
+env_version=2023.02
+gcc_version=12.3.0
+ncc_version=4.9.2
 ncf_version=4.6.0
-mpi_version=4.0.2
+mpi_version=4.1.1
 
 # Ensure the base spack modules are first in MODULEPATH
 module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel7-x86_64
