@@ -81,12 +81,6 @@ void reaquire_memory(const size_t sz, First*& first, Rest*&... rest){
   reaquire_memory( sz, first );
   reaquire_memory( sz, rest... );
 }
-#ifndef __AIX
-void get_grid_area_(const int nlon, const int nlat, const double *lon, const double *lat, double *area)
-{
-  get_grid_area(nlon, nlat, lon, lat, area);
-}
-#endif
 
 void get_grid_area(const int nlon, const int nlat, const double *lon, const double *lat, double *area)
 {
@@ -110,15 +104,8 @@ void get_grid_area(const int nlon, const int nlat, const double *lon, const doub
     area[j*nx+i] = poly_area(x_in, y_in, n_in);
   }
 
-};  /* get_grid_area */
+}  /* get_grid_area */
 
-#ifndef __AIX
-void get_grid_great_circle_area_(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
-{
-  get_grid_great_circle_area(nlon, nlat, lon, lat, area);
-
-}
-#endif
 
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
 {
@@ -627,20 +614,6 @@ int create_xgrid_2dx1d_order2(const int nlon_in, const int nlat_in, const int nl
   and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
   mask is on grid lon_in/lat_in.
 *******************************************************************************/
-#ifndef __AIX
-int create_xgrid_2dx2d_order1_(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                               const double *mask_in, int *i_in, int *j_in, int *i_out,
-                               int *j_out, double *xgrid_area)
-{
-  int nxgrid;
-
-  nxgrid = create_xgrid_2dx2d_order1(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-			       i_in, j_in, i_out, j_out, xgrid_area);
-  return nxgrid;
-
-};
-#endif
 
 
 /********************************************************************************
@@ -650,19 +623,6 @@ int create_xgrid_2dx2d_order1_(const int nlon_in, const int nlat_in, const int n
   and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
   mask is on grid lon_in/lat_in.
 ********************************************************************************/
-#ifndef __AIX
-int create_xgrid_2dx2d_order2_(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
-                               const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                               const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-                               double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
-{
-  int nxgrid;
-  nxgrid = create_xgrid_2dx2d_order2(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-  return nxgrid;
-
-};
-#endif
 
 
 /*******************************************************************************
@@ -860,21 +820,6 @@ void pimod(double x[],int nn)
     else if (x[i] >  M_PI) x[i] -= TPI;
   }
 }
-/*#define debug_test_create_xgrid*/
-
-#ifndef __AIX
-int create_xgrid_great_circle_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
-{
-  int nxgrid;
-  nxgrid = create_xgrid_great_circle(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out,
-			      mask_in, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-
-  return nxgrid;
-};
-#endif
 
 int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
