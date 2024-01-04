@@ -168,10 +168,11 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         for (size_t i = 0; i < static_cast<size_t>(nx_in * ny_in); i++) mask[i] = 1.0;
 
         if (opcode & GREAT_CIRCLE) {
-          nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
-                                             grid_in[m].latc, grid_out[n].lonc, grid_out[n].latc,
-                                             mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon,
-                                             xgrid_clat);
+          nxgrid = create_xgrid_great_circle(
+                  &nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
+                  grid_in[m].latc, grid_out[n].lonc, grid_out[n].latc,
+                  mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon,
+                  xgrid_clat);
         } else {
           y_min = minval_double((nx_out + 1) * (ny_out + 1), grid_out[n].latc);
           y_max = maxval_double((nx_out + 1) * (ny_out + 1), grid_out[n].latc);
@@ -193,23 +194,25 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
           ny_now = jend - jstart + 1;
 
           if (opcode & CONSERVE_ORDER1) {
-            nxgrid = create_xgrid_2dx2d_order1(nx_in, ny_now, nx_out, ny_out,
-                                               grid_in[m].lonc + jstart * (nx_in + 1),
-                                               grid_in[m].latc + jstart * (nx_in + 1), grid_out[n].lonc,
-                                               grid_out[n].latc,
-                                               mask, i_in, j_in, i_out, j_out, xgrid_area);
+            nxgrid = create_xgrid_2dx2d_order1(
+                    nx_in, ny_now, nx_out, ny_out,
+                    grid_in[m].lonc + jstart * (nx_in + 1),
+                    grid_in[m].latc + jstart * (nx_in + 1), grid_out[n].lonc,
+                    grid_out[n].latc,
+                    mask, i_in, j_in, i_out, j_out, xgrid_area);
             for (size_t i = 0; i < nxgrid; i++) j_in[i] += jstart;
           } else if (opcode & CONSERVE_ORDER2) {
             int g_nxgrid;
             int *g_i_in, *g_j_in;
             double *g_area, *g_clon, *g_clat;
 
-            nxgrid = create_xgrid_2dx2d_order2(nx_in, ny_now, nx_out, ny_out,
-                                               grid_in[m].lonc + jstart * (nx_in + 1),
-                                               grid_in[m].latc + jstart * (nx_in + 1), grid_out[n].lonc,
-                                               grid_out[n].latc,
-                                               mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon,
-                                               xgrid_clat);
+            nxgrid = create_xgrid_2dx2d_order2(
+                    nx_in, ny_now, nx_out, ny_out,
+                    grid_in[m].lonc + jstart * (nx_in + 1),
+                    grid_in[m].latc + jstart * (nx_in + 1), grid_out[n].lonc,
+                    grid_out[n].latc,
+                    mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon,
+                    xgrid_clat);
             for (size_t i = 0; i < nxgrid; i++) j_in[i] += jstart;
 
             /* For the purpose of bitiwise reproducing, the following operation is needed. */
@@ -520,7 +523,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   if (xgrid_clon) free(xgrid_clon);
   if (xgrid_clat) free(xgrid_clat);
 
-}; /* setup_conserve_interp */
+} /* setup_conserve_interp */
 
 
 /*******************************************************************************
@@ -695,7 +698,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
 
       /* get the global f_max and f_min */
       if (mpp_npes() > 1) {
-        for ( int n = 0; n < ntiles_in; n++) {
+        for (int n = 0; n < ntiles_in; n++) {
           mpp_min_double(nx1 * ny1, monotone_data[n].f_min);
           mpp_max_double(nx1 * ny1, monotone_data[n].f_max);
         }
@@ -721,7 +724,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
               xdata[n] = monotone_data[tile].f_bar_max[n1];
             if (xdata[n] > monotone_data[tile].f_bar_max[n1]) {
               std::cout << std::format(" n = {}, n1 = {}, xdata = {}, f_bar_max={}", n, n1, xdata[n],
-                     monotone_data[tile].f_bar_max[n1]) << std::endl;
+                                       monotone_data[tile].f_bar_max[n1]) << std::endl;
               mpp_error(" xdata is greater than f_bar_max ");
             }
           }
@@ -735,7 +738,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
               xdata[n] = monotone_data[tile].f_bar_min[n1];
             if (xdata[n] < monotone_data[tile].f_bar_min[n1]) {
               std::cout << std::format(" n = {}, n1 = {}, xdata = {}, f_bar_min={}", n, n1, xdata[n],
-                     monotone_data[tile].f_bar_min[n1]);
+                                       monotone_data[tile].f_bar_min[n1]);
               mpp_error(" xdata is less than f_bar_min ");
             }
           }
@@ -932,9 +935,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
              field_in->var[varid].name, gsum_in, gsum_out, gsum_out - gsum_in);
 
   }
-
-
-}; /* do_scalar_conserve_interp */
+} /* do_scalar_conserve_interp */
 
 
 /*******************************************************************************

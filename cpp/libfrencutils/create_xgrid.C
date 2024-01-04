@@ -822,18 +822,16 @@ void pimod(double x[],int nn)
 }
 
 int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
-			      double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat)
-{
-
+                              const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                              const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
+                              double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat) {
   int nx1, nx2, ny1, ny2, nx1p, nx2p, ny1p, ny2p, nxgrid, n1_in, n2_in;
   int n0, n1, n2, n3, i1, j1, i2, j2;
   double x1_in[MV], y1_in[MV], z1_in[MV];
   double x2_in[MV], y2_in[MV], z2_in[MV];
   double x_out[MV], y_out[MV], z_out[MV];
-  double *x1=NULL, *y1=NULL, *z1=NULL;
-  double *x2=NULL, *y2=NULL, *z2=NULL;
+  double *x1 = NULL, *y1 = NULL, *z1 = NULL;
+  double *x2 = NULL, *y2 = NULL, *z2 = NULL;
 
   double *area1, *area2, min_area;
 
@@ -851,65 +849,88 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
   ny2p = ny2 + 1;
 
   /* first convert lon-lat to cartesian coordinates */
-  x1 = (double *)malloc(nx1p*ny1p*sizeof(double));
-  y1 = (double *)malloc(nx1p*ny1p*sizeof(double));
-  z1 = (double *)malloc(nx1p*ny1p*sizeof(double));
-  x2 = (double *)malloc(nx2p*ny2p*sizeof(double));
-  y2 = (double *)malloc(nx2p*ny2p*sizeof(double));
-  z2 = (double *)malloc(nx2p*ny2p*sizeof(double));
+  x1 = (double *) malloc(nx1p * ny1p * sizeof(double));
+  y1 = (double *) malloc(nx1p * ny1p * sizeof(double));
+  z1 = (double *) malloc(nx1p * ny1p * sizeof(double));
+  x2 = (double *) malloc(nx2p * ny2p * sizeof(double));
+  y2 = (double *) malloc(nx2p * ny2p * sizeof(double));
+  z2 = (double *) malloc(nx2p * ny2p * sizeof(double));
 
-  latlon2xyz(nx1p*ny1p, lon_in, lat_in, x1, y1, z1);
-  latlon2xyz(nx2p*ny2p, lon_out, lat_out, x2, y2, z2);
+  latlon2xyz(nx1p * ny1p, lon_in, lat_in, x1, y1, z1);
+  latlon2xyz(nx2p * ny2p, lon_out, lat_out, x2, y2, z2);
 
-  area1  = (double *)malloc(nx1*ny1*sizeof(double));
-  area2 = (double *)malloc(nx2*ny2*sizeof(double));
+  area1 = (double *) malloc(nx1 * ny1 * sizeof(double));
+  area2 = (double *) malloc(nx2 * ny2 * sizeof(double));
   get_grid_great_circle_area(nlon_in, nlat_in, lon_in, lat_in, area1);
   get_grid_great_circle_area(nlon_out, nlat_out, lon_out, lat_out, area2);
   n1_in = 4;
   n2_in = 4;
 
-  for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-    /* clockwise */
-    n0 = j1*nx1p+i1;       n1 = (j1+1)*nx1p+i1;
-    n2 = (j1+1)*nx1p+i1+1; n3 = j1*nx1p+i1+1;
-    x1_in[0] = x1[n0]; y1_in[0] = y1[n0]; z1_in[0] = z1[n0];
-    x1_in[1] = x1[n1]; y1_in[1] = y1[n1]; z1_in[1] = z1[n1];
-    x1_in[2] = x1[n2]; y1_in[2] = y1[n2]; z1_in[2] = z1[n2];
-    x1_in[3] = x1[n3]; y1_in[3] = y1[n3]; z1_in[3] = z1[n3];
+  for (j1 = 0; j1 < ny1; j1++)
+    for (i1 = 0; i1 < nx1; i1++)
+      if (mask_in[j1 * nx1 + i1] > MASK_THRESH) {
+        /* clockwise */
+        n0 = j1 * nx1p + i1;
+        n1 = (j1 + 1) * nx1p + i1;
+        n2 = (j1 + 1) * nx1p + i1 + 1;
+        n3 = j1 * nx1p + i1 + 1;
+        x1_in[0] = x1[n0];
+        y1_in[0] = y1[n0];
+        z1_in[0] = z1[n0];
+        x1_in[1] = x1[n1];
+        y1_in[1] = y1[n1];
+        z1_in[1] = z1[n1];
+        x1_in[2] = x1[n2];
+        y1_in[2] = y1[n2];
+        z1_in[2] = z1[n2];
+        x1_in[3] = x1[n3];
+        y1_in[3] = y1[n3];
+        z1_in[3] = z1[n3];
 
-    for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
-      int  n_out;
-      double xarea;
+        for (j2 = 0; j2 < ny2; j2++)
+          for (i2 = 0; i2 < nx2; i2++) {
+            int n_out;
+            double xarea;
 
-      n0 = j2*nx2p+i2;       n1 = (j2+1)*nx2p+i2;
-      n2 = (j2+1)*nx2p+i2+1; n3 = j2*nx2p+i2+1;
-      x2_in[0] = x2[n0]; y2_in[0] = y2[n0]; z2_in[0] = z2[n0];
-      x2_in[1] = x2[n1]; y2_in[1] = y2[n1]; z2_in[1] = z2[n1];
-      x2_in[2] = x2[n2]; y2_in[2] = y2[n2]; z2_in[2] = z2[n2];
-      x2_in[3] = x2[n3]; y2_in[3] = y2[n3]; z2_in[3] = z2[n3];
+            n0 = j2 * nx2p + i2;
+            n1 = (j2 + 1) * nx2p + i2;
+            n2 = (j2 + 1) * nx2p + i2 + 1;
+            n3 = j2 * nx2p + i2 + 1;
+            x2_in[0] = x2[n0];
+            y2_in[0] = y2[n0];
+            z2_in[0] = z2[n0];
+            x2_in[1] = x2[n1];
+            y2_in[1] = y2[n1];
+            z2_in[1] = z2[n1];
+            x2_in[2] = x2[n2];
+            y2_in[2] = y2[n2];
+            z2_in[2] = z2[n2];
+            x2_in[3] = x2[n3];
+            y2_in[3] = y2[n3];
+            z2_in[3] = z2[n3];
 
-      if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
-					      x_out, y_out, z_out)) > 0) {
-	xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
-	min_area = std::min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
-	if( xarea/min_area > AREA_RATIO_THRESH ) {
+            if ((n_out = clip_2dx2d_great_circle(
+                    x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
+                    x_out, y_out, z_out)) > 0) {
+              xarea = great_circle_area(n_out, x_out, y_out, z_out) * mask_in[j1 * nx1 + i1];
+              min_area = std::min(area1[j1 * nx1 + i1], area2[j2 * nx2 + i2]);
+              if (xarea / min_area > AREA_RATIO_THRESH) {
 #ifdef debug_test_create_xgrid
-	  printf("(i2,j2)=(%d,%d), (i1,j1)=(%d,%d), xarea=%g\n", i2, j2, i1, j1, xarea);
+                printf("(i2,j2)=(%d,%d), (i1,j1)=(%d,%d), xarea=%g\n", i2, j2, i1, j1, xarea);
 #endif
-	  xgrid_area[nxgrid] = xarea;
-	  xgrid_clon[nxgrid] = 0; /*z1l: will be developed very soon */
-	  xgrid_clat[nxgrid] = 0;
-	  i_in[nxgrid]       = i1;
-	  j_in[nxgrid]       = j1;
-	  i_out[nxgrid]      = i2;
-	  j_out[nxgrid]      = j2;
-	  ++nxgrid;
-	  if(nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
+                xgrid_area[nxgrid] = xarea;
+                xgrid_clon[nxgrid] = 0; /*z1l: will be developed very soon */
+                xgrid_clat[nxgrid] = 0;
+                i_in[nxgrid] = i1;
+                j_in[nxgrid] = j1;
+                i_out[nxgrid] = i2;
+                j_out[nxgrid] = j2;
+                ++nxgrid;
+                if (nxgrid > get_MAXXGRID()) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
       }
-    }
-  }
-
 
   free(area1);
   free(area2);
@@ -922,8 +943,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
   free(z2);
 
   return nxgrid;
-
-};/* create_xgrid_great_circle */
+}/* create_xgrid_great_circle */
 
 /*******************************************************************************
    Revise Sutherland-Hodgeman algorithm to find the vertices of the overlapping
