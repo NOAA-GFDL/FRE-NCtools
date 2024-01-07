@@ -393,7 +393,7 @@ void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_
 
     /*calculate grid_in cell area */
     if (opcode & GREAT_CIRCLE)
-      get_grid_great_circle_area(&nx, &ny, lonc, latc, grid_in[n].cell_area);
+      get_grid_great_circle_area(nx, ny, lonc, latc, grid_in[n].cell_area);
     else
       get_grid_area(nx, ny, lonc, latc, grid_in[n].cell_area);
 
@@ -409,7 +409,7 @@ void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_
 
     /*calculate grid_in cell area */
     if (opcode & GREAT_CIRCLE)
-      get_grid_great_circle_area(&nx, &ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
+      get_grid_great_circle_area(nx, ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
     else
       get_grid_area(nx, ny, grid_out[n].lonc, grid_out[n].latc, grid_out[n].cell_area);
 

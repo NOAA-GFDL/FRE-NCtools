@@ -134,7 +134,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
   } else { //Calculate the xgrid instead of reading it in.
     //Note: The newer create_xgrid_2dx2d_... algorithms (e.g. create_xgrid_2dx2d_order2
     // with search tree or GPU) allocates only the needed memory. So routines called here
-    // were modified to allocate their own memory. Eventaully, all of them should be modified
+    // were modified to allocate their own memory. Eventually, all of them should be modified
     // to use std::vector (vs malloc arrays) for fields like xgrid_area, i_in, and j_out, etc.
     // This may be particularly easy if MPI version of the code can be removed altogether
     // for fields like xgrid_area, i_in, j_out etc.
@@ -168,8 +168,9 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
         for (size_t i = 0; i < static_cast<size_t>(nx_in * ny_in); i++) mask[i] = 1.0;
 
         if (opcode & GREAT_CIRCLE) {
+          std::cout << "calling create_grid_great_circle" << std::endl;
           nxgrid = create_xgrid_great_circle(
-                  &nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
+                  nx_in, ny_in, nx_out, ny_out, grid_in[m].lonc,
                   grid_in[m].latc, grid_out[n].lonc, grid_out[n].latc,
                   mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon,
                   xgrid_clat);

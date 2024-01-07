@@ -4,6 +4,6 @@
     "files.associations": {
         "*.fh": "FortranFreeForm",
         "*.C": "cpp",
-        "*.cpp": "cpp",
+        "*.cpp": "cpp"
     }
 }

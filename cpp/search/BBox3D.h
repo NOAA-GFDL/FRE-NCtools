@@ -6,6 +6,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <algorithm>
 //#include <ranges>
 #include <algorithm>
 #include <cmath>
@@ -134,17 +135,18 @@ namespace nct {
       }
 
 
-      /***
-       //TODO: delete. This was a Temporary debugging aid :
-       inline void expand_xy_by_kf(float kf = 0.000001) {
+      // Expand the bbox to take into account the RANGE_CHECK_CRITERIA used in function
+      // clip_2dx2d_great_circle. Note that the recommended RANGE_CHECK_CRITERIA may be a
+      // magic number, and so this expansion routine is also ad-hock. Its goal is to make
+      // bounding boxes large enough to not miss anything.
+      inline void expand_for_rcc(float rcc = 0.05) {
         for (int i = 0; i < 3; i++) {
-          auto diff = kf * (hi[i] - lo[i]);
-          //diff = std::max((float)10000.0, diff);
+          auto diff = rcc * (hi[i] - lo[i]);
+          //diff = std::max(diff, 1000.0f);
           hi[i] += diff;
           lo[i] -= diff;
         }
       }
-      ***/
 
         //Expand the box by "+- next possible float" in all six interval ends.
         // This is useful as boxes lo[] and hi[] are float; but the boxes are set
