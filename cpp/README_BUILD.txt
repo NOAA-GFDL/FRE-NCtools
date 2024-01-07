@@ -1,6 +1,12 @@
-#   I) load desired compilers and libs
+#   I) Get config.h
+# Get a copy of config.h; you can build NCTools then copy it
+# to the cpp project:
+# cp FRE-NCtools/build FRE-NCtools/cpp/libfrencutils
 
-#   IIA) #Compiling with CMake presets:
+
+#   II) load desired compilers and libs
+
+#   IIIA) #Compiling with CMake presets:
  # inspect the preset files under dir  FRE-NCtools/cpp
  # if you dont find one to you liking, modify one or make a
  # new one

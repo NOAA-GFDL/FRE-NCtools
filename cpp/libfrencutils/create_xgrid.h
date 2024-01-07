@@ -48,8 +48,8 @@ double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, do
 double box_ctrlat(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
 int get_maxxgrid(void);
 void get_grid_area(const int nlon, const int nlat, const double *lon, const double *lat, double *area);
-void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+void get_grid_great_circle_area(const int nlon, const int nlat, const double *lon, const double *lat, double *area);
+void get_grid_area_dimensionless(const int nlon, const int nlat, const double *lon, const double *lat, double *area);
 void get_grid_area_no_adjust(const int nlon, const int nlat, const double *lon, const double *lat, double *area);
 int clip(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
 	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
@@ -84,7 +84,7 @@ int create_xgrid_2dx2d_order2(const int nlon_in, const int nlat_in, const int nl
 int clip_2dx2d_great_circle(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in, 
 			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in, 
 			    double x_out[], double y_out[], double z_out[]);
-int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+int create_xgrid_great_circle(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
 			      const double *mask_in, int *&i_in, int *&j_in, int *&i_out, int *&j_out,
 			      double *&xgrid_area, double *&xgrid_clon, double *&xgrid_clat);
@@ -131,11 +131,20 @@ size_t pt_idx(const size_t i, const size_t j,  const size_t nx) {
  */
 inline std::array<size_t, 4>
 get_cell_idxs_ccw_4(const size_t i, const size_t j, const size_t nx) {
-  std::array<size_t, 4> idxs;
+  std::array<size_t, 4> idxs ;
   idxs[0] = pt_idx(i, j, nx); //ll
   idxs[1] = pt_idx(i + 1, j , nx); //lr
   idxs[2] = pt_idx(i + 1, j + 1, nx); //ur
   idxs[3] = pt_idx(i, j + 1, nx);//ul
+  return idxs;
+}
+inline std::array<size_t, 4>
+get_cell_idxs_cw_4(const size_t i, const size_t j, const size_t nx) {
+  std::array<size_t, 4> idxs ;
+  idxs[0] = pt_idx(i, j, nx); //ll
+  idxs[1] = pt_idx(i, j + 1, nx);//ul
+  idxs[2] = pt_idx(i + 1, j + 1, nx); //ur
+  idxs[3] = pt_idx(i + 1, j , nx); //lr
   return idxs;
 }
 

@@ -1432,12 +1432,9 @@ void getCoordinates(struct Node *node, double *p)
 
 void setCoordinate(struct Node *node, double x, double y, double z)
 {
-
-
   node->x = x;
   node->y = y;
   node->z = z;
-
 }
 
 /* set inbound value for the points in interList that has inbound =0,
@@ -1484,10 +1481,8 @@ void setInbound(struct Node *interList, struct Node *list)
 }
 
 int isInside(struct Node *node) {
-
   if(node->isInside == -1) error_handler("Error from mosaic_util.c: node->isInside is not set");
   return(node->isInside);
-
 }
 
 /*  #define debug_test_create_xgrid */
@@ -1581,16 +1576,3 @@ int inside_a_polygon(double *lon1, double *lat1, int *npts, double *lon2, double
   return isinside;
 
 }
-
-#ifndef __AIX
-int inside_a_polygon_(double *lon1, double *lat1, int *npts, double *lon2, double *lat2)
-{
-
-  int isinside;
-
-  isinside = inside_a_polygon(lon1, lat1, npts, lon2, lat2);
-
-  return isinside;
-
-}
-#endif

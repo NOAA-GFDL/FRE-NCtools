@@ -1,3 +1,3 @@
-set(tools /opt/nvidia/hpc_sdk/Linux_x86_64/23.7)
+set(tools /opt/nvhpc/Linux_x86_64/23.7)
 set(CMAKE_C_COMPILER ${tools}/compilers/bin/nvc)
 set(CMAKE_CXX_COMPILER ${tools}/compilers/bin/nvc++)
