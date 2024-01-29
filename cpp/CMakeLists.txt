@@ -66,6 +66,8 @@ add_subdirectory(common)
 add_subdirectory(search)
 add_subdirectory(libfrencutils)
 add_subdirectory(fregrid)
+#add_subdirectory(test)  #Is this needed.
+#add_subdirectory(make_coupler_mosaic)
 
 if(with-sycl)
     add_subdirectory(sycl_tests)
@@ -73,3 +75,4 @@ endif(with-sycl)
 
 add_dependencies(searchtest.x libSearch)
 add_dependencies(fregrid.x libSearch libFrencu)
+#add_dependencies(make_coupler_mosaic.x libSearch libFrencu)
