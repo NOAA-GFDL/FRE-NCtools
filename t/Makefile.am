@@ -68,8 +68,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
 	Test32-fregrid_no_stretched.sh \
-	Test33-reference_make_hgrid.sh \
-	Test34-mppnccombine_blocking_factor.sh
+	Test33-reference_make_hgrid.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\

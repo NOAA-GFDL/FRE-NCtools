@@ -33,3 +33,16 @@ load test_utils
   run_and_check [ -e mppnccombine_output.nc ]
   ncdump -h mppnccombine_output.nc
 }
+
+@test "mppnccombine combines with blocking factor 0" {
+
+  generate_all_from_ncl_num mppnccombine Test02-input
+
+  #Combine the files into 1
+  mppnccombine \
+      -k 0 \
+      mppnccombine_output.nc \
+      mppnccombine.nc.????
+  run_and_check [ -e mppnccombine_output.nc ]
+  ncdump -h mppnccombine_output.nc
+}
