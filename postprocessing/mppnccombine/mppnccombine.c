@@ -1004,29 +1004,28 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
      recdimsize=ncinfile->dimsize[ncinfile->recdim];
 
    /* Check the number of records */
-   if (*nrecs==1)
-     {
-       *nrecs=recdimsize;
+   if (*nrecs==1) {
+     *nrecs=recdimsize;
 
-      if ((*bf) >= 1)
-        {
-         if ((*bf) > (*nrecs)) {
-           fprintf(stderr, "blocking factor (k) > total records (%d). Setting blocking factor to %d.\n",
-                   *nrecs, *nrecs);
-           *bf = *nrecs;
-         }
-         if (((*nrecs) % (*bf)) != 0) *nblocks = (int)((*nrecs)/(*bf)) + 1;
-         else *nblocks = (int)((*nrecs)/(*bf));
-        }
-      else
-        {
-         /* bf was set to zero, so we do full buffering */
-         *bf = min(MAX_BF,*nrecs); // we use the maximum blocking factor in our capacity
-         /* normally we'll have one block, unless we hit MAX_BF */
-         *nblocks = (int)((*nrecs)/(*bf));
-        }
-        if (verbose) fprintf(stderr, "blocking factor=%d, num. blocks=%d, num. records=%d\n",*bf,*nblocks, *nrecs);
+     /* adjust bf */
+     if ((*bf) >= 1) {
+       if ((*bf) > (*nrecs)) {
+         fprintf(stderr, "blocking factor (k) > total records (%d). Setting blocking factor to %d.\n",
+                 *nrecs, *nrecs);
+         *bf = *nrecs;
+       }
      }
+     else {
+       /* bf was set to zero, so we do full buffering */
+       *bf = min(MAX_BF,*nrecs); // we use the maximum blocking factor in our capacity
+       /* normally we'll have one block, unless we hit MAX_BF */
+     }
+     /* find nblocks */
+     if (((*nrecs) % (*bf)) != 0) *nblocks = (int)((*nrecs)/(*bf)) + 1;
+     else *nblocks = (int)((*nrecs)/(*bf));
+ 
+     if (verbose) fprintf(stderr, "blocking factor=%d, num. blocks=%d, num. records=%d\n",*bf,*nblocks, *nrecs);
+   }
    else
      if (recdimsize != *nrecs)
        {
