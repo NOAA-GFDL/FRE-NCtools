@@ -1010,8 +1010,8 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
      /* adjust bf */
      if ((*bf) >= 1) {
        if ((*bf) > (*nrecs)) {
-         fprintf(stderr, "blocking factor (k) > total records (%d). Setting blocking factor to %d.\n", 
-		 *nrecs, *nrecs);
+         fprintf(stderr, "blocking factor (k) > total records (%d). Setting blocking factor to %d.\n",
+                 *nrecs, *nrecs);
          *bf = *nrecs;
        }
      }
