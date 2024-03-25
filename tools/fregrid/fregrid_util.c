@@ -1408,28 +1408,6 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
         }
       }
     }
-    /* close the file and get the tavg_info */
-    for (n = 0; n < ntiles; n++) {
-      if (file[n].has_tavg_info) {
-        file[n].t1 = (double *)malloc(file[n].nt * sizeof(double));
-        file[n].t2 = (double *)malloc(file[n].nt * sizeof(double));
-        file[n].dt = (double *)malloc(file[n].nt * sizeof(double));
-        file[n].id_t1 = mpp_get_varid(file[n].fid, "average_T1");
-        file[n].id_t2 = mpp_get_varid(file[n].fid, "average_T2");
-        file[n].id_dt = mpp_get_varid(file[n].fid, "average_DT");
-        file[n].tavg_type = mpp_get_var_type(file[n].fid, file[n].id_t1);
-        if (lbegin > 0)
-          start[0] = lbegin - 1;
-        else
-          start[0] = 0;
-        nread[0] = file[n].nt;
-        nread[1] = 1;
-        mpp_get_var_value_block(file[n].fid, file[n].id_t1, start, nread, file[n].t1);
-        mpp_get_var_value_block(file[n].fid, file[n].id_t2, start, nread, file[n].t2);
-        mpp_get_var_value_block(file[n].fid, file[n].id_dt, start, nread, file[n].dt);
-      }
-    }
-
   } /*nfile*/
 
   /* make sure bilinear and conservative interpolation do not co-exist. */
@@ -1873,24 +1851,7 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	      mpp_def_var_att(file_out[n].fid, v_out[n].var[l].vid, "remapping_method", "bilinear");
 	  }
 	}
-	/* define time avg info variables */
-	if(file_out[n].has_tavg_info) {
-	  int ll;
-	  file_out[n].id_t1 = mpp_def_var(file_out[n].fid, "average_T1", file_in[0].tavg_type, 1, &dim_time, 0);
-	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_t1, file_out[n].fid, file_out[n].id_t1);
-	  file_out[n].id_t2 = mpp_def_var(file_out[n].fid, "average_T2", file_in[0].tavg_type, 1, &dim_time, 0);
-	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_t2, file_out[n].fid, file_out[n].id_t2);
-	  file_out[n].id_dt = mpp_def_var(file_out[n].fid, "average_DT", file_in[0].tavg_type, 1, &dim_time, 0);
-	  mpp_copy_var_att(file_in[0].fid, file_in[0].id_dt, file_out[n].fid, file_out[n].id_dt);
-	  file_out[n].t1 = (double *)malloc(file_out[n].nt*sizeof(double));
-	  file_out[n].t2 = (double *)malloc(file_out[n].nt*sizeof(double));
-	  file_out[n].dt = (double *)malloc(file_out[n].nt*sizeof(double));
-	  for(ll=0; ll<file_out[n].nt; ll++) {
-	    file_out[n].t1[ll] = file_in[0].t1[ll];
-	    file_out[n].t2[ll] = file_in[0].t2[ll];
-	    file_out[n].dt[ll] = file_in[0].dt[ll];
-	  }
-	}
+
 	/* set deflation and shuffle */
 	mpp_set_deflation(file_in[0].fid, file_out[n].fid, deflation, shuffle);
 
@@ -2060,13 +2021,6 @@ void write_output_time(int ntiles, File_config *file, int level)
 				   nwrite, &(file[n].axis[i].bnddata[level*2]));
 	  }
 	}
-      }
-      /* write out time_avg_info if exist */
-      if(file[n].has_tavg_info) {
-	nwrite[1] = 1;
-	mpp_put_var_value_block(file[n].fid, file[n].id_t1, start, nwrite, &(file[n].t1[level]) );
-	mpp_put_var_value_block(file[n].fid, file[n].id_t2, start, nwrite, &(file[n].t2[level]) );
-	mpp_put_var_value_block(file[n].fid, file[n].id_dt, start, nwrite, &(file[n].dt[level]) );
       }
     }
   }

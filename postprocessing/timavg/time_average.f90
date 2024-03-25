@@ -75,19 +75,16 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
    integer :: istat, ifile, itime, ivar, idim, nvar, ndim, natt, dimlen, varid,      &
               i, ix, jy, kz, numtime, recdim, varid_recdim, varid_in, attnum, dimid, &
               nvar_out, nv_dimid, nc, nca, ncu, dimid_tod, mt, nv_varid
-   integer :: max_shape(4), shape(4), tid(0:3), avgid(3), start(5)
+   integer :: max_shape(4), shape(4), tid(0:3), start(5)
    integer :: axes(NF90_MAX_VAR_DIMS), dimids_out(NF90_MAX_VAR_DIMS)
    logical :: do_avg, first, time_bounds_present, do_time_bounds, add_time_bounds, &
               do_climo_avg, change_bounds_to_climo, climo_bounds_present, do_period_out
 
    character(len=NF90_MAX_NAME) :: name, name_recdim, attname, version, name_time_bounds
-   character(len=NF90_MAX_NAME) :: tavg_info_string, period_in, period_out
+   character(len=NF90_MAX_NAME) :: period_in, period_out
    character(len=NF90_MAX_NAME) :: time_att_units, time_units
    character(len=NF90_MAX_NAME) :: cell_methods, cell_methods_tavg, name_bnds
-   character(len=NF90_MAX_NAME) :: tavg_names(3) = (/'average_T1','average_T2','average_DT'/)
-   character(len=NF90_MAX_NAME) :: tavg_long_names(3) = (/'Start time for average period', &
-                                                          'End time for average period  ', &
-                                                          'Length of average period     '/)
+   integer :: time_bnds_id
    integer :: in_format, cmode
 
 !-----------------------------------------------------------------------
@@ -125,9 +122,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
     if (user_shuffle < -1 .or. user_shuffle > 1) &
               call error_handler ('Shuffle must be 0 or 1')
 
-  ! string used for time_avg_info attribute
-  ! all input file strings must match this
-    tavg_info_string = trim(tavg_names(1))//','//trim(tavg_names(2))//','//trim(tavg_names(3))
 !-----------------------------------------------------------------------
 !----------------- Loop through input files ----------------------------
 !-----------------------------------------------------------------------
@@ -216,7 +210,7 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
          if (numtime > 1) then
              call check_for_climo_avg ( ncid_in, name_recdim, time_units, numtime, &
                                         do_climo_avg, period_in, period_out,       &
-                                        name_time_bounds, tavg_names(1:2)          )
+                                        name_time_bounds)
              if (do_climo_avg) climo_time = 0.0
          else
              do_climo_avg = .false.
@@ -249,16 +243,13 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
          nvar_out = nvar
      endif
 
-    !--- time average info (assume the same name use by all variables) ---
+    !--- time bnds (assume the same name use by all variables) ---
     !--- should work for FMS generated files, but need to make this more robust ---
      do_avg = .true.
-     do i = 1, 3
-          istat = NF90_INQ_VARID (ncid_in, tavg_names(i), avgid(i))
-          if (istat /= NF90_NOERR) then
-              do_avg = .false.
-              exit
-          endif
-     enddo
+     istat = NF90_INQ_VARID (ncid_in, trim(name_time_bounds), time_bnds_id)
+     if (istat /= NF90_NOERR) then
+        do_avg = .false.
+     endif
 
     !--- allocate array space when doing first file ---
      if (ifile == 1) then
@@ -521,12 +512,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
                if (istat /= NF90_NOERR) call error_handler ('creating attribute '// &
                    'cell_methods for variable '//trim(Vars(ivar)%name), ncode=istat)
             endif
-            ! FMS time avg info
-            istat = NF90_PUT_ATT (ncid_out, Vars(ivar)%varid_out, &
-                                  'time_avg_info', trim(tavg_info_string))
-            if (istat /= NF90_NOERR) call error_handler ('creating attribute '// &
-                    'time_avg_info for variable '//trim(Vars(ivar)%name), ncode=istat)
-
          enddo
 
         ! extract time units from time axis units attribute
@@ -574,32 +559,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
              endif
          endif
 
-        ! define FMS time average variables (applies to all variables in the output file)
-         do i = 1, 3
-            istat = NF90_DEF_VAR (ncid_out, trim(tavg_names(i)), NF90_REAL8, (/recdim/), tid(i))
-            if (istat /= NF90_NOERR) call error_handler ('defining time_avg_info variables', ncode=istat)
-
-            ! set compression
-            call apply_compression_defaults (max_input_deflation, max_input_shuffle, &
-                deflation_out, shuffle_out )
-            if (deflation_out > 0) then
-                istat = NF90_DEF_VAR_DEFLATE (ncid_out, tid(i), shuffle_out, 1, &
-                    deflation_out)
-                if (istat /= NF90_NOERR) call error_handler &
-                           ('setting NetCDF4 compression: '//trim(Vars(ivar)%name), ncode=istat)
-            endif
-
-            ! attributes (long_name and units)
-            istat = NF90_PUT_ATT (ncid_out, tid(i), 'long_name', trim(tavg_long_names(i)))
-            if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-            nc = nca
-            if (i == 3) nc = ncu
-            if (nc > 0) then
-               istat = NF90_PUT_ATT (ncid_out, tid(i), 'units', time_att_units(1:nc))
-               if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-            endif
-         enddo
-
         ! end of defining metadata for output file
          istat = NF90_ENDDEF (ncid_out,header_buffer_val,4,0,4)
          if (istat /= NF90_NOERR) call error_handler (ncode=istat)
@@ -641,17 +600,36 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
         if (itime > 0) then
             istat =  NF90_GET_VAR (ncid_in, varid_recdim, time, start=(/itime/))
             if (istat /= NF90_NOERR) call error_handler ('getting time coord value', ncode=istat)
+
+            !--- read time bnds_info
+            istat = NF90_GET_VAR (ncid_in, time_bnds_id, tavg(1:2), (/1, itime/))
+            if (istat /= NF90_NOERR) call error_handler &
+              ('reading time bnds', ncode=istat)
+            tavg(3) = tavg(2) - tavg(1)
+        else
+            tavg = 1
+        endif
+
+        if (do_climo_avg .and. itime == numtime) then
+          ! use midpoint of last time interval for climatological time
+          if (change_bounds_to_climo) then
+            climo_time = 0.5*(tavg(1)+tavg(2))
+          else
+            ! use last time if already climo time
+            climo_time = time
+          endif
         endif
 !-----------------------------------------------------------------------
 !-------------------- Loop through variables ---------------------------
 !-----------------------------------------------------------------------
 
      do ivar = 1, nvar
-
       !--- skip certain fields ---
         if (.not.Vars(ivar)%static .and. itime == 0) cycle
         if (     Vars(ivar)%static .and. itime  > 0) cycle
         if (     Vars(ivar)%skip                   ) cycle
+
+        if (trim(Vars(ivar)%name) .eq. trim(name_time_bounds)) cycle
 
       !--- get variable data and check dimensions ----
       !  use name from first file to get variable id
@@ -700,27 +678,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
                if (istat /= NF90_NOERR) call error_handler &
                                         ('var= '//trim(Vars(ivar)%name), ncode=istat)
          end select
-
-       !--- read time average info (probably the same for many variables) ---
-       !    should do this only once
-         if (Vars(ivar)%do_avg) then
-             do i = 1, 3
-                istat = NF90_GET_VAR (ncid_in, avgid(i), tavg(i), (/itime/))
-                if (istat /= NF90_NOERR) call error_handler &
-                        ('reading time avg info for '//trim(Vars(ivar)%name), ncode=istat)
-             enddo
-             if (do_climo_avg .and. itime == numtime) then
-                 ! use midpoint of last time interval for climatological time
-                 if (change_bounds_to_climo) then
-                    climo_time = 0.5*(tavg(1)+tavg(2))
-                 else
-                 ! use last time if already climo time
-                    climo_time = time
-                 endif
-             endif
-         else
-             tavg(3) = 1.  ! dummy value when no time average
-         endif
 
        !--- keep track of time averaging info: begin, end, and delta times ---
          if (itime > 0) then
@@ -949,12 +906,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
 
    enddo ! end of output variable loop
 
-   ! write time average info (probably do only once)
-     do i = 1, 3
-        istat = NF90_PUT_VAR (ncid_out, tid(i), time_bounds(i), (/ifile/))
-        if (istat /= NF90_NOERR) call error_handler ('writing time avg info', ncode=istat)
-     enddo
-
      if (add_time_bounds) then
         istat = NF90_PUT_VAR(ncid_out, nv_varid, (/0,1/))
         if (istat /= NF90_NOERR) call error_handler ('writing nv bounds info', ncode=istat)
@@ -1119,18 +1070,7 @@ contains
    !--- get time average info for non-static variables ----
     Var%do_avg = .false.
     if (.not.Var%static) then
-        istat = NF90_GET_ATT (ncid, varid, 'time_avg_info', Var%avg_info)
-        if (istat == NF90_NOERR) then
-            nc = len_trim(tavg_info_string)
-           !if (trim(Var%avg_info) /= trim(tavg_info_string)) then
-            if (Var%avg_info(1:nc) /= tavg_info_string(1:nc)) then
-                if (.not.suppress_warnings) write (*,96) trim(Var%name),trim(tavg_info_string), &
-                                                         trim(Var%name),trim(Var%avg_info)
-             96 format ('WARNING: time average information string does not match, var=',a, &
-                      /,'         (time_avg_info=',a,', ',a,' has value=',a,')' )
-            endif
-            Var%do_avg = .true.
-        endif
+      Var%do_avg = .true.
     endif
 
  end subroutine init_variable_type
@@ -1139,48 +1079,25 @@ contains
 
  subroutine check_for_climo_avg ( ncid, tname, tunits, ntimes,  &
                                   climo, period_in, period_out, &
-                                  tbnds_name, tavg_names )
+                                  tbnds_name)
  integer,          intent(in)  :: ncid
  character(len=*), intent(in)  :: tname, tunits
  integer,          intent(in)  :: ntimes
  logical,          intent(out) :: climo
  character(len=*), intent(out) :: period_in, period_out
- character(len=*), intent(in), optional :: tbnds_name, tavg_names(2)
+ character(len=*), intent(in)  :: tbnds_name
  real(8) :: tbnds(2,2), times(2), dt(2)
  integer :: varid(2), i, istat, nc
- logical :: tbnds_present, tavgs_present
+ logical :: tbnds_present
 
  ! read the time bounds for the two time periods
 
-  tbnds_present = .false.
-  if (present(tbnds_name)) then
-      if (tbnds_name(1:1) .ne. ' ') tbnds_present = .true.
-  endif
-  tavgs_present = .false.
-  if (present(tavg_names)) then
-      if (tavg_names(1)(1:1) .ne. ' ' .and. tavg_names(2)(1:1) .ne. ' ')  then
-          tavgs_present = .true.
-          do i = 1, 2
-             istat = NF90_INQ_VARID ( ncid, trim(tavg_names(i)), varid(i) )
-             if (istat /= NF90_NOERR) then
-                 tavgs_present = .false.
-                 exit
-             endif
-          enddo
-      endif
-  endif
-
+  if (tbnds_name(1:1) .ne. ' ') tbnds_present = .true.
   if (tbnds_present) then
       istat = NF90_INQ_VARID ( ncid, trim(tbnds_name), varid(1) )
       if (istat /= NF90_NOERR) call error_handler ('error getting varid for time bounds', ncode=istat)
       istat = NF90_GET_VAR ( ncid, varid(1), tbnds )
       if (istat /= NF90_NOERR) call error_handler ('error getting data for time bounds', ncode=istat)
-
-  else if (tavgs_present) then
-      do i = 1, 2
-         istat = NF90_GET_VAR ( ncid, varid(i), tbnds(i,:) )
-         if (istat /= NF90_NOERR) call error_handler (ncode=istat)
-      enddo
   else
       tbnds = 0.0
   endif
@@ -1188,7 +1105,7 @@ contains
 ! if the time bounds are contiguous this is not a climatological average
 
   climo = .false.
-  if (tbnds_present .or. tavgs_present) then
+  if (tbnds_present) then
      if (tbnds(2,1) == tbnds(1,2)) then
         climo = .false.
      else
@@ -1205,7 +1122,7 @@ contains
      if (istat /= NF90_NOERR) call error_handler (ncode=istat)
      dt = times(2)-times(1)
   else
-     if (.not.tbnds_present .and. .not.tavgs_present) then
+     if (.not.tbnds_present) then
          call error_handler ('cannot average when only one time level')
      endif
   endif
@@ -1227,7 +1144,7 @@ contains
 ! determine the "within average period"
 ! this is the length of the input period
 
-  if (tbnds_present .or. tavgs_present) then
+  if (tbnds_present) then
       dt(1) = tbnds(2,1)-tbnds(1,1)
   else
       dt(1) = times(2)-times(1)
@@ -1249,7 +1166,7 @@ contains
 ! this is the time between input values when climatology
 ! this is the averaging time when not climatology
 
-  if (tbnds_present .or. tavgs_present) then
+  if (tbnds_present) then
       if (climo) then
           dt(2) = tbnds(1,2)-tbnds(1,1)
       else
