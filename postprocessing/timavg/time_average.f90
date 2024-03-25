@@ -600,13 +600,16 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
         if (itime > 0) then
             istat =  NF90_GET_VAR (ncid_in, varid_recdim, time, start=(/itime/))
             if (istat /= NF90_NOERR) call error_handler ('getting time coord value', ncode=istat)
+
+            !--- read time bnds_info
+            istat = NF90_GET_VAR (ncid_in, time_bnds_id, tavg(1:2), (/1, itime/))
+            if (istat /= NF90_NOERR) call error_handler &
+              ('reading time bnds', ncode=istat)
+            tavg(3) = tavg(2) - tavg(1)
+        else
+            tavg = 1
         endif
 
-      !--- read time bnds_info
-        istat = NF90_GET_VAR (ncid_in, time_bnds_id, tavg(1:2), (/itime/))
-        if (istat /= NF90_NOERR) call error_handler &
-          ('reading time bnds', ncode=istat)
-        tavg(3) = tavg(2) - tavg(1)
         if (do_climo_avg .and. itime == numtime) then
           ! use midpoint of last time interval for climatological time
           if (change_bounds_to_climo) then
@@ -621,11 +624,12 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
 !-----------------------------------------------------------------------
 
      do ivar = 1, nvar
-
       !--- skip certain fields ---
         if (.not.Vars(ivar)%static .and. itime == 0) cycle
         if (     Vars(ivar)%static .and. itime  > 0) cycle
         if (     Vars(ivar)%skip                   ) cycle
+
+        if (trim(Vars(ivar)%name) .eq. trim(name_time_bounds)) cycle
 
       !--- get variable data and check dimensions ----
       !  use name from first file to get variable id
@@ -901,12 +905,6 @@ namelist /input/   file_names, file_name_out, use_end_time, verbose, &
       end select
 
    enddo ! end of output variable loop
-
-   ! write time average info (probably do only once)
-     do i = 1, 3
-        istat = NF90_PUT_VAR (ncid_out, tid(i), time_bounds(i), (/ifile/))
-        if (istat /= NF90_NOERR) call error_handler ('writing time avg info', ncode=istat)
-     enddo
 
      if (add_time_bounds) then
         istat = NF90_PUT_VAR(ncid_out, nv_varid, (/0,1/))
