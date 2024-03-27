@@ -55,3 +55,7 @@ SUBDIRS = postprocessing/combine_restarts \
 if WITH_CHECK_PROGS
 SUBDIRS += t
 endif
+
+if ENABLE_ACC
+SUBDIRS += tools/fregrid_acc
+endif
