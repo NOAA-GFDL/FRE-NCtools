@@ -22,6 +22,7 @@
 #include <math.h>
 #include <string.h>
 #include "fregrid_util_acc.h"
+#include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "tool_util.h"
@@ -39,22 +40,22 @@
 #define MAX_ITER 4000
 #define MAX_NUM_VARS 5
 
-void init_halo(double *var, int nx, int ny, int nz, int halo);
-void update_halo(int nx, int ny, int nz, double *data, Bound_config *bound, Data_holder *dHold);
-void setup_boundary(const char *mosaic_file, int ntiles, Grid_config *grid, Bound_config *bound, int halo, int position);
-void delete_bound_memory(int ntiles, Bound_config *bound);
-void copy_var_config(const Var_config *var_in, Var_config *var_out);
-void init_var_config(Var_config *var, int interp_method);
-void fill_boundaries(int ni, int nj, double *data, int is_cyclic);
-int parse_string(const char *str1, const char *str2, char *strOut, char *errmsg);
-void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *lat, const double *data_in,
+void init_halo_acc(double *var, int nx, int ny, int nz, int halo);
+void update_halo_acc(int nx, int ny, int nz, double *data, Bound_config *bound, Data_holder *dHold);
+void setup_boundary_acc(const char *mosaic_file, int ntiles, Grid_config *grid, Bound_config *bound, int halo, int position);
+void delete_bound_memory_acc(int ntiles, Bound_config *bound);
+void copy_var_config_acc(const Var_config *var_in, Var_config *var_out);
+void init_var_config_acc(Var_config *var, int interp_method);
+void fill_boundaries_acc(int ni, int nj, double *data, int is_cyclic);
+int parse_string_acc(const char *str1, const char *str2, char *strOut, char *errmsg);
+void do_extrapolate_acc (int ni, int nj, int nk, const double *lon, const double *lat, const double *data_in,
 		     double *data_out, int is_cyclic, double missing_value, double stop_crit);
 /*******************************************************************************
   void setup_tile_data_file(Mosaic_config mosaic, const char *filename)
   This routine will setup the data file name for each tile.
 *******************************************************************************/
 
-void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, File_config *file,
+void set_mosaic_data_file_acc(int ntiles, const char *mosaic_file, const char *dir, File_config *file,
 			  const char *filename)
 {
   char   str1[STRING]="", str2[STRING]="", tilename[STRING]="";
@@ -100,7 +101,7 @@ void set_mosaic_data_file(int ntiles, const char *mosaic_file, const char *dir, 
 /*******************************************************************************
   void set_scalar_var()
 *******************************************************************************/
-void set_field_struct(int ntiles, Field_config *field, int nvar, char * varname, File_config *file)
+void set_field_struct_acc(int ntiles, Field_config *field, int nvar, char * varname, File_config *file)
 {
   int  n, i;
 
@@ -123,7 +124,7 @@ void set_field_struct(int ntiles, Field_config *field, int nvar, char * varname,
   void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, const char *weight_field);
   read the weight information
 *******************************************************************************/
-void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, const char *weight_field,
+void set_weight_inf_acc(int ntiles, Grid_config *grid, const char *weight_file, const char *weight_field,
 		    int has_cell_measure_att)
 {
   int n, fid, vid;
@@ -154,7 +155,7 @@ void set_weight_inf(int ntiles, Grid_config *grid, const char *weight_file, cons
   void get_input_grid()
   To decrease memory usage, use grid_out latitude to decide the input grid to be stored.
 *******************************************************************************/
-void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file,
+void get_input_grid_acc(int ntiles, Grid_config *grid, Bound_config *bound_T, const char *mosaic_file,
 		    unsigned int opcode, int *great_circle_algorithm, int save_weight_only)
 {
   int         n, m1, m2, i, j, l, ind1, ind2, nlon, nlat;
@@ -221,8 +222,8 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     for(j=0; j<ny[n]; j++) grid[n].latt1D[j] = y[(2*j+1)*(2*nx[n]+1) + 1] * D2R;
 
     if(halo>0) {
-      init_halo(grid[n].lonc, nx[n]+1, ny[n]+1, 1, halo);
-      init_halo(grid[n].latc, nx[n]+1, ny[n]+1, 1, halo);
+      init_halo_acc(grid[n].lonc, nx[n]+1, ny[n]+1, 1, halo);
+      init_halo_acc(grid[n].latc, nx[n]+1, ny[n]+1, 1, halo);
     }
     for(j=0; j<=ny[n]; j++) for(i=0; i<=nx[n]; i++) {
       ind1 = (j+halo)*(nx[n]+1+2*halo)+i+halo;
@@ -240,8 +241,8 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 	grid[n].latt[ind1] = y[ind2]*D2R;
       }
 
-      init_halo(grid[n].lont, nx[n], ny[n], 1, 1);
-      init_halo(grid[n].latt, nx[n], ny[n], 1, 1);
+      init_halo_acc(grid[n].lont, nx[n], ny[n], 1, 1);
+      init_halo_acc(grid[n].latt, nx[n], ny[n], 1, 1);
     }
 
     /* if vector, need to get rotation angle */
@@ -273,7 +274,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
   mpp_close(m_fid);
 
   /* get the boundary condition */
-  setup_boundary(mosaic_file, ntiles, grid, bound_T, 1, CENTER);
+  setup_boundary_acc(mosaic_file, ntiles, grid, bound_T, 1, CENTER);
   if(read_tgrid) {
     for(n=0; n<ntiles; n++) {
       nlon = grid[n].nx;
@@ -286,9 +287,9 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 	  dHold[l].nx = grid[bound_T[n].tile2[l]].nx+2;
 	  dHold[l].ny = grid[bound_T[n].tile2[l]].ny+2;
 	}
-	update_halo(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
+	update_halo_acc(nlon+2, nlat+2, 1, grid[n].lont, &(bound_T[n]), dHold );
 	for(l=0; l<nbound; l++) dHold[l].data = grid[bound_T[n].tile2[l]].latt;
-	update_halo(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
+	update_halo_acc(nlon+2, nlat+2, 1, grid[n].latt, &(bound_T[n]), dHold );
 
 	for(l=0; l<nbound; l++) dHold[l].data = NULL;
 	free(dHold);
@@ -298,7 +299,7 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 
   /* for bilinear interpolation, need to get cell-center grid */
   if(opcode & BILINEAR) {
-    setup_boundary(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
+    setup_boundary_acc(mosaic_file, ntiles, grid, bound_C, 1, CORNER);
     /*--- fill the halo of corner cell */
     for(n=0; n<ntiles; n++) {
       nlon = grid[n].nx;
@@ -318,10 +319,10 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
 	  dHold[l].nx   = grid[bound_C[n].tile2[l]].nx + 1 + 2*halo;
 	  dHold[l].ny   = grid[bound_C[n].tile2[l]].ny + 1 + 2*halo;
 	}
-	update_halo(nlon+1+2*halo, nlat+1+2*halo, 1, grid[n].lonc, &(bound_C[n]), dHold);
+	update_halo_acc(nlon+1+2*halo, nlat+1+2*halo, 1, grid[n].lonc, &(bound_C[n]), dHold);
 	for(l=0; l<nbound; l++) dHold[l].data = grid[bound_C[n].tile2[l]].latc;
 
-	update_halo(nlon+1+2*halo, nlat+1+2*halo, 1, grid[n].latc, &(bound_C[n]), dHold);
+	update_halo_acc(nlon+1+2*halo, nlat+1+2*halo, 1, grid[n].latc, &(bound_C[n]), dHold);
 	for(l=0; l<nbound; l++) dHold[l].data = NULL;
 	free(dHold);
       }
@@ -353,14 +354,14 @@ void get_input_grid(int ntiles, Grid_config *grid, Bound_config *bound_T, const 
     }
   }
 
-  if(opcode & BILINEAR) delete_bound_memory(ntiles, bound_C);
+  if(opcode & BILINEAR) delete_bound_memory_acc(ntiles, bound_C);
   free(bound_C);
   free(nx);
   free(ny);
 }; /* get_input_grid */
 
 
-void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_out, Grid_config *grid_out, unsigned int opcode)
+void get_input_output_cell_area_acc(int ntiles_in, Grid_config *grid_in, int ntiles_out, Grid_config *grid_out, unsigned int opcode)
 {
   double *lonc=NULL, *latc=NULL;
   int n, nx, ny, ind1, ind2, i, j, halo;
@@ -411,7 +412,7 @@ void get_input_output_cell_area(int ntiles_in, Grid_config *grid_in, int ntiles_
   void get_output_grid_from_mosaic(Mosaic_config *mosaic)
 
 *******************************************************************************/
-void get_output_grid_from_mosaic(int ntiles, Grid_config *grid, const char *mosaic_file, unsigned int opcode,
+void get_output_grid_from_mosaic_acc(int ntiles, Grid_config *grid, const char *mosaic_file, unsigned int opcode,
 				 int *great_circle_algorithm)
 {
   int         n, i, j, ii, jj, npes, layout[2];
@@ -561,7 +562,7 @@ void get_output_grid_from_mosaic(int ntiles, Grid_config *grid, const char *mosa
   calculate output grid based on nlon, nlat and finer steps.
 
 *******************************************************************************/
-void get_output_grid_by_size(int ntiles, Grid_config *grid, double lonbegin, double lonend, double latbegin, double latend,
+void get_output_grid_by_size_acc(int ntiles, Grid_config *grid, double lonbegin, double lonend, double latbegin, double latend,
 			     int nlon, int nlat, int finer_steps, int center_y, unsigned int opcode)
 {
   double      dlon, dlat, lon_fine, lat_fine, lon_range, lat_range;
@@ -660,9 +661,9 @@ void get_output_grid_by_size(int ntiles, Grid_config *grid, double lonbegin, dou
 
 
 /*******************************************************************************
-void init_var_config(Var_config *var)
+void init_var_config_acc(Var_config *var)
 *******************************************************************************/
-void init_var_config(Var_config *var, int interp_method)
+void init_var_config_acc(Var_config *var, int interp_method)
 {
   var->nz            = 1;
   var->nn            = 1;
@@ -679,9 +680,9 @@ void init_var_config(Var_config *var, int interp_method)
 }
 
 /*******************************************************************************
-void copy_var_config(Var_config *var)
+void copy_var_config_acc(Var_config *var)
 *******************************************************************************/
-void copy_var_config(const Var_config *var_in, Var_config *var_out)
+void copy_var_config_acc(const Var_config *var_in, Var_config *var_out)
 {
   int i;
 
@@ -700,7 +701,7 @@ void copy_var_config(const Var_config *var_in, Var_config *var_out)
 }
 
 /* We assume all the tiles have the same vgrid */
-void get_output_vgrid( VGrid_config *vgrid, const char *vgrid_file )
+void get_output_vgrid_acc( VGrid_config *vgrid, const char *vgrid_file )
 {
   int fid, nz, vid, k;
   double *z=NULL;
@@ -723,7 +724,7 @@ void get_output_vgrid( VGrid_config *vgrid, const char *vgrid_file )
   free(z);
 }
 
-void get_input_vgrid( VGrid_config *vgrid, const char *vgrid_file, const char *field )
+void get_input_vgrid_acc( VGrid_config *vgrid, const char *vgrid_file, const char *field )
 {
   int fid, vid, vid2, ndim, i, nz;
   char dimname[32];
@@ -753,7 +754,7 @@ void get_input_vgrid( VGrid_config *vgrid, const char *vgrid_file, const char *f
 
 }
 
-void setup_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out)
+void setup_vertical_interp_acc(VGrid_config *vgrid_in, VGrid_config *vgrid_out)
 {
   int nk1, nk2, kstart, kend, k;
 
@@ -786,7 +787,7 @@ void setup_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out)
   }
 }
 
-void do_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_config *grid_out, Field_config *field, int varid)
+void do_vertical_interp_acc(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_config *grid_out, Field_config *field, int varid)
 {
   int nk1, nk2, nx, ny, kstart, kend, i, k;
   double *tmp;
@@ -821,7 +822,7 @@ void do_vertical_interp(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_co
 /*******************************************************************************
   void get_input_metadata(Mosaic_config, *mosaic)
 *******************************************************************************/
-void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config *file2, Field_config *scalar,
+void get_input_metadata_acc(int ntiles, int nfiles, File_config *file1, File_config *file2, Field_config *scalar,
                         Field_config *u_comp, Field_config *v_comp, const Grid_config *grid, int kbegin, int kend,
                         int lbegin, int lend, unsigned int opcode, char *associated_file_dir) {
   int n, m, i, l, ll, nscalar, nvector, nfield;
@@ -872,13 +873,13 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 
   for (l = 0; l < nscalar; l++)
     for (n = 0; n < ntiles; n++) {
-      init_var_config(scalar[n].var + l, interp_method);
+      init_var_config_acc(scalar[n].var + l, interp_method);
     }
 
   for (l = 0; l < nvector; l++)
     for (n = 0; n < ntiles; n++) {
-      init_var_config(u_comp[n].var + l, interp_method);
-      init_var_config(v_comp[n].var + l, interp_method);
+      init_var_config_acc(u_comp[n].var + l, interp_method);
+      init_var_config_acc(v_comp[n].var + l, interp_method);
     }
 
   nfield = (nfiles == 1) ? (nscalar + 2 * nvector) : nvector; /* when nfiles = 2, no scalar */
@@ -968,7 +969,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           int status;
           char errout[STRING], errmsg[STRING];
           mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_methods", attval);
-          status = parse_string(attval, "area:", areaval, errout);
+          status = parse_string_acc(attval, "area:", areaval, errout);
           if (status == -1) {
             sprintf(errmsg,
                     "fregrid_util(get_input_metadata): %s for cell_methods "
@@ -1001,7 +1002,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
           /* --source_grid must be set when cell_measures attribute exists */
           mpp_get_var_att(file[n].fid, field[n].var[ll].vid, "cell_measures", attval);
 
-          status = parse_string(attval, "volume:", field[n].var[ll].area_name, errout);
+          status = parse_string_acc(attval, "volume:", field[n].var[ll].area_name, errout);
           if (status == -1) {
             sprintf(errmsg,
                     "fregrid_util(get_input_metadata): %s for cell_measure "
@@ -1012,7 +1013,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
             field[n].var[ll].cell_measures = 1;
             field[n].var[ll].use_volume = 1;
           } else {
-            status = parse_string(attval, "area:", field[n].var[ll].area_name, errout);
+            status = parse_string_acc(attval, "area:", field[n].var[ll].area_name, errout);
             if (status == -1) {
               sprintf(errmsg,
                       "fregrid_util(get_input_metadata): %s for cell_measure "
@@ -1046,7 +1047,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
               }
               mpp_get_global_att(file[n].fid, "associated_files", globalatt);
               sprintf(name, "%s:", field[n].var[ll].area_name);
-              status = parse_string(globalatt, name, file2, errout);
+              status = parse_string_acc(globalatt, name, file2, errout);
               if (status == 0) {
                 sprintf(errmsg,
                         "fregrid_util(get_input_metadata): global sttribute associated_files "
@@ -1444,7 +1445,7 @@ void get_input_metadata(int ntiles, int nfiles, File_config *file1, File_config 
 /* get the string after str2 in str1 and save it into strOut
    return 1 if the string is found, return 0 if not, return -1 if error found
 */
-int parse_string(const char *str1, const char *str2, char *strOut, char *errmsg)
+int parse_string_acc(const char *str1, const char *str2, char *strOut, char *errmsg)
 {
 
   char *str=NULL;
@@ -1491,7 +1492,7 @@ int parse_string(const char *str1, const char *str2, char *strOut, char *errmsg)
 void set_output_metadata ( Mosaic_config *mosaic)
 *******************************************************************************/
 
-void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in, const File_config *file2_in,
+void set_output_metadata_acc (int ntiles_in, int nfiles, const File_config *file1_in, const File_config *file2_in,
 			  const Field_config *scalar_in, const Field_config *u_in, const Field_config *v_in,
 			  int ntiles_out, File_config *file1_out, File_config *file2_out, Field_config *scalar_out,
 			  Field_config *u_out, Field_config *v_out, const Grid_config *grid_out, const VGrid_config *vgrid_out,
@@ -1540,13 +1541,13 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
   if( u_in)      nvector = u_in->nvar;
   for(n=0; n<ntiles_out; n++) {
     for(l=0; l<nscalar; l++) {
-      copy_var_config(scalar_in[0].var+l, scalar_out[n].var+l);
+      copy_var_config_acc(scalar_in[0].var+l, scalar_out[n].var+l);
       if( vgrid_out->nz > 0) scalar_out[n].var[l].nz = vgrid_out->nz;
     }
 
     for(l=0; l<nvector; l++) {
-      copy_var_config(u_in[0].var+l, u_out[n].var+l);
-      copy_var_config(v_in[0].var+l, v_out[n].var+l);
+      copy_var_config_acc(u_in[0].var+l, u_out[n].var+l);
+      copy_var_config_acc(v_in[0].var+l, v_out[n].var+l);
     }
   }
 
@@ -1923,7 +1924,7 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 /*******************************************************************************
    void get_field_attribute( )
    *******************************************************************************/
-void get_field_attribute( int ntiles, Field_config *field)
+void get_field_attribute_acc( int ntiles, Field_config *field)
 {
   int n, l, nfield;
   char str[128];
@@ -1960,7 +1961,7 @@ void get_field_attribute( int ntiles, Field_config *field)
 /*******************************************************************************
 void copy_field_attribute()
 *******************************************************************************/
-void copy_field_attribute( int ntiles_out, Field_config *field_in, Field_config *field_out)
+void copy_field_attribute_acc( int ntiles_out, Field_config *field_in, Field_config *field_out)
 {
 
   int n, l;
@@ -1979,7 +1980,7 @@ void copy_field_attribute( int ntiles_out, Field_config *field_in, Field_config 
 /*******************************************************************************
 void set_remap_file( )
 *******************************************************************************/
-void set_remap_file( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config *interp,
+void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config *interp,
 		     unsigned int *opcode, int save_weight_only)
 {
   int    i, len, m, fid, vid;
@@ -2038,7 +2039,7 @@ void set_remap_file( int ntiles, const char *mosaic_file, const char *remap_file
   void write_output_axis_data( )
   write out time axis data of the output data file
   --------------------------------------------------------------------*/
-void write_output_time(int ntiles, File_config *file, int level)
+void write_output_time_acc(int ntiles, File_config *file, int level)
 {
   int         i, n;
   size_t      start[4], nwrite[4];
@@ -2076,7 +2077,7 @@ void write_output_time(int ntiles, File_config *file, int level)
   void get_input_data(Mosaic_config *input, int l)
   get the input data for the number l variable.
   -------------------------------------------------------------------------*/
-void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_config *bound,
+void get_input_data_acc(int ntiles, Field_config *field, Grid_config *grid, Bound_config *bound,
 		    int varid, int level_z, int level_n, int level_t, int extrapolate, double stop_crit)
 {
   int         halo, i, j, k, i1, i2, n, p;
@@ -2134,7 +2135,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
       data = field[n].data;
     else {
       data = (double *)malloc(nx*ny*nz*sizeof(double));
-      init_halo(field[n].data, nx, ny, nz, 1);
+      init_halo_acc(field[n].data, nx, ny, nz, 1);
     }
 
     switch(field[n].var[varid].type) {
@@ -2172,7 +2173,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 
       tmp = (double *)malloc(nx*ny*nz*sizeof(double));
       for(i=0; i<nx*ny*nz; i++) tmp[i] = data[i];
-      do_extrapolate(nx, ny, nz, grid[n].lont1D, grid[n].latt1D, tmp, data, grid[n].is_cyclic,
+      do_extrapolate_acc(nx, ny, nz, grid[n].lont1D, grid[n].latt1D, tmp, data, grid[n].is_cyclic,
 		     field[n].var[varid].missing, stop_crit );
       field[n].var[varid].has_missing = 0;
       free(tmp);
@@ -2218,7 +2219,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
 	  dHold[l].nx = grid[bound[n].tile2[l]].nx+2;
 	  dHold[l].ny = grid[bound[n].tile2[l]].ny+2;
 	}
-	update_halo(grid[n].nx+2, grid[n].ny+2, nz, field[n].data, &(bound[n]), dHold );
+	update_halo_acc(grid[n].nx+2, grid[n].ny+2, nz, field[n].data, &(bound[n]), dHold );
 	for(l=0; l<nbound; l++) dHold[l].data = NULL;
 	free(dHold);
       }
@@ -2269,7 +2270,7 @@ void get_input_data(int ntiles, Field_config *field, Grid_config *grid, Bound_co
   void get_input_data(Mosaic_config *input, int l)
   get the input data for the number l variable.
   -------------------------------------------------------------------------*/
-void get_test_input_data(char *test_case, double test_param, int ntiles, Field_config *field,
+void get_test_input_data_acc(char *test_case, double test_param, int ntiles, Field_config *field,
 			 Grid_config *grid, Bound_config *bound, unsigned int opcode)
 {
   int         halo, i, j, k, ii, n, nx, ny, l, nbound;
@@ -2339,7 +2340,7 @@ void get_test_input_data(char *test_case, double test_param, int ntiles, Field_c
 	  dHold[l].nx = grid[bound[n].tile2[l]].nx+2;
 	  dHold[l].ny = grid[bound[n].tile2[l]].ny+2;
 	}
-	update_halo(grid[n].nx+2, grid[n].ny+2, 1, field[n].data, &(bound[n]), dHold );
+	update_halo_acc(grid[n].nx+2, grid[n].ny+2, 1, field[n].data, &(bound[n]), dHold );
 	for(l=0; l<nbound; l++) dHold[l].data = NULL;
 	free(dHold);
       }
@@ -2361,7 +2362,7 @@ void get_test_input_data(char *test_case, double test_param, int ntiles, Field_c
 }; /* get_test_input_data */
 
 
-void allocate_field_data(int ntiles, Field_config *field, Grid_config *grid, int nz)
+void allocate_field_data_acc(int ntiles, Field_config *field, Grid_config *grid, int nz)
 {
   int n, i;
   size_t memsize;
@@ -2379,7 +2380,7 @@ void allocate_field_data(int ntiles, Field_config *field, Grid_config *grid, int
   write_field_data(Mosaic_config *output)
   write data to output file
   -----------------------------------------------------------------------*/
-void write_field_data(int ntiles, Field_config *field, Grid_config *grid, int varid, int level_z, int level_n, int level_t)
+void write_field_data_acc(int ntiles, Field_config *field, Grid_config *grid, int varid, int level_z, int level_n, int level_t)
 {
   double *gdata;
   double missing_value;
@@ -2460,7 +2461,7 @@ void write_field_data(int ntiles, Field_config *field, Grid_config *grid, int va
 
 };/* write_output_data */
 
-void get_contact_direction(int ncontact, const int *tile, const int *istart, const int *iend,
+void get_contact_direction_acc(int ncontact, const int *tile, const int *istart, const int *iend,
 			   const int *jstart, const int *jend, int *dir)
 {
   int n;
@@ -2486,7 +2487,7 @@ void get_contact_direction(int ncontact, const int *tile, const int *istart, con
 
 }
 
-void setup_boundary(const char *mosaic_file, int ntiles, Grid_config *grid, Bound_config *bound, int halo, int position)
+void setup_boundary_acc(const char *mosaic_file, int ntiles, Grid_config *grid, Bound_config *bound, int halo, int position)
 {
   int ncontacts, shift, n, nbound, l, l2, nb, nx, ny;
   int *tile, *dir;
@@ -2515,7 +2516,7 @@ void setup_boundary(const char *mosaic_file, int ntiles, Grid_config *grid, Boun
   read_mosaic_contact(mosaic_file, tile, tile+ncontacts, istart, iend, jstart, jend,
 		      istart+ncontacts, iend+ncontacts, jstart+ncontacts, jend+ncontacts);
   for(n=0; n<2*ncontacts; n++) --tile[n];
-  get_contact_direction(2*ncontacts, tile, istart, iend, jstart, jend, dir);
+  get_contact_direction_acc(2*ncontacts, tile, istart, iend, jstart, jend, dir);
 
   /* First find number of boundary for each tile */
   for(n=0; n<ntiles; n++) {
@@ -2608,9 +2609,9 @@ void setup_boundary(const char *mosaic_file, int ntiles, Grid_config *grid, Boun
       }
     }
   }
-}; /* setup_boundary */
+}; /* setup_boundary_acc */
 
-void delete_bound_memory(int ntiles, Bound_config *bound)
+void delete_bound_memory_acc(int ntiles, Bound_config *bound)
 {
   int n;
 
@@ -2632,10 +2633,10 @@ void delete_bound_memory(int ntiles, Bound_config *bound)
 
 
 /*-----------------------------------------------------------------------------
-  void init_halo(double *var, int nx, int ny, int nz, int halo)
+  void init_halo_acc(double *var, int nx, int ny, int nz, int halo)
   initialze the halo data to be zero.
   ---------------------------------------------------------------------------*/
-void init_halo(double *var, int nx, int ny, int nz, int halo)
+void init_halo_acc(double *var, int nx, int ny, int nz, int halo)
 {
   int i, j, k;
   int nxd, nyd, nall;
@@ -2651,10 +2652,10 @@ void init_halo(double *var, int nx, int ny, int nz, int halo)
     for(j=ny+halo; j<nyd; j++) for(i=0; i<nxd; i++) var[k*nall+j*nxd+i] = 0; /* north halo */
   }
 
-};/* init_halo */
+};/* init_halo_acc */
 
 
-void update_halo(int nx, int ny, int nz, double *data, Bound_config *bound, Data_holder *dHold)
+void update_halo_acc(int nx, int ny, int nz, double *data, Bound_config *bound, Data_holder *dHold)
 {
   int nbound, n, i, j, k, l, size1, size2, nx2, ny2;
   int is1, ie1, js1, je1, is2, ie2, js2, je2, bufsize;
@@ -2700,9 +2701,9 @@ void update_halo(int nx, int ny, int nz, double *data, Bound_config *bound, Data
 
 }
 
-/* do_extrapolate assume the input data is on a lat-lon grid */
+/* do_extrapolate_acc assume the input data is on a lat-lon grid */
 
-void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *lat, const double *data_in,
+void do_extrapolate_acc (int ni, int nj, int nk, const double *lon, const double *lat, const double *data_in,
 		     double *data_out, int is_cyclic, double missing_value, double stop_crit)
 {
   int i, j, k, n, n1, n2, n3, n4, n5, n6;
@@ -2787,7 +2788,7 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
       }
     }
 
-    fill_boundaries(ni, nj, tmp, is_cyclic);
+    fill_boundaries_acc(ni, nj, tmp, is_cyclic);
 
     /* iterate */
     for(n=0; n<MAX_ITER; n++) {
@@ -2820,7 +2821,7 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
 
       /* update boundaries */
 
-      fill_boundaries(ni, nj, tmp, is_cyclic);
+      fill_boundaries_acc(ni, nj, tmp, is_cyclic);
     }
 
     if(mpp_pe() == mpp_root_pe() ) printf("Stopped after %d iterations, maxres = %g\n", n, resmax);
@@ -2839,10 +2840,10 @@ void do_extrapolate (int ni, int nj, int nk, const double *lon, const double *la
   free(sor);
   free(res);
 
-} /* do_extrapolate */
+} /* do_extrapolate_acc */
 
 
-void fill_boundaries(int ni, int nj, double *data, int is_cyclic)
+void fill_boundaries_acc(int ni, int nj, double *data, int is_cyclic)
 {
   int i,j;
 

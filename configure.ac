@@ -196,6 +196,7 @@ AC_CONFIG_FILES([Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile
                  tools/libfrencutils/Makefile
+                 tools/libfrencutils_acc/Makefile
                  tools/check_mask/Makefile
                  tools/cubic_utils/Makefile
                  tools/fregrid/Makefile

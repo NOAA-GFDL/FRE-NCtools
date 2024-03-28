@@ -57,5 +57,6 @@ SUBDIRS += t
 endif
 
 if ENABLE_ACC
+SUBDIRS += tools/libfrencutils_acc
 SUBDIRS += tools/fregrid_acc
 endif

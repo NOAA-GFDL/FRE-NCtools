@@ -26,8 +26,9 @@
 #include "globals.h"
 #include "create_xgrid.h"
 #include "mosaic_util.h"
+#include "conserve_interp.h"
 #include "conserve_interp_acc.h"
-#include "fregrid_util_acc.h"
+#include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
@@ -39,7 +40,7 @@
   void setup_conserve_interp
   Setup the interpolation weight for conservative interpolation
 *******************************************************************************/
-void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles_out,
+void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int ntiles_out,
 			   Grid_config *grid_out, Interp_config *interp, unsigned int opcode)
 {
   int    n, m, i, ii, jj, nx_in, ny_in, nx_out, ny_out, tile;
@@ -504,7 +505,7 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
  void do_scalar_conserve_interp( )
  doing conservative interpolation
 *******************************************************************************/
-void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in,
+void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in,
 			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
 			       Field_config *field_out, unsigned int opcode, int nz)
 {
@@ -914,7 +915,7 @@ void do_scalar_conserve_interp(Interp_config *interp, int varid, int ntiles_in, 
  void do_vector_conserve_interp( )
  doing conservative interpolation
 *******************************************************************************/
-void do_vector_conserve_interp(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,
+void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,
                                const Grid_config *grid_out, const Field_config *u_in,  const Field_config *v_in,
                                Field_config *u_out, Field_config *v_out, unsigned int opcode)
 {
