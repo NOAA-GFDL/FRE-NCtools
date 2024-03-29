@@ -35,13 +35,13 @@
 
 
 const double SMALL = 1.0e-4;
-double distant(double a, double b, double met1, double met2);
-double bp_lam(double x, double y, double bpeq, double rp);
-double bp_phi(double x, double y, double bpsp, double bpnp);
-double lon_in_range(double lon, double lon_strt);
-void vtx_insert(double *x, double *y, int *n, int n_ins);
-void vtx_delete(double *x, double *y, int *n, int n_del);
-int lon_fix(double *x, double *y, int n_in, double tlon);
+double distant_acc(double a, double b, double met1, double met2);
+double bp_lam_acc(double x, double y, double bpeq, double rp);
+double bp_phi_acc(double x, double y, double bpsp, double bpnp);
+double lon_in_range_acc(double lon, double lon_strt);
+void vtx_insert_acc(double *x, double *y, int *n, int n_ins);
+void vtx_delete_acc(double *x, double *y, int *n, int n_del);
+int lon_fix_acc(double *x, double *y, int n_in, double tlon);
 
 int round_to_nearest_int_acc(double r)
 {
@@ -115,12 +115,12 @@ double spherical_dist_acc(double x1, double y1, double x2, double y2)
   if(x1 == x2) {
     h1 = RADIUS;
     h2 = RADIUS;
-    dist = distant(y1,y2,h1,h2);
+    dist = distant_acc(y1,y2,h1,h2);
   }
   else if(y1 == y2) {
     h1 = RADIUS * cos(y1*D2R);
     h2 = RADIUS * cos(y2*D2R);
-    dist = distant(x1,x2,h1,h2);
+    dist = distant_acc(x1,x2,h1,h2);
   }
   else
     mpp_error("tool_till: This is not rectangular grid");
@@ -145,8 +145,8 @@ double bipolar_dist_acc(double x1, double y1, double x2, double y2,
 
   /*--- get the bipolar grid and metric term ----------------------------*/
   for(n=0; n<2; n++){
-    bp_lon[n] = bp_lam(x[n],y[n],bpeq, rp);     /* longitude (degrees) in bipolar grid system */
-    bp_lat[n] = bp_phi(x[n],y[n],bpsp, bpnp);  /* latitude (degrees) in bipolar grid system */
+    bp_lon[n] = bp_lam_acc(x[n],y[n],bpeq, rp);     /* longitude (degrees) in bipolar grid system */
+    bp_lat[n] = bp_phi_acc(x[n],y[n],bpsp, bpnp);  /* latitude (degrees) in bipolar grid system */
     h1[n]     = RADIUS*cos(bp_lat[n]*D2R);
     h2[n]     = RADIUS;
     metric[n] = 1.0;
@@ -159,9 +159,9 @@ double bipolar_dist_acc(double x1, double y1, double x2, double y2,
 
   /*--- then calculate the distance -------------------------------------*/
   if(x1 == x2)
-    dist = distant(bp_lon[0],bp_lon[1],metric[0]*h1[0],metric[1]*h1[1]);
+    dist = distant_acc(bp_lon[0],bp_lon[1],metric[0]*h1[0],metric[1]*h1[1]);
   else if(y1 == y2)
-    dist = distant(bp_lat[0],bp_lat[1],metric[0]*h2[0],metric[1]*h2[1]);
+    dist = distant_acc(bp_lat[0],bp_lat[1],metric[0]*h2[0],metric[1]*h2[1]);
   else
     mpp_error("tool_util: This tripolar grid not transformed from rectangular grid");
 
@@ -170,13 +170,13 @@ double bipolar_dist_acc(double x1, double y1, double x2, double y2,
 } /* bipolar_dist */
 
 /*********************************************************************
-  double distant(double a, double b, double met1, double met2)
-  return distant on the earth
+  double distant_acc(double a, double b, double met1, double met2)
+  return distant_acc on the earth
 *********************************************************************/
 double distant_acc(double a, double b, double met1, double met2)
 {
    return fabs(a-b)*D2R*(met1+met2)/2. ;
-} /* distant */
+} /* distant_acc */
 
 /*********************************************************************
    double spherical_area(double x1, double y1, double x2, double y2,
@@ -235,7 +235,7 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 
 
   /*--- first fix the longitude at the pole -----------------------------*/
-  n = lon_fix(x, y, 4, 180.);
+  n = lon_fix_acc(x, y, 4, 180.);
 
   /*--- calculate the area ----------------------------------------------  */
   area = 0.0;
@@ -271,33 +271,33 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 
 
 /*********************************************************************
-  double bp_lam(double x, double y, double bpeq)
+  double bp_lam_acc(double x, double y, double bpeq)
   find bipolar grid longitude given geo. coordinates
  ********************************************************************/
   double bp_lam_acc(double x, double y, double bpeq, double rp)
 {
-  double bp_lam;
+  double bp_lam_acc;
 
-  /*  bp_lam = ((90-y)/(90-lat_join))*90 */
+  /*  bp_lam_acc = ((90-y)/(90-lat_join))*90 */
   /* invert eqn. 5 with phic=0 to place point at specified geo. lat */
-  bp_lam = 2.*atan(tan((0.5*M_PI-y*D2R)/2)/rp)*R2D;
-  if (lat_dist(x,bpeq)<90.) bp_lam = -bp_lam;
-  return bp_lam;
-}; /* bp_lam */
+  bp_lam_acc = 2.*atan(tan((0.5*M_PI-y*D2R)/2)/rp)*R2D;
+  if (lat_dist(x,bpeq)<90.) bp_lam_acc = -bp_lam_acc;
+  return bp_lam_acc;
+}; /* bp_lam_acc */
 
 /*********************************************************************
-   double bp_phi(double x, double y, double bpsp, double bpnp)
+   double bp_phi_acc(double x, double y, double bpsp, double bpnp)
    find bipolar grid latitude given geo. coordinates
  ********************************************************************/
    double bp_phi_acc(double x, double y, double bpsp, double bpnp)
 {
-  double bp_phi;
+  double bp_phi_acc;
 
   if (lat_dist(x,bpsp)<90.)
     return (-90+lat_dist(x,bpsp));
   else
     return ( 90-lat_dist(x,bpnp));
-} /* bp_phi */
+} /* bp_phi_acc */
 
 
 /*********************************************************************
@@ -309,12 +309,12 @@ void tp_trans_acc(double *lon, double *lat, double lon_ref, double lon_start,
 {
   double lamc, phic, lams, chic, phis;
 
-  lamc = bp_lam(*lon, *lat, bpeq, rp )*D2R;
-  phic = bp_phi(*lon, *lat, bpsp, bpnp)*D2R;
+  lamc = bp_lam_acc(*lon, *lat, bpeq, rp )*D2R;
+  phic = bp_phi_acc(*lon, *lat, bpsp, bpnp)*D2R;
 
   if (fabs(*lat-90.) < SMALL) {
        if (phic > 0)
-	 *lon=lon_in_range(lon_start,lon_ref);
+	 *lon=lon_in_range_acc(lon_start,lon_ref);
        else
 	 *lon=lon_start+180.;
        chic = acos(cos(lamc)*cos(phic));                     /* eqn. 6 */
@@ -332,38 +332,38 @@ void tp_trans_acc(double *lon, double *lat, double lon_ref, double lon_start,
     chic = acos(cos(lamc)*cos(phic));                          /* eqn. 6 */
     phis = M_PI*0.5-2*atan(rp*tan(chic/2));                        /* eqn. 5 */
     *lon = lams*R2D;
-    *lon = lon_in_range(*lon,lon_ref);
+    *lon = lon_in_range_acc(*lon,lon_ref);
     *lat = phis*R2D;
   }
 } /* tp_trans */
 
 /*********************************************************************
-  double Lon_in_range(double lon, double lon_strt)
+  double lon_in_range_acc(double lon, double lon_strt)
   Returns lon_strt <= longitude <= lon_strt+360
  ********************************************************************/
 double lon_in_range_acc(double lon, double lon_strt)
 {
-  double lon_in_range, lon_end;
+  double lon_in_range_acc, lon_end;
 
-  lon_in_range = lon;
+  lon_in_range_acc = lon;
   lon_end = lon_strt+360.;
 
-  if (fabs(lon_in_range - lon_strt) < SMALL)
-    lon_in_range = lon_strt;
-  else if (fabs(lon_in_range - lon_end) < SMALL)
-    lon_in_range = lon_strt;
+  if (fabs(lon_in_range_acc - lon_strt) < SMALL)
+    lon_in_range_acc = lon_strt;
+  else if (fabs(lon_in_range_acc - lon_end) < SMALL)
+    lon_in_range_acc = lon_strt;
   else {
     while(1) {
-      if (lon_in_range < lon_strt)
-	lon_in_range = lon_in_range +  360.;
-      else if (lon_in_range  >  lon_end)
-	lon_in_range  = lon_in_range - 360.;
+      if (lon_in_range_acc < lon_strt)
+	lon_in_range_acc = lon_in_range_acc +  360.;
+      else if (lon_in_range_acc  >  lon_end)
+	lon_in_range_acc  = lon_in_range_acc - 360.;
       else
 	break;
     }
   }
-  return lon_in_range;
-} /* lon_in_range */
+  return lon_in_range_acc;
+} /* lon_in_range_acc */
 
 
 /*********************************************************************
@@ -385,11 +385,11 @@ int lon_fix_acc(double *x, double *y, int n_in, double tlon)
       if(ip >= n_out) ip = ip - n_out;
       /*--- all pole points must be paired ---------------------------- */
       if(y[im] == y[i] && y[ip] == y[i] ) {
-	vtx_delete(x,y, &n_out, i);
+	vtx_delete_acc(x,y, &n_out, i);
 	i = i - 1;
       }
       else if(y[im] != y[i] && y[ip] != y[i] ) {
-        vtx_insert(x,y,&n_out,i);
+        vtx_insert_acc(x,y,&n_out,i);
 	i = i + 1;
       }
     }
@@ -452,7 +452,7 @@ void vtx_delete_acc(double *x, double *y, int *n, int n_del)
 } /* vtx_delete */
 
 /*********************************************************************
-   void Vtx_insert(double *x, double *y, int *n, int n_del)
+   void vtx_insert_acc(double *x, double *y, int *n, int n_del)
    insert vertex
  ********************************************************************/
 void vtx_insert_acc(double *x, double *y, int *n, int n_ins)
@@ -465,7 +465,7 @@ void vtx_insert_acc(double *x, double *y, int *n, int n_ins)
   }
   (*n)++;
 
-} /* vtx_insert */
+} /* vtx_insert_acc */
 
 
 /*----------------------------------------------------------------------
