@@ -17,6 +17,9 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef GRADIENT_C2L_ACC_H_
+#define GRADIENT_C2L_ACC_H_
+
 void grad_c2l_acc(const int *nlon, const int *nlat, const double *pin, const double *dx, const double *dy, const double *area,
 	      const double *edge_w, const double *edge_e, const double *edge_s, const double *edge_n,
 	      const double *en_n, const double *en_e, const double *vlon, const double *vlat,
@@ -35,3 +38,5 @@ void get_edge_acc(int nx, int ny, const double *lont, const double *latt,
 void mid_pt_sphere_acc(const double *p1, const double *p2, double *pm);
 
 void mid_pt3_cart_acc(const double *p1, const double *p2, double *e);
+
+#endif

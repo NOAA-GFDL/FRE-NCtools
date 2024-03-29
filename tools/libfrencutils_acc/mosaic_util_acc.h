@@ -17,6 +17,11 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef MOSAIC_UTIL_ACC_H_
+#define MOSAIC_UTIL_ACC_H_
+
+
+
 #ifndef RANGE_CHECK_CRITERIA
 #define RANGE_CHECK_CRITERIA 0.05
 #endif
@@ -171,3 +176,5 @@ void rotate_poly_acc(const double x[], const double y[], const int n,
                      double xr[], double yr[]);
 
 void set_the_rotation_matrix_acc();
+
+#endif

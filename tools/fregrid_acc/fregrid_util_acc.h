@@ -17,6 +17,9 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef FREGRID_UTIL_ACC_H_
+#define FREGRID_UTIL_ACC_H_
+
 #include "globals.h"
 void set_mosaic_data_file_acc(int ntiles, const char *mosaic_file, const char *dir, File_config *file,
 			  const char *filename);
@@ -72,3 +75,5 @@ void get_input_vgrid_acc( VGrid_config *vgrid, const char *vgrid_file, const cha
 void setup_vertical_interp_acc(VGrid_config *vgrid_in, VGrid_config *vgrid_out);
 
 void do_vertical_interp_acc(VGrid_config *vgrid_in, VGrid_config *vgrid_out, Grid_config *grid_out, Field_config *field, int varid);
+
+#endif

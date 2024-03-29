@@ -23,6 +23,9 @@
 
     contact: Zhi.Liang@noaa.gov
 ***********************************************************************/
+#ifndef TOOL_UTIL_ACC_H_
+#define TOOL_UTIL_ACC_H_
+
 #define MAX_GRID_LENGTH (10000)
 #define VERSION_1 1
 #define VERSION_2 2
@@ -60,3 +63,5 @@ void print_provenance_gv_gca_acc(int fid,  const char * history, char * grid_ver
 void print_provenance_gv_acc(int fid,  const char * history, char * grid_version);
 
 void print_provenance_acc(int fid, const char * history);
+
+#endif
