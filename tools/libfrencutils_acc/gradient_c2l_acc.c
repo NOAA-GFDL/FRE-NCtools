@@ -25,8 +25,8 @@
 #include "gradient_c2l_acc.h"
 #include <stdio.h>
 void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const double *edge_e,
-	      const double *edge_s, const double *edge_n, double *qout,
-	      int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge);
+                  const double *edge_s, const double *edge_n, double *qout,
+                  int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge);
 
 
 /*------------------------------------------------------------------------------
@@ -47,20 +47,20 @@ void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const
   The size of vlat   will be (nx, ny, 3), T-cell center
   ----------------------------------------------------------------------------*/
 void grad_c2l_acc_(const int *nlon, const int *nlat, const double *pin, const double *dx, const double *dy, const double *area,
-	       const double *edge_w, const double *edge_e, const double *edge_s, const double *edge_n,
-	       const double *en_n, const double *en_e, const double *vlon, const double *vlat,
-	       double *grad_x, double *grad_y, const int *on_west_edge, const int *on_east_edge,
-	       const int *on_south_edge, const int *on_north_edge)
+                   const double *edge_w, const double *edge_e, const double *edge_s, const double *edge_n,
+                   const double *en_n, const double *en_e, const double *vlon, const double *vlat,
+                   double *grad_x, double *grad_y, const int *on_west_edge, const int *on_east_edge,
+                   const int *on_south_edge, const int *on_north_edge)
 {
   grad_c2l_acc(nlon, nlat, pin, dx, dy, area, edge_w, edge_e, edge_s, edge_n, en_n, en_e, vlon, vlat, grad_x, grad_y,
-	   on_west_edge, on_east_edge, on_south_edge, on_north_edge);
+               on_west_edge, on_east_edge, on_south_edge, on_north_edge);
 }
 
 void grad_c2l_acc(const int *nlon, const int *nlat, const double *pin, const double *dx, const double *dy, const double *area,
-	      const double *edge_w, const double *edge_e, const double *edge_s, const double *edge_n,
-	      const double *en_n, const double *en_e, const double *vlon, const double *vlat,
-	      double *grad_x, double *grad_y, const int *on_west_edge, const int *on_east_edge,
-	      const int *on_south_edge, const int *on_north_edge)
+                  const double *edge_w, const double *edge_e, const double *edge_s, const double *edge_n,
+                  const double *en_n, const double *en_e, const double *vlon, const double *vlat,
+                  double *grad_x, double *grad_y, const int *on_west_edge, const int *on_east_edge,
+                  const int *on_south_edge, const int *on_north_edge)
 {
 
   double *pb, *pdx, *pdy, *grad3;
@@ -77,39 +77,39 @@ void grad_c2l_acc(const int *nlon, const int *nlat, const double *pin, const dou
   a2b_ord2(nx, ny, pin, edge_w, edge_e, edge_s, edge_n, pb, *on_west_edge, *on_east_edge,*on_south_edge, *on_north_edge);
 
   for(j=0; j<nyp; j++) for(i=0; i<nx; i++) {
-    m0 = j*nx+i;
-    m1 = j*nxp+i;
-    for(n=0; n<3; n++) {
-      pdx[3*m0+n] = 0.5*(pb[m1]+pb[m1+1])*dx[m0]*en_n[3*m0+n];
+      m0 = j*nx+i;
+      m1 = j*nxp+i;
+      for(n=0; n<3; n++) {
+        pdx[3*m0+n] = 0.5*(pb[m1]+pb[m1+1])*dx[m0]*en_n[3*m0+n];
+      }
     }
-  }
 
   for(j=0; j<ny; j++) for(i=0; i<nxp; i++) {
-    m0 = j*nxp+i;
-    for(n=0; n<3; n++) {
-      pdy[3*m0+n] = 0.5*(pb[m0]+pb[m0+nxp])*dy[m0]*en_e[3*m0+n];
+      m0 = j*nxp+i;
+      for(n=0; n<3; n++) {
+        pdy[3*m0+n] = 0.5*(pb[m0]+pb[m0+nxp])*dy[m0]*en_e[3*m0+n];
+      }
     }
-  }
 
   /* Compute 3D grad of the input scalar field  by Green's theorem */
   for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
-    m0 = 3*(j*nx+i);
-    for(n=0; n<3; n++) {
-      grad3[m0+n] = pdx[3*((j+1)*nx+i)+n]-pdx[m0+n]-pdy[3*(j*nxp+i)+n]+pdy[3*(j*nxp+i+1)+n];
+      m0 = 3*(j*nx+i);
+      for(n=0; n<3; n++) {
+        grad3[m0+n] = pdx[3*((j+1)*nx+i)+n]-pdx[m0+n]-pdy[3*(j*nxp+i)+n]+pdy[3*(j*nxp+i+1)+n];
+      }
     }
-  }
 
   /* Compute inner product: V3 * grad (pe) */
   for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
-    m0 = j*nx+i;
-    m1 = 3*m0;
-    /* dq / d(Lamda)*/
-    grad_x[m0] = (vlon[m1]*grad3[m1] + vlon[m1+1]*grad3[m1+1] + vlon[m1+2]*grad3[m1+2])/area[m0];
-    grad_x[m0] *= RADIUS;
-    /* dq / d(theta) */
-    grad_y[m0] = (vlat[m1]*grad3[m1] + vlat[m1+1]*grad3[m1+1] + vlat[m1+2]*grad3[m1+2] )/area[m0];
-    grad_y[m0] *= RADIUS;
-  }
+      m0 = j*nx+i;
+      m1 = 3*m0;
+      /* dq / d(Lamda)*/
+      grad_x[m0] = (vlon[m1]*grad3[m1] + vlon[m1+1]*grad3[m1+1] + vlon[m1+2]*grad3[m1+2])/area[m0];
+      grad_x[m0] *= RADIUS;
+      /* dq / d(theta) */
+      grad_y[m0] = (vlat[m1]*grad3[m1] + vlat[m1+1]*grad3[m1+1] + vlat[m1+2]*grad3[m1+2] )/area[m0];
+      grad_y[m0] *= RADIUS;
+    }
 
   free(pb);
   free(pdx);
@@ -123,8 +123,8 @@ void grad_c2l_acc(const int *nlon, const int *nlat, const double *pin, const dou
   qout: B-grid field, size (nx+1, ny+1)
   ----------------------------------------------------------------------------*/
 void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const double *edge_e,
-	      const double *edge_s, const double *edge_n, double *qout,
-	      int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge)
+                  const double *edge_s, const double *edge_n, double *qout,
+                  int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge)
 {
   int    nxp, nyp, i, j;
   int    istart, iend, jstart, jend;
@@ -156,9 +156,9 @@ void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const
 
   /* internal region ( 1: nx-1, 1:ny-1) */
   for(j=jstart; j<jend; j++) for(i=istart; i<iend; i++) {
-    qout[j*nxp+i] = 0.25*(qin[j*(nx+2)+i] + qin[j*(nx+2)+i+1] +
-			  qin[(j+1)*(nx+2)+i] + qin[(j+1)*(nx+2)+i+1] );
-  }
+      qout[j*nxp+i] = 0.25*(qin[j*(nx+2)+i] + qin[j*(nx+2)+i+1] +
+                            qin[(j+1)*(nx+2)+i] + qin[(j+1)*(nx+2)+i+1] );
+    }
 
   /* Fix the 4 Corners */
   if(on_west_edge && on_south_edge)qout[        0] = r3*(qin[1* (nx+2)+1 ]+qin[1* (nx+2)    ]+qin[             1]); /* sw_corner */
@@ -186,8 +186,8 @@ void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const
 
   /* north edge */
   if(on_north_edge) {
-     for(i=istart; i<=iend; i++) q1[i] = 0.5*(qin[ny*(nx+2)+i] + qin[nyp*(nx+2)+i]);
-     for(i=istart; i<iend; i++) qout[ny*nxp+i] = edge_n[i]*q1[i] + (1 - edge_n[i])*q1[i+1];
+    for(i=istart; i<=iend; i++) q1[i] = 0.5*(qin[ny*(nx+2)+i] + qin[nyp*(nx+2)+i]);
+    for(i=istart; i<iend; i++) qout[ny*nxp+i] = edge_n[i]*q1[i] + (1 - edge_n[i])*q1[i+1];
   }
 
   free(q1);
@@ -197,8 +197,8 @@ void a2b_ord2_acc(int nx, int ny, const double *qin, const double *edge_w, const
 
 
 void get_edge_acc(int nx, int ny, const double *lont, const double *latt,
-	      const double *lonc, const double *latc, double *edge_w, double *edge_e, double *edge_s, double *edge_n,
-	      int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge)
+                  const double *lonc, const double *latc, double *edge_w, double *edge_e, double *edge_s, double *edge_n,
+                  int on_west_edge, int on_east_edge, int on_south_edge, int on_north_edge)
 {
   int i, j, nxp, nyp;
   int istart, iend, jstart, jend;
@@ -357,19 +357,19 @@ void mid_pt3_cart_acc(const double *p1, const double *p2, double *e)
   The size of vlat   will be (nx, ny),    T-cell center
 **********************************************************************************************/
 void calc_c2l_grid_info_acc_(int *nx_pt, int *ny_pt, const double *xt, const double *yt, const double *xc, const double *yc,
-		         double *dx, double *dy, double *area, double *edge_w, double *edge_e, double *edge_s,
-		         double *edge_n, double *en_n, double *en_e, double *vlon, double *vlat,
-			int *on_west_edge, int *on_east_edge, int *on_south_edge, int *on_north_edge)
+                             double *dx, double *dy, double *area, double *edge_w, double *edge_e, double *edge_s,
+                             double *edge_n, double *en_n, double *en_e, double *vlon, double *vlat,
+                             int *on_west_edge, int *on_east_edge, int *on_south_edge, int *on_north_edge)
 {
-    calc_c2l_grid_info(nx_pt, ny_pt, xt, yt, xc, yc, dx, dy, area, edge_w, edge_e, edge_s, edge_n,
-		       en_n, en_e, vlon, vlat, on_west_edge, on_east_edge, on_south_edge, on_north_edge);
+  calc_c2l_grid_info(nx_pt, ny_pt, xt, yt, xc, yc, dx, dy, area, edge_w, edge_e, edge_s, edge_n,
+                     en_n, en_e, vlon, vlat, on_west_edge, on_east_edge, on_south_edge, on_north_edge);
 
 }
 
 void calc_c2l_grid_info_acc(int *nx_pt, int *ny_pt, const double *xt, const double *yt, const double *xc, const double *yc,
-		        double *dx, double *dy, double *area, double *edge_w, double *edge_e, double *edge_s,
-		        double *edge_n, double *en_n, double *en_e, double *vlon, double *vlat,
-			int *on_west_edge, int *on_east_edge, int *on_south_edge, int *on_north_edge)
+                            double *dx, double *dy, double *area, double *edge_w, double *edge_e, double *edge_s,
+                            double *edge_n, double *en_n, double *en_e, double *vlon, double *vlat,
+                            int *on_west_edge, int *on_east_edge, int *on_south_edge, int *on_north_edge)
 {
   double *x, *y, *z, *xt_tmp, *yt_tmp;
   int    nx, ny, nxp, nyp, i, j;
@@ -382,32 +382,32 @@ void calc_c2l_grid_info_acc(int *nx_pt, int *ny_pt, const double *xt, const doub
   nyp = ny+1;
 
   for(j=0; j<nyp; j++) for(i=0; i<nx; i++) {
-    p1[0] = xc[j*nxp+i];
-    p1[1] = yc[j*nxp+i];
-    p2[0] = xc[j*nxp+i+1];
-    p2[1] = yc[j*nxp+i+1];
-    dx[j*nx+i] = great_circle_distance(p1, p2);
-  }
+      p1[0] = xc[j*nxp+i];
+      p1[1] = yc[j*nxp+i];
+      p2[0] = xc[j*nxp+i+1];
+      p2[1] = yc[j*nxp+i+1];
+      dx[j*nx+i] = great_circle_distance(p1, p2);
+    }
 
   for(j=0; j<ny; j++) for(i=0; i<nxp; i++) {
-    p1[0] = xc[j*nxp+i];
-    p1[1] = yc[j*nxp+i];
-    p2[0] = xc[(j+1)*nxp+i];
-    p2[1] = yc[(j+1)*nxp+i];
-    dy[j*nxp+i] = great_circle_distance(p1, p2);
-  }
+      p1[0] = xc[j*nxp+i];
+      p1[1] = yc[j*nxp+i];
+      p2[0] = xc[(j+1)*nxp+i];
+      p2[1] = yc[(j+1)*nxp+i];
+      dy[j*nxp+i] = great_circle_distance(p1, p2);
+    }
 
   for(j=0; j<ny; j++) for(i=0; i<nx; i++) {
-    p1[0] = xc[j*nxp+i];       /* ll lon */
-    p1[1] = yc[j*nxp+i];       /* ll lat */
-    p2[0] = xc[(j+1)*nxp+i];   /* ul lon */
-    p2[1] = yc[(j+1)*nxp+i];   /* ul lat */
-    p3[0] = xc[j*nxp+i+1];     /* lr lon */
-    p3[1] = yc[j*nxp+i+1];     /* lr lat */
-    p4[0] = xc[(j+1)*nxp+i+1]; /* ur lon */
-    p4[1] = yc[(j+1)*nxp+i+1]; /* ur lat */
-    area[j*nx+i] = spherical_excess_area(p1, p2, p3, p4, RADIUS);
-  }
+      p1[0] = xc[j*nxp+i];       /* ll lon */
+      p1[1] = yc[j*nxp+i];       /* ll lat */
+      p2[0] = xc[(j+1)*nxp+i];   /* ul lon */
+      p2[1] = yc[(j+1)*nxp+i];   /* ul lat */
+      p3[0] = xc[j*nxp+i+1];     /* lr lon */
+      p3[1] = yc[j*nxp+i+1];     /* lr lat */
+      p4[0] = xc[(j+1)*nxp+i+1]; /* ur lon */
+      p4[1] = yc[(j+1)*nxp+i+1]; /* ur lat */
+      area[j*nx+i] = spherical_excess_area(p1, p2, p3, p4, RADIUS);
+    }
 
   x = (double *)malloc(nxp*nyp*sizeof(double));
   y = (double *)malloc(nxp*nyp*sizeof(double));
@@ -415,36 +415,36 @@ void calc_c2l_grid_info_acc(int *nx_pt, int *ny_pt, const double *xt, const doub
 
   latlon2xyz(nxp*nyp, xc, yc, x, y, z);
   for(j=0; j<nyp; j++) for(i=0; i<nx; i++) {
-    p1[0] = x[j*nxp+i];
-    p1[1] = y[j*nxp+i];
-    p1[2] = z[j*nxp+i];
-    p2[0] = x[j*nxp+i+1];
-    p2[1] = y[j*nxp+i+1];
-    p2[2] = z[j*nxp+i+1];
-    vect_cross(p1, p2, en_n+3*(j*nx+i) );
-    normalize_vect(en_n+3*(j*nx+i));
-  }
+      p1[0] = x[j*nxp+i];
+      p1[1] = y[j*nxp+i];
+      p1[2] = z[j*nxp+i];
+      p2[0] = x[j*nxp+i+1];
+      p2[1] = y[j*nxp+i+1];
+      p2[2] = z[j*nxp+i+1];
+      vect_cross(p1, p2, en_n+3*(j*nx+i) );
+      normalize_vect(en_n+3*(j*nx+i));
+    }
 
   for(j=0; j<ny; j++) for(i=0; i<nxp; i++) {
-    p2[0] = x[j*nxp+i];
-    p2[1] = y[j*nxp+i];
-    p2[2] = z[j*nxp+i];
-    p1[0] = x[(j+1)*nxp+i];
-    p1[1] = y[(j+1)*nxp+i];
-    p1[2] = z[(j+1)*nxp+i];
-    vect_cross(p1, p2, en_e+3*(j*nxp+i) );
-    normalize_vect(en_e+3*(j*nxp+i));
-  }
+      p2[0] = x[j*nxp+i];
+      p2[1] = y[j*nxp+i];
+      p2[2] = z[j*nxp+i];
+      p1[0] = x[(j+1)*nxp+i];
+      p1[1] = y[(j+1)*nxp+i];
+      p1[2] = z[(j+1)*nxp+i];
+      vect_cross(p1, p2, en_e+3*(j*nxp+i) );
+      normalize_vect(en_e+3*(j*nxp+i));
+    }
 
   xt_tmp = (double *)malloc(nx*ny*sizeof(double));
   yt_tmp = (double *)malloc(nx*ny*sizeof(double));
   for(j=0; j<ny; j++)for(i=0; i<nx; i++) {
-    xt_tmp[j*nx+i] = xt[(j+1)*(nx+2)+i+1];
-    yt_tmp[j*nx+i] = yt[(j+1)*(nx+2)+i+1];
-  }
+      xt_tmp[j*nx+i] = xt[(j+1)*(nx+2)+i+1];
+      yt_tmp[j*nx+i] = yt[(j+1)*(nx+2)+i+1];
+    }
   unit_vect_latlon(nx*ny, xt_tmp, yt_tmp, vlon, vlat);
   get_edge(nx, ny, xt, yt, xc, yc, edge_w, edge_e, edge_s, edge_n, *on_west_edge, *on_east_edge,
-	   *on_south_edge, *on_north_edge);
+           *on_south_edge, *on_north_edge);
 
   free(x);
   free(y);

@@ -20,7 +20,7 @@
 
 /**
  * \author Zhi Liang
-*/
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -79,7 +79,7 @@ void error_handler_acc(const char *msg)
      value:  arbitrary data...same units as elements in "array"
      array:  array of data points  (must be monotonically increasing)
      ia   :  size of array.
- ********************************************************************/
+********************************************************************/
 int nearest_index_acc(double value, const double *array, int ia)
 {
   int index, i;
@@ -98,12 +98,12 @@ int nearest_index_acc(double value, const double *array, int ia)
       i=0;
       keep_going = 1;
       while (i < ia && keep_going) {
-   i = i+1;
-   if (value <= array[i]) {
-     index = i;
-     if (array[i]-value > value-array[i-1]) index = i-1;
-     keep_going = 0;
-   }
+        i = i+1;
+        if (value <= array[i]) {
+          index = i;
+          if (array[i]-value > value-array[i-1]) index = i-1;
+          keep_going = 0;
+        }
       }
     }
   return index;
@@ -113,7 +113,7 @@ int nearest_index_acc(double value, const double *array, int ia)
 /******************************************************************/
 
 void tokenize_acc(const char * const string, const char *tokens, unsigned int varlen,
-         unsigned int maxvar, char * pstring, unsigned int * const nstr)
+                  unsigned int maxvar, char * pstring, unsigned int * const nstr)
 {
   size_t i, j, nvar, len, ntoken, n;
   int found;
@@ -128,17 +128,17 @@ void tokenize_acc(const char * const string, const char *tokens, unsigned int va
     if(string[i] != ' ' && string[i] != '\t'){
       found = 0;
       for(n=0; n<ntoken; n++) {
-   if(string[i] == tokens[n] ) {
-     found = 1;
-     break;
-   }
+        if(string[i] == tokens[n] ) {
+          found = 1;
+          break;
+        }
       }
       if(found) {
-   if( j != 0) { /* remove :: */
-     *(pstring + (nvar++)*varlen + j) = 0;
-     j = 0;
-     if(nvar >= maxvar) error_handler("Error from tokenize: number of variables exceeds limit");
-   }
+        if( j != 0) { /* remove :: */
+          *(pstring + (nvar++)*varlen + j) = 0;
+          j = 0;
+          if(nvar >= maxvar) error_handler("Error from tokenize: number of variables exceeds limit");
+        }
       }
       else {
         *(pstring + nvar*varlen + j++) = string[i];
@@ -224,9 +224,9 @@ void latlon2xyz_acc(int size, const double *lon, const double *lat, double *x, d
 } /* latlon2xyz */
 
 /*------------------------------------------------------------
-       void xyz2laton(np, p, xs, ys)
-   Transfer cartesian coordinates to spherical coordinates
-   ----------------------------------------------------------*/
+  void xyz2laton(np, p, xs, ys)
+  Transfer cartesian coordinates to spherical coordinates
+  ----------------------------------------------------------*/
 void xyz2latlon_acc( int np, const double *x, const double *y, const double *z, double *lon, double *lat)
 {
 
@@ -244,12 +244,12 @@ void xyz2latlon_acc( int np, const double *x, const double *y, const double *z, 
     zz /= dist;
 
     if ( fabs(xx)+fabs(yy)  < EPSLN10 )
-       lon[i] = 0;
-     else
-       lon[i] = atan2(yy, xx);
-     lat[i] = asin(zz);
+      lon[i] = 0;
+    else
+      lon[i] = atan2(yy, xx);
+    lat[i] = asin(zz);
 
-     if ( lon[i] < 0.) lon[i] = 2.*M_PI + lon[i];
+    if ( lon[i] < 0.) lon[i] = 2.*M_PI + lon[i];
   }
 
 } /* xyz2latlon */
@@ -301,12 +301,12 @@ double poly_area_dimensionless_acc(const double x[], const double y[], int n)
       area -= dx*sin(0.5*(lat1+lat2));
     else {
       if(reproduce_siena) {
-   area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
+        area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
       }
       else {
-   dy = 0.5*(lat1-lat2);
-   dat = sin(dy)/dy;
-   area -= dx*sin(0.5*(lat1+lat2))*dat;
+        dy = 0.5*(lat1-lat2);
+        dat = sin(dy)/dy;
+        area -= dx*sin(0.5*(lat1+lat2))*dat;
       }
     }
   }
@@ -327,86 +327,86 @@ double poly_area_dimensionless_acc(const double x[], const double y[], int n)
   grid is in radians.
 
   Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
-             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
   The following is an implementation of equation (12) in the above paper:
-     \int dA = \int_c [-sin(lat)] dlon
+  \int dA = \int_c [-sin(lat)] dlon
 
   An alternative derivation of line integrating -sin(lat)d(lon) formula:
   Consider a vector function in spherical coordinates (r,lon,lat)
   with only a lon component :
-      A=(0, (1-sin(lat))/cos(lat)/r , 0)
+  A=(0, (1-sin(lat))/cos(lat)/r , 0)
   Then
-      Curl(A)=(1/r**2 , 0, 0) .
+  Curl(A)=(1/r**2 , 0, 0) .
   Now consider any loop C on the suface of the sphere enclosing an area S
   and apply the Stokes theorem:
-      \integral_surface_S Curl(A).da = \integral_loop_C A.dl
+  \integral_surface_S Curl(A).da = \integral_loop_C A.dl
   where da and dl are the vectorial suface and line elements on sphere:
-      da=(da, 0, 0) and dl=(0, R*cos(lat)*d(lon), R*d(lat)).
+  da=(da, 0, 0) and dl=(0, R*cos(lat)*d(lon), R*d(lat)).
   We get
-      \integral_surface_S Curl(A) = \integral_surface_S (da/r**2) = S/R**2
+  \integral_surface_S Curl(A) = \integral_surface_S (da/r**2) = S/R**2
   and
-      \integral_loop_C A.dl = \integral_loop_C (1-sin(lat))*d(lon)
+  \integral_loop_C A.dl = \integral_loop_C (1-sin(lat))*d(lon)
 
   Hence per Stokes formula:
-      S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon).
-             = I1 - I2
+  S/R**2 = \integral_loop_C d(lon) - \integral_loop_C sin(lat)*d(lon).
+  = I1 - I2
 
   Now the approximation used for the second loop integral
   I2= \integral_loop_C sin(lat)*d(lon)
-    = sum_over_loop_segments \integral_loop_C sin(lat)*d(lon)
-    = sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
+  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lon)
+  = sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
 
   If d(lon)/d(lat) is assumed constant over a loop segment, given that the segments
   used here are the sides of a grid cell, then we can take it outside the integral
-    sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
-   =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat)
-   =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (-(cos(lat2)-cos(lat1)))
-   =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (2*sin(0.5*(lat2+lat1))*sin(0.5*(lat2-lat1)))
+  sum_over_loop_segments \integral_loop_C sin(lat)*d(lat) *d(lon)/d(lat)
+  =sum_over_loop_segments delta(lon)/delta(lat) \int_segment sin(lat)*d(lat)
+  =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (-(cos(lat2)-cos(lat1)))
+  =sum_over_grid_cell_sides (lon2-lon1)/(lat2-lat1) * (2*sin(0.5*(lat2+lat1))*sin(0.5*(lat2-lat1)))
 
   So, finally:
-   S/R**2 = I1 - I2
-          = I1 - sum_over_grid_cell_sides (lon2-lon1)* sin(0.5*(lat2+lat1))* sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
+  S/R**2 = I1 - I2
+  = I1 - sum_over_grid_cell_sides (lon2-lon1)* sin(0.5*(lat2+lat1))* sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
   We can prove that the first integral I1 above is zero for grid cells that do not include or cross a pole.
 
   Special cases:
-   In general I1=0, but for the grid cells that have the N Pole as a vertex:
-      I1=- angle at pole vertex
-   Particularly,
-      I1=-pi/2 for regular CS grids (or close to -pi/2 for stregtched CS grids)
-   and
-      I1=-pi for grid cells with a side passing through the N pole
-      I1=+pi for grid cells with a side passing through the S pole
-   You could easily see that for a spherical grid cell bounded by the North pole, two longitude and a lattitude to the south.
-   There are 8 such cells in a CS grids and a few more in the exchange grids.
+  In general I1=0, but for the grid cells that have the N Pole as a vertex:
+  I1=- angle at pole vertex
+  Particularly,
+  I1=-pi/2 for regular CS grids (or close to -pi/2 for stregtched CS grids)
+  and
+  I1=-pi for grid cells with a side passing through the N pole
+  I1=+pi for grid cells with a side passing through the S pole
+  You could easily see that for a spherical grid cell bounded by the North pole, two longitude and a lattitude to the south.
+  There are 8 such cells in a CS grids and a few more in the exchange grids.
 
-   Alternatively, we can treat such a pole vertex as the limit of an additional (imagined) grid segment that shrinks
-   as its two end points approach the pole. Such segment contributes pi/2 to the line integral I2.
-   So, as an implementaion trick, if for each pole vertex we insert an additional twin pole vertex with a longitude the same
-   as the next vertex in the cell (which is 90 degrees or close to 90 degrees appart) the contribution to I1 shifts into -I2
-   and we can again assume I1=0. This scheme is implemented in subroutine fix_lon() which is always called before poly_area().
-   That is why in the implementation below I1 is totally absent.
+  Alternatively, we can treat such a pole vertex as the limit of an additional (imagined) grid segment that shrinks
+  as its two end points approach the pole. Such segment contributes pi/2 to the line integral I2.
+  So, as an implementaion trick, if for each pole vertex we insert an additional twin pole vertex with a longitude the same
+  as the next vertex in the cell (which is 90 degrees or close to 90 degrees appart) the contribution to I1 shifts into -I2
+  and we can again assume I1=0. This scheme is implemented in subroutine fix_lon() which is always called before poly_area().
+  That is why in the implementation below I1 is totally absent.
 
-   In some pathological grid cells that do not have a pole vertex, I1 may not come out zero due to ambiguities in choosing
-   d(lon) mod 2pi and we have to be careful in the implementation to deal with those grid cells.
-   As we saw the approximation for I2 is based on the assumtion that  d(lon)/d(lat) is
-   almost a constant over each segment of the path. This approximation is also equivalent
-   to assuming a linear variation of latitude versus the longitude along the loop segments (grid cell sides)
-   i.e., lat = lat1 + (lon-lon1)*(lat2-lat1)/(lon2-lon1)
-   This assumption breaks down if the segment passes through a pole, e.g. along a longitude great circle where
-   lon abruptly changes by pi as it goes through the pole like in the following two grid cells:
-       x----x----x
-       |    |    |
-       |   Pole  |
-       |    |    |
-       |    |    |
-       x----x----x
-    x denotes the grid points.
-    We can diagnose such situations
-      either via I1=sum(dlons) coming out as 2*pi instead of 0, in that case we can correct the area by 2*pi
-      or via dx=-pi, in that case we can just flip the sign of dx and continue
-    These two turn out to be equivalent and so in the implementation below we add the equal sign inside the if conditional   if(dx <= -M_PI) dx = dx + 2.0*M_PI;
-    The reason for the sign flip is delicate. As we saw above the contribution to I1 from a grid cell side
-    passing through the S pole is +pi regardless of the direction.
+  In some pathological grid cells that do not have a pole vertex, I1 may not come out zero due to ambiguities in choosing
+  d(lon) mod 2pi and we have to be careful in the implementation to deal with those grid cells.
+  As we saw the approximation for I2 is based on the assumtion that  d(lon)/d(lat) is
+  almost a constant over each segment of the path. This approximation is also equivalent
+  to assuming a linear variation of latitude versus the longitude along the loop segments (grid cell sides)
+  i.e., lat = lat1 + (lon-lon1)*(lat2-lat1)/(lon2-lon1)
+  This assumption breaks down if the segment passes through a pole, e.g. along a longitude great circle where
+  lon abruptly changes by pi as it goes through the pole like in the following two grid cells:
+  x----x----x
+  |    |    |
+  |   Pole  |
+  |    |    |
+  |    |    |
+  x----x----x
+  x denotes the grid points.
+  We can diagnose such situations
+  either via I1=sum(dlons) coming out as 2*pi instead of 0, in that case we can correct the area by 2*pi
+  or via dx=-pi, in that case we can just flip the sign of dx and continue
+  These two turn out to be equivalent and so in the implementation below we add the equal sign inside the if conditional   if(dx <= -M_PI) dx = dx + 2.0*M_PI;
+  The reason for the sign flip is delicate. As we saw above the contribution to I1 from a grid cell side
+  passing through the S pole is +pi regardless of the direction.
 
   Side note:
   The above approximation for I2 is not very accurate, patricularly for CS grid cells near the Poles.
@@ -417,10 +417,10 @@ double poly_area_dimensionless_acc(const double x[], const double y[], int n)
   the great circle joining the vertices. However the implementation becomes rather tedious. For future
   reference here is the paramtrized equation of the curves that we should integrate along, that is
   the great circle passing at (lon0,lat0) closest to the N pole (excluding the pole itself):
-     tan(lat)=-tan(lat0)*cos(lon-lon0).
+  tan(lat)=-tan(lat0)*cos(lon-lon0).
   So, I2=\integral dx sin(arctan(tan(lat0)*cos(x-lon0)))  can be shown to give an accurate estimate of grid
   cell areas surrounding the pole without a bump.
-   ----------------------------------------------------------------------------*/
+  ----------------------------------------------------------------------------*/
 double poly_area_main_acc(const double x[], const double y[], int n) {
   double area = 0.0;
   int i;
@@ -443,9 +443,9 @@ double poly_area_main_acc(const double x[], const double y[], int n) {
       continue;  // next i
     }
     /*
-     We have to be careful in implementing sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
-     in the limit of lat1=lat2 where it becomes 1. Note that in that limit we get the well known formula
-     for the area of a section of sphere bounded by two longitudes and two latitude circles.
+      We have to be careful in implementing sin(0.5*(lat2-lat1))/(0.5*(lat2-lat1))
+      in the limit of lat1=lat2 where it becomes 1. Note that in that limit we get the well known formula
+      for the area of a section of sphere bounded by two longitudes and two latitude circles.
     */
     if (fabs(lat1 - lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
       area -= dx * sin(0.5 * (lat1 + lat2));
@@ -563,17 +563,17 @@ double poly_area2_acc(const double x[], const double y[], int n)
     if(hasBadxm || hasBadxp) printf("%19.15f,%19.15f,%19.15f,%19.15f\n", dx,dxs,da,area);
   }
   /*
-  if(hasPole){
+    if(hasPole){
     printf("Pole cell : %19.15f\n", area);
-  }
-  if(hasBadxm){
+    }
+    if(hasBadxm){
     printf("Trouble dx=-pi cell : %19.15f\n", area);
     //v_print(x, y, n);
-  }
-  if(hasBadxp){
+    }
+    if(hasBadxp){
     printf("Trouble dx=+pi cell : %19.15f\n", area);
     //v_print(x, y, n);
-  }
+    }
   */
   if(fabs(dxs)>SMALL_VALUE && fabs(area) > HPI){
     printf("Error    : Nonzero gridcell dx sum in poly_area: %19.15f,%19.15f\n", dxs,area);
@@ -585,36 +585,36 @@ double poly_area2_acc(const double x[], const double y[], int n)
     printf("WARNING poly_area: Large values for poly_area: %19.15f\n", area);
   }
   if(area < 0)
-     return -area*RADIUS*RADIUS;
+    return -area*RADIUS*RADIUS;
   else
-     return area*RADIUS*RADIUS;
+    return area*RADIUS*RADIUS;
 } /* poly_area2 */
 /* Note how one of the two cells straddling the SP has a wrong sign for "dx=-pi"
    producing an excess area of -2pi.
    Also note how the fix_lon is needed to insert twin poles at SP to correct the
    contribution of the side passing through the SP to be exactly pi
-  dx                 dx_sum              da                  da_sum
- -0.891607974235719, -0.891607974235719, -0.891519061449037, -0.891519061449037
- -1.329985598742566, -2.221593572978286, -1.329938713571685, -2.221457775020722
-  3.141592653589793,  0.919999080611507,  3.141527168815382,  0.920069393794660
- -0.919999080611507,  0.000000000000000, -0.919927107270490,  0.000142286524170
-Trouble dx=+pi cell :   0.000142286524170
-              209.688               -89.1151
-              158.603                -89.269
-                 82.4               -89.8237
-                262.4               -89.4658
-  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000
- -3.141592653589793, -3.141592653589793, -3.141592653589793, -3.141592653589793  if there was no twin pole inserted the contribution would have been wrong
-  0.000000000000000, -3.141592653589793,  0.000000000000000, -3.141592653589793
- -1.329985598742571, -4.471578252332364, -1.329938713571690, -4.471531367161483
- -0.891607974235693, -5.363186226568057, -0.891519061449011, -5.363050428610494
- -0.919999080611529, -6.283185307179586, -0.919927107270511, -6.282977535881005
-Trouble dx=-pi cell :  -6.282977535881005
-                262.4               -89.4658
-                262.4                    -90
-                 82.4                    -90
-                 82.4               -89.8237
-              6.19744                -89.269
+   dx                 dx_sum              da                  da_sum
+   -0.891607974235719, -0.891607974235719, -0.891519061449037, -0.891519061449037
+   -1.329985598742566, -2.221593572978286, -1.329938713571685, -2.221457775020722
+   3.141592653589793,  0.919999080611507,  3.141527168815382,  0.920069393794660
+   -0.919999080611507,  0.000000000000000, -0.919927107270490,  0.000142286524170
+   Trouble dx=+pi cell :   0.000142286524170
+   209.688               -89.1151
+   158.603                -89.269
+   82.4               -89.8237
+   262.4               -89.4658
+   0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000
+   -3.141592653589793, -3.141592653589793, -3.141592653589793, -3.141592653589793  if there was no twin pole inserted the contribution would have been wrong
+   0.000000000000000, -3.141592653589793,  0.000000000000000, -3.141592653589793
+   -1.329985598742571, -4.471578252332364, -1.329938713571690, -4.471531367161483
+   -0.891607974235693, -5.363186226568057, -0.891519061449011, -5.363050428610494
+   -0.919999080611529, -6.283185307179586, -0.919927107270511, -6.282977535881005
+   Trouble dx=-pi cell :  -6.282977535881005
+   262.4               -89.4658
+   262.4                    -90
+   82.4                    -90
+   82.4               -89.8237
+   6.19744                -89.269
 
 */
 double poly_area_no_adjust_acc(const double x[], const double y[], int n)
@@ -640,9 +640,9 @@ double poly_area_no_adjust_acc(const double x[], const double y[], int n)
     printf("WARNING poly_area_no_adjust: Large values for poly_area_no_adjust: %19.15f\n", area);
   }
   if(area < 0)
-     return area*RADIUS*RADIUS;
+    return area*RADIUS*RADIUS;
   else
-     return area*RADIUS*RADIUS;
+    return area*RADIUS*RADIUS;
 } /* poly_area_no_adjust */
 
 int delete_vtx_acc(double x[], double y[], int n, int n_del)
@@ -692,24 +692,24 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
   /* The reason is poly_area() function needs a contribution equal to the angle (in radians)
      between the sides that connect to the pole. */
   for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) {
-    int im=(i+nn-1)%nn, ip=(i+1)%nn;
+      int im=(i+nn-1)%nn, ip=(i+1)%nn;
 
-    if (y[im]==y[i] && y[ip]==y[i]) {
-      nn = delete_vtx(x, y, nn, i);
-      i--;
-    } else if (y[im]!=y[i] && y[ip]!=y[i]) {
-      nn = insert_vtx(x, y, nn, i, x[i], y[i]);
-      i++;
+      if (y[im]==y[i] && y[ip]==y[i]) {
+        nn = delete_vtx(x, y, nn, i);
+        i--;
+      } else if (y[im]!=y[i] && y[ip]!=y[i]) {
+        nn = insert_vtx(x, y, nn, i, x[i], y[i]);
+        i++;
+      }
     }
-  }
   /* first of pole pair has longitude of previous vertex */
   /* second of pole pair has longitude of subsequent vertex */
   for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLORENCE) {
-    int im=(i+nn-1)%nn, ip=(i+1)%nn;
+      int im=(i+nn-1)%nn, ip=(i+1)%nn;
 
-    if (y[im]!=y[i]) x[i] = x[im];
-    if (y[ip]!=y[i]) x[i] = x[ip];
-  }
+      if (y[im]!=y[i]) x[i] = x[im];
+      if (y[ip]!=y[i]) x[i] = x[ip];
+    }
 
   /*If a polygon side passes through a Pole insert twin vertices at the Pole*/
   /*A fix is also directly applied to poly_area to handle this case.*/
@@ -761,10 +761,10 @@ double great_circle_distance_acc(double *p1, double *p2)
   double dist, beta;
 
   /* This algorithm is not accurate for small distance
-  dist = RADIUS*ACOS(SIN(p1[1])*SIN(p2[1]) + COS(p1[1])*COS(p2[1])*COS(p1[0]-p2[0]));
+     dist = RADIUS*ACOS(SIN(p1[1])*SIN(p2[1]) + COS(p1[1])*COS(p2[1])*COS(p1[0]-p2[0]));
   */
   beta = 2.*asin( sqrt( sin((p1[1]-p2[1])/2.)*sin((p1[1]-p2[1])/2.) +
-                               cos(p1[1])*cos(p2[1])*(sin((p1[0]-p2[0])/2.)*sin((p1[0]-p2[0])/2.)) ) );
+                        cos(p1[1])*cos(p2[1])*(sin((p1[0]-p2[0])/2.)*sin((p1[0]-p2[0])/2.)) ) );
   dist = RADIUS*beta;
   return dist;
 
@@ -801,14 +801,14 @@ double great_circle_area_acc(int n, const double *x, const double *y, const doub
 
 /*------------------------------------------------------------------------------
   double spherical_angle(const double *p1, const double *p2, const double *p3)
-           p3
-         /
-        /
-       p1 ---> angle
-         \
-          \
-           p2
- -----------------------------------------------------------------------------*/
+  p3
+  /
+  /
+  p1 ---> angle
+  \
+  \
+  p2
+  -----------------------------------------------------------------------------*/
 double spherical_angle_acc(const double *v1, const double *v2, const double *v3)
 {
   double angle;
@@ -838,9 +838,9 @@ double spherical_angle_acc(const double *v1, const double *v2, const double *v3)
     if ( ddd>1. || ddd<-1. ) {
       /*FIX (lmh) to correctly handle co-linear points (angle near pi or 0) */
       if (ddd < 0.)
-   angle = M_PI;
+        angle = M_PI;
       else
-   angle = 0.;
+        angle = 0.;
     }
     else
       angle = acosl( ddd );
@@ -856,7 +856,7 @@ double spherical_angle_acc(const double *v1, const double *v2, const double *v3)
   [area units are m^2]
   ----------------------------------------------------------------------------*/
 double spherical_excess_area_acc(const double* p_ll, const double* p_ul,
-              const double* p_lr, const double* p_ur, double radius)
+                                 const double* p_lr, const double* p_ur, double radius)
 {
   double area, ang1, ang2, ang3, ang4;
   double v1[3], v2[3], v3[3];
@@ -893,9 +893,9 @@ double spherical_excess_area_acc(const double* p_ll, const double* p_ul,
 
 
 /*----------------------------------------------------------------------
-    void vect_cross(e, p1, p2)
-    Perform cross products of 3D vectors: e = P1 X P2
-    -------------------------------------------------------------------*/
+  void vect_cross(e, p1, p2)
+  Perform cross products of 3D vectors: e = P1 X P2
+  -------------------------------------------------------------------*/
 
 void vect_cross_acc(const double *p1, const double *p2, double *e )
 {
@@ -908,9 +908,9 @@ void vect_cross_acc(const double *p1, const double *p2, double *e )
 
 
 /*----------------------------------------------------------------------
-    double* vect_cross(p1, p2)
-    return cross products of 3D vectors: = P1 X P2
-    -------------------------------------------------------------------*/
+  double* vect_cross(p1, p2)
+  return cross products of 3D vectors: = P1 X P2
+  -------------------------------------------------------------------*/
 
 double dot_acc(const double *p1, const double *p2)
 {
@@ -977,7 +977,7 @@ void unit_vect_latlon_acc(int size, const double *lon, const double *lat, double
    NOTE: the intersection doesn't have to be inside the tri or line for this to return true
 */
 int intersect_tri_with_line_acc(const double *plane, const double *l1, const double *l2, double *p,
-             double *t) {
+                                double *t) {
 
   long double M[3*3], inv_M[3*3];
   long double V[3];
@@ -1031,8 +1031,8 @@ int invert_matrix_3x3_acc(long double m[], long double m_inv[]) {
 
 
   const long double det =  m[0] * (m[4]*m[8] - m[5]*m[7])
-                     -m[1] * (m[3]*m[8] - m[5]*m[6])
-                     +m[2] * (m[3]*m[7] - m[4]*m[6]);
+    -m[1] * (m[3]*m[8] - m[5]*m[6])
+    +m[2] * (m[3]*m[7] - m[4]*m[6]);
 #ifdef test_invert_matrix_3x3
   printf("det = %Lf\n", det);
 #endif
@@ -1092,15 +1092,15 @@ struct Node_acc *getNext_acc()
 
 void initNode_acc_acc(struct Node_acc *node)
 {
-    node->x = 0;
-    node->y = 0;
-    node->z = 0;
-    node->u = 0;
-    node->intersect = 0;
-    node->inbound = 0;
-    node->isInside = 0;
-    node->Next = NULL;
-    node->initialized=0;
+  node->x = 0;
+  node->y = 0;
+  node->z = 0;
+  node->u = 0;
+  node->intersect = 0;
+  node->inbound = 0;
+  node->isInside = 0;
+  node->Next = NULL;
+  node->initialized=0;
 
 }
 
@@ -1114,11 +1114,11 @@ void addEnd_acc(struct Node_acc *list, double x, double y, double z, int interse
   if(list->initialized) {
 
     /* (x,y,z) might already in the list when intersect is true and u=0 or 1 */
-      temp = list;
-      while (temp) {
-        if(samePoint(temp->x, temp->y, temp->z, x, y, z)) return;
-        temp=temp->Next;
-      }
+    temp = list;
+    while (temp) {
+      if(samePoint(temp->x, temp->y, temp->z, x, y, z)) return;
+      temp=temp->Next;
+    }
     temp = list;
     while(temp->Next)
       temp=temp->Next;
@@ -1144,7 +1144,7 @@ void addEnd_acc(struct Node_acc *list, double x, double y, double z, int interse
 /* return 1 if the point (x,y,z) is added in the list, return 0 if it is already in the list */
 
 int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u1, double u2, int inbound,
-       int is1, int ie1, int is2, int ie2)
+                     int is1, int ie1, int is2, int ie2)
 {
 
   double u1_cur, u2_cur;
@@ -1202,27 +1202,27 @@ int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int in
 
 int length_acc(struct Node_acc *list)
 {
-   struct Node_acc *cur_ptr=NULL;
-   int count=0;
+  struct Node_acc *cur_ptr=NULL;
+  int count=0;
 
-   cur_ptr=list;
+  cur_ptr=list;
 
-   while(cur_ptr)
-   {
-     if(cur_ptr->initialized ==0) break;
+  while(cur_ptr)
+    {
+      if(cur_ptr->initialized ==0) break;
       cur_ptr=cur_ptr->Next;
       count++;
-   }
-   return(count);
+    }
+  return(count);
 }
 
 /* two points are the same if there are close enough */
 int samePoint_acc(double x1, double y1, double z1, double x2, double y2, double z2)
 {
-    if( fabs(x1-x2) > EPSLN10 || fabs(y1-y2) > EPSLN10 || fabs(z1-z2) > EPSLN10 )
-      return 0;
-    else
-      return 1;
+  if( fabs(x1-x2) > EPSLN10 || fabs(y1-y2) > EPSLN10 || fabs(z1-z2) > EPSLN10 )
+    return 0;
+  else
+    return 1;
 }
 
 
@@ -1290,7 +1290,7 @@ void printNode_acc_acc(struct Node_acc *list, char *str)
   while(temp) {
     if(temp->initialized ==0) break;
     printf(" (x, y, z, interset, inbound, isInside) = (%19.15f,%19.15f,%19.15f,%d,%d,%d)\n",
-      temp->x, temp->y, temp->z, temp->intersect, temp->inbound, temp->isInside);
+           temp->x, temp->y, temp->z, temp->intersect, temp->inbound, temp->isInside);
     temp = temp->Next;
   }
   printf("\n");
@@ -1366,8 +1366,8 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
       temp2 = temp1->Next;
       if(!temp2) temp2 = list;
       while(temp2->intersect) {
-         temp2=temp2->Next;
-         if(!temp2) temp2 = list;
+        temp2=temp2->Next;
+        if(!temp2) temp2 = list;
       }
 
       temp2->isInside = 0;
@@ -1381,7 +1381,7 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
   while ( temp2 ) {
     if( temp2->intersect == 1 ) {
       if( temp2->u > u_cur ) {
-   break;
+        break;
       }
     }
     else
@@ -1521,25 +1521,25 @@ void setInbound_acc(struct Node_acc *interList, struct Node_acc *list)
   while(temp) {
     if( !temp->inbound) {
       /* search in grid1 to find the prev and next point of temp, when prev point is outside and next point is inside
-    inbound = 2, else inbound = 1*/
+         inbound = 2, else inbound = 1*/
       temp1 = list;
       temp1_prev = NULL;
       temp1_next = NULL;
       while(temp1) {
-   if(sameNode_acc(*temp1, *temp)) {
-     if(!temp1_prev) temp1_prev = getLast(list);
-     temp1_next = temp1->Next;
-     if(!temp1_next) temp1_next = list;
-     break;
-   }
-   temp1_prev = temp1;
-   temp1 = temp1->Next;
+        if(sameNode_acc(*temp1, *temp)) {
+          if(!temp1_prev) temp1_prev = getLast(list);
+          temp1_next = temp1->Next;
+          if(!temp1_next) temp1_next = list;
+          break;
+        }
+        temp1_prev = temp1;
+        temp1 = temp1->Next;
       }
       if(!temp1_next) error_handler("Error from create_xgrid.c: temp is not in list1");
       if( temp1_prev->isInside == 0 && temp1_next->isInside == 1)
-   temp->inbound = 2;   /* go inside */
+        temp->inbound = 2;   /* go inside */
       else
-   temp->inbound = 1;
+        temp->inbound = 1;
     }
     temp=temp->Next;
   }
@@ -1555,7 +1555,7 @@ int isInside_acc(struct Node_acc *node) {
 /*  #define debug_test_create_xgrid */
 
 /* check if node is inside polygon list or not */
- int insidePolygon_acc( struct Node_acc *node, struct Node_acc *list)
+int insidePolygon_acc( struct Node_acc *node, struct Node_acc *list)
 {
   int i, ip, is_inside;
   double pnt0[3], pnt1[3], pnt2[3];
@@ -1660,7 +1660,7 @@ int inside_a_polygon_acc_(double *lon1, double *lat1, int *npts, double *lon2, d
 /*
   is_near_pole() reuturns 1 if a polygon has any point with a latitude
   within a threshold from the CGS poles (i.e. near +- Pi/2).
-   Otherwise returns 0.
+  Otherwise returns 0.
 */
 int is_near_pole_acc(const double y[], int n) {
   int pole = 0;

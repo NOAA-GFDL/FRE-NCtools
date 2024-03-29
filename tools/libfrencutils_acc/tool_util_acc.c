@@ -134,7 +134,7 @@ double spherical_dist_acc(double x1, double y1, double x2, double y2)
   return distance of bipolar grids
 *********************************************************************/
 double bipolar_dist_acc(double x1, double y1, double x2, double y2,
-		    double bpeq, double bpsp, double bpnp, double rp )
+                        double bpeq, double bpsp, double bpnp, double rp )
 {
   double dist, x[2],y[2], bp_lon[2], bp_lat[2], metric[2];
   double h1[2], h2[2], chic;
@@ -151,7 +151,7 @@ double bipolar_dist_acc(double x1, double y1, double x2, double y2,
     h2[n]     = RADIUS;
     metric[n] = 1.0;
     if (fabs(y[n]-90.0) < SMALL || fabs(bp_lon[n]*D2R) >= SMALL
-	|| fabs(bp_lat[n]*D2R) >= SMALL) {
+        || fabs(bp_lat[n]*D2R) >= SMALL) {
       chic = acos(cos(bp_lon[n]*D2R)*cos(bp_lat[n]*D2R));            /* eqn. 6 */
       metric[n] = rp*(1/pow(cos(chic/2),2))/(1+(pow(rp,2))*(pow(tan(chic/2),2)));/* eq 3 */
     }
@@ -175,16 +175,16 @@ double bipolar_dist_acc(double x1, double y1, double x2, double y2,
 *********************************************************************/
 double distant_acc(double a, double b, double met1, double met2)
 {
-   return fabs(a-b)*D2R*(met1+met2)/2. ;
+  return fabs(a-b)*D2R*(met1+met2)/2. ;
 } /* distant_acc */
 
 /*********************************************************************
    double spherical_area(double x1, double y1, double x2, double y2,
                    double x3, double y3, double x4, double y4 )
    rectangular grid box area
- ********************************************************************/
+********************************************************************/
 double spherical_area_acc(double x1, double y1, double x2, double y2,
-		      double x3, double y3, double x4, double y4 )
+                          double x3, double y3, double x4, double y4 )
 {
   double area, dx, lat1, lat2, x[4],y[4];
   int i, ip;
@@ -221,9 +221,9 @@ double spherical_area_acc(double x1, double y1, double x2, double y2,
    double bipolar_area(double x1, double y1, double x2, double y2,
                        double x3, double y3, double x4, double y4 )
    bipolar grid  area
- ********************************************************************/
+********************************************************************/
 double bipolar_area_acc(double x1, double y1, double x2, double y2,
-			  double x3, double y3, double x4, double y4 )
+                        double x3, double y3, double x4, double y4 )
 {
   double area, dx, lat1, lat2, x[8],y[8];
   int i, ip, n;
@@ -263,8 +263,8 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 /*********************************************************************
   double lat_dist(double x1, double x2)
   distance (in degrees) between points on lat. circle
- ********************************************************************/
-  double lat_dist_acc(double x1, double x2)
+********************************************************************/
+double lat_dist_acc(double x1, double x2)
 {
   return min(fmod(x1-x2+720,360.),fmod(x2-x1+720,360.));
 }
@@ -273,8 +273,8 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 /*********************************************************************
   double bp_lam_acc(double x, double y, double bpeq)
   find bipolar grid longitude given geo. coordinates
- ********************************************************************/
-  double bp_lam_acc(double x, double y, double bpeq, double rp)
+********************************************************************/
+double bp_lam_acc(double x, double y, double bpeq, double rp)
 {
   double bp_lam_acc;
 
@@ -288,8 +288,8 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 /*********************************************************************
    double bp_phi_acc(double x, double y, double bpsp, double bpnp)
    find bipolar grid latitude given geo. coordinates
- ********************************************************************/
-   double bp_phi_acc(double x, double y, double bpsp, double bpnp)
+********************************************************************/
+double bp_phi_acc(double x, double y, double bpsp, double bpnp)
 {
   double bp_phi_acc;
 
@@ -303,9 +303,9 @@ double bipolar_area_acc(double x1, double y1, double x2, double y2,
 /*********************************************************************
   void tp_trans(double& lon, double& lat, double lon_ref)
   calculate tripolar grid
- ********************************************************************/
+********************************************************************/
 void tp_trans_acc(double *lon, double *lat, double lon_ref, double lon_start,
-		    double lam0, double bpeq, double bpsp, double bpnp, double rp )
+                  double lam0, double bpeq, double bpsp, double bpnp, double rp )
 {
   double lamc, phic, lams, chic, phis;
 
@@ -313,14 +313,14 @@ void tp_trans_acc(double *lon, double *lat, double lon_ref, double lon_start,
   phic = bp_phi_acc(*lon, *lat, bpsp, bpnp)*D2R;
 
   if (fabs(*lat-90.) < SMALL) {
-       if (phic > 0)
-	 *lon=lon_in_range_acc(lon_start,lon_ref);
-       else
-	 *lon=lon_start+180.;
-       chic = acos(cos(lamc)*cos(phic));                     /* eqn. 6 */
-       phis = M_PI*0.5-2*atan(rp*tan(chic/2));                   /* eqn. 5 */
-       *lat = phis*R2D;
-       return;
+    if (phic > 0)
+      *lon=lon_in_range_acc(lon_start,lon_ref);
+    else
+      *lon=lon_start+180.;
+    chic = acos(cos(lamc)*cos(phic));                     /* eqn. 6 */
+    phis = M_PI*0.5-2*atan(rp*tan(chic/2));                   /* eqn. 5 */
+    *lat = phis*R2D;
+    return;
   }
 
   if (fabs(lamc) < SMALL && fabs(phic) < SMALL) {
@@ -340,7 +340,7 @@ void tp_trans_acc(double *lon, double *lat, double lon_ref, double lon_start,
 /*********************************************************************
   double lon_in_range_acc(double lon, double lon_strt)
   Returns lon_strt <= longitude <= lon_strt+360
- ********************************************************************/
+********************************************************************/
 double lon_in_range_acc(double lon, double lon_strt)
 {
   double lon_in_range_acc, lon_end;
@@ -355,11 +355,11 @@ double lon_in_range_acc(double lon, double lon_strt)
   else {
     while(1) {
       if (lon_in_range_acc < lon_strt)
-	lon_in_range_acc = lon_in_range_acc +  360.;
+        lon_in_range_acc = lon_in_range_acc +  360.;
       else if (lon_in_range_acc  >  lon_end)
-	lon_in_range_acc  = lon_in_range_acc - 360.;
+        lon_in_range_acc  = lon_in_range_acc - 360.;
       else
-	break;
+        break;
     }
   }
   return lon_in_range_acc;
@@ -369,7 +369,7 @@ double lon_in_range_acc(double lon, double lon_strt)
 /*********************************************************************
    int lon_fix(double *x, double *y, int n_in, double tlon)
    fix longitude at pole.
- ********************************************************************/
+********************************************************************/
 int lon_fix_acc(double *x, double *y, int n_in, double tlon)
 {
   int i, ip, im, n_out;
@@ -385,12 +385,12 @@ int lon_fix_acc(double *x, double *y, int n_in, double tlon)
       if(ip >= n_out) ip = ip - n_out;
       /*--- all pole points must be paired ---------------------------- */
       if(y[im] == y[i] && y[ip] == y[i] ) {
-	vtx_delete_acc(x,y, &n_out, i);
-	i = i - 1;
+        vtx_delete_acc(x,y, &n_out, i);
+        i = i - 1;
       }
       else if(y[im] != y[i] && y[ip] != y[i] ) {
         vtx_insert_acc(x,y,&n_out,i);
-	i = i + 1;
+        i = i + 1;
       }
     }
     i = i + 1;
@@ -438,7 +438,7 @@ int lon_fix_acc(double *x, double *y, int n_in, double tlon)
 /*********************************************************************
    void vtx_delete(double *x, double *y, int *n, int n_del)
    delete vertex
- ********************************************************************/
+********************************************************************/
 void vtx_delete_acc(double *x, double *y, int *n, int n_del)
 {
   int i;
@@ -454,7 +454,7 @@ void vtx_delete_acc(double *x, double *y, int *n, int n_del)
 /*********************************************************************
    void vtx_insert_acc(double *x, double *y, int *n, int n_del)
    insert vertex
- ********************************************************************/
+********************************************************************/
 void vtx_insert_acc(double *x, double *y, int *n, int n_ins)
 {
   int i;
@@ -469,9 +469,9 @@ void vtx_insert_acc(double *x, double *y, int *n, int n_ins)
 
 
 /*----------------------------------------------------------------------
-    void vect_cross(e, p1, p2)
-    Perform cross products of 3D vectors: e = P1 X P2
-    -------------------------------------------------------------------*/
+  void vect_cross(e, p1, p2)
+  Perform cross products of 3D vectors: e = P1 X P2
+  -------------------------------------------------------------------*/
 
 /********************************************************************************
   void compute_grid_bound(int nb, const couble *bnds, const int *npts, int *grid_size, const char *center_cell)
@@ -504,9 +504,9 @@ double* compute_grid_bound_acc(int nb, const double *bnds, const int *npts, int 
   grid  = (double *)malloc((*grid_size+1)*sizeof(double));
   grid2 = (double *)malloc(np*sizeof(double));
   for(i=0;i<np;i++) grid2[i] = i + 1.0;
-/*
-  cubic_spline( nb, np, grid1, grid2, bnds, tmp, 1e30, 1e30);
-*/
+  /*
+    cubic_spline( nb, np, grid1, grid2, bnds, tmp, 1e30, 1e30);
+  */
   cubic_spline_sp( nb, np, grid1, grid2, bnds, tmp);
   if(!strcmp(center, "none")) {
     for(i=0; i<np; i++) grid[i] = tmp[i];
@@ -520,12 +520,12 @@ double* compute_grid_bound_acc(int nb, const double *bnds, const int *npts, int 
     grid[0] = tmp[0];
     for(i=1; i<n;  i++) grid[2*i] = 0.5*(grid[2*i-1] + grid[2*i+1]);
     grid[2*n] = tmp[n];
-/*
-  else if( !strcmp(center, "c_cell")) {
-    for(i=0; i<np; i++) grid[2*i] = tmp[i];
-    grid[1] = 0.5*(tmp[0]+tmp[1]);
-    for(i=1; i<n;  i++) grid[2*i+1] = 2*grid[2*i] - grid[2*i-1];
-*/
+    /*
+      else if( !strcmp(center, "c_cell")) {
+      for(i=0; i<np; i++) grid[2*i] = tmp[i];
+      grid[1] = 0.5*(tmp[0]+tmp[1]);
+      for(i=1; i<n;  i++) grid[2*i+1] = 2*grid[2*i] - grid[2*i-1];
+    */
   }
 
   free(grid1);
@@ -611,48 +611,48 @@ double* compute_grid_bound_legacy_acc(int nb, const double *bnds, const double *
     ncells = round(an);
     if( !strcmp(center, "t_cell") ) {
       if( fabs(an-ncells) > tol )
-	mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 't_cell'");
+        mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 't_cell'");
 
       for(i=0; i<ncells; i++) {
-	del = avg_res - 0.5*chg_res*cos((M_PI/ncells)*(i+0.5));
-	num++;
-	if( num > maxlen ) mpp_error("tool_util(ompute_grid_bound_legacy): maxlen exceeded, increase size of MAX_GRID_LENGTH");
-	delta[num-1] = del;
+        del = avg_res - 0.5*chg_res*cos((M_PI/ncells)*(i+0.5));
+        num++;
+        if( num > maxlen ) mpp_error("tool_util(ompute_grid_bound_legacy): maxlen exceeded, increase size of MAX_GRID_LENGTH");
+        delta[num-1] = del;
       }
     }
     else {
       /* Calculate resolution of U cells: "deltau"
-	 U grid points will be centered in these cells
-	 n = number of T cells fitting within the region boundaries
-	 note: "sum" initially discounts half of the U cells widths
-	 at the boundaries
+         U grid points will be centered in these cells
+         n = number of T cells fitting within the region boundaries
+         note: "sum" initially discounts half of the U cells widths
+         at the boundaries
       */
 
       sum = 0.5*dbnds[l] - 0.5*dbnds[l+1];
       n   = 0;
       i = 0;
       while (i < 100000 ) {
-	i++;
-	del = avg_res - 0.5*chg_res*cos((M_PI/ncells)*i);
-	if (sum + del <= wid*(1.0 + tol)) {
-	  sum += del;
-	  num++;
-	  if( num > maxlen ) mpp_error("tool_util(compute_grid_bound_legacy): maxlen exceeded, increase size of MAX_GRID_LENGTH");
-	  delta[num-1] = del;
-	  n++;
-	}
-	else
-	  break;
+        i++;
+        del = avg_res - 0.5*chg_res*cos((M_PI/ncells)*i);
+        if (sum + del <= wid*(1.0 + tol)) {
+          sum += del;
+          num++;
+          if( num > maxlen ) mpp_error("tool_util(compute_grid_bound_legacy): maxlen exceeded, increase size of MAX_GRID_LENGTH");
+          delta[num-1] = del;
+          n++;
+        }
+        else
+          break;
       }
       if( stretch == 1 || l != nb-1 ) {
-	if( fabs(an-n) > tol ) {
-	  if(mpp_pe() == mpp_root_pe()) {
-	    printf("==>Error: non integral number of cells in region #%d, average resolution within "
-		   "region = %f14.7, this implies %f14.7 grid cells, Change grid specifications dbnds. "
-		   "Here is some help \n", l, avg_res, an );
-	  }
-	  mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 'c_cell'");
-	}
+        if( fabs(an-n) > tol ) {
+          if(mpp_pe() == mpp_root_pe()) {
+            printf("==>Error: non integral number of cells in region #%d, average resolution within "
+                   "region = %f14.7, this implies %f14.7 grid cells, Change grid specifications dbnds. "
+                   "Here is some help \n", l, avg_res, an );
+          }
+          mpp_error("tool_util(ompute_grid_bound_legacy): non integral number of cells in some subregion for 'c_cell'");
+        }
       }
     }
   }
@@ -709,32 +709,32 @@ void get_boundary_type_acc( const char *grid_file, int grid_version, int *cyclic
     if(mpp_field_exist(grid_file, "contacts") ) {
       ncontacts = read_mosaic_ncontacts(grid_file);
       if(ncontacts < 1) {
-	sprintf(errmsg, "==>Error from get_boundary_type: number of contacts "
-		"number of contacts should be larger than 0 when field contacts exist in file %s",grid_file );
-	mpp_error(errmsg);
+        sprintf(errmsg, "==>Error from get_boundary_type: number of contacts "
+                "number of contacts should be larger than 0 when field contacts exist in file %s",grid_file );
+        mpp_error(errmsg);
       }
       if(ncontacts > 2) {
-	sprintf(errmsg, "==>Error from get_boundary_type: "
-                       "number of contacts should be no larger than 2 in file %s",grid_file );
-	mpp_error(errmsg);
+        sprintf(errmsg, "==>Error from get_boundary_type: "
+                "number of contacts should be no larger than 2 in file %s",grid_file );
+        mpp_error(errmsg);
       }
       read_mosaic_contact( grid_file, tile1, tile2, istart1, iend1, jstart1, jend1,
-			   istart2, iend2, jstart2, jend2 );
+                           istart2, iend2, jstart2, jend2 );
 
       for(m=0; m<ncontacts; m++) {
-	if(istart1[m] == iend1[m] ) { /* x-direction contact, only cyclic condition */
-	  if(istart2[m] != iend2[m] )
-	    mpp_error("==>Error from get_boundary_type: only cyclic condition is allowed for x-boundary");
-	  *cyclic_x = 1;
-	}
-	else if( jstart1[m] == jend1[m] ) {  /* y-direction contact, cyclic or folded-north */
-	  if(jstart2[m] != jend2[m] )
-	    mpp_error("==>Error from get_boundary_type: only cyclic/folded-north condition is allowed for y-boundary");
-	  if( jstart1[m] == jstart2[m] )  /* folded north */
-	    *is_tripolar = 1;
-	  else
-	    *cyclic_y = 1;
-	}
+        if(istart1[m] == iend1[m] ) { /* x-direction contact, only cyclic condition */
+          if(istart2[m] != iend2[m] )
+            mpp_error("==>Error from get_boundary_type: only cyclic condition is allowed for x-boundary");
+          *cyclic_x = 1;
+        }
+        else if( jstart1[m] == jend1[m] ) {  /* y-direction contact, cyclic or folded-north */
+          if(jstart2[m] != jend2[m] )
+            mpp_error("==>Error from get_boundary_type: only cyclic/folded-north condition is allowed for y-boundary");
+          if( jstart1[m] == jstart2[m] )  /* folded north */
+            *is_tripolar = 1;
+          else
+            *cyclic_y = 1;
+        }
         else
           mpp_error("==>Error from get_boundary_type: invalid boundary contact");
       }
@@ -756,17 +756,17 @@ void get_boundary_type_acc( const char *grid_file, int grid_version, int *cyclic
   }
 
   if(mpp_pe() == mpp_root_pe()) {
-     if(*cyclic_x)
-       printf("\n==>NOTE from get_boundary_type: x_boundary_type is cyclic\n");
-     else
-       printf("\n==>NOTE from get_boundary_type: x_boundary_type is solid_walls\n");
+    if(*cyclic_x)
+      printf("\n==>NOTE from get_boundary_type: x_boundary_type is cyclic\n");
+    else
+      printf("\n==>NOTE from get_boundary_type: x_boundary_type is solid_walls\n");
 
-     if(*cyclic_y)
-       printf("\n==>NOTE from get_boundary_type: y_boundary_type is cyclic\n");
-     else if(*is_tripolar)
-       printf("\n==>NOTE from get_boundary_type: y_boundary_type is fold_north_edge\n");
-     else
-       printf("\n==>NOTE from get_boundary_type: y_boundary_type is solid_walls\n");
+    if(*cyclic_y)
+      printf("\n==>NOTE from get_boundary_type: y_boundary_type is cyclic\n");
+    else if(*is_tripolar)
+      printf("\n==>NOTE from get_boundary_type: y_boundary_type is fold_north_edge\n");
+    else
+      printf("\n==>NOTE from get_boundary_type: y_boundary_type is solid_walls\n");
   }
 
 } /* get_boundary_type */
@@ -777,7 +777,7 @@ void get_boundary_type_acc( const char *grid_file, int grid_version, int *cyclic
   - history (the command and arguemnts used) is written if passed in as not null).
   - grid version is written if passed in as not null.
   - gca_flag is the great circle algorithm flag.
-  */
+*/
 void print_provenance_gv_gca_acc(int fid, const char *history, char *grid_version, int gca_flag) {
   char hostname[128];
   gethostname(hostname, 128);

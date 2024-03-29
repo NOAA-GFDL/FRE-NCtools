@@ -33,10 +33,10 @@
 
 double grid_box_radius_acc(const double *x, const double *y, const double *z, int n);
 double dist_between_boxes_acc(const double *x1, const double *y1, const double *z1, int n1,
-			  const double *x2, const double *y2, const double *z2, int n2);
+                              const double *x2, const double *y2, const double *z2, int n2);
 int inside_edge_acc(double x0, double y0, double x1, double y1, double x, double y);
 int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, double *q3,
-		         double *intersect, double *u_a, double *u_q, int *inbound);
+                             double *intersect, double *u_a, double *u_q, int *inbound);
 
 
 /*******************************************************************************
@@ -74,17 +74,17 @@ void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, cons
   nxp = nx + 1;
 
   for(j=0; j<ny; j++) for(i=0; i < nx; i++) {
-    x_in[0] = lon[j*nxp+i];
-    x_in[1] = lon[j*nxp+i+1];
-    x_in[2] = lon[(j+1)*nxp+i+1];
-    x_in[3] = lon[(j+1)*nxp+i];
-    y_in[0] = lat[j*nxp+i];
-    y_in[1] = lat[j*nxp+i+1];
-    y_in[2] = lat[(j+1)*nxp+i+1];
-    y_in[3] = lat[(j+1)*nxp+i];
-    n_in = fix_lon(x_in, y_in, 4, M_PI);
-    area[j*nx+i] = poly_area(x_in, y_in, n_in);
-  }
+      x_in[0] = lon[j*nxp+i];
+      x_in[1] = lon[j*nxp+i+1];
+      x_in[2] = lon[(j+1)*nxp+i+1];
+      x_in[3] = lon[(j+1)*nxp+i];
+      y_in[0] = lat[j*nxp+i];
+      y_in[1] = lat[j*nxp+i+1];
+      y_in[2] = lat[(j+1)*nxp+i+1];
+      y_in[3] = lat[(j+1)*nxp+i];
+      n_in = fix_lon(x_in, y_in, 4, M_PI);
+      area[j*nx+i] = poly_area(x_in, y_in, n_in);
+    }
 
 };  /* get_grid_area */
 
@@ -117,19 +117,19 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
   latlon2xyz(nxp*nyp, lon, lat, x, y, z);
 
   for(j=0; j<ny; j++) for(i=0; i < nx; i++) {
-    /* clockwise */
-    n0 = j*nxp+i;
-    n1 = (j+1)*nxp+i;
-    n2 = (j+1)*nxp+i+1;
-    n3 = j*nxp+i+1;
-    rewindList();
-    grid = getNext();
-    addEnd(grid, x[n0], y[n0], z[n0], 0, 0, 0, -1);
-    addEnd(grid, x[n1], y[n1], z[n1], 0, 0, 0, -1);
-    addEnd(grid, x[n2], y[n2], z[n2], 0, 0, 0, -1);
-    addEnd(grid, x[n3], y[n3], z[n3], 0, 0, 0, -1);
-    area[j*nx+i] = gridArea(grid);
-  }
+      /* clockwise */
+      n0 = j*nxp+i;
+      n1 = (j+1)*nxp+i;
+      n2 = (j+1)*nxp+i+1;
+      n3 = j*nxp+i+1;
+      rewindList();
+      grid = getNext();
+      addEnd(grid, x[n0], y[n0], z[n0], 0, 0, 0, -1);
+      addEnd(grid, x[n1], y[n1], z[n1], 0, 0, 0, -1);
+      addEnd(grid, x[n2], y[n2], z[n2], 0, 0, 0, -1);
+      addEnd(grid, x[n3], y[n3], z[n3], 0, 0, 0, -1);
+      area[j*nx+i] = gridArea(grid);
+    }
 
   free(x);
   free(y);
@@ -148,17 +148,17 @@ void get_grid_area_dimensionless_acc(const int *nlon, const int *nlat, const dou
   nxp = nx + 1;
 
   for(j=0; j<ny; j++) for(i=0; i < nx; i++) {
-    x_in[0] = lon[j*nxp+i];
-    x_in[1] = lon[j*nxp+i+1];
-    x_in[2] = lon[(j+1)*nxp+i+1];
-    x_in[3] = lon[(j+1)*nxp+i];
-    y_in[0] = lat[j*nxp+i];
-    y_in[1] = lat[j*nxp+i+1];
-    y_in[2] = lat[(j+1)*nxp+i+1];
-    y_in[3] = lat[(j+1)*nxp+i];
-    n_in = fix_lon(x_in, y_in, 4, M_PI);
-    area[j*nx+i] = poly_area_dimensionless(x_in, y_in, n_in);
-  }
+      x_in[0] = lon[j*nxp+i];
+      x_in[1] = lon[j*nxp+i+1];
+      x_in[2] = lon[(j+1)*nxp+i+1];
+      x_in[3] = lon[(j+1)*nxp+i];
+      y_in[0] = lat[j*nxp+i];
+      y_in[1] = lat[j*nxp+i+1];
+      y_in[2] = lat[(j+1)*nxp+i+1];
+      y_in[3] = lat[(j+1)*nxp+i];
+      n_in = fix_lon(x_in, y_in, 4, M_PI);
+      area[j*nx+i] = poly_area_dimensionless(x_in, y_in, n_in);
+    }
 
 };  /* get_grid_area */
 
@@ -174,17 +174,17 @@ void get_grid_area_no_adjust_acc(const int *nlon, const int *nlat, const double 
   nxp = nx + 1;
 
   for(j=0; j<ny; j++) for(i=0; i < nx; i++) {
-    x_in[0] = lon[j*nxp+i];
-    x_in[1] = lon[j*nxp+i+1];
-    x_in[2] = lon[(j+1)*nxp+i+1];
-    x_in[3] = lon[(j+1)*nxp+i];
-    y_in[0] = lat[j*nxp+i];
-    y_in[1] = lat[j*nxp+i+1];
-    y_in[2] = lat[(j+1)*nxp+i+1];
-    y_in[3] = lat[(j+1)*nxp+i];
-    n_in = 4;
-    area[j*nx+i] = poly_area_no_adjust(x_in, y_in, n_in);
-  }
+      x_in[0] = lon[j*nxp+i];
+      x_in[1] = lon[j*nxp+i+1];
+      x_in[2] = lon[(j+1)*nxp+i+1];
+      x_in[3] = lon[(j+1)*nxp+i];
+      y_in[0] = lat[j*nxp+i];
+      y_in[1] = lat[j*nxp+i+1];
+      y_in[2] = lat[(j+1)*nxp+i+1];
+      y_in[3] = lat[(j+1)*nxp+i];
+      n_in = 4;
+      area[j*nx+i] = poly_area_no_adjust(x_in, y_in, n_in);
+    }
 
 };  /* get_grid_area_no_adjust */
 
@@ -195,21 +195,21 @@ void get_grid_area_no_adjust_acc(const int *nlon, const int *nlat, const double 
   and lon_in,lat_in are 1-D grid bounds, lon_out,lat_out are geographic grid location of grid cell bounds.
 *******************************************************************************/
 int create_xgrid_1dx2d_order1_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_1dx2d_order1_acc(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-			       i_in, j_in, i_out, j_out, xgrid_area);
+                                         i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 
 int create_xgrid_1dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-			      const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-			      int *j_out, double *xgrid_area)
+                                  const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                  int *j_out, double *xgrid_area)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -232,13 +232,13 @@ int create_xgrid_1dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   tmpx = (double *)malloc((nx1+1)*(ny1+1)*sizeof(double));
   tmpy = (double *)malloc((nx1+1)*(ny1+1)*sizeof(double));
   for(j1=0; j1<=ny1; j1++) for(i1=0; i1<=nx1; i1++) {
-    tmpx[j1*nx1p+i1] = lon_in[i1];
-    tmpy[j1*nx1p+i1] = lat_in[j1];
-  }
+      tmpx[j1*nx1p+i1] = lon_in[i1];
+      tmpy[j1*nx1p+i1] = lat_in[j1];
+    }
   /* This is just a temporary fix to solve the issue that there is one point in zonal direction */
   // TODO: Finish this "temporary fix"
   if(nx1 > 1)
-     get_grid_area(nlon_in, nlat_in, tmpx, tmpy, area_in);
+    get_grid_area(nlon_in, nlat_in, tmpx, tmpy, area_in);
   else
     get_grid_area_no_adjust(nlon_in, nlat_in, tmpx, tmpy, area_in);
 
@@ -248,42 +248,42 @@ int create_xgrid_1dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
 
   for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
 
-    ll_lon = lon_in[i1];   ll_lat = lat_in[j1];
-    ur_lon = lon_in[i1+1]; ur_lat = lat_in[j1+1];
-    for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
-      int n_in, n_out;
-      double Xarea;
+        ll_lon = lon_in[i1];   ll_lat = lat_in[j1];
+        ur_lon = lon_in[i1+1]; ur_lat = lat_in[j1+1];
+        for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
+            int n_in, n_out;
+            double Xarea;
 
-      y_in[0] = lat_out[j2*nx2p+i2];
-      y_in[1] = lat_out[j2*nx2p+i2+1];
-      y_in[2] = lat_out[(j2+1)*nx2p+i2+1];
-      y_in[3] = lat_out[(j2+1)*nx2p+i2];
-      if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
-	    && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
-      if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
-	    && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
+            y_in[0] = lat_out[j2*nx2p+i2];
+            y_in[1] = lat_out[j2*nx2p+i2+1];
+            y_in[2] = lat_out[(j2+1)*nx2p+i2+1];
+            y_in[3] = lat_out[(j2+1)*nx2p+i2];
+            if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
+                  && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
+            if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
+                  && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
 
-      x_in[0] = lon_out[j2*nx2p+i2];
-      x_in[1] = lon_out[j2*nx2p+i2+1];
-      x_in[2] = lon_out[(j2+1)*nx2p+i2+1];
-      x_in[3] = lon_out[(j2+1)*nx2p+i2];
-      n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
+            x_in[0] = lon_out[j2*nx2p+i2];
+            x_in[1] = lon_out[j2*nx2p+i2+1];
+            x_in[2] = lon_out[(j2+1)*nx2p+i2+1];
+            x_in[3] = lon_out[(j2+1)*nx2p+i2];
+            n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
 
-      if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
-	Xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	if( Xarea/min_area > AREA_RATIO_THRESH ) {
-      	  xgrid_area[nxgrid] = Xarea;
-	  i_in[nxgrid]    = i1;
-	  j_in[nxgrid]    = j1;
-	  i_out[nxgrid]   = i2;
-	  j_out[nxgrid]   = j2;
-	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
+            if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
+              Xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if( Xarea/min_area > AREA_RATIO_THRESH ) {
+                xgrid_area[nxgrid] = Xarea;
+                i_in[nxgrid]    = i1;
+                j_in[nxgrid]    = j1;
+                i_out[nxgrid]   = i2;
+                j_out[nxgrid]   = j2;
+                ++nxgrid;
+                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
       }
-    }
-  }
 
   free(area_in);
   free(area_out);
@@ -300,9 +300,9 @@ int create_xgrid_1dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   and lon_in,lat_in are 1-D grid bounds, lon_out,lat_out are geographic grid location of grid cell bounds.
 ********************************************************************************/
 int create_xgrid_1dx2d_order2_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			       double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_1dx2d_order2(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
@@ -311,9 +311,9 @@ int create_xgrid_1dx2d_order2_acc_(const int *nlon_in, const int *nlat_in, const
 
 };
 int create_xgrid_1dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -336,9 +336,9 @@ int create_xgrid_1dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   tmpx = (double *)malloc((nx1+1)*(ny1+1)*sizeof(double));
   tmpy = (double *)malloc((nx1+1)*(ny1+1)*sizeof(double));
   for(j1=0; j1<=ny1; j1++) for(i1=0; i1<=nx1; i1++) {
-    tmpx[j1*nx1p+i1] = lon_in[i1];
-    tmpy[j1*nx1p+i1] = lat_in[j1];
-  }
+      tmpx[j1*nx1p+i1] = lon_in[i1];
+      tmpy[j1*nx1p+i1] = lat_in[j1];
+    }
   get_grid_area(nlon_in, nlat_in, tmpx, tmpy, area_in);
   get_grid_area(nlon_out, nlat_out, lon_out, lat_out, area_out);
   free(tmpx);
@@ -346,45 +346,45 @@ int create_xgrid_1dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
   for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
 
-    ll_lon = lon_in[i1];   ll_lat = lat_in[j1];
-    ur_lon = lon_in[i1+1]; ur_lat = lat_in[j1+1];
-    for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
-      int n_in, n_out;
-      double xarea, lon_in_avg;
+        ll_lon = lon_in[i1];   ll_lat = lat_in[j1];
+        ur_lon = lon_in[i1+1]; ur_lat = lat_in[j1+1];
+        for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
+            int n_in, n_out;
+            double xarea, lon_in_avg;
 
-      y_in[0] = lat_out[j2*nx2p+i2];
-      y_in[1] = lat_out[j2*nx2p+i2+1];
-      y_in[2] = lat_out[(j2+1)*nx2p+i2+1];
-      y_in[3] = lat_out[(j2+1)*nx2p+i2];
-      if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
-	    && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
-      if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
-	    && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
+            y_in[0] = lat_out[j2*nx2p+i2];
+            y_in[1] = lat_out[j2*nx2p+i2+1];
+            y_in[2] = lat_out[(j2+1)*nx2p+i2+1];
+            y_in[3] = lat_out[(j2+1)*nx2p+i2];
+            if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
+                  && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
+            if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
+                  && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
 
-      x_in[0] = lon_out[j2*nx2p+i2];
-      x_in[1] = lon_out[j2*nx2p+i2+1];
-      x_in[2] = lon_out[(j2+1)*nx2p+i2+1];
-      x_in[3] = lon_out[(j2+1)*nx2p+i2];
-      n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
-      lon_in_avg = avgval_double(n_in, x_in);
+            x_in[0] = lon_out[j2*nx2p+i2];
+            x_in[1] = lon_out[j2*nx2p+i2+1];
+            x_in[2] = lon_out[(j2+1)*nx2p+i2+1];
+            x_in[3] = lon_out[(j2+1)*nx2p+i2];
+            n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
+            lon_in_avg = avgval_double(n_in, x_in);
 
-      if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
-	xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-        min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	if(xarea/min_area > AREA_RATIO_THRESH ) {
-	  xgrid_area[nxgrid] = xarea;
-	  xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	  xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
-	  i_in[nxgrid]    = i1;
-	  j_in[nxgrid]    = j1;
-	  i_out[nxgrid]   = i2;
-	  j_out[nxgrid]   = j2;
-	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
+            if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
+              xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if(xarea/min_area > AREA_RATIO_THRESH ) {
+                xgrid_area[nxgrid] = xarea;
+                xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+                xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
+                i_in[nxgrid]    = i1;
+                j_in[nxgrid]    = j1;
+                i_out[nxgrid]   = i2;
+                j_out[nxgrid]   = j2;
+                ++nxgrid;
+                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
       }
-    }
-  }
   free(area_in);
   free(area_out);
 
@@ -400,21 +400,21 @@ int create_xgrid_1dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   mask is on grid lon_in/lat_in.
 *******************************************************************************/
 int create_xgrid_2dx1d_order1_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out,
-			       int *j_out, double *xgrid_area)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                   int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_2dx1d_order1(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-			       i_in, j_in, i_out, j_out, xgrid_area);
+                                     i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 int create_xgrid_2dx1d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-			      const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-			      int *j_out, double *xgrid_area)
+                                  const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                  int *j_out, double *xgrid_area)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -436,9 +436,9 @@ int create_xgrid_2dx1d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   tmpx = (double *)malloc((nx2+1)*(ny2+1)*sizeof(double));
   tmpy = (double *)malloc((nx2+1)*(ny2+1)*sizeof(double));
   for(j2=0; j2<=ny2; j2++) for(i2=0; i2<=nx2; i2++) {
-    tmpx[j2*nx2p+i2] = lon_out[i2];
-    tmpy[j2*nx2p+i2] = lat_out[j2];
-  }
+      tmpx[j2*nx2p+i2] = lon_out[i2];
+      tmpy[j2*nx2p+i2] = lat_out[j2];
+    }
   get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in);
   get_grid_area(nlon_out, nlat_out, tmpx, tmpy, area_out);
 
@@ -447,43 +447,43 @@ int create_xgrid_2dx1d_order1_acc(const int *nlon_in, const int *nlat_in, const 
 
   for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
 
-    ll_lon = lon_out[i2];   ll_lat = lat_out[j2];
-    ur_lon = lon_out[i2+1]; ur_lat = lat_out[j2+1];
-    for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n_in, n_out;
-      double Xarea;
+      ll_lon = lon_out[i2];   ll_lat = lat_out[j2];
+      ur_lon = lon_out[i2+1]; ur_lat = lat_out[j2+1];
+      for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+            int n_in, n_out;
+            double Xarea;
 
-      y_in[0] = lat_in[j1*nx1p+i1];
-      y_in[1] = lat_in[j1*nx1p+i1+1];
-      y_in[2] = lat_in[(j1+1)*nx1p+i1+1];
-      y_in[3] = lat_in[(j1+1)*nx1p+i1];
-      if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
-	    && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
-      if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
-	    && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
+            y_in[0] = lat_in[j1*nx1p+i1];
+            y_in[1] = lat_in[j1*nx1p+i1+1];
+            y_in[2] = lat_in[(j1+1)*nx1p+i1+1];
+            y_in[3] = lat_in[(j1+1)*nx1p+i1];
+            if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
+                  && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
+            if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
+                  && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
 
-      x_in[0] = lon_in[j1*nx1p+i1];
-      x_in[1] = lon_in[j1*nx1p+i1+1];
-      x_in[2] = lon_in[(j1+1)*nx1p+i1+1];
-      x_in[3] = lon_in[(j1+1)*nx1p+i1];
+            x_in[0] = lon_in[j1*nx1p+i1];
+            x_in[1] = lon_in[j1*nx1p+i1+1];
+            x_in[2] = lon_in[(j1+1)*nx1p+i1+1];
+            x_in[3] = lon_in[(j1+1)*nx1p+i1];
 
-      n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
+            n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
 
-      if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
-	Xarea = poly_area ( x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	if( Xarea/min_area > AREA_RATIO_THRESH ) {
-      	  xgrid_area[nxgrid] = Xarea;
-	  i_in[nxgrid]    = i1;
-	  j_in[nxgrid]    = j1;
-	  i_out[nxgrid]   = i2;
-	  j_out[nxgrid]   = j2;
-	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
-      }
+            if ( (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
+              Xarea = poly_area ( x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if( Xarea/min_area > AREA_RATIO_THRESH ) {
+                xgrid_area[nxgrid] = Xarea;
+                i_in[nxgrid]    = i1;
+                j_in[nxgrid]    = j1;
+                i_out[nxgrid]   = i2;
+                j_out[nxgrid]   = j2;
+                ++nxgrid;
+                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
     }
-  }
 
   free(area_in);
   free(area_out);
@@ -501,21 +501,21 @@ int create_xgrid_2dx1d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   mask is on grid lon_in/lat_in.
 ********************************************************************************/
 int create_xgrid_2dx1d_order2_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			       double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_2dx1d_order2_acc(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                         j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
 
 };
 
 int create_xgrid_2dx1d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, ny1, nx2, ny2, nx1p, nx2p;
@@ -539,9 +539,9 @@ int create_xgrid_2dx1d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   tmpx = (double *)malloc((nx2+1)*(ny2+1)*sizeof(double));
   tmpy = (double *)malloc((nx2+1)*(ny2+1)*sizeof(double));
   for(j2=0; j2<=ny2; j2++) for(i2=0; i2<=nx2; i2++) {
-    tmpx[j2*nx2p+i2] = lon_out[i2];
-    tmpy[j2*nx2p+i2] = lat_out[j2];
-  }
+      tmpx[j2*nx2p+i2] = lon_out[i2];
+      tmpy[j2*nx2p+i2] = lat_out[j2];
+    }
   get_grid_area(nlon_in, nlat_in, lon_in, lat_in, area_in);
   get_grid_area(nlon_out, nlat_out, tmpx, tmpy, area_out);
 
@@ -550,46 +550,46 @@ int create_xgrid_2dx1d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
   for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
 
-    ll_lon = lon_out[i2];   ll_lat = lat_out[j2];
-    ur_lon = lon_out[i2+1]; ur_lat = lat_out[j2+1];
-    for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n_in, n_out;
-      double xarea;
+      ll_lon = lon_out[i2];   ll_lat = lat_out[j2];
+      ur_lon = lon_out[i2+1]; ur_lat = lat_out[j2+1];
+      for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+            int n_in, n_out;
+            double xarea;
 
-      y_in[0] = lat_in[j1*nx1p+i1];
-      y_in[1] = lat_in[j1*nx1p+i1+1];
-      y_in[2] = lat_in[(j1+1)*nx1p+i1+1];
-      y_in[3] = lat_in[(j1+1)*nx1p+i1];
-      if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
-	    && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
-      if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
-	    && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
+            y_in[0] = lat_in[j1*nx1p+i1];
+            y_in[1] = lat_in[j1*nx1p+i1+1];
+            y_in[2] = lat_in[(j1+1)*nx1p+i1+1];
+            y_in[3] = lat_in[(j1+1)*nx1p+i1];
+            if (  (y_in[0]<=ll_lat) && (y_in[1]<=ll_lat)
+                  && (y_in[2]<=ll_lat) && (y_in[3]<=ll_lat) ) continue;
+            if (  (y_in[0]>=ur_lat) && (y_in[1]>=ur_lat)
+                  && (y_in[2]>=ur_lat) && (y_in[3]>=ur_lat) ) continue;
 
-      x_in[0] = lon_in[j1*nx1p+i1];
-      x_in[1] = lon_in[j1*nx1p+i1+1];
-      x_in[2] = lon_in[(j1+1)*nx1p+i1+1];
-      x_in[3] = lon_in[(j1+1)*nx1p+i1];
+            x_in[0] = lon_in[j1*nx1p+i1];
+            x_in[1] = lon_in[j1*nx1p+i1+1];
+            x_in[2] = lon_in[(j1+1)*nx1p+i1+1];
+            x_in[3] = lon_in[(j1+1)*nx1p+i1];
 
-      n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
-      lon_in_avg = avgval_double(n_in, x_in);
+            n_in = fix_lon(x_in, y_in, 4, (ll_lon+ur_lon)/2);
+            lon_in_avg = avgval_double(n_in, x_in);
 
-      if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
-	xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	if(xarea/min_area > AREA_RATIO_THRESH ) {
-	  xgrid_area[nxgrid] = xarea;
-	  xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	  xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
-	  i_in[nxgrid]  = i1;
-	  j_in[nxgrid]  = j1;
-	  i_out[nxgrid] = i2;
-	  j_out[nxgrid] = j2;
-	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
-      }
+            if (  (n_out = clip ( x_in, y_in, n_in, ll_lon, ll_lat, ur_lon, ur_lat, x_out, y_out )) > 0 ) {
+              xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if(xarea/min_area > AREA_RATIO_THRESH ) {
+                xgrid_area[nxgrid] = xarea;
+                xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+                xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
+                i_in[nxgrid]  = i1;
+                j_in[nxgrid]  = j1;
+                i_out[nxgrid] = i2;
+                j_out[nxgrid] = j2;
+                ++nxgrid;
+                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
     }
-  }
 
   free(area_in);
   free(area_out);
@@ -607,22 +607,22 @@ int create_xgrid_2dx1d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 *******************************************************************************/
 #ifndef __AIX
 int create_xgrid_2dx2d_order1_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out,
-			       int *j_out, double *xgrid_area)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                   int *j_out, double *xgrid_area)
 {
   int nxgrid;
 
   nxgrid = create_xgrid_2dx2d_order1_acc(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in,
-			       i_in, j_in, i_out, j_out, xgrid_area);
+                                         i_in, j_in, i_out, j_out, xgrid_area);
   return nxgrid;
 
 };
 #endif
 int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-			      int *j_out, double *xgrid_area)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                  int *j_out, double *xgrid_area)
 {
 
 #define MAX_V 8
@@ -739,7 +739,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
     }
   }
 
-nxgrid = 0;
+  nxgrid = 0;
 
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
@@ -751,79 +751,79 @@ nxgrid = 0;
   for(m=0; m<nblocks; m++) {
     int i1, j1, ij;
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n0, n1, n2, n3, l,n1_in;
-      double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
-      double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
+          int n0, n1, n2, n3, l,n1_in;
+          double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
+          double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
-      n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
-      n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-      x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
-      x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
-      x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
-      x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-      lat_in_min = minval_double(4, y1_in);
-      lat_in_max = maxval_double(4, y1_in);
-      n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-      lon_in_min = minval_double(n1_in, x1_in);
-      lon_in_max = maxval_double(n1_in, x1_in);
-      lon_in_avg = avgval_double(n1_in, x1_in);
-      for(ij=istart2[m]; ij<=iend2[m]; ij++) {
-	int n_in, n_out, i2, j2, n2_in;
-	double xarea, dx, lon_out_min, lon_out_max;
-	double x2_in[MAX_V], y2_in[MAX_V];
+          n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
+          n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
+          x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
+          x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
+          x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
+          x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
+          lat_in_min = minval_double(4, y1_in);
+          lat_in_max = maxval_double(4, y1_in);
+          n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
+          lon_in_min = minval_double(n1_in, x1_in);
+          lon_in_max = maxval_double(n1_in, x1_in);
+          lon_in_avg = avgval_double(n1_in, x1_in);
+          for(ij=istart2[m]; ij<=iend2[m]; ij++) {
+            int n_in, n_out, i2, j2, n2_in;
+            double xarea, dx, lon_out_min, lon_out_max;
+            double x2_in[MAX_V], y2_in[MAX_V];
 
-	i2 = ij%nx2;
-	j2 = ij/nx2;
+            i2 = ij%nx2;
+            j2 = ij/nx2;
 
-	if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
-	/* adjust x2_in according to lon_in_avg*/
-	n2_in = n2_list[ij];
-	for(l=0; l<n2_in; l++) {
-	  x2_in[l] = lon_out_list[ij*MAX_V+l];
-	  y2_in[l] = lat_out_list[ij*MAX_V+l];
-	}
-	lon_out_min = lon_out_min_list[ij];
-	lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
-	if(dx < -M_PI ) {
-	  lon_out_min += TPI;
-	  lon_out_max += TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] += TPI;
-	}
-        else if (dx >  M_PI) {
-	  lon_out_min -= TPI;
-	  lon_out_max -= TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
-	}
+            if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
+            /* adjust x2_in according to lon_in_avg*/
+            n2_in = n2_list[ij];
+            for(l=0; l<n2_in; l++) {
+              x2_in[l] = lon_out_list[ij*MAX_V+l];
+              y2_in[l] = lat_out_list[ij*MAX_V+l];
+            }
+            lon_out_min = lon_out_min_list[ij];
+            lon_out_max = lon_out_max_list[ij];
+            dx = lon_out_avg[ij] - lon_in_avg;
+            if(dx < -M_PI ) {
+              lon_out_min += TPI;
+              lon_out_max += TPI;
+              for (l=0; l<n2_in; l++) x2_in[l] += TPI;
+            }
+            else if (dx >  M_PI) {
+              lon_out_min -= TPI;
+              lon_out_max -= TPI;
+              for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
+            }
 
-	/* x2_in should in the same range as x1_in after lon_fix, so no need to
-	   consider cyclic condition
-	*/
-	if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
-	if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
-	  int    nn;
-	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("The xgrid size is too large for resources.\n"
-        " nxgrid is greater than MAXXGRID/nthreads; increase MAXXGRID,\n"
-        " decrease nthreads, or increase number of MPI ranks.");
-	    nn = pstart[m] + pnxgrid[m]-1;
+            /* x2_in should in the same range as x1_in after lon_fix, so no need to
+               consider cyclic condition
+            */
+            if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
+            if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
+              double min_area;
+              int    nn;
+              xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if( xarea/min_area > AREA_RATIO_THRESH ) {
+                pnxgrid[m]++;
+                if(pnxgrid[m]>= MAXXGRID/nthreads)
+                  error_handler("The xgrid size is too large for resources.\n"
+                                " nxgrid is greater than MAXXGRID/nthreads; increase MAXXGRID,\n"
+                                " decrease nthreads, or increase number of MPI ranks.");
+                nn = pstart[m] + pnxgrid[m]-1;
 
-	    pxgrid_area[nn] = xarea;
-	    pi_in[nn]       = i1;
-	    pj_in[nn]       = j1;
-	    pi_out[nn]      = i2;
-	    pj_out[nn]      = j2;
-	  }
+                pxgrid_area[nn] = xarea;
+                pi_in[nn]       = i1;
+                pj_in[nn]       = j1;
+                pi_out[nn]      = i2;
+                pj_out[nn]      = j2;
+              }
 
-	}
+            }
 
-      }
-    }
+          }
+        }
   }
 
   /*copy data if nblocks > 1 */
@@ -840,13 +840,13 @@ nxgrid = 0;
     nxgrid = 0;
     for(m=0; m<nblocks; m++) {
       for(i=0; i<pnxgrid[m]; i++) {
-	nn = pstart[m] + i;
-	i_in[nxgrid] = pi_in[nn];
-	j_in[nxgrid] = pj_in[nn];
-	i_out[nxgrid] = pi_out[nn];
-	j_out[nxgrid] = pj_out[nn];
-	xgrid_area[nxgrid] = pxgrid_area[nn];
-	nxgrid++;
+        nn = pstart[m] + i;
+        i_in[nxgrid] = pi_in[nn];
+        j_in[nxgrid] = pj_in[nn];
+        i_out[nxgrid] = pi_out[nn];
+        j_out[nxgrid] = pj_out[nn];
+        xgrid_area[nxgrid] = pxgrid_area[nn];
+        nxgrid++;
       }
     }
     free(pi_in);
@@ -880,21 +880,21 @@ nxgrid = 0;
 ********************************************************************************/
 #ifndef __AIX
 int create_xgrid_2dx2d_order2_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			       const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			       const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			       double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_2dx2d_order2_acc(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out, mask_in, i_in,
-                                     j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                         j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
   return nxgrid;
 
 };
 #endif
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
 #define MAX_V 8
@@ -1016,7 +1016,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
     }
   }
 
-nxgrid = 0;
+  nxgrid = 0;
 
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(nblocks,nx1,ny1,nx1p,mask_in,lon_in,lat_in, \
@@ -1029,76 +1029,76 @@ nxgrid = 0;
   for(m=0; m<nblocks; m++) {
     int i1, j1, ij;
     for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-      int n0, n1, n2, n3, l,n1_in;
-      double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
-      double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
+          int n0, n1, n2, n3, l,n1_in;
+          double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
+          double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
-      n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
-      n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-      x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
-      x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
-      x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
-      x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-      lat_in_min = minval_double(4, y1_in);
-      lat_in_max = maxval_double(4, y1_in);
-      n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-      lon_in_min = minval_double(n1_in, x1_in);
-      lon_in_max = maxval_double(n1_in, x1_in);
-      lon_in_avg = avgval_double(n1_in, x1_in);
-      for(ij=istart2[m]; ij<=iend2[m]; ij++) {
-	int n_in, n_out, i2, j2, n2_in;
-	double xarea, dx, lon_out_min, lon_out_max;
-	double x2_in[MAX_V], y2_in[MAX_V];
+          n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
+          n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
+          x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
+          x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
+          x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
+          x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
+          lat_in_min = minval_double(4, y1_in);
+          lat_in_max = maxval_double(4, y1_in);
+          n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
+          lon_in_min = minval_double(n1_in, x1_in);
+          lon_in_max = maxval_double(n1_in, x1_in);
+          lon_in_avg = avgval_double(n1_in, x1_in);
+          for(ij=istart2[m]; ij<=iend2[m]; ij++) {
+            int n_in, n_out, i2, j2, n2_in;
+            double xarea, dx, lon_out_min, lon_out_max;
+            double x2_in[MAX_V], y2_in[MAX_V];
 
-	i2 = ij%nx2;
-	j2 = ij/nx2;
+            i2 = ij%nx2;
+            j2 = ij/nx2;
 
-	if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
-	/* adjust x2_in according to lon_in_avg*/
-	n2_in = n2_list[ij];
-	for(l=0; l<n2_in; l++) {
-	  x2_in[l] = lon_out_list[ij*MAX_V+l];
-	  y2_in[l] = lat_out_list[ij*MAX_V+l];
-	}
-	lon_out_min = lon_out_min_list[ij];
-	lon_out_max = lon_out_max_list[ij];
-        dx = lon_out_avg[ij] - lon_in_avg;
-	if(dx < -M_PI ) {
-	  lon_out_min += TPI;
-	  lon_out_max += TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] += TPI;
-	}
-        else if (dx >  M_PI) {
-	  lon_out_min -= TPI;
-	  lon_out_max -= TPI;
-	  for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
-	}
+            if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
+            /* adjust x2_in according to lon_in_avg*/
+            n2_in = n2_list[ij];
+            for(l=0; l<n2_in; l++) {
+              x2_in[l] = lon_out_list[ij*MAX_V+l];
+              y2_in[l] = lat_out_list[ij*MAX_V+l];
+            }
+            lon_out_min = lon_out_min_list[ij];
+            lon_out_max = lon_out_max_list[ij];
+            dx = lon_out_avg[ij] - lon_in_avg;
+            if(dx < -M_PI ) {
+              lon_out_min += TPI;
+              lon_out_max += TPI;
+              for (l=0; l<n2_in; l++) x2_in[l] += TPI;
+            }
+            else if (dx >  M_PI) {
+              lon_out_min -= TPI;
+              lon_out_max -= TPI;
+              for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
+            }
 
-	/* x2_in should in the same range as x1_in after lon_fix, so no need to
-	   consider cyclic condition
-	*/
-	if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
-	if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-          double min_area;
-	  int nn;
-	  xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
-	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-	  if( xarea/min_area > AREA_RATIO_THRESH ) {
-	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
-	    nn = pstart[m] + pnxgrid[m]-1;
-	    pxgrid_area[nn] = xarea;
-	    pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
-	    pxgrid_clat[nn] = poly_ctrlat (x_out, y_out, n_out );
-	    pi_in[nn]       = i1;
-	    pj_in[nn]       = j1;
-	    pi_out[nn]      = i2;
-	    pj_out[nn]      = j2;
-	  }
-	}
-      }
-    }
+            /* x2_in should in the same range as x1_in after lon_fix, so no need to
+               consider cyclic condition
+            */
+            if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
+            if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
+              double min_area;
+              int nn;
+              xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
+              if( xarea/min_area > AREA_RATIO_THRESH ) {
+                pnxgrid[m]++;
+                if(pnxgrid[m]>= MAXXGRID/nthreads)
+                  error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+                nn = pstart[m] + pnxgrid[m]-1;
+                pxgrid_area[nn] = xarea;
+                pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
+                pxgrid_clat[nn] = poly_ctrlat (x_out, y_out, n_out );
+                pi_in[nn]       = i1;
+                pj_in[nn]       = j1;
+                pi_out[nn]      = i2;
+                pj_out[nn]      = j2;
+              }
+            }
+          }
+        }
   }
 
   /*copy data if nblocks > 1 */
@@ -1117,15 +1117,15 @@ nxgrid = 0;
     nxgrid = 0;
     for(m=0; m<nblocks; m++) {
       for(i=0; i<pnxgrid[m]; i++) {
-	nn = pstart[m] + i;
-	i_in[nxgrid] = pi_in[nn];
-	j_in[nxgrid] = pj_in[nn];
-	i_out[nxgrid] = pi_out[nn];
-	j_out[nxgrid] = pj_out[nn];
-	xgrid_area[nxgrid] = pxgrid_area[nn];
-	xgrid_clon[nxgrid] = pxgrid_clon[nn];
-	xgrid_clat[nxgrid] = pxgrid_clat[nn];
-	nxgrid++;
+        nn = pstart[m] + i;
+        i_in[nxgrid] = pi_in[nn];
+        j_in[nxgrid] = pj_in[nn];
+        i_out[nxgrid] = pi_out[nn];
+        j_out[nxgrid] = pj_out[nn];
+        xgrid_area[nxgrid] = pxgrid_area[nn];
+        xgrid_clon[nxgrid] = pxgrid_clon[nn];
+        xgrid_clat[nxgrid] = pxgrid_clat[nn];
+        nxgrid++;
       }
     }
     free(pi_in);
@@ -1158,7 +1158,7 @@ nxgrid = 0;
 *******************************************************************************/
 
 int clip_acc(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
-	 double ur_lon, double ur_lat, double lon_out[], double lat_out[])
+             double ur_lon, double ur_lat, double lon_out[], double lat_out[])
 {
   double x_tmp[MV], y_tmp[MV], x_last, y_last;
   int i_in, i_out, n_out, inside_last, inside;
@@ -1196,7 +1196,7 @@ int clip_acc(const double lon_in[], const double lat_in[], int n_in, double ll_l
     if ((inside=(x_tmp[i_in] <= ur_lon))!=inside_last) {
       lon_out[i_out]   = ur_lon;
       lat_out[i_out++] = y_last + (ur_lon - x_last) * (y_tmp[i_in] - y_last)
-                                                 / (x_tmp[i_in] - x_last);
+        / (x_tmp[i_in] - x_last);
     }
 
     /* if "to" point is left of RIGHT boundary, output it */
@@ -1265,8 +1265,8 @@ int clip_acc(const double lon_in[], const double lat_in[], int n_in, double ll_l
 *******************************************************************************/
 
 int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
-	 const double lon2_in[], const double lat2_in[], int n2_in,
-	 double lon_out[], double lat_out[])
+                   const double lon2_in[], const double lat2_in[], int n2_in,
+                   double lon_out[], double lat_out[])
 {
   double lon_tmp[MV], lat_tmp[MV];
   double lon2_tmp[MV], lat2_tmp[MV];
@@ -1305,25 +1305,25 @@ int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
         /* there is intersection, the line between <x1_0,y1_0> and  <x1_1,y1_1>
            should not parallel to the line between <x2_0,y2_0> and  <x2_1,y2_1>
            may need to consider truncation error */
-	dy1 = y1_1-y1_0;
-	dy2 = y2_1-y2_0;
-	dx1 = x1_1-x1_0;
-	dx2 = x2_1-x2_0;
-	ds1 = y1_0*x1_1 - y1_1*x1_0;
-	ds2 = y2_0*x2_1 - y2_1*x2_0;
-	determ = dy2*dx1 - dy1*dx2;
+        dy1 = y1_1-y1_0;
+        dy2 = y2_1-y2_0;
+        dx1 = x1_1-x1_0;
+        dx2 = x2_1-x2_0;
+        ds1 = y1_0*x1_1 - y1_1*x1_0;
+        ds2 = y2_0*x2_1 - y2_1*x2_0;
+        determ = dy2*dx1 - dy1*dx2;
         if(fabs(determ) < EPSLN30) {
-	  error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
-				     "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
-	}
-	lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
-	lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
+          error_handler("the line between <x1_0,y1_0> and  <x1_1,y1_1> should not parallel to "
+                        "the line between <x2_0,y2_0> and  <x2_1,y2_1>");
+        }
+        lon_out[i_out]   = (dx2*ds1 - dx1*ds2)/determ;
+        lat_out[i_out++] = (dy2*ds1 - dy1*ds2)/determ;
 
 
       }
       if(inside) {
-	lon_out[i_out]   = x1_1;
-	lat_out[i_out++] = y1_1;
+        lon_out[i_out]   = x1_1;
+        lat_out[i_out++] = y1_1;
       }
       x1_0 = x1_1;
       y1_0 = y1_1;
@@ -1352,22 +1352,22 @@ void pimod(double x[],int nn)
 
 #ifndef __AIX
 int create_xgrid_great_circle_acc_(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                   const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
   int nxgrid;
   nxgrid = create_xgrid_great_circle_acc(nlon_in, nlat_in, nlon_out, nlat_out, lon_in, lat_in, lon_out, lat_out,
-			      mask_in, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                         mask_in, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
 
   return nxgrid;
 };
 #endif
 
 int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
+                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, ny1p, ny2p, nxgrid, n1_in, n2_in;
@@ -1410,46 +1410,46 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
   n2_in = 4;
 
   for(j1=0; j1<ny1; j1++) for(i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
-    /* clockwise */
-    n0 = j1*nx1p+i1;       n1 = (j1+1)*nx1p+i1;
-    n2 = (j1+1)*nx1p+i1+1; n3 = j1*nx1p+i1+1;
-    x1_in[0] = x1[n0]; y1_in[0] = y1[n0]; z1_in[0] = z1[n0];
-    x1_in[1] = x1[n1]; y1_in[1] = y1[n1]; z1_in[1] = z1[n1];
-    x1_in[2] = x1[n2]; y1_in[2] = y1[n2]; z1_in[2] = z1[n2];
-    x1_in[3] = x1[n3]; y1_in[3] = y1[n3]; z1_in[3] = z1[n3];
+        /* clockwise */
+        n0 = j1*nx1p+i1;       n1 = (j1+1)*nx1p+i1;
+        n2 = (j1+1)*nx1p+i1+1; n3 = j1*nx1p+i1+1;
+        x1_in[0] = x1[n0]; y1_in[0] = y1[n0]; z1_in[0] = z1[n0];
+        x1_in[1] = x1[n1]; y1_in[1] = y1[n1]; z1_in[1] = z1[n1];
+        x1_in[2] = x1[n2]; y1_in[2] = y1[n2]; z1_in[2] = z1[n2];
+        x1_in[3] = x1[n3]; y1_in[3] = y1[n3]; z1_in[3] = z1[n3];
 
-    for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
-      int n_in, n_out;
-      double xarea;
+        for(j2=0; j2<ny2; j2++) for(i2=0; i2<nx2; i2++) {
+            int n_in, n_out;
+            double xarea;
 
-      n0 = j2*nx2p+i2;       n1 = (j2+1)*nx2p+i2;
-      n2 = (j2+1)*nx2p+i2+1; n3 = j2*nx2p+i2+1;
-      x2_in[0] = x2[n0]; y2_in[0] = y2[n0]; z2_in[0] = z2[n0];
-      x2_in[1] = x2[n1]; y2_in[1] = y2[n1]; z2_in[1] = z2[n1];
-      x2_in[2] = x2[n2]; y2_in[2] = y2[n2]; z2_in[2] = z2[n2];
-      x2_in[3] = x2[n3]; y2_in[3] = y2[n3]; z2_in[3] = z2[n3];
+            n0 = j2*nx2p+i2;       n1 = (j2+1)*nx2p+i2;
+            n2 = (j2+1)*nx2p+i2+1; n3 = j2*nx2p+i2+1;
+            x2_in[0] = x2[n0]; y2_in[0] = y2[n0]; z2_in[0] = z2[n0];
+            x2_in[1] = x2[n1]; y2_in[1] = y2[n1]; z2_in[1] = z2[n1];
+            x2_in[2] = x2[n2]; y2_in[2] = y2[n2]; z2_in[2] = z2[n2];
+            x2_in[3] = x2[n3]; y2_in[3] = y2[n3]; z2_in[3] = z2[n3];
 
-      if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
-					      x_out, y_out, z_out)) > 0) {
-	xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
-	min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
-	if( xarea/min_area > AREA_RATIO_THRESH ) {
+            if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
+                                                    x_out, y_out, z_out)) > 0) {
+              xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
+              min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
+              if( xarea/min_area > AREA_RATIO_THRESH ) {
 #ifdef debug_test_create_xgrid
-	  printf("(i2,j2)=(%d,%d), (i1,j1)=(%d,%d), xarea=%g\n", i2, j2, i1, j1, xarea);
+                printf("(i2,j2)=(%d,%d), (i1,j1)=(%d,%d), xarea=%g\n", i2, j2, i1, j1, xarea);
 #endif
-	  xgrid_area[nxgrid] = xarea;
-	  xgrid_clon[nxgrid] = 0; /*z1l: will be developed very soon */
-	  xgrid_clat[nxgrid] = 0;
-	  i_in[nxgrid]       = i1;
-	  j_in[nxgrid]       = j1;
-	  i_out[nxgrid]      = i2;
-	  j_out[nxgrid]      = j2;
-	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
-	}
+                xgrid_area[nxgrid] = xarea;
+                xgrid_clon[nxgrid] = 0; /*z1l: will be developed very soon */
+                xgrid_clat[nxgrid] = 0;
+                i_in[nxgrid]       = i1;
+                j_in[nxgrid]       = j1;
+                i_out[nxgrid]      = i2;
+                j_out[nxgrid]      = j2;
+                ++nxgrid;
+                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+              }
+            }
+          }
       }
-    }
-  }
 
 
   free(area1);
@@ -1478,8 +1478,8 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
 *******************************************************************************/
 
 int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
-			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
-			    double x_out[], double y_out[], double z_out[])
+                                const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
+                                double x_out[], double y_out[], double z_out[])
 {
   struct Node *subjList=NULL;
   struct Node *clipList=NULL;
@@ -1623,50 +1623,50 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       printf("********************************************************************************\n");
 #endif
       if( line_intersect_2D_3D(p1_0, p1_1, p2_0, p2_1, p2_2, intersect, &u1, &u2, &inbound) ) {
-	int n_prev, n_cur;
-	int is_in_subj, is_in_clip;
+        int n_prev, n_cur;
+        int is_in_subj, is_in_clip;
 
-	/* from the value of u1, u2 and inbound, we can partially decide if a point is inside or outside of polygon */
+        /* from the value of u1, u2 and inbound, we can partially decide if a point is inside or outside of polygon */
 
-	/* add the intersection into intersetList, The intersection might already be in
-	   intersectList and will be taken care addIntersect
-	*/
-	if(addIntersect(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
-	  /* add the intersection into the grid1List */
+        /* add the intersection into intersetList, The intersection might already be in
+           intersectList and will be taken care addIntersect
+        */
+        if(addIntersect(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
+          /* add the intersection into the grid1List */
 
-	  if(u1 == 1) {
-	    insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
-	  }
-	  else
-	    insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
-	  /* when u1 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
-	  if(u1==1) {
-	    p1_1[0] = intersect[0];
-	    p1_1[1] = intersect[1];
-	    p1_1[2] = intersect[2];
-	  }
-	  else if(u1 == 0) {
-	    p1_0[0] = intersect[0];
-	    p1_0[1] = intersect[1];
-	    p1_0[2] = intersect[2];
-	  }
-	  /* add the intersection into the grid2List */
-	  if(u2==1)
-	    insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
-	  else
-	    insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
-	  /* when u2 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
-	  if(u2==1) {
-	    p2_1[0] = intersect[0];
-	    p2_1[1] = intersect[1];
-	    p2_1[2] = intersect[2];
-	  }
-	  else if(u2 == 0) {
-	    p2_0[0] = intersect[0];
-	    p2_0[1] = intersect[1];
-	    p2_0[2] = intersect[2];
-	  }
-	}
+          if(u1 == 1) {
+            insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
+          }
+          else
+            insertIntersect(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
+          /* when u1 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
+          if(u1==1) {
+            p1_1[0] = intersect[0];
+            p1_1[1] = intersect[1];
+            p1_1[2] = intersect[2];
+          }
+          else if(u1 == 0) {
+            p1_0[0] = intersect[0];
+            p1_0[1] = intersect[1];
+            p1_0[2] = intersect[2];
+          }
+          /* add the intersection into the grid2List */
+          if(u2==1)
+            insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
+          else
+            insertIntersect(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
+          /* when u2 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
+          if(u2==1) {
+            p2_1[0] = intersect[0];
+            p2_1[1] = intersect[1];
+            p2_1[2] = intersect[2];
+          }
+          else if(u2 == 0) {
+            p2_0[0] = intersect[0];
+            p2_0[1] = intersect[1];
+            p2_0[2] = intersect[2];
+          }
+        }
       }
     }
   }
@@ -1752,44 +1752,44 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       iter2  = 0;
       /* Loop until find the next intersection */
       while( iter2 < maxiter2 ) {
-	int temp2IsIntersect;
+        int temp2IsIntersect;
 
-	temp2IsIntersect = 0;
-	if( isIntersect( *temp2 ) ) { /* copy the point and switch to the grid2List */
-	  struct Node *temp3;
+        temp2IsIntersect = 0;
+        if( isIntersect( *temp2 ) ) { /* copy the point and switch to the grid2List */
+          struct Node *temp3;
 
-	  /* first check if temp2 is the firstIntersect */
-	  if( sameNode( *temp2, *firstIntersect) ) {
-	    found1 = 1;
-	    break;
-	  }
+          /* first check if temp2 is the firstIntersect */
+          if( sameNode( *temp2, *firstIntersect) ) {
+            found1 = 1;
+            break;
+          }
 
-	  temp3 = temp2->Next;
-	  if( temp3 == NULL) temp3 = curList;
-	  if( temp3 == NULL) error_handler("creat_xgrid.c: temp3 can not be NULL");
-	  found2 = 1;
-	  /* if next node is inside or an intersection,
-	     need to keep on curList
-	  */
-	  temp2IsIntersect = 1;
-	  if( isIntersect(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
-	}
-	if(found2) {
-	  copyNode(curIntersect, *temp2);
-	  break;
-	}
-	else {
-	  addNode(polyList, *temp2);
+          temp3 = temp2->Next;
+          if( temp3 == NULL) temp3 = curList;
+          if( temp3 == NULL) error_handler("creat_xgrid.c: temp3 can not be NULL");
+          found2 = 1;
+          /* if next node is inside or an intersection,
+             need to keep on curList
+          */
+          temp2IsIntersect = 1;
+          if( isIntersect(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
+        }
+        if(found2) {
+          copyNode(curIntersect, *temp2);
+          break;
+        }
+        else {
+          addNode(polyList, *temp2);
 #ifdef debug_test_create_xgrid
-	  printNode(polyList, "polyList at stage 2");
+          printNode(polyList, "polyList at stage 2");
 #endif
-	  if(temp2IsIntersect) {
-	    nintersect--;
-	  }
-	}
-	temp2 = temp2->Next;
-	if( temp2 == NULL ) temp2 = curList;
-	iter2 ++;
+          if(temp2IsIntersect) {
+            nintersect--;
+          }
+        }
+        temp2 = temp2->Next;
+        if( temp2 == NULL ) temp2 = curList;
+        iter2 ++;
       }
       if(found1) break;
 
@@ -1797,8 +1797,8 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
       /* if find the first intersection, the poly found */
       if( sameNode( *curIntersect, *firstIntersect) ) {
-	found1 = 1;
-	break;
+        found1 = 1;
+        break;
       }
 
       /* add curIntersect to polyList and remove it from intersectList and curList */
@@ -1811,12 +1811,12 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
       /* switch curList */
       if( curListNum == 0) {
-	curList = grid2List;
-	curListNum = 1;
+        curList = grid2List;
+        curListNum = 1;
       }
       else {
-	curList = grid1List;
-	curListNum = 0;
+        curList = grid1List;
+        curListNum = 0;
       }
       iter1++;
     }
@@ -1853,9 +1853,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
     while(temp) {
       if(temp->intersect != 1) {
 #ifdef debug_test_create_xgrid
-	printf("grid1->isInside = %d\n", temp->isInside);
+        printf("grid1->isInside = %d\n", temp->isInside);
 #endif
-	if( temp->isInside == 1) n1in2++;
+        if( temp->isInside == 1) n1in2++;
       }
       temp = getNextNode(temp);
     }
@@ -1864,9 +1864,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       n = 0;
       temp = grid1List;
       while( temp ) {
-	getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
-	n++;
-	temp = getNextNode(temp);
+        getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
+        n++;
+        temp = getNextNode(temp);
       }
     }
     if(n_out>0) return n_out;
@@ -1884,9 +1884,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
     while(temp) {
       if(temp->intersect != 1) {
 #ifdef debug_test_create_xgrid
-	printf("grid2->isInside = %d\n", temp->isInside);
+        printf("grid2->isInside = %d\n", temp->isInside);
 #endif
-	if( temp->isInside == 1) n2in1++;
+        if( temp->isInside == 1) n2in1++;
       }
       temp = getNextNode(temp);
     }
@@ -1896,9 +1896,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       n = 0;
       temp = grid2List;
       while( temp ) {
-	getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
-	n++;
-	temp = getNextNode(temp);
+        getCoordinate(*temp, &x_out[n], &y_out[n], &z_out[n]);
+        n++;
+        temp = getNextNode(temp);
       }
 
     }
@@ -1918,7 +1918,7 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 */
 
 int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, double *q3,
-			 double *intersect, double *u_a, double *u_q, int *inbound){
+                             double *intersect, double *u_a, double *u_q, int *inbound){
 
   /* Do this intersection by reprsenting the line a1 to a2 as a plane through the
      two line points and the origin of the sphere (0,0,0). This is the
@@ -1946,8 +1946,8 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     printf("\nNOTE from line_intersect_2D_3D: u_a = %19.15f, u_q=%19.15f, inbound=%d\n", *u_a, *u_q, *inbound);
 #endif
     return 1;
-   }
-   else if (samePoint(a1[0], a1[1], a1[2], q2[0], q2[1], q2[2])) {
+  }
+  else if (samePoint(a1[0], a1[1], a1[2], q2[0], q2[1], q2[2])) {
     *u_a = 0;
     *u_q = 1;
     intersect[0] = a1[0];
@@ -1958,7 +1958,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
 #endif
     return 1;
   }
-   else if(samePoint(a2[0], a2[1], a2[2], q1[0], q1[1], q1[2])) {
+  else if(samePoint(a2[0], a2[1], a2[2], q1[0], q1[1], q1[2])) {
 #ifdef debug_test_create_xgrid
     printf("\nNOTE from line_intersect_2D_3D: u_a = %19.15f, u_q=%19.15f, inbound=%d\n", *u_a, *u_q, *inbound);
 #endif
@@ -1968,8 +1968,8 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     intersect[1] = a2[1];
     intersect[2] = a2[2];
     return 1;
-   }
-   else if (samePoint(a2[0], a2[1], a2[2], q2[0], q2[1], q2[2])) {
+  }
+  else if (samePoint(a2[0], a2[1], a2[2], q2[0], q2[1], q2[2])) {
 #ifdef debug_test_create_xgrid
     printf("\nNOTE from line_intersect_2D_3D: u_a = %19.15f, u_q=%19.15f, inbound=%d\n", *u_a, *u_q, *inbound);
 #endif
@@ -1997,14 +1997,14 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   is_inter1 = intersect_tri_with_line(plane, a1, a2, plane_p, u_a);
 
   if(!is_inter1)
-     return 0;
+    return 0;
 
   if(fabs(*u_a) < EPSLN8) *u_a = 0;
   if(fabs(*u_a-1) < EPSLN8) *u_a = 1;
 
 
 #ifdef debug_test_create_xgrid
-    printf("\nNOTE from line_intersect_2D_3D: u_a = %19.15f\n", *u_a);
+  printf("\nNOTE from line_intersect_2D_3D: u_a = %19.15f\n", *u_a);
 #endif
 
 
@@ -2025,12 +2025,12 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   is_inter2 = intersect_tri_with_line(plane, q1, q2, plane_p, u_q);
 
   if(!is_inter2)
-     return 0;
+    return 0;
 
   if(fabs(*u_q) < EPSLN8) *u_q = 0;
   if(fabs(*u_q-1) < EPSLN8) *u_q = 1;
 #ifdef debug_test_create_xgrid
-    printf("\nNOTE from line_intersect_2D_3D: u_q = %19.15f\n", *u_q);
+  printf("\nNOTE from line_intersect_2D_3D: u_q = %19.15f\n", *u_q);
 #endif
 
 
@@ -2075,7 +2075,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     if(sense > 0) *inbound = 2; /* v1 going into v2 in CCW sense */
   }
 #ifdef debug_test_create_xgrid
-    printf("\nNOTE from line_intersect_2D_3D: inbound=%d\n", *inbound);
+  printf("\nNOTE from line_intersect_2D_3D: inbound=%d\n", *inbound);
 #endif
 
   return 1;
@@ -2086,13 +2086,13 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   double poly_ctrlat(const double x[], const double y[], int n)
   This routine is used to calculate the latitude of the centroid
   Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
-             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
   The following is an implementation of equation (13) in the above paper:
-     \int lat.dA = \int_c [-cos(lat)-lat sin(lat)] dlon
+  \int lat.dA = \int_c [-cos(lat)-lat sin(lat)] dlon
   It assumes the sides of the spherical polygons are line segments with tangent
   (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
   line integral along the sides of the polygon  \int_c.
-   ---------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------*/
 
 double poly_ctrlat_acc(const double x[], const double y[], int n)
 {
@@ -2167,7 +2167,7 @@ double poly_ctrlat2(const double x[], const double y[], int n)
 /*------------------------------------------------------------------------------
   double poly_ctrlon(const double x[], const double y[], int n, double clon)
   This routine is used to calculate the lontitude of the centroid.
-   ---------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------*/
 double poly_ctrlon_acc(const double x[], const double y[], int n, double clon)
 {
   double ctrlon = 0.0;
@@ -2189,8 +2189,8 @@ double poly_ctrlon_acc(const double x[], const double y[], int n, double clon)
     f1 = 0.5*(cos(lat1)*sin(lat1)+lat1);
     f2 = 0.5*(cos(lat2)*sin(lat2)+lat2);
 
-     /* this will make sure longitude of centroid is at
-        the same interval as the center of any grid */
+    /* this will make sure longitude of centroid is at
+       the same interval as the center of any grid */
     if(dphi > M_PI)  dphi = dphi - 2.0*M_PI;
     if(dphi < -M_PI) dphi = dphi + 2.0*M_PI;
     dphi1 = phi1 - clon;
@@ -2205,13 +2205,13 @@ double poly_ctrlon_acc(const double x[], const double y[], int n, double clon)
     }
     else {
       if(dphi1 > 0.0)
-	fac = M_PI;
+        fac = M_PI;
       else
-	fac = -M_PI;
+        fac = -M_PI;
       fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
-	+ 0.5*fac*(dphi1+dphi2)*fint;
-	}
+        + 0.5*fac*(dphi1+dphi2)*fint;
+    }
 
   }
   return (ctrlon*RADIUS*RADIUS);
@@ -2235,7 +2235,7 @@ double box_ctrlat_acc(double ll_lon, double ll_lat, double ur_lon, double ur_lat
 /*------------------------------------------------------------------------------
   double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon)
   This routine is used to calculate the lontitude of the centroid
-   ----------------------------------------------------------------------------*/
+  ----------------------------------------------------------------------------*/
 double box_ctrlon_acc(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon)
 {
   double phi1, phi2, dphi, lat1, lat2, dphi1, dphi2;
@@ -2273,12 +2273,12 @@ double box_ctrlon_acc(double ll_lon, double ll_lat, double ur_lon, double ur_lat
     }
     else {
       if(dphi1 > 0.0)
-	fac = M_PI;
+        fac = M_PI;
       else
-	fac = -M_PI;
+        fac = -M_PI;
       fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
       ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
-	+ 0.5*fac*(dphi1+dphi2)*fint;
+        + 0.5*fac*(dphi1+dphi2)*fint;
     }
   }
   return (ctrlon*RADIUS*RADIUS);
@@ -2314,7 +2314,7 @@ double grid_box_radius_acc(const double *x, const double *y, const double *z, in
   distance between any vertices of these two box
 *******************************************************************************/
 double dist_between_boxes_acc(const double *x1, const double *y1, const double *z1, int n1,
-			  const double *x2, const double *y2, const double *z2, int n2)
+                              const double *x2, const double *y2, const double *z2, int n2)
 {
   double dist;
   int i, j;
@@ -2342,13 +2342,13 @@ double dist_between_boxes_acc(const double *x1, const double *y1, const double *
 *******************************************************************************/
 int inside_edge_acc(double x0, double y0, double x1, double y1, double x, double y)
 {
-   const double SMALL = 1.e-12;
-   double product;
+  const double SMALL = 1.e-12;
+  double product;
 
-   product = ( x-x0 )*(y1-y0) + (x0-x1)*(y-y0);
-   return (product<=SMALL) ? 1:0;
+  product = ( x-x0 )*(y1-y0) + (x0-x1)*(y-y0);
+  return (product<=SMALL) ? 1:0;
 
- }; /* inside_edge */
+}; /* inside_edge */
 
 
 /* The following is a test program to test subroutines in create_xgrid.c */
@@ -2418,8 +2418,8 @@ int main(int argc, char* argv[])
       lon1_in[3] = 24; lat1_in[3] =-89;
 
       for(i=0; i<n2_in; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
+        lon2_in[i] = lon1_in[i];
+        lat2_in[i] = lat1_in[i];
       }
       break;
 
@@ -2444,10 +2444,10 @@ int main(int argc, char* argv[])
       lon2_in[2] = 152.5; lat2_in[2] = 90;
       lon2_in[3] = 152.5; lat2_in[3] = 88;
       /*
-      for(i=0; i<4; i++) {
-	lon2_in[i] = lon1_in[i];
-	lat2_in[i] = lat1_in[i];
-      }
+        for(i=0; i<4; i++) {
+        lon2_in[i] = lon1_in[i];
+        lat2_in[i] = lat1_in[i];
+        }
       */
       break;
 
@@ -2555,7 +2555,7 @@ int main(int argc, char* argv[])
       ****************************************************************/
       n1_in = 4; n2_in = 4;
       /* first a simple lat-lo
-	 n grid box to clip another lat-lon grid box */
+         n grid box to clip another lat-lon grid box */
       lon1_in[0] = 350.0; lat1_in[0] = -45;
       lon1_in[1] = 350.0; lat1_in[1] = -43.43;
       lon1_in[2] = 352.1; lat1_in[2] = -43.41;
@@ -2632,65 +2632,65 @@ int main(int argc, char* argv[])
       lon1_in[2] = 260.0; lat1_in[2] = 87.92;
       lon1_in[3] = 215.0;  lat1_in[3] = 87.06;
 
-/*       lon1_in[0] = 35.0; lat1_in[0] = 87.06; */
-/*       lon1_in[1] = 80.0; lat1_in[1] = 87.92; */
-/*       lon1_in[2] = 125.0; lat1_in[2] = 87.06; */
-/*       lon1_in[3] = 350.0; lat1_in[3] = 87.92; */
-/*       lon1_in[4] = 350.0; lat1_in[4] = 90.00; */
-/*       lon1_in[5] = 170.0; lat1_in[5] = 87.92; */
-/*       lon1_in[6] = 305.0; lat1_in[6] = 87.06; */
-/*       lon1_in[7] = 260.0; lat1_in[7] = 87.92; */
-/*       lon1_in[8] = 215.0;  lat1_in[8] = 87.06; */
+      /*       lon1_in[0] = 35.0; lat1_in[0] = 87.06; */
+      /*       lon1_in[1] = 80.0; lat1_in[1] = 87.92; */
+      /*       lon1_in[2] = 125.0; lat1_in[2] = 87.06; */
+      /*       lon1_in[3] = 350.0; lat1_in[3] = 87.92; */
+      /*       lon1_in[4] = 350.0; lat1_in[4] = 90.00; */
+      /*       lon1_in[5] = 170.0; lat1_in[5] = 87.92; */
+      /*       lon1_in[6] = 305.0; lat1_in[6] = 87.06; */
+      /*       lon1_in[7] = 260.0; lat1_in[7] = 87.92; */
+      /*       lon1_in[8] = 215.0;  lat1_in[8] = 87.06; */
 
       lon2_in[0] = 167.5; lat2_in[0] = 88;
       lon2_in[1] = 170;   lat2_in[1] = 88;
       lon2_in[2] = 167.5; lat2_in[2] = 90;
       lon2_in[3] = 170;   lat2_in[3] = 90;
 
-/*       nlon1 = 3; */
-/*       nlat1 = 2; */
-/*       nlon2 = 1; */
-/*       nlat2 = 1; */
-/*       n1_in = (nlon1+1)*(nlat1+1); */
-/*       n2_in = (nlon2+1)*(nlat2+1); */
+      /*       nlon1 = 3; */
+      /*       nlat1 = 2; */
+      /*       nlon2 = 1; */
+      /*       nlat2 = 1; */
+      /*       n1_in = (nlon1+1)*(nlat1+1); */
+      /*       n2_in = (nlon2+1)*(nlat2+1); */
 
-/*       lon1_in[0] = 35.00;     lat1_in[0] = -59.90; */
-/*       lon1_in[1] = 37.64;     lat1_in[1] = -58.69; */
-/*       lon1_in[2] = 40.07;     lat1_in[2] = -57.44; */
-/*       lon1_in[3] = 42.32;     lat1_in[3] = -56.15; */
-/*       lon1_in[4] = 32.36;     lat1_in[4] = -58.69; */
-/*       lon1_in[5] = 35.00;     lat1_in[5] = -57.56; */
-/*       lon1_in[6] = 37.45;     lat1_in[6] = -56.39; */
-/*       lon1_in[7] = 39.74;     lat1_in[7] = -55.18; */
-/*       lon1_in[8] = 29.93;     lat1_in[8] = -57.44; */
-/*       lon1_in[9] = 32.55;     lat1_in[9] = -56.39; */
-/*       lon1_in[10] = 35.00;     lat1_in[10] = -55.29; */
-/*       lon1_in[11] = 37.30;     lat1_in[11] = -54.16; */
-/*       lon2_in[0] = 35;   lat2_in[0] = -58; */
-/*       lon2_in[1] = 37.5; lat2_in[1] = -58; */
-/*       lon2_in[2] = 35;   lat2_in[2] = -56; */
-/*       lon2_in[3] = 37.5; lat2_in[3] = -56; */
+      /*       lon1_in[0] = 35.00;     lat1_in[0] = -59.90; */
+      /*       lon1_in[1] = 37.64;     lat1_in[1] = -58.69; */
+      /*       lon1_in[2] = 40.07;     lat1_in[2] = -57.44; */
+      /*       lon1_in[3] = 42.32;     lat1_in[3] = -56.15; */
+      /*       lon1_in[4] = 32.36;     lat1_in[4] = -58.69; */
+      /*       lon1_in[5] = 35.00;     lat1_in[5] = -57.56; */
+      /*       lon1_in[6] = 37.45;     lat1_in[6] = -56.39; */
+      /*       lon1_in[7] = 39.74;     lat1_in[7] = -55.18; */
+      /*       lon1_in[8] = 29.93;     lat1_in[8] = -57.44; */
+      /*       lon1_in[9] = 32.55;     lat1_in[9] = -56.39; */
+      /*       lon1_in[10] = 35.00;     lat1_in[10] = -55.29; */
+      /*       lon1_in[11] = 37.30;     lat1_in[11] = -54.16; */
+      /*       lon2_in[0] = 35;   lat2_in[0] = -58; */
+      /*       lon2_in[1] = 37.5; lat2_in[1] = -58; */
+      /*       lon2_in[2] = 35;   lat2_in[2] = -56; */
+      /*       lon2_in[3] = 37.5; lat2_in[3] = -56; */
 
-/*       nlon1 = 1; */
-/*       nlat1 = 1; */
-/*       nlon2 = 1; */
-/*       nlat2 = 1; */
-/*       n1_in = (nlon1+1)*(nlat1+1); */
-/*       n2_in = (nlon2+1)*(nlat2+1); */
+      /*       nlon1 = 1; */
+      /*       nlat1 = 1; */
+      /*       nlon2 = 1; */
+      /*       nlat2 = 1; */
+      /*       n1_in = (nlon1+1)*(nlat1+1); */
+      /*       n2_in = (nlon2+1)*(nlat2+1); */
 
-/*       lon1_in[0] = 305;     lat1_in[0] = -35.26; */
-/*       lon1_in[1] = 306;     lat1_in[1] = -35.99; */
-/*       lon1_in[2] = 305;     lat1_in[2] = -33.80; */
-/*       lon1_in[3] = 306;     lat1_in[3] = -34.51; */
-/*       lon2_in[0] = 305;   lat2_in[0] = -34; */
-/*       lon2_in[1] = 307.5; lat2_in[1] = -34; */
-/*       lon2_in[2] = 305;   lat2_in[2] = -32; */
-/*       lon2_in[3] = 307.5; lat2_in[3] = -32; */
+      /*       lon1_in[0] = 305;     lat1_in[0] = -35.26; */
+      /*       lon1_in[1] = 306;     lat1_in[1] = -35.99; */
+      /*       lon1_in[2] = 305;     lat1_in[2] = -33.80; */
+      /*       lon1_in[3] = 306;     lat1_in[3] = -34.51; */
+      /*       lon2_in[0] = 305;   lat2_in[0] = -34; */
+      /*       lon2_in[1] = 307.5; lat2_in[1] = -34; */
+      /*       lon2_in[2] = 305;   lat2_in[2] = -32; */
+      /*       lon2_in[3] = 307.5; lat2_in[3] = -32; */
 
-       nlon1 = 2;
-       nlat1 = 2;
-       nlon2 = 1;
-       nlat2 = 1;
+      nlon1 = 2;
+      nlat1 = 2;
+      nlon2 = 1;
+      nlat2 = 1;
       n1_in = (nlon1+1)*(nlat1+1);
       n2_in = (nlon2+1)*(nlat2+1);
 
@@ -2729,13 +2729,13 @@ int main(int argc, char* argv[])
 
       /* first a simple lat-lon grid box to clip another lat-lon grid box */
       for(j=0; j<=nlat1; j++) for(i=0; i<=nlon1; i++){
-	lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
-	lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
-      }
-       for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++){
-	lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
-	lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
-      }
+          lon1_in[j*(nlon1+1)+i] = 20.0 + (i-1)*2.0;
+          lat1_in[j*(nlon1+1)+i] = 10.0 + (j-1)*2.0;
+        }
+      for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++){
+          lon2_in[j*(nlon2+1)+i] = 19.0 + (i-1)*2.0;
+          lat2_in[j*(nlon2+1)+i] = 9.0 + (j-1)*2.0;
+        }
 
       break;
 
@@ -2748,33 +2748,33 @@ int main(int argc, char* argv[])
       n1_in = (nlon1+1)*(nlat1+1);
       n2_in = (nlon2+1)*(nlat2+1);
 
-/*       lon1_in[0] = ; lat1_in[0] = ; */
-/*       lon1_in[1] = ; lat1_in[1] = ; */
-/*       lon1_in[2] = ; lat1_in[2] = ; */
-/*       lon1_in[3] = ; lat1_in[3] = ; */
-/*       lon2_in[0] = ; lat2_in[0] = ; */
-/*       lon2_in[1] = ; lat2_in[1] = ; */
-/*       lon2_in[2] = ; lat2_in[2] = ; */
-/*       lon2_in[3] = ; lat2_in[3] = ;     */
+      /*       lon1_in[0] = ; lat1_in[0] = ; */
+      /*       lon1_in[1] = ; lat1_in[1] = ; */
+      /*       lon1_in[2] = ; lat1_in[2] = ; */
+      /*       lon1_in[3] = ; lat1_in[3] = ; */
+      /*       lon2_in[0] = ; lat2_in[0] = ; */
+      /*       lon2_in[1] = ; lat2_in[1] = ; */
+      /*       lon2_in[2] = ; lat2_in[2] = ; */
+      /*       lon2_in[3] = ; lat2_in[3] = ;     */
 
-/*       lon1_in[0] = 1.35536; lat1_in[0] = 1.16251; */
-/*       lon1_in[1] = 1.36805; lat1_in[1] = 1.15369; */
-/*       lon1_in[2] = 1.37843; lat1_in[2] = 1.16729; */
-/*       lon1_in[3] = 1.39048; lat1_in[3] = 1.15826; */
-/*       lon2_in[0] = 1.34611; lat2_in[0] = 1.16372; */
-/*       lon2_in[1] = 1.35616; lat2_in[1] = 1.15802;    */
-/*       lon2_in[2] = 1.35143; lat2_in[2] = 1.16509; */
-/*       lon2_in[3] = 1.36042; lat2_in[3] = 1.15913; */
+      /*       lon1_in[0] = 1.35536; lat1_in[0] = 1.16251; */
+      /*       lon1_in[1] = 1.36805; lat1_in[1] = 1.15369; */
+      /*       lon1_in[2] = 1.37843; lat1_in[2] = 1.16729; */
+      /*       lon1_in[3] = 1.39048; lat1_in[3] = 1.15826; */
+      /*       lon2_in[0] = 1.34611; lat2_in[0] = 1.16372; */
+      /*       lon2_in[1] = 1.35616; lat2_in[1] = 1.15802;    */
+      /*       lon2_in[2] = 1.35143; lat2_in[2] = 1.16509; */
+      /*       lon2_in[3] = 1.36042; lat2_in[3] = 1.15913; */
 
-/*       lon1_in[0] = 12.508065121288551; lat1_in[0] = -87.445883646793547; */
-/*       lon1_in[1] = 325.425637772; lat1_in[1] = -86.481216821859505; */
-/*       lon1_in[2] = 97.5; lat1_in[2] = -89.802136057677174; */
-/*       lon1_in[3] = 277.5; lat1_in[3] = -87.615232005344637; */
+      /*       lon1_in[0] = 12.508065121288551; lat1_in[0] = -87.445883646793547; */
+      /*       lon1_in[1] = 325.425637772; lat1_in[1] = -86.481216821859505; */
+      /*       lon1_in[2] = 97.5; lat1_in[2] = -89.802136057677174; */
+      /*       lon1_in[3] = 277.5; lat1_in[3] = -87.615232005344637; */
 
-/*       for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++) { */
-/* 	lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
-/* 	lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
-/*       } */
+      /*       for(j=0; j<=nlat2; j++) for(i=0; i<=nlon2; i++) { */
+      /* 	lon2_in[j*(nlon2+1)+i] = -280.0 + i*1.0; */
+      /* 	lat2_in[j*(nlon2+1)+i] = -90.0 + j*8.0; */
+      /*       } */
       lon1_in[0] = 120.369397984526174; lat1_in[0] = 16.751543427495864;
       lon1_in[1] = 119.999999999999986; lat1_in[1] = 16.751871929590038;
       lon1_in[2] = 120.369397846883501; lat1_in[2] = 16.397797979598028;
@@ -2792,22 +2792,22 @@ int main(int argc, char* argv[])
          identical grid boxes
       ****************************************************************/
       /*
-      nlon1 = 1;
-      nlat1 = 1;
-      nlon2 = 1;
-      nlat2 = 1;
-      n1_in = (nlon1+1)*(nlat1+1);
-      n2_in = (nlon2+1)*(nlat2+1);
+        nlon1 = 1;
+        nlat1 = 1;
+        nlon2 = 1;
+        nlat2 = 1;
+        n1_in = (nlon1+1)*(nlat1+1);
+        n2_in = (nlon2+1)*(nlat2+1);
 
-      lon1_in[0] = 350.0; lat1_in[0] = 90.00;
-      lon1_in[1] = 170.0; lat1_in[1] = 87.92;
-      lon1_in[2] = 260.0; lat1_in[2] = 87.92;
-      lon1_in[3] = 215.0; lat1_in[3] = 87.06;
+        lon1_in[0] = 350.0; lat1_in[0] = 90.00;
+        lon1_in[1] = 170.0; lat1_in[1] = 87.92;
+        lon1_in[2] = 260.0; lat1_in[2] = 87.92;
+        lon1_in[3] = 215.0; lat1_in[3] = 87.06;
 
-      lon2_in[0] = 350.0; lat2_in[0] = 90.00;
-      lon2_in[1] = 170.0; lat2_in[1] = 87.92;
-      lon2_in[2] = 260.0; lat2_in[2] = 87.92;
-      lon2_in[3] = 215.0; lat2_in[3] = 87.06;
+        lon2_in[0] = 350.0; lat2_in[0] = 90.00;
+        lon2_in[1] = 170.0; lat2_in[1] = 87.92;
+        lon2_in[2] = 260.0; lat2_in[2] = 87.92;
+        lon2_in[3] = 215.0; lat2_in[3] = 87.06;
       */
       n1_in = 4; n2_in = 4;
 
@@ -2839,7 +2839,7 @@ int main(int argc, char* argv[])
 
     case 16:
       /*Must give [[-57.748, -30, -30, -97.6, -97.6],
-                   [89.876, 89.891, 90, 90, 89.9183]]*/
+        [89.876, 89.891, 90, 90, 89.9183]]*/
       n1_in = 6; n2_in = 5;
       double lon1_16[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_16[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2853,8 +2853,8 @@ int main(int argc, char* argv[])
 
     case 17:
       /*Must give the second square
-	 -30, -2.252, 60, 60, -30,
-	 89.891, 89.876, 89.942, 90, 90,
+        -30, -2.252, 60, 60, -30,
+        89.891, 89.876, 89.942, 90, 90,
       */
       n1_in = 6; n2_in = 5;
       lon1_in[0]=82.400;  lon1_in[1]=82.400; lon1_in[2]=262.400; lon1_in[3]=262.400; lon1_in[4]=326.498; lon1_in[5]=379.641;
@@ -2902,10 +2902,10 @@ int main(int argc, char* argv[])
 
     case 20:
       /*Must give
- n_out= 5
- 122.176, 150, 150, 82.4, 82.4,
- 89.761, 89.789, 90, 90, 89.8429,
-       */      n1_in = 6; n2_in = 5;
+        n_out= 5
+        122.176, 150, 150, 82.4, 82.4,
+        89.761, 89.789, 90, 90, 89.8429,
+      */      n1_in = 6; n2_in = 5;
       double lon1_20[] = {145.159, 198.302, 262.400, 262.400,  82.400,  82.400};
       double lat1_20[] = {89.642,  89.648,  89.847,  90.000,  90.000,  89.835};
 
@@ -2919,10 +2919,10 @@ int main(int argc, char* argv[])
 
     case 21:
       /*Must give
- n_out= 5
- 60.000,  82.400,  82.400,  60.000],
- 89.889,  89.843,  90.000,  90.000]
-       */
+        n_out= 5
+        60.000,  82.400,  82.400,  60.000],
+        89.889,  89.843,  90.000,  90.000]
+      */
       n1_in = 6; n2_in = 5;
       double lon1_21[] = {82.400,  82.400, 262.400, 262.400, 326.498, 379.641};
       double lat1_21[] = {89.835,  90.000,  90.000,  89.847,  89.648,  89.642};
@@ -2937,7 +2937,7 @@ int main(int argc, char* argv[])
 
     case 26:
       /*Side crosses SP (Right cell).
-	Must give same box
+        Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_22[] = {209.68793552504,158.60256162113,82.40000000000,262.40000000000};
@@ -2953,7 +2953,7 @@ int main(int argc, char* argv[])
 
     case 23:
       /*Side does not cross SP (Right cell).
-	Must give same box
+        Must give same box
       */
 
       n1_in = 4; n2_in = 4;
@@ -2970,7 +2970,7 @@ int main(int argc, char* argv[])
 
     case 24:
       /*Side crosses SP (Left cell). Added twin poles.
-	Must give the same box
+        Must give the same box
       */
       n1_in = 6; n2_in = 6;
       double lon1_24[] = {262.40000000000,262.40000000000,82.4,82.4,6.19743837887,-44.88793552504};
@@ -2985,7 +2985,7 @@ int main(int argc, char* argv[])
       break;
     case 25:
       /*Side crosses SP (Left cell).
-	Must givethe same box
+        Must givethe same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_25[] = {262.40000000000,82.4,6.19743837887,-44.88793552504};
@@ -3000,7 +3000,7 @@ int main(int argc, char* argv[])
       break;
     case 22:
       /*Side does not cross SP (Left cell).
-	Must give same box
+        Must give same box
       */
       n1_in = 4; n2_in = 4;
       double lon1_26[] = {82.4,82.4,43.60348402380,6.19743837887};
@@ -3048,8 +3048,8 @@ int main(int argc, char* argv[])
       for(i=0; i<nlon1*nlat1; i++) mask1[i] = 1.0;
 
       nxgrid = create_xgrid_great_circle(&nlon1, &nlat1, &nlon2, &nlat2, lon1_in, lat1_in,
-					 lon2_in, lat2_in, mask1, i1, j1, i2, j2,
-					 xarea, xclon, xclat);
+                                         lon2_in, lat2_in, mask1, i1, j1, i2, j2,
+                                         xarea, xclon, xclat);
       printf("     First input grid box longitude, latitude   \n");
       for(i=0; i<n1_in; i++) printf(" %g,  %g \n", lon1_in[i]*R2D, lat1_in[i]*R2D);
 
@@ -3058,25 +3058,25 @@ int main(int argc, char* argv[])
 
       printf("  Number of exchange grid is %d\n", nxgrid);
       for(i=0; i<nxgrid; i++) {
-	printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
-	       i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
+        printf("(i1,j1)=(%d,%d), (i2,j2)=(%d, %d), xgrid_area=%g, xgrid_clon=%g, xgrid_clat=%g\n",
+               i1[i], j1[i], i2[i], j2[i], xarea[i], xclon[i], xclat[i]);
       }
 
       /* comparing the area sum of exchange grid and grid1 area */
       {
-	double *x1, *y1, *z1, *area1;
-	double area_sum;
-	int    i;
-	area_sum = 0.0;
+        double *x1, *y1, *z1, *area1;
+        double area_sum;
+        int    i;
+        area_sum = 0.0;
 
-	for(i=0; i<nxgrid; i++) {
-	  area_sum+= xarea[i];
-	}
+        for(i=0; i<nxgrid; i++) {
+          area_sum+= xarea[i];
+        }
 
-	area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
-	get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
+        area1 = (double *)malloc((nlon1)*(nlat1)*sizeof(double));
+        get_grid_great_circle_area_(&nlon1, &nlat1, lon1_in, lat1_in, area1);
 
-	printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
+        printf("xgrid area sum is %g, grid 1 area is %g\n", area_sum, area1[0]);
       }
 
       printf("\n");
@@ -3090,8 +3090,8 @@ int main(int argc, char* argv[])
       free(mask1);
     }
     else if(n>14) {
-     // latlon2xyz(n1_in, lon1_in, lat1_in, x1_in, y1_in, z1_in);
-     // latlon2xyz(n2_in, lon2_in, lat2_in, x2_in, y2_in, z2_in);
+      // latlon2xyz(n1_in, lon1_in, lat1_in, x1_in, y1_in, z1_in);
+      // latlon2xyz(n2_in, lon2_in, lat2_in, x2_in, y2_in, z2_in);
 
       n_out = clip_2dx2d(lon1_in, lat1_in, n1_in, lon2_in, lat2_in, n2_in, lon_out, lat_out);
 
@@ -3135,7 +3135,7 @@ int main(int argc, char* argv[])
       latlon2xyz(n2_in, lon2_in, lat2_in, x2_in, y2_in, z2_in);
 
       n_out = clip_2dx2d_great_circle(x1_in, y1_in, z1_in, 4, x2_in, y2_in, z2_in, n2_in,
-				      x_out, y_out,  z_out);
+                                      x_out, y_out,  z_out);
       xyz2latlon(n_out, x_out, y_out, z_out, lon_out, lat_out);
 
       printf("\n*********************************************************\n");
