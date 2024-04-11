@@ -96,7 +96,7 @@ typedef struct {
   char   area_name[STRING];
   int    do_regrid;
   int    is_axis_data;
-  int    dimsize[5];  
+  int    dimsize[5];
 } Var_config;
 
 typedef struct {
@@ -121,11 +121,11 @@ typedef struct {
   int  bndid;
   int  size;
   nc_type type;
-  char cart; 
+  char cart;
   int  bndtype;
   int  is_defined;
   double *bnddata;
-  double *data; 
+  double *data;
 } Axis_config;
 
 typedef struct {
@@ -142,6 +142,17 @@ typedef struct {
 } File_config;
 
 typedef struct {
+  int nxgrid;
+  int *i_in;
+  int *j_in;
+  int *i_out;
+  int *j_out;
+  double *area;
+  double *di_in;
+  double *dj_in;
+} Interp_config_mini;
+
+typedef struct {
   size_t nxgrid;
   int *i_in;
   int *j_in;
@@ -150,6 +161,7 @@ typedef struct {
   int *t_in;
   double *di_in;
   double *dj_in;
+  Interp_config_mini *interp_mini;
   double *area;
   double *weight;
   int    *index;

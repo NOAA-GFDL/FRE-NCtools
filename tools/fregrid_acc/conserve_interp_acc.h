@@ -31,4 +31,6 @@ void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
                                const Grid_config *grid_out, const Field_config *u_in,  const Field_config *v_in,
                                Field_config *u_out, Field_config *v_out, unsigned int opcode);
 
+void read_remap_file(int ntiles_in, int ntiles_out, Interp_config *interp, unsigned int opcode);
+
 #endif
