@@ -21,7 +21,7 @@ bin_PROGRAMS = fregrid_acc
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS) \
             -I$(top_srcdir)/tools/libfrencutils_acc \
-            -I$(top_srcdir)/tools/fregrid -acc
+            -I$(top_srcdir)/tools/fregrid
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_acc_SOURCES = conserve_interp_acc.c \
@@ -32,6 +32,7 @@ fregrid_acc_SOURCES = conserve_interp_acc.c \
 
 fregrid_acc_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
                     $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a \
-                    $(LDADD) $(top_builddir)/tools/fregrid/conserve_interp.o \
                     $(top_builddir)/tools/fregrid/fregrid_util.o \
-                    $(top_builddir)/tools/fregrid/bilinear_interp.o
+                    $(top_builddir)/tools/fregrid/conserve_interp.o \
+                    $(top_builddir)/tools/fregrid/bilinear_interp.o \
+                    $(LDADD)

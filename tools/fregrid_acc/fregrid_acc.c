@@ -674,18 +674,6 @@ int main(int argc, char* argv[])
       strcat(history, argv[i]);
   }
 
-  {
-    int base_cpu;
-
-#if defined(_OPENMP)
-    omp_set_num_threads(nthreads);
-    base_cpu = get_cpu_affinity();
-#pragma omp parallel
-    set_cpu_affinity(base_cpu+omp_get_thread_num() );
-#endif
-
-  }
-
   /* get the mosaic information of input and output mosaic*/
   fid = mpp_open(mosaic_in, MPP_READ);
   ntiles_in = mpp_get_dimlen(fid, "ntiles");
