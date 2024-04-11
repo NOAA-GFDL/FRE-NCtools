@@ -19,15 +19,9 @@
 #***********************************************************************
 noinst_LIBRARIES = libfrencutils_acc.a
 
-AM_CFLAGS = $(NETCDF_CFLAGS) -acc -I$(top_srcdir)/tools/libfrencutils
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/libfrencutils -fPIC -shared
 
 libfrencutils_acc_a_SOURCES = create_xgrid_acc.c \
-                          create_xgrid_acc.h \
-                          gradient_c2l_acc.c \
-                          gradient_c2l_acc.h \
-                          interp_acc.c \
-                          interp_acc.h \
-                          mosaic_util_acc.c \
-                          mosaic_util_acc.h \
-                          tool_util_acc.c \
-                          tool_util_acc.h
+                              create_xgrid_acc.h
+
+libfrencutils_acc_a_LIBADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a

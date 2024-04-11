@@ -22,8 +22,7 @@ if WITH_MPI
   bin_PROGRAMS += fregrid_parallel
 endif
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_SOURCES = bilinear_interp.c \

@@ -26,13 +26,11 @@ LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_acc_SOURCES = conserve_interp_acc.c \
                       conserve_interp_acc.h \
-                      fregrid_util_acc.c \
-                      fregrid_util_acc.h \
                       fregrid_acc.c
 
-fregrid_acc_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-                    $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a \
-                    $(top_builddir)/tools/fregrid/fregrid_util.o \
+fregrid_acc_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \
                     $(top_builddir)/tools/fregrid/conserve_interp.o \
                     $(top_builddir)/tools/fregrid/bilinear_interp.o \
+                    $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+                    $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a \
                     $(LDADD)

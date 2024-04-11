@@ -22,7 +22,7 @@ if WITH_MPI
   noinst_LIBRARIES += libfrencutils_mpi.a
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS) -fPIC -shared
 
 libfrencutils_a_SOURCES = affinity.c \
                           constant.h \
