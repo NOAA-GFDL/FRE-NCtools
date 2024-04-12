@@ -216,12 +216,15 @@ AC_CONFIG_FILES([Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
-                 t/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
+                 t/Makefile
+                 t_acc/Makefile
+                 t_acc/test_read_remap_file/Makefile
+
 ])
 
 AC_OUTPUT

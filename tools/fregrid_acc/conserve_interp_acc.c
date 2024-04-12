@@ -30,6 +30,7 @@
 #include "conserve_interp.h"
 #include "conserve_interp_acc.h"
 #include "fregrid_util.h"
+#include "fregrid_utils_acc.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
@@ -59,7 +60,10 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
   } CellStruct;
   CellStruct *cell_in;
 
-  if( opcode & READ) read_remap_file(ntiles_in, ntiles_out, interp, opcode);
+  if( opcode & READ) {
+    read_remap_file(ntiles_in, ntiles_out, interp, opcode);
+    copy_interp_to_device(ntiles_in, ntiles_out, interp, opcode);
+  }
   else {
     i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
     j_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
@@ -76,8 +80,8 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
       cell_in[m].clon = (double *)malloc(nx_in*ny_in*sizeof(double));
       cell_in[m].clat = (double *)malloc(nx_in*ny_in*sizeof(double));
       for(n=0; n<nx_in*ny_in; n++) {
-	cell_in[m].area[n] = 0;
-	cell_in[m].clon[n] = 0;
+        cell_in[m].area[n] = 0;
+        cell_in[m].clon[n] = 0;
         cell_in[m].clat[n] = 0;
       }
     }
@@ -86,27 +90,27 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
       ny_out    = grid_out[n].nyc;
       interp[n].nxgrid = 0;
       for(m=0; m<ntiles_in; m++) {
-	double *mask;
-	double y_min, y_max, yy;
-	int jstart, jend, ny_now, j;
+        double *mask;
+        double y_min, y_max, yy;
+        int jstart, jend, ny_now, j;
 
-  nx_in = grid_in[m].nx;
-  ny_in = grid_in[m].ny;
+        nx_in = grid_in[m].nx;
+        ny_in = grid_in[m].ny;
 
-	mask = (double *)malloc(nx_in*ny_in*sizeof(double));
-	for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
+        mask = (double *)malloc(nx_in*ny_in*sizeof(double));
+        for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
-	if(opcode & GREAT_CIRCLE) {
-	  nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
-					     grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
+        if(opcode & GREAT_CIRCLE) {
+          nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
+                                             grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
 					     mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-	  }
-	else {
-	  y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-	  y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-	  jstart = ny_in; jend = -1;
-	  for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
-	    yy = grid_in[m].latc[j*(nx_in+1)+i];
+        }
+        else {
+          y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
+          y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
+          jstart = ny_in; jend = -1;
+          for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
+              yy = grid_in[m].latc[j*(nx_in+1)+i];
            if( yy > y_min ) {
                if(j < jstart ) jstart = j;
             }
@@ -150,10 +154,10 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	      mpp_gather_field_double(nxgrid, xgrid_clon, g_clon);
 	      mpp_gather_field_double(nxgrid, xgrid_clat, g_clat);
 	      for(i=0; i<g_nxgrid; i++) {
-		ii = g_j_in[i]*nx_in+g_i_in[i];
-		cell_in[m].area[ii] += g_area[i];
-		cell_in[m].clon[ii] += g_clon[i];
-		cell_in[m].clat[ii] += g_clat[i];
+          ii = g_j_in[i]*nx_in+g_i_in[i];
+          cell_in[m].area[ii] += g_area[i];
+          cell_in[m].clon[ii] += g_clon[i];
+          cell_in[m].clat[ii] += g_clat[i];
 	      }
 	      free(g_i_in);
 	      free(g_j_in);
@@ -449,9 +453,6 @@ void read_remap_file(int ntiles_in, int ntiles_out, Interp_config *interp, unsig
   size_t nxgrid;
   int nxgrid_acc;
 
-  //start deep copy
-#pragma acc enter data copyin( interp[:ntiles_out] )
-
   for(int n=0; n<ntiles_out; n++) {
     if( interp[n].file_exist ) {
       int *t_in, *ind_acc;
@@ -520,22 +521,6 @@ void read_remap_file(int ntiles_in, int ntiles_out, Interp_config *interp, unsig
           interp[n].interp_mini[itile].dj_in[ii] = xgrid_clat[i];
         }
         ind_acc[itile]++;
-      }
-
-      //copy data to device
-#pragma acc update device(interp[n].nxgrid)
-#pragma acc enter data copyin( interp[n].interp_mini[:ntiles_in] )
-      for( int m=0 ; m < ntiles_in ; m++ ) {
-        nxgrid_acc = interp[n].interp_mini[m].nxgrid ;
-#pragma acc enter data copyin( interp[n].interp_mini[m].i_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].j_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].i_out[:nxgrid_acc], \
-                               interp[n].interp_mini[m].j_out[:nxgrid_acc], \
-                               interp[n].interp_mini[m].area[:nxgrid_acc] )
-        if( opcode & CONSERVE_ORDER2) {
-#pragma acc enter data copyin( interp[n].interp_mini[m].di_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].dj_in[:nxgrid_acc])
-        }
       }
 
       free(t_in) ; free(ind_acc); free(i_in) ; free(j_in); free(i_out); free(j_out);
