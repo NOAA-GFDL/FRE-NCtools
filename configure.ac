@@ -122,6 +122,12 @@ AC_CHECK_PROGS(PROVE, [prove])
 
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
+# Check if openacc.h exists
+if test $enable_acc = yes ; then
+   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
+   AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
+fi
+
 # Check for library
 AX_LIB_NETCDF()
 if test "$with_netcdf" = "no"; then
@@ -147,11 +153,6 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
   [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])
   ])
 ])
-
-# Check if openacc.h exists
-if test $enable_acc = yes ; then
-   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
-fi
 
 # Check for library functions
 
