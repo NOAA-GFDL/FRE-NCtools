@@ -17,24 +17,11 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = fregrid
-if WITH_MPI
-  bin_PROGRAMS += fregrid_parallel
-endif
+noinst_LIBRARIES = libfrencutils_acc.a
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS)
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/libfrencutils -acc
 
-fregrid_SOURCES = bilinear_interp.c \
-                  bilinear_interp.h \
-                  conserve_interp.c \
-                  conserve_interp.h \
-                  fregrid_util.c \
-                  fregrid_util.h \
-                  fregrid.c \
-                  globals.h
-fregrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
+libfrencutils_acc_a_SOURCES = create_xgrid_acc.c \
+                              create_xgrid_acc.h
 
-fregrid_parallel_SOURCES = $(fregrid_SOURCES)
-fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
-fregrid_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
+libfrencutils_acc_a_LIBADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a

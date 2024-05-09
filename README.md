@@ -165,6 +165,11 @@ make install
 The option  `--with-mpi` to the `configure` command will configure for building
 parallel running versions of certain FRE-NCtools applications.
 
+### OpenACC-enabled NCTools applications
+The option `--enable-acc=yes` to the `configure` command will configure for building
+the fregrid_acc executable that is capable of offloading computation to GPUs.  Currently, only
+NVDIA compilers are supported to enable OpenACC directives in fregrid_acc and libfrencutils_acc.
+Please ensure that `FC=nvfortran` and `CC=nvc`.
 
 ## Building on a GFDL-managed system
 The recommended environment with the recommended autoconf defaults can be loaded by running

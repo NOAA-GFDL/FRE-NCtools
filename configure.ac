@@ -53,7 +53,7 @@ AC_ARG_ENABLE([quad-precision],
     [],
     [enable_quad_precision=no])
 
-AC_PROG_CC([icc gcc])
+AC_PROG_CC([icc gcc nvc])
 AM_PROG_CC_C_O
 ## When autoconf v2.70 is more available, this can be replaced with:
 ##AC_C__GENERIC
@@ -62,7 +62,7 @@ AS_IF([test $gx_cv_c__Generic = no],
   AC_MSG_ERROR([The C compiler does not support the generic selection C-11 standard.  Please use a C-11 compliant compiler.])
 )
 
-AC_PROG_FC([ifort gfortran])
+AC_PROG_FC([ifort gfortran nvfortran])
 AC_PROG_FC_C_O
 AC_FC_SRCEXT([f90])
 AC_FC_SRCEXT([F90])
@@ -85,11 +85,16 @@ AS_IF([test x"$with_mpi" = x"yes"],
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
 
+#Build with OpenACC suport.  Default is 'no'
+AC_ARG_ENABLE([acc],
+  [AS_HELP_STRING([--enable-acc], [Build with OpenACC support.  Defaults to 'no'])] )
+AS_IF([test ${enable_acc:no} = "yes"], [enable_acc=yes], [enable_acc=no])
+AM_CONDITIONAL([ENABLE_ACC], [test $enable_acc = "yes"])
+
 AC_CHECK_FUNCS(gettid, [], [])
 
 # Check if Fortran compiler has Cray pointer support
 GX_FC_CRAY_POINTER_FLAG()
-
 
  # Add Cray Pointer support flag
 if test ! -z "$FC_CRAY_POINTER_FLAG"; then
@@ -116,6 +121,12 @@ AC_CHECK_PROGS(BATS, [bats])
 AC_CHECK_PROGS(PROVE, [prove])
 
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
+
+# Check if openacc.h exists
+if test $enable_acc = yes ; then
+   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
+   AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
+fi
 
 # Check for library
 AX_LIB_NETCDF()
@@ -174,7 +185,6 @@ if test x$ac_compiler_gnu = xyes; then
 	AC_SUBST(RPATH_FLAGS)
 fi
 
-
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
@@ -187,9 +197,11 @@ AC_CONFIG_FILES([Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile
                  tools/libfrencutils/Makefile
+                 tools/libfrencutils_acc/Makefile
                  tools/check_mask/Makefile
                  tools/cubic_utils/Makefile
                  tools/fregrid/Makefile
+                 tools/fregrid_acc/Makefile
                  tools/make_coupler_mosaic/Makefile
                  tools/make_hgrid/Makefile
                  tools/make_land_domain/Makefile
@@ -212,4 +224,5 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
 ])
+
 AC_OUTPUT

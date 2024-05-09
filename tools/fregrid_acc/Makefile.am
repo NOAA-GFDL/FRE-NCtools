@@ -17,24 +17,20 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = fregrid
-if WITH_MPI
-  bin_PROGRAMS += fregrid_parallel
-endif
+bin_PROGRAMS = fregrid_acc
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS) \
+            -I$(top_srcdir)/tools/libfrencutils_acc \
+            -I$(top_srcdir)/tools/fregrid -acc
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
-fregrid_SOURCES = bilinear_interp.c \
-                  bilinear_interp.h \
-                  conserve_interp.c \
-                  conserve_interp.h \
-                  fregrid_util.c \
-                  fregrid_util.h \
-                  fregrid.c \
-                  globals.h
-fregrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
+fregrid_acc_SOURCES = conserve_interp_acc.c \
+                      conserve_interp_acc.h \
+                      fregrid_acc.c
 
-fregrid_parallel_SOURCES = $(fregrid_SOURCES)
-fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
-fregrid_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
+fregrid_acc_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \
+                    $(top_builddir)/tools/fregrid/conserve_interp.o \
+                    $(top_builddir)/tools/fregrid/bilinear_interp.o \
+                    $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+                    $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a \
+                    $(LDADD)
