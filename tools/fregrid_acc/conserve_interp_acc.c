@@ -46,13 +46,12 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 			   Grid_config *grid_out, Interp_config *interp, unsigned int opcode)
 {
   int    n, m, i, ii, jj, nx_in, ny_in, nx_out, ny_out, tile;
-  size_t nxgrid, nxgrid2, nxgrid_prev;
+  size_t nxgrid, nxgrid_prev;
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
   double *tmp_di_in, *tmp_dj_in;
   double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
 
-  double garea;
   typedef struct{
     double *area;
     double *clon;

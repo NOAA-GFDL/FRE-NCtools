@@ -22,7 +22,7 @@
 
 #include "globals.h"
 
-void copy_interp_to_device( const ntiles_in, const int ntiles_out, const Interp_config *interp,
+void copy_interp_to_device( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
                             const unsigned int opcode );
 
 #endif

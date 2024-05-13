@@ -319,7 +319,6 @@ int main(int argc, char* argv[])
   unsigned int nscalar_orig;
   int     option_index, c, i, n, m, l;
   char    entry[MAXSTRING];  /* should be long enough */
-  char    txt[STRING];
   char    history[MAXATT];
   int     fill_missing = 0;
   int     extrapolate = 0;
@@ -999,7 +998,7 @@ int main(int argc, char* argv[])
 
   /* Then doing the regridding */
   for(m=0; m<file_in->nt; m++) {
-    int memsize, level_z, level_n, level_t;
+    int level_z, level_n, level_t;
 
     write_output_time(ntiles_out, file_out, m);
     if(nfiles > 1) write_output_time(ntiles_out, file2_out, m);
