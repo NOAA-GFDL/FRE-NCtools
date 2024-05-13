@@ -20,11 +20,18 @@
 #ifndef CREATE_XGRID_ACC_H_
 #define CREATE_XGRID_ACC_H_
 
+#include "globals.h"
+
 #define MV 50
 /* this value is small compare to earth area */
 
 void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
+
+void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
+                                 Minmaxavg_list *minmaxavg_list );
+
+void get_cell_vertices( const int ij, const nlon, const double *lon, const double *lat, double *x, double *y );
 
 #endif

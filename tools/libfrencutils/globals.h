@@ -248,4 +248,17 @@ typedef struct{
   double *f_min;
 } Monotone_config;
 
+
+typedef struct {
+  double *lon_min;
+  double *lon_max;
+  double *lat_min;
+  double *lat_max;
+  double *lon_avg;
+  int *n_vertices;
+  double *lon_vertices;
+  double *lat_vertices;
+} Minmaxavg_list;
+
+
 #endif

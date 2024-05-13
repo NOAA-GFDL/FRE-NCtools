@@ -22,7 +22,8 @@
 #include <math.h>
 #include "mosaic_util.h"
 #include "create_xgrid_utils_acc.h"
-#include "constant.h"
+#include "globals.h"
+#include "parameters.h"
 
 /*******************************************************************************
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, const double *area)
@@ -92,3 +93,62 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
   free(z);
 
 };  /* get_grid_great_circle_area */
+
+
+void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
+                                 Minmaxavg_list *minmaxavg_list )
+{
+
+  minmaxavg_list->lon_min = (double *)malloc(nlon*nlat*sizeof(double));
+  minmaxavg_list->lon_max = (double *)malloc(nlon*nlat*sizeof(double));
+  minmaxavg_list->lat_min = (double *)malloc(nlon*nlat*sizeof(double));
+  minmaxavg_list->lat_max = (double *)malloc(nlon*nlat*sizeof(double));
+  minmaxavg_list->lon_avg = (double *)malloc(nlon*nlat*sizeof(double));
+  minmaxavg_list->n_vertices   = (int *)malloc(nlon*nlat*sizeof(int));
+  minmaxavg_list->lon_vertices = (double *)malloc(MAX_V*nlon*nlat*sizeof(double));
+  minmaxavg_list->lat_vertices = (double *)malloc(MAX_V*nlon*nlat*sizeof(double));
+
+  for(int ij=0; ij<nlon*nlat; ij++){
+    int n;
+    double x[MV], y[MV];
+
+    get_cell_verticies( ij, nlon, lon, lat, x, y );
+
+    minmaxavg_list->lat_min[ij] = minval_double(4, y);
+    minmaxavg_list->lat_max[ij] = maxval_double(4, y);
+
+    n = fix_lon(x, y, 4, M_PI);
+    minmaxavg_list->n_vertices[ij] = n;
+
+    //if(n > MAX_V) error_handler("get_cell_minmaxavg_latlons: number of cell vertices is greater than MAX_V");
+    minmaxavg_list->lon_min[ij] = minval_double(n, x);
+    minmaxavg_list->lon_max[ij] = maxval_double(n, x);
+    minmaxavg_list->lon_avg[ij] = avgval_double(n, x);
+
+    for(int l=0; l<n; l++) {
+      minmaxavg_list->lon_vertices[ij*MAX_V+l] = x[l];
+      minmaxavg_list->lat_vertices[ij*MAX_V+l] = y[l];
+    }
+  }
+
+}
+
+void get_cell_vertices( const int ij, const nlon, const double *lon, const double *lat, double *x, double *y )
+{
+
+  int i, j;
+  int n0, n1, n2, n3;
+
+  i = ij%nlon;
+  j = ij/nlon;
+  n0 = j*(nlon+1)+i;
+  n1 = j*(nlon+1)+i+1;
+  n2 = (j+1)*(nlon+1)+i+1;
+  n3 = (j+1)*(nlon+1)+i;
+
+  x[0] = lon[n0]; y[0] = lat[n0];
+  x[1] = lon[n1]; y[1] = lat[n1];
+  x[2] = lon[n2]; y[2] = lat[n2];
+  x[3] = lon[n3]; y[3] = lat[n3];
+
+}
