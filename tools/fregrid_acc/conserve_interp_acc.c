@@ -25,7 +25,7 @@
 #include <openacc.h>
 #include "constant.h"
 #include "globals.h"
-#include "create_xgrid.h"
+#include "create_xgrid_acc.h"
 #include "mosaic_util.h"
 #include "conserve_interp.h"
 #include "conserve_interp_acc.h"
@@ -100,7 +100,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
         for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
 
         if(opcode & GREAT_CIRCLE) {
-          nxgrid = create_xgrid_great_circle(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
+          nxgrid = create_xgrid_great_circle_acc(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                              grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
 					     mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
@@ -123,7 +123,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	  ny_now = jend-jstart+1;
 
 	  if(opcode & CONSERVE_ORDER1) {
-	    nxgrid = create_xgrid_2dx2d_order1(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+	    nxgrid = create_xgrid_2dx2d_order1_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
 					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
 					       mask, i_in, j_in, i_out, j_out, xgrid_area);
 	    for(i=0; i<nxgrid; i++) j_in[i] += jstart;
@@ -133,7 +133,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	    int    *g_i_in, *g_j_in;
 	    double *g_area, *g_clon, *g_clat;
 
-	    nxgrid = create_xgrid_2dx2d_order2(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+	    nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
 					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
 					       mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
 	    for(i=0; i<nxgrid; i++) j_in[i] += jstart;
