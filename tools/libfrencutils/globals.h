@@ -258,7 +258,7 @@ typedef struct {
   int *n_vertices;
   double **lon_vertices;
   double **lat_vertices;
-} Cell_info;
+} Cell;
 
 
 #endif

@@ -96,32 +96,32 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
 
 
 void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
-                                 Cell_info *cell_info )
+                                 Cell *cell )
 {
 
   int ncell=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  cell_info->lon_min = (double *)malloc(ncell*sizeof(double));
-  cell_info->lon_max = (double *)malloc(ncell*sizeof(double));
-  cell_info->lat_min = (double *)malloc(ncell*sizeof(double));
-  cell_info->lat_max = (double *)malloc(ncell*sizeof(double));
-  cell_info->lon_avg = (double *)malloc(ncell*sizeof(double));
-  cell_info->n_vertices = (int *)malloc(ncell*sizeof(int));
-  cell_info->lon_vertices  = (double **)malloc(ncell*sizeof(double));
-  cell_info->lat_vertices  = (double **)malloc(ncell*sizeof(double));
+  cell->lon_min = (double *)malloc(ncell*sizeof(double));
+  cell->lon_max = (double *)malloc(ncell*sizeof(double));
+  cell->lat_min = (double *)malloc(ncell*sizeof(double));
+  cell->lat_max = (double *)malloc(ncell*sizeof(double));
+  cell->lon_avg = (double *)malloc(ncell*sizeof(double));
+  cell->n_vertices = (int *)malloc(ncell*sizeof(int));
+  cell->lon_vertices  = (double **)malloc(ncell*sizeof(double));
+  cell->lat_vertices  = (double **)malloc(ncell*sizeof(double));
 
   for(int icell=0 ; icell<ncell ; icell++) {
-    cell_info->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
-    cell_info->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
+    cell->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
+    cell->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
   }
 
-#pragma acc enter data copyin(cell_info[:1])
-#pragma acc enter data copyin(cell_info->lon_min[:ncell], cell_info->lon_max[:ncell], \
-                              cell_info->lat_min[:ncell], cell_info->lat_max[:ncell], \
-                              cell_info->lon_avg[:ncell], cell_info->n_vertices[:ncell])
-#pragma acc enter data copyin(cell_info->lon_vertices[:ncell][:MAX_V], \
-                              cell_info->lat_vertices[:ncell][:MAX_V])
+#pragma acc enter data copyin(cell[:1])
+#pragma acc enter data copyin(cell->lon_min[:ncell], cell->lon_max[:ncell], \
+                              cell->lat_min[:ncell], cell->lat_max[:ncell], \
+                              cell->lon_avg[:ncell], cell->n_vertices[:ncell])
+#pragma acc enter data copyin(cell->lon_vertices[:ncell][:MAX_V], \
+                              cell->lat_vertices[:ncell][:MAX_V])
 
   //grid data should already be present, if not, will copyin
   if( ! acc_is_present(lon, npts*sizeof(double)) ) {
@@ -131,27 +131,27 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
     printf("WARNING lat grid coordinates not on device.  copying in data for the duration of kernel execution\n");
   }
 
-#pragma acc data present(cell_info[:1]) copyin(lon[:npts], lat[:npts])
+#pragma acc data present(cell[:1]) copyin(lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
   for(int icell=0; icell<ncell; icell++){
     int n;
     double x[MV], y[MV];
 
     get_cell_vertices( icell, nlon, lon, lat, x, y );
-    cell_info->lat_min[icell] = minval_double(4, y);
-    cell_info->lat_max[icell] = maxval_double(4, y);
+    cell->lat_min[icell] = minval_double(4, y);
+    cell->lat_max[icell] = maxval_double(4, y);
 
     n = fix_lon(x, y, 4, M_PI);
-    cell_info->n_vertices[icell] = n;
+    cell->n_vertices[icell] = n;
 
     if(n > MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
-    cell_info->lon_min[icell] = minval_double(n, x);
-    cell_info->lon_max[icell] = maxval_double(n, x);
-    cell_info->lon_avg[icell] = avgval_double(n, x);
+    cell->lon_min[icell] = minval_double(n, x);
+    cell->lon_max[icell] = maxval_double(n, x);
+    cell->lon_avg[icell] = avgval_double(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
-      cell_info->lon_vertices[icell][ivertex] = x[ivertex];
-      cell_info->lat_vertices[icell][ivertex] = y[ivertex];
+      cell->lon_vertices[icell][ivertex] = x[ivertex];
+      cell->lat_vertices[icell][ivertex] = y[ivertex];
     }
   }
 
