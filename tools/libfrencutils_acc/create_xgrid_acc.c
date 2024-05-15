@@ -32,11 +32,10 @@
   This routine generate exchange grids between two grids for the first order
   conservative interpolation. nlon_in,nlat_in,nlon_out,nlat_out are the size of the grid cell
   and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
-  mask is on grid lon_in/lat_in.
 *******************************************************************************/
 int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                  const double *mask_in, int *i_in, int *j_in, int *i_out,
+                                  int *i_in, int *j_in, int *i_out,
                                   int *j_out, double *xgrid_area)
 {
 
@@ -97,7 +96,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
 
   nxgrid = 0;
 
-  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
         int n0, n1, n2, n3, l,n1_in;
         double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
@@ -150,7 +149,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
           if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
             double min_area;
             int    nn;
-            xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+            xarea = poly_area (x_out, y_out, n_out );
             min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
             if( xarea/min_area > AREA_RATIO_THRESH ) {
               if(nxgrid>= MAXXGRID)
@@ -189,11 +188,10 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   This routine generate exchange grids between two grids for the second order
   conservative interpolation. nlon_in,nlat_in,nlon_out,nlat_out are the size of the grid cell
   and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
-  mask is on grid lon_in/lat_in.
 ********************************************************************************/
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
@@ -254,7 +252,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
   nxgrid = 0;
 
-  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
         int n0, n1, n2, n3, l,n1_in;
         double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
@@ -307,7 +305,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
           if (  (n_out = clip_2dx2d( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
             double min_area;
             int nn;
-            xarea = poly_area (x_out, y_out, n_out ) * mask_in[j1*nx1+i1];
+            xarea = poly_area (x_out, y_out, n_out ) ;
             min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
             if( xarea/min_area > AREA_RATIO_THRESH ) {
               if(nxgrid>= MAXXGRID)
@@ -343,7 +341,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
 int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
                                   const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-                                  const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+                                  int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
@@ -386,7 +384,7 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
   n1_in = 4;
   n2_in = 4;
 
-  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) if( mask_in[j1*nx1+i1] > MASK_THRESH ) {
+  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
         /* clockwise */
         n0 = j1*nx1p+i1;       n1 = (j1+1)*nx1p+i1;
         n2 = (j1+1)*nx1p+i1+1; n3 = j1*nx1p+i1+1;
@@ -408,7 +406,7 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
 
             if (  (n_out = clip_2dx2d_great_circle( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
                                                     x_out, y_out, z_out)) > 0) {
-              xarea = great_circle_area ( n_out, x_out, y_out, z_out ) * mask_in[j1*nx1+i1];
+              xarea = great_circle_area ( n_out, x_out, y_out, z_out );
               min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
               if( xarea/min_area > AREA_RATIO_THRESH ) {
 #ifdef debug_test_create_xgrid

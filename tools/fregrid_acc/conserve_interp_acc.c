@@ -86,18 +86,14 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
       interp[n].nxgrid = 0;
       for(m=0; m<ntiles_in; m++) {
         int jstart, jend;
-        double *mask;
 
         nx_in = grid_in[m].nx;
         ny_in = grid_in[m].ny;
 
-        mask = (double *)malloc(nx_in*ny_in*sizeof(double));
-        for(i=0; i<nx_in*ny_in; i++) mask[i] = 1.0;
-
         if(opcode & GREAT_CIRCLE) {
           nxgrid = create_xgrid_great_circle_acc(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                                  grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
-                                                 mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                                 i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
 
@@ -106,7 +102,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
           if(opcode & CONSERVE_ORDER1) {
             nxgrid = create_xgrid_2dx2d_order1_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                    grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                                   mask, i_in, j_in, i_out, j_out, xgrid_area);
+                                                   i_in, j_in, i_out, j_out, xgrid_area);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
           }
           else if(opcode & CONSERVE_ORDER2) {
@@ -116,7 +112,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 
             nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
                                                    grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                                   mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                                   i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
             for(i=0; i<nxgrid; i++) j_in[i] += jstart;
 
 	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
@@ -150,7 +146,6 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	    mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
 	}
 
-      	free(mask);
 	if(nxgrid > 0) {
 	  nxgrid_prev = interp[n].nxgrid;
 	  interp[n].nxgrid += nxgrid;
