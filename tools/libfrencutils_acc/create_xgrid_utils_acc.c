@@ -96,59 +96,62 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
 
 
 void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
-                                 Minmaxavg_list *minmaxavg_list )
+                                 Cell_info *cell_info )
 {
 
   int ncell=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  minmaxavg_list->lon_min = (double *)calloc(ncell,sizeof(double));
-  minmaxavg_list->lon_max = (double *)calloc(ncell,sizeof(double));
-  minmaxavg_list->lat_min = (double *)calloc(ncell,sizeof(double));
-  minmaxavg_list->lat_max = (double *)calloc(ncell,sizeof(double));
-  minmaxavg_list->lon_center = (double *)calloc(ncell,sizeof(double));
-  minmaxavg_list->n_vertices = (int *)calloc(ncell,sizeof(int));
-  minmaxavg_list->vertices   = (Vertices *)calloc(ncell,sizeof(Vertices));
+  cell_info->lon_min = (double *)malloc(ncell*sizeof(double));
+  cell_info->lon_max = (double *)malloc(ncell*sizeof(double));
+  cell_info->lat_min = (double *)malloc(ncell*sizeof(double));
+  cell_info->lat_max = (double *)malloc(ncell*sizeof(double));
+  cell_info->lon_avg = (double *)malloc(ncell*sizeof(double));
+  cell_info->n_vertices = (int *)malloc(ncell*sizeof(int));
+  cell_info->lon_vertices  = (double **)malloc(ncell*sizeof(double));
+  cell_info->lat_vertices  = (double **)malloc(ncell*sizeof(double));
 
   for(int icell=0 ; icell<ncell ; icell++) {
-    minmaxavg_list->vertices[icell].lat = (double *)calloc(MAX_V, sizeof(double));
-    minmaxavg_list->vertices[icell].lon = (double *)calloc(MAX_V, sizeof(double));
+    cell_info->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
+    cell_info->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
   }
 
-#pragma acc enter data create(minmaxavg_list)
-#pragma acc enter data create(minmaxavg_list->lon_min[:ncell], minmaxavg_list->lon_max[ncell], \
-                              minmaxavg_list->lat_min[:ncell], minmaxavg_list->lat_max[ncell], \
-                              minmaxavg_list->lon_center[ncell], minmaxavg_list->n_vertices[ncell], \
-                              minmaxavg_list->vertices[ncell])
-  for(int icell=0 ; icell<ncell ; icell++){
-#pragma acc enter data create(minmaxavg_list->vertices[ncell].lat[:MAX_V], \
-                              minmaxavg_list->vertices[ncell].lat[:MAX_V])
+#pragma acc enter data copyin(cell_info[:1])
+#pragma acc enter data copyin(cell_info->lon_min[:ncell], cell_info->lon_max[:ncell], \
+                              cell_info->lat_min[:ncell], cell_info->lat_max[:ncell], \
+                              cell_info->lon_avg[:ncell], cell_info->n_vertices[:ncell])
+#pragma acc enter data copyin(cell_info->lon_vertices[:ncell][:MAX_V], \
+                              cell_info->lat_vertices[:ncell][:MAX_V])
+
+  //grid data should already be present, if not, will copyin
+  if( ! acc_is_present(lon, npts*sizeof(double)) ) {
+    printf("WARNING lon grid coordinates not on device.  copying in data for the duration of kernel execution\n");
+  }
+  if( ! acc_is_present(lat, npts*sizeof(double)) ) {
+    printf("WARNING lat grid coordinates not on device.  copying in data for the duration of kernel execution\n");
   }
 
-
-#pragma acc data present(minmaxavg_list)
-#pragma acc data copyin(lon[:npts], lat[:npts]) //data should already be present, if not, will copyin
+#pragma acc data present(cell_info[:1]) copyin(lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
   for(int icell=0; icell<ncell; icell++){
     int n;
     double x[MV], y[MV];
 
     get_cell_vertices( icell, nlon, lon, lat, x, y );
-
-    minmaxavg_list->lat_min[icell] = minval_double(4, y);
-    minmaxavg_list->lat_max[icell] = maxval_double(4, y);
+    cell_info->lat_min[icell] = minval_double(4, y);
+    cell_info->lat_max[icell] = maxval_double(4, y);
 
     n = fix_lon(x, y, 4, M_PI);
-    minmaxavg_list->n_vertices[icell] = n;
+    cell_info->n_vertices[icell] = n;
 
-    //if(n > MAX_V) error_handler("get_cell_minmaxavg_latlons: number of cell vertices is greater than MAX_V");
-    minmaxavg_list->lon_min[icell] = minval_double(n, x);
-    minmaxavg_list->lon_max[icell] = maxval_double(n, x);
-    minmaxavg_list->lon_center[icell] = avgval_double(n, x);
+    if(n > MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
+    cell_info->lon_min[icell] = minval_double(n, x);
+    cell_info->lon_max[icell] = maxval_double(n, x);
+    cell_info->lon_avg[icell] = avgval_double(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
-      minmaxavg_list->vertices[icell].lon[ivertex] = x[ivertex];
-      minmaxavg_list->vertices[icell].lat[ivertex] = y[ivertex];
+      cell_info->lon_vertices[icell][ivertex] = x[ivertex];
+      cell_info->lat_vertices[icell][ivertex] = y[ivertex];
     }
   }
 

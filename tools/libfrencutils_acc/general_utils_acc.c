@@ -41,10 +41,14 @@ void set_rotate_poly_true(void){
   set_the_rotation_matrix();
 }
 
+struct Node *nodeList=NULL;
+int curListPos=0;
+
 #pragma acc declare copyin(from_pole_threshold_rad)
 #pragma acc declare copyin(rotate_poly_flag)
+#pragma acc declare copyin(nodeList)
+#pragma acc declare copyin(curListPos)
 #pragma acc declare copyin(the_rotation_matrix)
-
 
 /*********************************************************************
 
@@ -666,7 +670,7 @@ double spherical_angle(const double *v1, const double *v2, const double *v3)
       else angle = 0.;
     }
     else
-      angle = acosl( ddd );
+      angle = acos( ddd );
   }
 
   return angle;
@@ -857,9 +861,9 @@ int invert_matrix_3x3(double m[], double m_inv[]) {
                      -m[1] * (m[3]*m[8] - m[5]*m[6])
                      +m[2] * (m[3]*m[7] - m[4]*m[6]);
 
-  if (fabsl(det) < EPSLN15 ) return 0;
+  if (fabs(det) < EPSLN15 ) return 0;
 
-  const long double deti = 1.0/det;
+  const double deti = 1.0/det;
 
   m_inv[0] = (m[4]*m[8] - m[5]*m[7]) * deti;
   m_inv[1] = (m[2]*m[7] - m[1]*m[8]) * deti;
@@ -875,9 +879,6 @@ int invert_matrix_3x3(double m[], double m_inv[]) {
 
   return 1;
 }
-
-struct Node *nodeList=NULL;
-int curListPos=0;
 
 void rewindList(void)
 {
@@ -1533,7 +1534,6 @@ void set_the_rotation_matrix() {
       the_rotation_matrix[i][j] = m[i][j];
     }
   }
-#pragma acc update device(the_rotation_matrix[:3][:3])
 }
 
 /* Rotate point given the passed in rotation matrix  */

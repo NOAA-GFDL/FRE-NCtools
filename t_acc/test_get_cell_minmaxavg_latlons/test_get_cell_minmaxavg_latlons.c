@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "create_xgrid_utils_acc.h"
+#include "conserve_interp_utils_acc.h"
 #include "parameters.h"
 
 #define NLON 36 // 36 cells in lon direction (36+1 grid points in the lon direction for each lat point)
@@ -37,13 +38,13 @@ typedef struct {
   double lon_max[NLON*NLAT];
   double lat_min[NLON*NLAT];
   double lat_max[NLON*NLAT];
-  double lon_center[NLON*NLAT];
+  double lon_avg[NLON*NLAT];
   double *lon_vertices[NLON*NLAT];
   double *lat_vertices[NLON*NLAT];
 } Answers;
 
 void get_answers(const double *lon, const double *lat, Answers *answers);
-void check_answers( const Minmaxavg_list *minmaxavg_list, const Answers *answers);
+void check_answers( const cell_info *cell_info, const Answers *answers);
 void check_ranswer( const int n, const double *answer, const double *checkme);
 
 
@@ -51,24 +52,35 @@ int main(){
 
   double lon[(NLON+1)*(NLON+1)], lat[(NLON+1)*(NLON+1)];
   Answers answers;
-  Minmaxavg_list minmaxavg_list;
+  Cell_info cell_info;
+  Grid_config grid[1];
+
+  grid[0].nxc=NLON;
+  grid[0].nyc=NLAT;
+  grid[0].lonc = (double *)calloc( (NLON+1)*(NLAT+1), sizeof(double) );
+  grid[0].latc = (double *)calloc( (NLON+1)*(NLAT+1), sizeof(double) );
 
   // no poles, do not need to worry about fix_lon
   for(int ilat=0 ; ilat<NLAT+1 ; ilat++) {
     for(int ilon=0 ; ilon<NLON+1 ; ilon++) {
       int ipt=ilat*(NLON+1)+ilon;
-      lat[ipt] = (-30.0 + dlat*ilat)*D2R;
-      lon[ipt] = (0.0 + dlon*ilon)*D2R;
+      grid[0].latc[ipt] = (-30.0 + dlat*ilat)*D2R;
+      grid[0].lonc[ipt] = (0.0 + dlon*ilon)*D2R;
     }
   }
 
-  get_cell_minmaxavg_latlons( NLON, NLAT, lon, lat, &minmaxavg_list);
-  get_answers(lon, lat, &answers);
-  check_answers( &minmaxavg_list, &answers);
+  copy_grid_to_device(0, grid);
+  get_cell_minmaxavg_latlons( NLON, NLAT, grid[0].lonc, grid[0].latc, &cell_info);
+
+  get_answers(grid[0].lonc, grid[0].latc, &answers);
+
+  reset_cell_info_on_host(&cell_info); //to verify data is copied out from device
+  copy_cell_info_to_host(&cell_info);
+
+  check_answers(&cell_info, &answers);
 
   return 0;
 }
-
 
 void get_answers(const double *lon, const double *lat, Answers *answers ){
 
@@ -85,7 +97,7 @@ void get_answers(const double *lon, const double *lat, Answers *answers ){
       answers->lat_max[icell] = (-30.0 + dlat*(ilat+1))* D2R;
       answers->lon_min[icell] = (0 + dlon*ilon)* D2R;
       answers->lon_max[icell] = (0 + dlon*(ilon+1))* D2R;
-      answers->lon_center[icell] = (dlon*ilon+0.5*dlon)* D2R;
+      answers->lon_avg[icell] = (dlon*ilon+0.5*dlon)* D2R;
     }
   }
 
@@ -111,40 +123,70 @@ void get_answers(const double *lon, const double *lat, Answers *answers ){
 
 }
 
-void check_answers( const Minmaxavg_list *minmaxavg_list, const Answers *answers)
+void reset_cell_info_on_host(Cell_info *cell_info)
+{
+
+  for( int icell=0 ; icell<NLON*NLAT; icell++) {
+    cell_info->lon_min[icell]=-99.;
+    cell_info->lon_max[icell]=-99.;
+    cell_info->lat_min[icell]=-99.;
+    cell_info->lat_max[icell]=-99.;
+    cell_info->lon_avg[icell]=-99.;
+    cell_info->n_vertices[icell]=-99;
+    for(int ipt=0 ; ipt<MAX_V ; ipt++){
+      cell_info->lon_vertices[icell][ipt]=-99.;
+      cell_info->lat_vertices[icell][ipt]=-99.;
+    }
+  }
+
+}
+
+void copy_cell_info_to_host(Cell_info *cell_info)
+{
+
+  int ncell = NLON*NLAT;
+#pragma acc exit data copyout( cell_info->lon_min[:ncell], cell_info->lon_max[:ncell], \
+                               cell_info->lat_min[:ncell], cell_info->lat_max[:ncell], \
+                               cell_info->lon_avg[:ncell], cell_info->n_vertices[:ncell], \
+                               cell_info->lon_vertices[:ncell][:MAX_V],\
+                               cell_info->lat_vertices[:ncell][:MAX_V])
+
+}
+
+void check_answers( const cell_info *cell_info, const Answers *answers)
 {
 
   printf("Checking for nubmer of cell vertices\n");
   for(int i=0 ; i<NLON*NLAT ; i++) {
-    if( minmaxavg_list->n_vertices[i] != 4 ) {
-      printf("ERROR element %d:  %d vs %d\n", i, minmaxavg_list->n_vertices[i], 4);
+    if( cell_info->n_vertices[i] != 4 ) {
+      printf("ERROR element %d:  %d vs %d\n", i, cell_info->n_vertices[i], 4);
       exit(1);
     }
   }
 
   printf("Checking for min longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_min, minmaxavg_list->lon_min);
+  check_ranswer(NLON*NLAT, answers->lon_min, cell_info->lon_min);
 
   printf("Checking for max longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_max, minmaxavg_list->lon_max);
+  check_ranswer(NLON*NLAT, answers->lon_max, cell_info->lon_max);
 
   printf("Checking for min latitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lat_min, minmaxavg_list->lat_min);
+  check_ranswer(NLON*NLAT, answers->lat_min, cell_info->lat_min);
 
   printf("Checking for max latitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lat_max, minmaxavg_list->lat_max);
+  check_ranswer(NLON*NLAT, answers->lat_max, cell_info->lat_max);
 
-  printf("Checking for center longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_center, minmaxavg_list->lon_center);
+  printf("Checking for avg longitudinal point for each cell\n");
+  check_ranswer(NLON*NLAT, answers->lon_avg, cell_info->lon_avg);
 
   printf("Checking for longitudinal vertices for each cell\n");
   for(int icell=0 ; icell<NLAT*NLON ; icell++) {
-    check_ranswer(MAX_V, answers->lon_vertices[icell], minmaxavg_list->vertices[icell].lon);
+    check_ranswer(MAX_V, answers->lon_vertices[icell], cell_info->lon_vertices[icell]);
   }
 
   printf("Checking for latitudinal vertices for each cell\n");
   for(int icell=0 ; icell<NLAT*NLON ; icell++) {
-    check_ranswer(MAX_V, answers->lat_vertices[icell], minmaxavg_list->vertices[icell].lat);
+    check_ranswer(MAX_V, answers->lat_vertices[icell], cell_info->lat_vertices[icell]);
   }
 
 

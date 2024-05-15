@@ -250,19 +250,15 @@ typedef struct{
 
 
 typedef struct {
-  double *lat;
-  double *lon;
-} Vertices;
-
-typedef struct {
   double *lon_min;
   double *lon_max;
   double *lat_min;
   double *lat_max;
-  double *lon_center;
+  double *lon_avg;
   int *n_vertices;
-  Vertices *vertices;
-} Minmaxavg_list;
+  double **lon_vertices;
+  double **lat_vertices;
+} Cell_info;
 
 
 #endif
