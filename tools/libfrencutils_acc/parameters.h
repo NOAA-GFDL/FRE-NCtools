@@ -29,3 +29,18 @@
 #define MAXXGRID 1e6
 
 #define MV 50
+
+#define TOLERENCE (1.e-6)
+#define EPSLN8 (1.e-8)
+#define EPSLN10 (1.e-10)
+#define EPSLN15 (1.e-15)
+#define EPSLN30 (1.e-30)
+#define SMALL_VALUE ( 1.e-10 )
+
+#ifndef RANGE_CHECK_CRITERIA
+#define RANGE_CHECK_CRITERIA 0.05
+#endif
+
+#ifndef MAXNODELIST
+#define MAXNODELIST 100
+#endif

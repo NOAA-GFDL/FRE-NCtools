@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "mosaic_util.h"
+#include "general_utils_acc.h"
 #include "create_xgrid.h"
 #include "create_xgrid_acc.h"
 #include "create_xgrid_utils_acc.h"

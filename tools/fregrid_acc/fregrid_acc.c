@@ -51,7 +51,7 @@
 #include "mpp_io.h"
 #include "mpp.h"
 #include "mosaic_util.h"
-#include "conserve_interp.h"
+#include "conserve_interp_acc.h"
 #include "bilinear_interp.h"
 #include "fregrid_util.h"
 

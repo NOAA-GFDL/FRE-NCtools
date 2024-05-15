@@ -20,8 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "general_utils.h"
-#include "mosaic_util.h"
+#include "general_utils_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "globals.h"
 #include "parameters.h"
@@ -96,8 +95,8 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
 };  /* get_grid_great_circle_area */
 
 
-void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const double *lon, const double *lat,
-                                     Minmaxavg_list *minmaxavg_list )
+void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
+                                 Minmaxavg_list *minmaxavg_list )
 {
 
   int ncell=nlon*nlat;
@@ -134,18 +133,18 @@ void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const doubl
     int n;
     double x[MV], y[MV];
 
-    get_cell_vertices_acc( icell, nlon, lon, lat, x, y );
+    get_cell_vertices( icell, nlon, lon, lat, x, y );
 
-    minmaxavg_list->lat_min[icell] = minval_double_acc(4, y);
-    minmaxavg_list->lat_max[icell] = maxval_double_acc(4, y);
+    minmaxavg_list->lat_min[icell] = minval_double(4, y);
+    minmaxavg_list->lat_max[icell] = maxval_double(4, y);
 
     n = fix_lon(x, y, 4, M_PI);
     minmaxavg_list->n_vertices[icell] = n;
 
     //if(n > MAX_V) error_handler("get_cell_minmaxavg_latlons: number of cell vertices is greater than MAX_V");
-    minmaxavg_list->lon_min[icell] = minval_double_acc(n, x);
-    minmaxavg_list->lon_max[icell] = maxval_double_acc(n, x);
-    minmaxavg_list->lon_center[icell] = avgval_double_acc(n, x);
+    minmaxavg_list->lon_min[icell] = minval_double(n, x);
+    minmaxavg_list->lon_max[icell] = maxval_double(n, x);
+    minmaxavg_list->lon_center[icell] = avgval_double(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
       minmaxavg_list->vertices[icell].lon[ivertex] = x[ivertex];
@@ -155,7 +154,7 @@ void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const doubl
 
 }
 
-void get_cell_vertices_acc( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
+void get_cell_vertices( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
 {
 
   int i, j;
