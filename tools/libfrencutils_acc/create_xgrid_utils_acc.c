@@ -111,18 +111,21 @@ void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const doubl
   minmaxavg_list->n_vertices = (int *)calloc(ncell,sizeof(int));
   minmaxavg_list->vertices   = (Vertices *)calloc(ncell,sizeof(Vertices));
 
+  for(int icell=0 ; icell<ncell ; icell++) {
+    minmaxavg_list->vertices[icell].lat = (double *)calloc(MAX_V, sizeof(double));
+    minmaxavg_list->vertices[icell].lon = (double *)calloc(MAX_V, sizeof(double));
+  }
+
 #pragma acc enter data create(minmaxavg_list)
 #pragma acc enter data create(minmaxavg_list->lon_min[:ncell], minmaxavg_list->lon_max[ncell], \
                               minmaxavg_list->lat_min[:ncell], minmaxavg_list->lat_max[ncell], \
                               minmaxavg_list->lon_center[ncell], minmaxavg_list->n_vertices[ncell], \
                               minmaxavg_list->vertices[ncell])
-
-  for(int icell=0 ; icell<ncell ; icell++) {
-    minmaxavg_list->vertices[icell].lat = (double *)calloc(MAX_V, sizeof(double));
-    minmaxavg_list->vertices[icell].lon = (double *)calloc(MAX_V, sizeof(double));
+  for(int icell=0 ; icell<ncell ; icell++){
 #pragma acc enter data create(minmaxavg_list->vertices[ncell].lat[:MAX_V], \
                               minmaxavg_list->vertices[ncell].lat[:MAX_V])
   }
+
 
 #pragma acc data present(minmaxavg_list)
 #pragma acc data copyin(lon[:npts], lat[:npts]) //data should already be present, if not, will copyin
