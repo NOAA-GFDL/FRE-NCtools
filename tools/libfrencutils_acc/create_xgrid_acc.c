@@ -25,9 +25,7 @@
 #include "create_xgrid_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "constant.h"
-
-#define AREA_RATIO_THRESH (1.e-6)
-#define MASK_THRESH       (0.5)
+#include "parameters.h"
 
 /*******************************************************************************
   void create_xgrid_2DX2D_order1
@@ -42,7 +40,6 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
                                   int *j_out, double *xgrid_area)
 {
 
-#define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
   int  ij;
@@ -200,7 +197,6 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
 
-#define MAX_V 8
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
   int ij;

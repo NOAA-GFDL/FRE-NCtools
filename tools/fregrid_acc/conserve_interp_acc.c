@@ -34,10 +34,8 @@
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
+#include "parameters.h"
 
-#define  AREA_RATIO (1.e-3)
-#define  MAXVAL (1.e20)
-#define  TOLERANCE  (1.e-10)
 /*******************************************************************************
   void setup_conserve_interp
   Setup the interpolation weight for conservative interpolation
