@@ -41,7 +41,7 @@
 void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int ntiles_out,
 			   Grid_config *grid_out, Interp_config *interp, unsigned int opcode)
 {
-  int    n, m, i, ii, jj, nx_in, ny_in, nx_out, ny_out, tile;
+  int    n, m, i, ii, jj, nx_in, ny_in, ny_in2, nx_out, ny_out, tile;
   size_t nxgrid, nxgrid_prev;
   int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
   int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
@@ -85,9 +85,8 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
       ny_out    = grid_out[n].nyc;
       interp[n].nxgrid = 0;
       for(m=0; m<ntiles_in; m++) {
+        int jstart, jend;
         double *mask;
-        double y_min, y_max, yy;
-        int jstart, jend, ny_now, j;
 
         nx_in = grid_in[m].nx;
         ny_in = grid_in[m].ny;
@@ -101,38 +100,24 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
                                                  mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
-          y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-          y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-          jstart = ny_in; jend = -1;
-          for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
-              yy = grid_in[m].latc[j*(nx_in+1)+i];
-           if( yy > y_min ) {
-               if(j < jstart ) jstart = j;
-            }
-            if( yy < y_max ) {
-               if(j > jend ) jend = j;
-            }
 
-	  }
-	  jstart = max(0, jstart-1);
-	  jend   = min(ny_in-1, jend+1);
-	  ny_now = jend-jstart+1;
+          get_bounding_indices(nx_out, ny_out, nx_in, ny_in, grid_out[n].latc, grid_in[m].latc, &jstart, &jend, &ny_in2);
 
-	  if(opcode & CONSERVE_ORDER1) {
-	    nxgrid = create_xgrid_2dx2d_order1_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
-					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-					       mask, i_in, j_in, i_out, j_out, xgrid_area);
-	    for(i=0; i<nxgrid; i++) j_in[i] += jstart;
-	  }
-	  else if(opcode & CONSERVE_ORDER2) {
-	    int g_nxgrid;
-	    int    *g_i_in, *g_j_in;
-	    double *g_area, *g_clon, *g_clat;
+          if(opcode & CONSERVE_ORDER1) {
+            nxgrid = create_xgrid_2dx2d_order1_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+                                                   grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
+                                                   mask, i_in, j_in, i_out, j_out, xgrid_area);
+            for(i=0; i<nxgrid; i++) j_in[i] += jstart;
+          }
+          else if(opcode & CONSERVE_ORDER2) {
+            int g_nxgrid;
+            int    *g_i_in, *g_j_in;
+            double *g_area, *g_clon, *g_clat;
 
-	    nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_now, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
-					       grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-					       mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
-	    for(i=0; i<nxgrid; i++) j_in[i] += jstart;
+            nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
+                                                   grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
+                                                   mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+            for(i=0; i<nxgrid; i++) j_in[i] += jstart;
 
 	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
 	    g_nxgrid = nxgrid;

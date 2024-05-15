@@ -27,4 +27,7 @@ void copy_grid_to_device( const int itile, const Grid_config *grid );
 void copy_interp_to_device( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
                             const unsigned int opcode );
 
+void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, const int ny,
+                          const double *ref_lat, const double *lat, int *jstart, int *jend, int *new_ny);
+
 #endif

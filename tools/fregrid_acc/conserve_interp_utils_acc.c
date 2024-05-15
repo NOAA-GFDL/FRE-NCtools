@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <openacc.h>
 #include "globals.h"
+#include "general_utils_acc.h"
 
 /*******************************************************************************
 void copy_grid_to_device( const int itile, Grid_config *grid )
@@ -69,3 +70,35 @@ void copy_interp_to_device( const int ntiles_in, const int ntiles_out, const Int
   }//ntiles_out
 
 } //end copy_interp_to_device
+
+/*******************************************************************************
+void get_bounding_indices
+gets indices for kat that overlap with the ref_lat
+TODO: THIS FUNCTION NEEDS A UNIT TEST
+*******************************************************************************/
+void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, const int ny,
+                          const double *ref_lat, const double *lat, int *jstart, int *jend, int *new_ny)
+{
+
+  int ref_min, ref_max, yy;
+  int jstart2, jend2;
+
+  ref_min = minval_double((ref_ny+1)*(ref_nx+1), ref_lat);
+  ref_max = maxval_double((ref_ny+1)*(ref_nx+1), ref_lat);
+
+  jstart2 = ny;
+  jend2 = -1;
+
+  for(int j=0; j<ny+1; j++) {
+    for(int i=0; i<nx+1; i++) {
+      yy = lat[j*(nx+1)+i];
+      if( yy > ref_min ) jstart2 = min(jstart2, j);
+      if( yy < ref_max ) jend2   = max(jend2, j);
+    }
+  }
+
+  *jstart = max(0, jstart2-1);
+  *jend   = min(ny-1, jend2+1);
+  *new_ny = jend2-jstart2+1;
+
+}
