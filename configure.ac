@@ -224,6 +224,7 @@ AC_CONFIG_FILES([Makefile
                  t/Makefile
                  t_acc/Makefile
                  t_acc/test_read_remap_file/Makefile
+                 t_acc/test_get_cell_minmaxavg_latlons/Makefile
 
 ])
 

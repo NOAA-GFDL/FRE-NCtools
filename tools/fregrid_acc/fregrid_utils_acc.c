@@ -23,6 +23,23 @@
 #include "globals.h"
 
 /*******************************************************************************
+void copy_grid_to_device( const int itile, Grid_config *grid )
+Copies lat lon coordinates to device
+*******************************************************************************/
+void copy_grid_to_device( const int itile, const Grid_config *grid )
+{
+
+  int nxp, nyp;
+
+  nxp = grid[itile].nxc +1;
+  nyp = grid[itile].nyc +1;
+
+#pragma acc enter data copyin(grid[itile])
+#pragma acc enter data copyin(grid[itile].lonc[0:nxp*nyp], grid[itile].latc[0:nxp*nyp])
+
+}
+
+/*******************************************************************************
 void copy_interp_to_device( Interp_config *interp )
 Copies the interp struct to device
 *******************************************************************************/

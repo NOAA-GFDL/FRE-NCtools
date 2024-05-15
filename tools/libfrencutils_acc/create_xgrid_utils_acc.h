@@ -29,9 +29,10 @@ void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, cons
 
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 
-void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
-                                 Minmaxavg_list *minmaxavg_list );
+void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const double *lon, const double *lat,
+                                     Minmaxavg_list *minmaxavg_list );
 
-void get_cell_vertices( const int ij, const nlon, const double *lon, const double *lat, double *x, double *y );
+#pragma acc routine seq
+void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
 
 #endif

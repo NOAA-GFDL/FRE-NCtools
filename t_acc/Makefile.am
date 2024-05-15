@@ -17,4 +17,4 @@
 #* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-SUBDIRS = test_read_remap_file
+SUBDIRS = test_read_remap_file test_get_cell_minmaxavg_latlons
