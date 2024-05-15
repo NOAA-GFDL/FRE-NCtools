@@ -27,3 +27,5 @@
 #define TOLERANCE  (1.e-10)
 
 #define MAXXGRID 1e6
+
+#define MV 50

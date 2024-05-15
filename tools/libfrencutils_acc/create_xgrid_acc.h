@@ -20,7 +20,6 @@
 #ifndef CREATE_XGRID_ACC_H_
 #define CREATE_XGRID_ACC_H_
 
-#define MV 50
 /* this value is small compare to earth area */
 
 int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
@@ -32,4 +31,11 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
 			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
             double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+
+int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
+            const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+            const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
+            double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+
+
 #endif

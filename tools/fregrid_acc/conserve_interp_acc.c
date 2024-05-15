@@ -99,7 +99,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
         if(opcode & GREAT_CIRCLE) {
           nxgrid = create_xgrid_great_circle_acc(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
                                                  grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
-					     mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+                                                 mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
           y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
