@@ -27,6 +27,93 @@
 #include "globals.h"
 #include "parameters.h"
 
+int get_nxgrid_upbound_2dx2d_order1_acc(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                       const double *lon_in, const double *lat_in, const double *lon_out,
+                                       const double *lat_out, Cell *out_cell, int *xcells_per_icell,
+                                       int *ij2_start, int *ij2_end)
+{
+
+  int nx1p=nlon_in+1;
+  int nx2p=nlon_out+1;
+  int ny1p=nlat_in+1;
+  int ny2p=nlat_out+1;
+  int n1=nlon_in*nlat_in;
+  int n2=nlon_out*nlat_out;
+  int nxgrid_upbound=0;
+
+#pragma acc data present(lon_out[0:nx2p*ny2p], lat_out[0:nx2p*ny2p], lon_in[0:nx1p*ny1p], lat_in[0:nx1p*ny1p], \
+                         out_cell[:1], xcells_per_icell[0:n1], ij2_start[0:n1], ij2_end[0:n1]) copy(nxgrid_upbound)
+#pragma acc parallel loop independent reduction(+:nxgrid_upbound)
+  for( int ij1=0 ; ij1<n1 ; ij1++) {
+
+    int n1;
+    int i1=ij1%nlon_in;
+    int j1=ij1/nlon_in;
+    int icount=0;
+    int ij2_max=0;
+    int ij2_min=n1;
+    double lat_in_min, lat_in_max, lon_in_min, lon_in_max, lon_in_avg;
+    double x1[MV], y1[MV];
+
+    xcells_per_icell[ij1]=0;
+
+    get_cell_vertices(ij1, nlon_in, nlat_in, lon_in, lat_in, x1, y1);
+
+    lat_in_min = minval_double(4, y1);
+    lat_in_max = maxval_double(4, y1);
+    n1 = fix_lon(x1, y1, 4, M_PI);
+    lon_in_min = minval_double(n1, x1);
+    lon_in_max = maxval_double(n1, x1);
+    lon_in_avg = avgval_double(n1, x1);
+
+#pragma acc loop independent reduction(+:nxgrid_upbound) reduction(+:icount) reduction(min:ij2_min) reduction(max:ij2_max)
+    for(int ij2=0; ij2<nlon_out*nlat_out; ij2++) {
+
+      double dx, lon_out_min, lon_out_max;
+      int i2=ij2%nlon_out;
+      int j2=ij2/nlon_out;
+
+      if(out_cell->lat_min[ij2] >= lat_in_max) continue;
+      if(out_cell->lat_max[ij2] <= lat_in_min ) continue;
+
+      /* adjust according to lon_in_avg*/
+      lon_out_min = out_cell->lon_min[ij2];
+      lon_out_max = out_cell->lon_max[ij2];
+
+      dx = out_cell->lon_avg[ij2] - lon_in_avg;
+      if(dx < -M_PI ) {
+        lon_out_min += TPI;
+        lon_out_max += TPI;
+      }
+      else if (dx >  M_PI) {
+        lon_out_min -= TPI;
+        lon_out_max -= TPI;
+      }
+
+      /* x2_in should in the same range as x1_in after lon_fix, so no need to consider cyclic condition */
+      if(lon_out_min >= lon_in_max ) continue;
+      if(lon_out_max <= lon_in_min ) continue;
+
+      //Note, the check for AREA_RATIO_THRESH has been removed
+      //Thus, the computed value of nxgrid_upbound will be equal to or greater than nxgrid
+      icount++;
+      nxgrid_upbound++;
+      ij2_min = min(ij2_min, ij2);
+      ij2_max = max(ij2_max, ij2);
+
+    } //ij2
+    xcells_per_icell[ij1] = icount;
+    ij2_start[ij1] = ij2_min ;
+    ij2_end[ij1]   = ij2_max;
+
+  } //ij1
+
+  return nxgrid_upbound;
+
+}
+
+
+
 /*******************************************************************************
   void create_xgrid_2DX2D_order1
   This routine generate exchange grids between two grids for the first order

@@ -20,7 +20,12 @@
 #ifndef CREATE_XGRID_ACC_H_
 #define CREATE_XGRID_ACC_H_
 
-/* this value is small compare to earth area */
+#include "globals.h"
+
+int get_nxgrid_upbound_2dx2d_order1_acc(const int nlon_in, const int nlat_in, const int nlon_out, const int nlat_out,
+                                       const double *lon_in, const double *lat_in, const double *lon_out,
+                                       const double *lat_out, Cell *out_cell, int *xcells_per_icell,
+                                       int *ij2_start, int *ij2_end);
 
 int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
