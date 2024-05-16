@@ -123,15 +123,7 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
 #pragma acc enter data copyin(cell->lon_vertices[:ncell][:MAX_V], \
                               cell->lat_vertices[:ncell][:MAX_V])
 
-  //grid data should already be present, if not, will copyin
-  if( ! acc_is_present(lon, npts*sizeof(double)) ) {
-    printf("WARNING lon grid coordinates not on device.  copying in data for the duration of kernel execution\n");
-  }
-  if( ! acc_is_present(lat, npts*sizeof(double)) ) {
-    printf("WARNING lat grid coordinates not on device.  copying in data for the duration of kernel execution\n");
-  }
-
-#pragma acc data present(cell[:1]) copyin(lon[:npts], lat[:npts])
+#pragma acc data present(cell[:1], lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
   for(int icell=0; icell<ncell; icell++){
     int n;
