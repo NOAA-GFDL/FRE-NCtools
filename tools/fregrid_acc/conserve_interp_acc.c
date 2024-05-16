@@ -26,6 +26,7 @@
 #include "constant.h"
 #include "globals.h"
 #include "create_xgrid_acc.h"
+#include "create_xgrid_utils_acc.h"
 #include "mosaic_util.h"
 #include "conserve_interp.h"
 #include "conserve_interp_acc.h"
