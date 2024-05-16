@@ -102,11 +102,11 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
   int ncell=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  cell->lon_min = (double *)malloc(ncell*sizeof(double));
-  cell->lon_max = (double *)malloc(ncell*sizeof(double));
-  cell->lat_min = (double *)malloc(ncell*sizeof(double));
-  cell->lat_max = (double *)malloc(ncell*sizeof(double));
-  cell->lon_avg = (double *)malloc(ncell*sizeof(double));
+  cell->lon_min  = (double *)malloc(ncell*sizeof(double));
+  cell->lon_max  = (double *)malloc(ncell*sizeof(double));
+  cell->lat_min  = (double *)malloc(ncell*sizeof(double));
+  cell->lat_max  = (double *)malloc(ncell*sizeof(double));
+  cell->lon_cent = (double *)malloc(ncell*sizeof(double));
   cell->n_vertices = (int *)malloc(ncell*sizeof(int));
   cell->lon_vertices  = (double **)malloc(ncell*sizeof(double));
   cell->lat_vertices  = (double **)malloc(ncell*sizeof(double));
@@ -119,7 +119,7 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
 #pragma acc enter data copyin(cell[:1])
 #pragma acc enter data copyin(cell->lon_min[:ncell], cell->lon_max[:ncell], \
                               cell->lat_min[:ncell], cell->lat_max[:ncell], \
-                              cell->lon_avg[:ncell], cell->n_vertices[:ncell])
+                              cell->lon_cent[:ncell], cell->n_vertices[:ncell])
 #pragma acc enter data copyin(cell->lon_vertices[:ncell][:MAX_V], \
                               cell->lat_vertices[:ncell][:MAX_V])
 
@@ -145,9 +145,9 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
     cell->n_vertices[icell] = n;
 
     if(n > MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
-    cell->lon_min[icell] = minval_double(n, x);
-    cell->lon_max[icell] = maxval_double(n, x);
-    cell->lon_avg[icell] = avgval_double(n, x);
+    cell->lon_min[icell]  = minval_double(n, x);
+    cell->lon_max[icell]  = maxval_double(n, x);
+    cell->lon_cent[icell] = avgval_double(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
       cell->lon_vertices[icell][ivertex] = x[ivertex];

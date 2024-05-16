@@ -38,11 +38,13 @@ typedef struct {
   double lon_max[NLON*NLAT];
   double lat_min[NLON*NLAT];
   double lat_max[NLON*NLAT];
-  double lon_avg[NLON*NLAT];
+  double lon_cent[NLON*NLAT];
   double *lon_vertices[NLON*NLAT];
   double *lat_vertices[NLON*NLAT];
 } Answers;
 
+void copy_cell_to_host(Cell *cell);
+void reset_cell_on_host(Cell *cell);
 void get_answers(const double *lon, const double *lat, Answers *answers);
 void check_answers( const Cell *cell, const Answers *answers);
 void check_ranswer( const int n, const double *answer, const double *checkme);
@@ -50,7 +52,6 @@ void check_ranswer( const int n, const double *answer, const double *checkme);
 
 int main(){
 
-  double lon[(NLON+1)*(NLON+1)], lat[(NLON+1)*(NLON+1)];
   Answers answers;
   Cell cell;
   Grid_config grid[1];
@@ -97,7 +98,7 @@ void get_answers(const double *lon, const double *lat, Answers *answers ){
       answers->lat_max[icell] = (-30.0 + dlat*(ilat+1))* D2R;
       answers->lon_min[icell] = (0 + dlon*ilon)* D2R;
       answers->lon_max[icell] = (0 + dlon*(ilon+1))* D2R;
-      answers->lon_avg[icell] = (dlon*ilon+0.5*dlon)* D2R;
+      answers->lon_cent[icell] = (dlon*ilon+0.5*dlon)* D2R;
     }
   }
 
@@ -131,7 +132,7 @@ void reset_cell_on_host(Cell *cell)
     cell->lon_max[icell]=-99.;
     cell->lat_min[icell]=-99.;
     cell->lat_max[icell]=-99.;
-    cell->lon_avg[icell]=-99.;
+    cell->lon_cent[icell]=-99.;
     cell->n_vertices[icell]=-99;
     for(int ipt=0 ; ipt<MAX_V ; ipt++){
       cell->lon_vertices[icell][ipt]=-99.;
@@ -147,7 +148,7 @@ void copy_cell_to_host(Cell *cell)
   int ncell = NLON*NLAT;
 #pragma acc exit data copyout( cell->lon_min[:ncell], cell->lon_max[:ncell], \
                                cell->lat_min[:ncell], cell->lat_max[:ncell], \
-                               cell->lon_avg[:ncell], cell->n_vertices[:ncell], \
+                               cell->lon_cent[:ncell], cell->n_vertices[:ncell], \
                                cell->lon_vertices[:ncell][:MAX_V],\
                                cell->lat_vertices[:ncell][:MAX_V])
 
@@ -177,7 +178,7 @@ void check_answers( const Cell *cell, const Answers *answers)
   check_ranswer(NLON*NLAT, answers->lat_max, cell->lat_max);
 
   printf("Checking for avg longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_avg, cell->lon_avg);
+  check_ranswer(NLON*NLAT, answers->lon_cent, cell->lon_cent);
 
   printf("Checking for longitudinal vertices for each cell\n");
   for(int icell=0 ; icell<NLAT*NLON ; icell++) {

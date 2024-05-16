@@ -254,7 +254,7 @@ typedef struct {
   double *lon_max;
   double *lat_min;
   double *lat_max;
-  double *lon_avg;
+  double *lon_cent;
   int *n_vertices;
   double **lon_vertices;
   double **lat_vertices;
