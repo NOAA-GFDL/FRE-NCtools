@@ -170,7 +170,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    if(n2_in > MAX_V) printf("ERROR create_xgrid.c: n2_in is greater than MAX_V\n");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
@@ -239,9 +239,6 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
             xarea = poly_area (x_out, y_out, n_out );
             min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
             if( xarea/min_area > AREA_RATIO_THRESH ) {
-              if(nxgrid>= MAXXGRID)
-                error_handler("The xgrid size is too large for resources.\n"
-                              " nxgrid is greater than MAXXGRID; increase increase number of MPI ranks.");
               xgrid_area[nxgrid] = xarea;
               i_in[nxgrid]       = i1;
               j_in[nxgrid]       = j1;
@@ -326,7 +323,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
     lat_out_min_list[n] = minval_double(4, y2_in);
     lat_out_max_list[n] = maxval_double(4, y2_in);
     n2_in = fix_lon(x2_in, y2_in, 4, M_PI);
-    if(n2_in > MAX_V) error_handler("create_xgrid.c: n2_in is greater than MAX_V");
+    if(n2_in > MAX_V) printf("ERROR create_xgrid.c: n2_in is greater than MAX_V\n");
     lon_out_min_list[n] = minval_double(n2_in, x2_in);
     lon_out_max_list[n] = maxval_double(n2_in, x2_in);
     lon_out_avg[n] = avgval_double(n2_in, x2_in);
@@ -395,8 +392,6 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
             xarea = poly_area (x_out, y_out, n_out ) ;
             min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
             if( xarea/min_area > AREA_RATIO_THRESH ) {
-              if(nxgrid>= MAXXGRID)
-                error_handler("nxgrid is greater than MAXXGRID/increase MAXXGRID or increase number of MPI ranks");
               xgrid_area[nxgrid] = xarea;
               xgrid_clon[nxgrid] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
               xgrid_clat[nxgrid] = poly_ctrlat (x_out, y_out, n_out );
@@ -507,7 +502,6 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
                 i_out[nxgrid]      = i2;
                 j_out[nxgrid]      = j2;
                 ++nxgrid;
-                if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
               }
             }
           }

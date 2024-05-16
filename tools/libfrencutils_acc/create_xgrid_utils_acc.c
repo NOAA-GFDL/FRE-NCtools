@@ -94,6 +94,97 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
 
 };  /* get_grid_great_circle_area */
 
+/*---------------------------------------------------------------------------
+  double poly_ctrlon(const double x[], const double y[], int n, double clon)
+  This routine is used to calculate the lontitude of the centroid.
+---------------------------------------------------------------------------*/
+double poly_ctrlon(const double x[], const double y[], int n, double clon)
+{
+  double ctrlon = 0.0;
+  int    i;
+
+  clon = clon;
+  for (i=0;i<n;i++) {
+    int ip = (i+1) % n;
+    double phi1, phi2, dphi, lat1, lat2, dphi1, dphi2;
+    double f1, f2, fac, fint;
+    phi1   = x[ip];
+    phi2   = x[i];
+    lat1 = y[ip];
+    lat2 = y[i];
+    dphi   = phi1 - phi2;
+
+    if      (dphi==0.0) continue;
+
+    f1 = 0.5*(cos(lat1)*sin(lat1)+lat1);
+    f2 = 0.5*(cos(lat2)*sin(lat2)+lat2);
+
+     /* this will make sure longitude of centroid is at
+        the same interval as the center of any grid */
+    if(dphi > M_PI)  dphi = dphi - 2.0*M_PI;
+    if(dphi < -M_PI) dphi = dphi + 2.0*M_PI;
+    dphi1 = phi1 - clon;
+    if( dphi1 > M_PI) dphi1 -= 2.0*M_PI;
+    if( dphi1 <-M_PI) dphi1 += 2.0*M_PI;
+    dphi2 = phi2 -clon;
+    if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
+    if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
+
+    if(fabs(dphi2 -dphi1) < M_PI) {
+      ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
+    }
+    else {
+      if(dphi1 > 0.0)
+        fac = M_PI;
+      else
+        fac = -M_PI;
+      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
+      ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
+        + 0.5*fac*(dphi1+dphi2)*fint;
+        }
+
+  }
+  return (ctrlon*RADIUS*RADIUS);
+};   /* poly_ctrlon */
+
+/*------------------------------------------------------------------------------
+  double poly_ctrlat(const double x[], const double y[], int n)
+  This routine is used to calculate the latitude of the centroid
+  Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
+             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  The following is an implementation of equation (13) in the above paper:
+     \int lat.dA = \int_c [-cos(lat)-lat sin(lat)] dlon
+  It assumes the sides of the spherical polygons are line segments with tangent
+  (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
+  line integral along the sides of the polygon  \int_c.
+ ---------------------------------------------------------------------------*/
+double poly_ctrlat(const double x[], const double y[], int n)
+{
+  double ctrlat = 0.0;
+  int    i;
+  for (i=0;i<n;i++) {
+    int ip = (i+1) % n;
+    double dx = (x[ip]-x[i]);
+    double dy, avg_y, hdy;
+    double lat1, lat2;
+    lat1 = y[ip];
+    lat2 = y[i];
+    dy = lat2 - lat1;
+    hdy = dy*0.5;
+    avg_y = (lat1+lat2)*0.5;
+    if      (dx==0.0) continue;
+    if(dx > M_PI)  dx = dx - 2.0*M_PI;
+    if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
+
+    if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
+      ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
+    else
+      ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
+  }
+  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  return (ctrlat*RADIUS*RADIUS);
+
+}; /* poly_ctrlat */
 
 void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat,
                                  Cell *cell )
@@ -102,11 +193,11 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
   int ncell=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  cell->lon_min = (double *)malloc(ncell*sizeof(double));
-  cell->lon_max = (double *)malloc(ncell*sizeof(double));
-  cell->lat_min = (double *)malloc(ncell*sizeof(double));
-  cell->lat_max = (double *)malloc(ncell*sizeof(double));
-  cell->lon_avg = (double *)malloc(ncell*sizeof(double));
+  cell->lon_min  = (double *)malloc(ncell*sizeof(double));
+  cell->lon_max  = (double *)malloc(ncell*sizeof(double));
+  cell->lat_min  = (double *)malloc(ncell*sizeof(double));
+  cell->lat_max  = (double *)malloc(ncell*sizeof(double));
+  cell->lon_cent = (double *)malloc(ncell*sizeof(double));
   cell->n_vertices = (int *)malloc(ncell*sizeof(int));
   cell->lon_vertices  = (double **)malloc(ncell*sizeof(double));
   cell->lat_vertices  = (double **)malloc(ncell*sizeof(double));
@@ -119,19 +210,11 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
 #pragma acc enter data copyin(cell[:1])
 #pragma acc enter data copyin(cell->lon_min[:ncell], cell->lon_max[:ncell], \
                               cell->lat_min[:ncell], cell->lat_max[:ncell], \
-                              cell->lon_avg[:ncell], cell->n_vertices[:ncell])
+                              cell->lon_cent[:ncell], cell->n_vertices[:ncell])
 #pragma acc enter data copyin(cell->lon_vertices[:ncell][:MAX_V], \
                               cell->lat_vertices[:ncell][:MAX_V])
 
-  //grid data should already be present, if not, will copyin
-  if( ! acc_is_present(lon, npts*sizeof(double)) ) {
-    printf("WARNING lon grid coordinates not on device.  copying in data for the duration of kernel execution\n");
-  }
-  if( ! acc_is_present(lat, npts*sizeof(double)) ) {
-    printf("WARNING lat grid coordinates not on device.  copying in data for the duration of kernel execution\n");
-  }
-
-#pragma acc data present(cell[:1]) copyin(lon[:npts], lat[:npts])
+#pragma acc data present(cell[:1], lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
   for(int icell=0; icell<ncell; icell++){
     int n;
@@ -145,9 +228,9 @@ void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *l
     cell->n_vertices[icell] = n;
 
     if(n > MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
-    cell->lon_min[icell] = minval_double(n, x);
-    cell->lon_max[icell] = maxval_double(n, x);
-    cell->lon_avg[icell] = avgval_double(n, x);
+    cell->lon_min[icell]  = minval_double(n, x);
+    cell->lon_max[icell]  = maxval_double(n, x);
+    cell->lon_cent[icell] = avgval_double(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
       cell->lon_vertices[icell][ivertex] = x[ivertex];
