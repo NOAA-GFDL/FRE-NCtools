@@ -146,6 +146,17 @@ double poly_ctrlon(const double x[], const double y[], int n, double clon)
   return (ctrlon*RADIUS*RADIUS);
 };   /* poly_ctrlon */
 
+/*------------------------------------------------------------------------------
+  double poly_ctrlat(const double x[], const double y[], int n)
+  This routine is used to calculate the latitude of the centroid
+  Reference: First- and Second-Order Conservative Remapping Schemes for Grids in
+             Spherical Coordinates, P. Jones, Monthly Weather Review, 1998, vol127, p2204
+  The following is an implementation of equation (13) in the above paper:
+     \int lat.dA = \int_c [-cos(lat)-lat sin(lat)] dlon
+  It assumes the sides of the spherical polygons are line segments with tangent
+  (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
+  line integral along the sides of the polygon  \int_c.
+ ---------------------------------------------------------------------------*/
 double poly_ctrlat(const double x[], const double y[], int n)
 {
   double ctrlat = 0.0;
