@@ -92,3 +92,84 @@ void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *
   free(z);
 
 };  /* get_grid_great_circle_area */
+
+/*------------------------------------------------------------------------------
+  double poly_ctrlon(const double x[], const double y[], int n, double clon)
+  This routine is used to calculate the lontitude of the centroid.
+   ---------------------------------------------------------------------------*/
+double poly_ctrlon(const double x[], const double y[], int n, double clon)
+{
+  double ctrlon = 0.0;
+  int    i;
+
+  clon = clon;
+  for (i=0;i<n;i++) {
+    int ip = (i+1) % n;
+    double phi1, phi2, dphi, lat1, lat2, dphi1, dphi2;
+    double f1, f2, fac, fint;
+    phi1   = x[ip];
+    phi2   = x[i];
+    lat1 = y[ip];
+    lat2 = y[i];
+    dphi   = phi1 - phi2;
+
+    if      (dphi==0.0) continue;
+
+    f1 = 0.5*(cos(lat1)*sin(lat1)+lat1);
+    f2 = 0.5*(cos(lat2)*sin(lat2)+lat2);
+
+     /* this will make sure longitude of centroid is at
+        the same interval as the center of any grid */
+    if(dphi > M_PI)  dphi = dphi - 2.0*M_PI;
+    if(dphi < -M_PI) dphi = dphi + 2.0*M_PI;
+    dphi1 = phi1 - clon;
+    if( dphi1 > M_PI) dphi1 -= 2.0*M_PI;
+    if( dphi1 <-M_PI) dphi1 += 2.0*M_PI;
+    dphi2 = phi2 -clon;
+    if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
+    if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
+
+    if(fabs(dphi2 -dphi1) < M_PI) {
+      ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
+    }
+    else {
+      if(dphi1 > 0.0)
+        fac = M_PI;
+      else
+        fac = -M_PI;
+      fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
+      ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
+        + 0.5*fac*(dphi1+dphi2)*fint;
+        }
+
+  }
+  return (ctrlon*RADIUS*RADIUS);
+};   /* poly_ctrlon */
+
+double poly_ctrlat(const double x[], const double y[], int n)
+{
+  double ctrlat = 0.0;
+  int    i;
+  for (i=0;i<n;i++) {
+    int ip = (i+1) % n;
+    double dx = (x[ip]-x[i]);
+    double dy, avg_y, hdy;
+    double lat1, lat2;
+    lat1 = y[ip];
+    lat2 = y[i];
+    dy = lat2 - lat1;
+    hdy = dy*0.5;
+    avg_y = (lat1+lat2)*0.5;
+    if      (dx==0.0) continue;
+    if(dx > M_PI)  dx = dx - 2.0*M_PI;
+    if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
+
+    if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
+      ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
+    else
+      ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
+  }
+  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  return (ctrlat*RADIUS*RADIUS);
+
+}; /* poly_ctrlat */
