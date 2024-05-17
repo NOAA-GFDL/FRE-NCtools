@@ -100,8 +100,8 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
                                                  mask, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
         }
         else {
-          y_min = minval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
-          y_max = maxval_double((nx_out+1)*(ny_out+1), grid_out[n].latc);
+          y_min = minval_double_acc((nx_out+1)*(ny_out+1), grid_out[n].latc);
+          y_max = maxval_double_acc((nx_out+1)*(ny_out+1), grid_out[n].latc);
           jstart = ny_in; jend = -1;
           for(j=0; j<=ny_in; j++) for(i=0; i<=nx_in; i++) {
               yy = grid_in[m].latc[j*(nx_in+1)+i];
@@ -272,10 +272,10 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	      x1_in[1] = grid_in[n].lonc[n1]; y1_in[1] = grid_in[n].latc[n1];
 	      x1_in[2] = grid_in[n].lonc[n2]; y1_in[2] = grid_in[n].latc[n2];
 	      x1_in[3] = grid_in[n].lonc[n3]; y1_in[3] = grid_in[n].latc[n3];
-	      n1_in = fix_lon(x1_in, y1_in, 4, M_PI);
-	      lon_in_avg = avgval_double(n1_in, x1_in);
-              clon = poly_ctrlon(x1_in, y1_in, n1_in, lon_in_avg);
-	      clat = poly_ctrlat (x1_in, y1_in, n1_in );
+	      n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
+	      lon_in_avg = avgval_double_acc(n1_in, x1_in);
+              clon = poly_ctrlon_acc(x1_in, y1_in, n1_in, lon_in_avg);
+	      clat = poly_ctrlat_acc(x1_in, y1_in, n1_in );
 	      cell_in[n].clon[ii] = clon/grid_in[n].cell_area[ii];
 	      cell_in[n].clat[ii] = clat/grid_in[n].cell_area[ii];
 	    }
