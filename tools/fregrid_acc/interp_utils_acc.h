@@ -22,9 +22,9 @@
 
 #include "globals.h"
 
-void copy_grid_to_device( const int itile, const Grid_config *grid );
+void copy_grid_to_device_acc( const int itile, const Grid_config *grid );
 
-void copy_interp_to_device( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
-                            const unsigned int opcode );
+void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
+                                const unsigned int opcode );
 
 #endif
