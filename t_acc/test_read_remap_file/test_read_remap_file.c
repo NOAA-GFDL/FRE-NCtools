@@ -6,7 +6,7 @@
 #include <math.h>
 #include <unistd.h>
 #include "conserve_interp_acc.h"
-#include "fregrid_utils_acc.h"
+#include "interp_utils_acc.h"
 #include "globals.h"
 
 #define NTILES_IN 6
