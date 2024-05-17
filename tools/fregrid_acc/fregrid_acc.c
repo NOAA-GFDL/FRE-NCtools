@@ -46,12 +46,11 @@
 #include <math.h>
 #include <time.h>
 #include "globals.h"
-#include "constant.h"
 #include "read_mosaic.h"
 #include "mpp_io.h"
 #include "mpp.h"
 #include "mosaic_util.h"
-#include "conserve_interp.h"
+#include "conserve_interp_acc.h"
 #include "bilinear_interp.h"
 #include "fregrid_util.h"
 
@@ -952,7 +951,7 @@ int main(int argc, char* argv[])
     setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
   }
   else
-    setup_conserve_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode);
+    setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode);
   if(debug) {
     time_end = clock();
     time_setup_interp = 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -1016,7 +1015,7 @@ int main(int argc, char* argv[])
           if( opcode & BILINEAR )
             do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
           else
-            do_scalar_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+            do_scalar_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
           write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
           if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
@@ -1046,7 +1045,7 @@ int main(int argc, char* argv[])
               if( opcode & BILINEAR )
                 do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
               else
-                do_scalar_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+                do_scalar_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
               if(debug) {
                 time_end = clock();
                 time_do_interp += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -1083,7 +1082,7 @@ int main(int argc, char* argv[])
       if( opcode & BILINEAR )
         do_vector_bilinear_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, finer_step, fill_missing);
       else
-        do_vector_conserve_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
+        do_vector_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
 
       write_field_data(ntiles_out, u_out, grid_out, l, level_z, level_n, m);
       write_field_data(ntiles_out, v_out, grid_out, l, level_z, level_n, m);
