@@ -25,7 +25,7 @@
 #define min(a,b) (a<b ? a:b)
 #define max(a,b) (a>b ? a:b)
 
-struct Node{
+struct Node_acc{
   double x, y, z, u, u_clip;
   int intersect; /* indicate if this point is an intersection, 0 = no, 1= yes, 2=both intersect and vertices */
   int inbound;      /* -1 uninitialized, 0 coincident, 1 outbound, 2 inbound */
@@ -33,189 +33,171 @@ struct Node{
   int isInside;   /* = 1 means one point is inside the other polygon, 0 is not, -1 undecided. */
   int subj_index; /* the index of subject point that an intersection follow. */
   int clip_index; /* the index of clip point that an intersection follow */
-  struct Node *Next;
+  struct Node_acc *Next_acc;
 };
 
 #pragma acc routine seq
 int nearest_index_acc(double value, const double *array, int ia);
 
 #pragma acc routine seq
-int lon_fix(double *x, double *y, int n_in, double tlon);
+int lon_fix_acc(double *x, double *y, int n_in, double tlon);
 
 #pragma acc routine seq
-double minval_double(int size, const double *data);
+double minval_double_acc(int size, const double *data);
 
 #pragma acc routine seq
-double maxval_double(int size, const double *data);
+double maxval_double_acc(int size, const double *data);
 
 #pragma acc routine seq
-double avgval_double(int size, const double *data);
+double avgval_double_acc(int size, const double *data);
 
 #pragma acc routine seq
-void latlon2xyz(int size, const double *lon, const double *lat, double *x, double *y, double *z);
+void latlon2xyz_acc(int size, const double *lon, const double *lat, double *x, double *y, double *z);
 
 #pragma acc routine seq
-void xyz2latlon(int size, const double *x, const double *y, const double *z, double *lon, double *lat);
+void xyz2latlon_acc(int size, const double *x, const double *y, const double *z, double *lon, double *lat);
 
 #pragma acc routine seq
-double box_area(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
+double poly_area_acc(const double lon[], const double lat[], int n);
 
 #pragma acc routine seq
-double poly_area(const double lon[], const double lat[], int n);
+int fix_lon_acc(double lon[], double lat[], int n, double tlon);
 
 #pragma acc routine seq
-double poly_area_dimensionless(const double lon[], const double lat[], int n);
+double spherical_angle_acc(const double *v1, const double *v2, const double *v3);
 
 #pragma acc routine seq
-double poly_area_no_adjust(const double x[], const double y[], int n);
+void vect_cross_acc(const double *p1, const double *p2, double *e );
 
 #pragma acc routine seq
-int fix_lon(double lon[], double lat[], int n, double tlon);
+double dot_acc(const double *p1, const double *p2);
 
 #pragma acc routine seq
-double great_circle_distance(double *p1, double *p2);
+double metric_acc(const double *p) ;
 
 #pragma acc routine seq
-double spherical_excess_area(const double* p_ll, const double* p_ul,
-                             const double* p_lr, const double* p_ur, double radius);
+int intersect_tri_with_line_acc(const double *plane, const double *l1, const double *l2, double *p, double *t);
 
 #pragma acc routine seq
-void vect_cross(const double *p1, const double *p2, double *e );
+void mult_acc(double m[], double v[], double out_v[]);
 
 #pragma acc routine seq
-double spherical_angle(const double *v1, const double *v2, const double *v3);
+int invert_matrix_3x3_acc(double m[], double m_inv[]);
 
 #pragma acc routine seq
-void normalize_vect(double *e);
+double great_circle_area_acc(int n, const double *x, const double *y, const double *z);
 
 #pragma acc routine seq
-void unit_vect_latlon(int size, const double *lon, const double *lat, double *vlon, double *vlat);
+int insidePolygon_acc(struct Node_acc *node, struct Node_acc *list );
 
 #pragma acc routine seq
-double great_circle_area(int n, const double *x, const double *y, const double *z);
+int inside_a_polygon_acc( double *lon1, double *lat1, int *npts, double *lon2, double *lat2);
 
 #pragma acc routine seq
-double * cross(const double *p1, const double *p2);
+void rewindList_acc(void);
 
 #pragma acc routine seq
-double dot(const double *p1, const double *p2);
+struct Node_acc *getNext_acc();
 
 #pragma acc routine seq
-int intersect_tri_with_line(const double *plane, const double *l1, const double *l2, double *p, double *t);
+void initNode_acc(struct Node_acc *node);
 
 #pragma acc routine seq
-int invert_matrix_3x3(double m[], double m_inv[]);
+void addEnd_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u, int inbound, int inside);
 
 #pragma acc routine seq
-void mult(double m[], double v[], double out_v[]);
-
-#pragma acc routine seq
-double metric(const double *p);
-
-#pragma acc routine seq
-int insidePolygon(struct Node *node, struct Node *list );
-
-#pragma acc routine seq
-int inside_a_polygon( double *lon1, double *lat1, int *npts, double *lon2, double *lat2);
-
-#pragma acc routine seq
-void rewindList(void);
-
-#pragma acc routine seq
-struct Node *getNext();
-
-#pragma acc routine seq
-void initNode(struct Node *node);
-
-#pragma acc routine seq
-void addEnd(struct Node *list, double x, double y, double z, int intersect, double u, int inbound, int inside);
-
-#pragma acc routine seq
-int addIntersect(struct Node *list, double x, double y, double z, int intersect, double u1, double u2,
+int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u1, double u2,
                 int inbound, int is1, int ie1, int is2, int ie2);
 
 #pragma acc routine seq
-void insertIntersect(struct Node *list, double x, double y, double z, double u1, double u2, int inbound,
+void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, double u1, double u2, int inbound,
                      double x2, double y2, double z2);
 
 #pragma acc routine seq
-int length(struct Node *list);
+int length_acc(struct Node_acc *list);
 
 #pragma acc routine seq
-int samePoint(double x1, double y1, double z1, double x2, double y2, double z2);
+int samePoint_acc(double x1, double y1, double z1, double x2, double y2, double z2);
 
 #pragma acc routine seq
-int sameNode(struct Node node1, struct Node node2);
+int sameNode_acc(struct Node_acc node1, struct Node_acc node2);
 
 #pragma acc routine seq
-void addNode(struct Node *list, struct Node nodeIn);
+void addNode_acc(struct Node_acc *list, struct Node_acc nodeIn);
 
 #pragma acc routine seq
-struct Node *getNode(struct Node *list, struct Node inNode);
+struct Node_acc *getNode_acc(struct Node_acc *list, struct Node_acc inNode_acc);
 
 #pragma acc routine seq
-struct Node *getNextNode(struct Node *list);
+struct Node_acc *getNextNode_acc(struct Node_acc *list);
 
 #pragma acc routine seq
-void copyNode(struct Node *node_out, struct Node node_in);
+void copyNode_acc(struct Node_acc *node_out, struct Node_acc node_in);
 
 #pragma acc routine seq
-void printNode(struct Node *list, char *str);
+void printNode_acc(struct Node_acc *list, char *str);
 
 #pragma acc routine seq
-int intersectInList(struct Node *list, double x, double y, double z);
+int intersectInList_acc(struct Node_acc *list, double x, double y, double z);
 
 #pragma acc routine seq
-void insertAfter(struct Node *list, double x, double y, double z, int intersect, double u, int inbound,
+void insertAfter_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u, int inbound,
                  double x2, double y2, double z2);
 
 #pragma acc routine seq
-double gridArea(struct Node *grid);
+double gridArea_acc(struct Node_acc *grid);
 
 #pragma acc routine seq
-int isIntersect(struct Node node);
+int isIntersect_acc(struct Node_acc node);
 
 #pragma acc routine seq
-int getInbound( struct Node node );
+int getInbound_acc( struct Node_acc node );
 
 #pragma acc routine seq
-struct Node *getLast(struct Node *list);
+struct Node_acc *getLast_acc(struct Node_acc *list);
 
 #pragma acc routine seq
-int getFirstInbound( struct Node *list, struct Node *nodeOut);
+int getFirstInbound_acc( struct Node_acc *list, struct Node_acc *nodeOut);
 
 #pragma acc routine seq
-void getCoordinate(struct Node node, double *x, double *y, double *z);
+void getCoordinate_acc(struct Node_acc node, double *x, double *y, double *z);
 
 #pragma acc routine seq
-void getCoordinates(struct Node *node, double *p);
+void getCoordinates_acc(struct Node_acc *node, double *p);
 
 #pragma acc routine seq
-void setCoordinate(struct Node *node, double x, double y, double z);
+void setCoordinate_acc(struct Node_acc *node, double x, double y, double z);
 
 #pragma acc routine seq
-void setInbound(struct Node *interList, struct Node *list);
+void setInbound_acc(struct Node_acc *interList, struct Node_acc *list);
 
 #pragma acc routine seq
-int isInside(struct Node *node);
+int isInside_acc(struct Node_acc *node);
 
 #pragma acc routine seq
-void set_reproduce_siena_true(void);
+void set_rotate_poly_true_acc(void);
 
 #pragma acc routine seq
-void set_rotate_poly_true(void);
+int is_near_pole_acc(const double y[], int n);
 
 #pragma acc routine seq
-int is_near_pole(const double y[], int n);
+int crosses_pole_acc(const double x[], int n);
 
 #pragma acc routine seq
-int crosses_pole(const double x[], int n);
+void rotate_point_acc( double rv[], double rmat [][3]);
 
 #pragma acc routine seq
-void rotate_point( double rv[], double rmat [][3]);
+void rotate_poly_acc(const double x[], const double y[], const int n, double xr[], double yr[]);
 
 #pragma acc routine seq
-void rotate_poly(const double x[], const double y[], const int n, double xr[], double yr[]);
+void set_the_rotation_matrix_acc();
 
 #pragma acc routine seq
-void set_the_rotation_matrix();
+void pimod_acc(double x[],int nn);
+
+#pragma acc routine seq
+int inside_edge_acc(double x0, double y0, double x1, double y1, double x, double y);
+
+#pragma acc routine seq
+int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, double *q3,
+                         double *intersect, double *u_a, double *u_q, int *inbound);

@@ -33,9 +33,17 @@ double poly_ctrlon_acc(const double x[], const double y[], int n, double clon);
 
 double poly_ctrlat_acc(const double x[], const double y[], int n);
 
-void get_cell_minmaxavg_latlons( const int nlon, const int nlat, const double *lon, const double *lat, Cell *cell);
+int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
+                   const double lon2_in[], const double lat2_in[], int n2_in,
+                   double lon_out[], double lat_out[]);
+
+int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
+                                const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
+                                double x_out[], double y_out[], double z_out[]);
+
+void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const double *lon, const double *lat, Cell *cell);
 
 #pragma acc routine seq
-void get_cell_vertices( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
+void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
 
 #endif
