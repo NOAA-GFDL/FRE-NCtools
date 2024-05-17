@@ -46,53 +46,51 @@ int get_nxgrid_upbound_2dx2d_order1_acc(const int nlon_in, const int nlat_in, co
 #pragma acc parallel loop independent reduction(+:nxgrid_upbound)
   for( int ij1=0 ; ij1<n1 ; ij1++) {
 
-    int n1;
+    int nvertices;
     int i1=ij1%nlon_in;
     int j1=ij1/nlon_in;
     int icount=0;
     int ij2_max=0;
     int ij2_min=n1;
-    double lat_in_min, lat_in_max, lon_in_min, lon_in_max, lon_in_avg;
+    double lat1_min, lat1_max, lon1_min, lon1_max, lon1_cent;
     double x1[MV], y1[MV];
 
     xcells_per_icell[ij1]=0;
 
-    get_cell_vertices(ij1, nlon_in, nlat_in, lon_in, lat_in, x1, y1);
+    get_cell_vertices(ij1, nlon_in, lon_in, lat_in, x1, y1);
 
-    lat_in_min = minval_double(4, y1);
-    lat_in_max = maxval_double(4, y1);
-    n1 = fix_lon(x1, y1, 4, M_PI);
-    lon_in_min = minval_double(n1, x1);
-    lon_in_max = maxval_double(n1, x1);
-    lon_in_avg = avgval_double(n1, x1);
+    lat1_min = minval_double(4, y1);
+    lat1_max = maxval_double(4, y1);
+    nvertices = fix_lon(x1, y1, 4, M_PI);
+    lon1_min = minval_double(nvertices, x1);
+    lon1_max = maxval_double(nvertices, x1);
+    lon1_cent = avgval_double(nvertices, x1);
 
 #pragma acc loop independent reduction(+:nxgrid_upbound) reduction(+:icount) reduction(min:ij2_min) reduction(max:ij2_max)
     for(int ij2=0; ij2<nlon_out*nlat_out; ij2++) {
 
-      double dx, lon_out_min, lon_out_max;
-      int i2=ij2%nlon_out;
-      int j2=ij2/nlon_out;
+      double dx, lon2_min, lon2_max;
 
-      if(out_cell->lat_min[ij2] >= lat_in_max) continue;
-      if(out_cell->lat_max[ij2] <= lat_in_min ) continue;
+      if(out_cell->lat_min[ij2] >= lat1_max) continue;
+      if(out_cell->lat_max[ij2] <= lat1_min) continue;
 
-      /* adjust according to lon_in_avg*/
-      lon_out_min = out_cell->lon_min[ij2];
-      lon_out_max = out_cell->lon_max[ij2];
+      /* adjust according to lon_in_cent*/
+      lon2_min = out_cell->lon_min[ij2];
+      lon2_max = out_cell->lon_max[ij2];
 
-      dx = out_cell->lon_avg[ij2] - lon_in_avg;
+      dx = out_cell->lon_cent[ij2] - lon1_cent;
       if(dx < -M_PI ) {
-        lon_out_min += TPI;
-        lon_out_max += TPI;
+        lon2_min += TPI;
+        lon2_max += TPI;
       }
       else if (dx >  M_PI) {
-        lon_out_min -= TPI;
-        lon_out_max -= TPI;
+        lon2_min -= TPI;
+        lon2_max -= TPI;
       }
 
       /* x2_in should in the same range as x1_in after lon_fix, so no need to consider cyclic condition */
-      if(lon_out_min >= lon_in_max ) continue;
-      if(lon_out_max <= lon_in_min ) continue;
+      if(lon2_min >= lon1_max ) continue;
+      if(lon2_max <= lon1_min ) continue;
 
       //Note, the check for AREA_RATIO_THRESH has been removed
       //Thus, the computed value of nxgrid_upbound will be equal to or greater than nxgrid
