@@ -22,10 +22,6 @@
 #define _GENERAL_UTILS_H 1
 #endif
 
-/* override the `fabs` function based on the type */
-#define fabs(X) _Generic((X), \
-          double: fabs)(X)
-
 #define min(a,b) (a<b ? a:b)
 #define max(a,b) (a>b ? a:b)
 

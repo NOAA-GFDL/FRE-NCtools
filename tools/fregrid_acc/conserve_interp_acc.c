@@ -22,14 +22,12 @@
 #include <string.h>
 #include <netcdf.h>
 #include <math.h>
-#include <openacc.h>
 #include "globals.h"
 #include "conserve_interp_acc.h"
-#include "conserve_interp_utils_acc.h"
+#include "interp_utils_acc.h"
 #include "create_xgrid_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "general_utils_acc.h"
-#include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
