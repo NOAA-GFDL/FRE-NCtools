@@ -26,8 +26,8 @@ LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_acc_SOURCES = conserve_interp_acc.c \
                       conserve_interp_acc.h \
-                      conserve_interp_utils_acc.c \
-                      conserve_interp_utils_acc.h \
+                      interp_utils_acc.c \
+                      interp_utils_acc.h \
                       fregrid_acc.c
 
 fregrid_acc_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \

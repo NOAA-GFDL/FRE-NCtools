@@ -17,8 +17,8 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef CREATE_XGRID_ACC_H_
-#define CREATE_XGRID_ACC_H_
+#ifndef CREATE_XGRID_UTILS_ACC_H_
+#define CREATE_XGRID_UTILS_ACC_H_
 
 #include "globals.h"
 
