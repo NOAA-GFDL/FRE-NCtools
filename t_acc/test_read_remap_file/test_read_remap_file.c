@@ -6,7 +6,7 @@
 #include <math.h>
 #include <unistd.h>
 #include "conserve_interp_acc.h"
-#include "fregrid_utils_acc.h"
+#include "interp_utils_acc.h"
 #include "globals.h"
 
 #define NTILES_IN 6
@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
   }
 
   // read in remap and transfer data to device
-  read_remap_file(NTILES_IN, NTILES_OUT, interp, opcode) ;
-  copy_interp_to_device(NTILES_IN, NTILES_OUT, interp, opcode) ;
+  read_remap_file_acc(NTILES_IN, NTILES_OUT, interp, opcode) ;
+  copy_interp_to_device_acc(NTILES_IN, NTILES_OUT, interp, opcode) ;
 
   // get all answers
   for(int n=0 ; n<NTILES_OUT ; n++) {

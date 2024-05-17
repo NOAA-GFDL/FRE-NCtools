@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "create_xgrid_utils_acc.h"
-#include "conserve_interp_utils_acc.h"
+#include "interp_utils_acc.h"
 #include "parameters.h"
 
 #define NLON 36 // 36 cells in lon direction (36+1 grid points in the lon direction for each lat point)
@@ -70,8 +70,8 @@ int main(){
     }
   }
 
-  copy_grid_to_device(0, grid);
-  get_cell_minmaxavg_latlons( NLON, NLAT, grid[0].lonc, grid[0].latc, &cell);
+  copy_grid_to_device_acc(0, grid);
+  get_cell_minmaxavg_latlons_acc( NLON, NLAT, grid[0].lonc, grid[0].latc, &cell);
 
   get_answers(grid[0].lonc, grid[0].latc, &answers);
 

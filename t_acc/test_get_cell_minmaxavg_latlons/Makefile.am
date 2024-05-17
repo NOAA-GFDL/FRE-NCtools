@@ -25,7 +25,7 @@ AM_CFLAGS =  $(NETCDF_CFLAGS) \
             -I$(top_srcdir)/tools/libfrencutils_acc -acc
 
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
-        $(top_builddir)/tools/fregrid_acc/conserve_interp_utils_acc.o \
+        $(top_builddir)/tools/fregrid_acc/interp_utils_acc.o \
         $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a
 
