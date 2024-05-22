@@ -20,10 +20,16 @@
 #ifndef CREATE_XGRID_H_
 #define CREATE_XGRID_H_
 #ifndef MAXXGRID
+#ifdef use_libMPI
 #define MAXXGRID 1e6
+#else
+#define MAXXGRID 5e6
+#endif
 #endif
 
+#ifndef MV
 #define MV 50
+#endif
 /* this value is small compare to earth area */
 
 double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
