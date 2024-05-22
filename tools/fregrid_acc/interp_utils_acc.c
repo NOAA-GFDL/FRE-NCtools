@@ -26,11 +26,10 @@
 void copy_grid_to_device( const int itile, Grid_config *grid )
 Copies lat lon coordinates to device
 *******************************************************************************/
-void copy_grid_to_device_acc( const int itile, const int npoints, const Grid_config *grid )
+void copy_grid_to_device_acc( const int npoints, const double *lat, const double *lon )
 {
 
-#pragma acc enter data copyin(grid[itile])
-#pragma acc enter data copyin(grid[itile].lonc[:npoints], grid[itile].latc[:npoints])
+#pragma acc enter data copyin(lon[:npoints], lat[:npoints])
 
 }
 
