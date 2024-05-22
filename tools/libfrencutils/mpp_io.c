@@ -1050,7 +1050,12 @@ void mpp_set_deflation(int fid_in, int fid_out, int user_deflation, int user_shu
     for (int vid_out = 0; vid_out < files[fid_out].nvar; ++vid_out) {
         // if user has not specified options, look up and use settings in input file
         if (user_deflation == -1 || user_shuffle == -1) {
-            mpp_get_varname(fid_in, vid_out, varname);
+            mpp_get_varname(fid_out, vid_out, varname);
+
+            // Don't attempt to the get the deflate level if the variable is not in the input file (i.e lat_bnds,
+            // lon_bnds)
+            if (mpp_var_exist(fid_in, varname) == 0) continue;
+
             vid_in = mpp_get_varid(fid_in, varname);
 
             // Note: MPP variable IDs, such as vid_in above, are not the same as the netCDF variable ID
