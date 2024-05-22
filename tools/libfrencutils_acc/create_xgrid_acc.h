@@ -26,20 +26,21 @@ int get_nxgrid_upbound_2dx2d_acc(const int input_grid_nlon, const int input_grid
                                  const int output_grid_nlon, const int output_grid_nlat,
                                  const double *intput_grid_lon, const double *input_grid_lat,
                                  const double *output_grid_lon, const double *output_grid_lat,
-                                 const Cell *output_grid_cell,
+                                 const double *mask_skip_input_cell, const Cell *output_grid_cell,
                                  int *xcells_per_ij1, int *ij2_start, int *ij2_end);
 
 int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area);
+            const double *mask_skip_input_cell, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area);
 
 int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
 			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+            const double *mask_skip_input_cell, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
+            double *xgrid_clon, double *xgrid_clat);
 
 int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
             const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-            int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
-
+            const double *mask_skip_input_cell, int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
+            double *xgrid_clon, double *xgrid_clat);
 
 #endif

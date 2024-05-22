@@ -96,3 +96,20 @@ void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, cons
   *new_ny = jend2-jstart2+1;
 
 }
+/*******************************************************************************
+void get_mask
+get mask between input and output grid.
+*******************************************************************************/
+void create_mask_on_device(const int mask_size, double **mask)
+{
+
+  double *pmask;
+  pmask = mask;
+
+  pmask = (double *)malloc(mask_size*sizeof(double));
+
+#pragma acc enter data create(pmask[:mask_size])
+#pragma acc parallel loop independent present(pmask[:mask_size])
+  for( int i=0 ; i<mask_size; i++) pmask[i]=1.0;
+
+}
