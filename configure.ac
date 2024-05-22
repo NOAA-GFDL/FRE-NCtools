@@ -22,7 +22,7 @@
 AC_PREREQ([2.63])
 AC_INIT(
   [FRE NC Tools],
-  [2023.01.02],
+  [2024.01],
   [oar.gfdl.help@noaa.gov],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
@@ -88,7 +88,7 @@ AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_T
 #Build with OpenACC suport.  Default is 'no'
 AC_ARG_ENABLE([acc],
   [AS_HELP_STRING([--enable-acc], [Build with OpenACC support.  Defaults to 'no'])] )
-AS_IF([test ${enable_acc:no} = "yes"], [enable_acc=yes], [enable_acc=no])
+AS_IF([test ${enable_acc:-no} = "yes"], [enable_acc=yes], [enable_acc=no])
 AM_CONDITIONAL([ENABLE_ACC], [test $enable_acc = "yes"])
 
 AC_CHECK_FUNCS(gettid, [], [])
@@ -122,6 +122,12 @@ AC_CHECK_PROGS(PROVE, [prove])
 
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
+# Check if openacc.h exists
+if test $enable_acc = yes ; then
+   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
+   AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
+fi
+
 # Check for library
 AX_LIB_NETCDF()
 if test "$with_netcdf" = "no"; then
@@ -148,11 +154,6 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
   ])
 ])
 
-# Check if openacc.h exists
-if test $enable_acc = yes ; then
-   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
-fi
-
 # Check for library functions
 
 # Check if Test25-input link points to an existing directory
@@ -164,25 +165,22 @@ AC_DEFINE([GIT_REVISION], "git_revision",
 AC_DEFINE([GIT_HEADHASH], "git_hashval",
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 
-
 #Code for setting rpath based ncview's configure.in code.
-echo "ac_computer_gnu: $ac_compiler_gnu"
-if test x$ac_compiler_gnu = xyes; then
-	RPATH_FLAGS=""
-	for word in $NETCDF_LDFLAGS; do
-		if test `expr $word : -L/` -eq 3; then
-			RPDIR=${word:2}
-			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
-		fi
-	done
-  for word in $NETCDF_FCLDFLAGS; do
-		if test `expr $word : -L/` -eq 3; then
-			RPDIR=${word:2}
-			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
-		fi
-	done
-	AC_SUBST(RPATH_FLAGS)
-fi
+AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
+  for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS
+  do
+    if test `expr $word : -L/` -eq 3
+    then
+      RPDIR=${word:2}
+      regex=".*$RPDIR.*"
+      if test `expr "$RPATH_FLAGS" : $regex` -eq 0
+      then
+        # RPDIR not in RPATH_FLAGS
+        RPATH_FLAGS="$RPATHFLAGS -Wl,-rpath,$RPDIR"
+      fi
+    fi
+  done])
+AC_SUBST(RPATH_FLAGS) dnl
 
 # Output files
 AC_CONFIG_HEADERS([config.h])

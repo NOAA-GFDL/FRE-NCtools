@@ -63,14 +63,15 @@ int main(){
 
   // no poles, do not need to worry about fix_lon
   for(int ilat=0 ; ilat<NLAT+1 ; ilat++) {
+    double latitude = (-30.0 + dlat*ilat)*D2R;
     for(int ilon=0 ; ilon<NLON+1 ; ilon++) {
       int ipt=ilat*(NLON+1)+ilon;
-      grid[0].latc[ipt] = (-30.0 + dlat*ilat)*D2R;
+      grid[0].latc[ipt] = latitude;
       grid[0].lonc[ipt] = (0.0 + dlon*ilon)*D2R;
     }
   }
 
-  copy_grid_to_device_acc(0, grid);
+  copy_grid_to_device_acc((NLON+1)*(NLAT+1), grid[0].latc, grid[0].lonc);
   get_cell_minmaxavg_latlons_acc( NLON, NLAT, grid[0].lonc, grid[0].latc, &cell);
 
   get_answers(grid[0].lonc, grid[0].latc, &answers);
@@ -92,10 +93,12 @@ void get_answers(const double *lon, const double *lat, Answers *answers ){
 
   //get min max avg replaceme lon values of a cell
   for(int ilat=0 ; ilat<NLAT ; ilat++) {
+    double latitude_min = (-30.0 + dlat*ilat)* D2R;
+    double latitude_max = (-30.0 + dlat*(ilat+1))* D2R;
     for(int ilon=0 ; ilon<NLON ; ilon++) {
       int icell = ilat*NLON + ilon;
-      answers->lat_min[icell] = (-30.0 + dlat*ilat)* D2R;
-      answers->lat_max[icell] = (-30.0 + dlat*(ilat+1))* D2R;
+      answers->lat_min[icell] = latitude_min;
+      answers->lat_max[icell] = latitude_max;
       answers->lon_min[icell] = (0 + dlon*ilon)* D2R;
       answers->lon_max[icell] = (0 + dlon*(ilon+1))* D2R;
       answers->lon_cent[icell] = (dlon*ilon+0.5*dlon)* D2R;
