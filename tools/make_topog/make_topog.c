@@ -25,6 +25,7 @@
 #include "mpp.h"
 #include "mpp_domain.h"
 #include "mpp_io.h"
+#include "mosaic_util.h"
 #include "tool_util.h"
 #include "topog.h"
 
