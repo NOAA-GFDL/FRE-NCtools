@@ -25,7 +25,6 @@
 #include "mpp.h"
 #include "mpp_domain.h"
 #include "mpp_io.h"
-#include "mosaic_util.h"
 #include "tool_util.h"
 #include "topog.h"
 
@@ -45,7 +44,7 @@ char *usage[] = {
   "              [--fill_shallow] [--deepen_shallow] [--smooth_topo_allow_deepening]        ",
   "              [--dome_slope #] [--dome_bottom #], [--dome_embayment_west #]              ",
   "              [--dome_embayment_east # [--dome_embayment_south #]                        ",
-  "              [--dome_embayment_depth #] [--vgrid_file vgrid_file]                       ",
+  "              [--dome_embayment_depth #] [--vgrid_file vgrid_file] [--on_grid]           ",
   "              [--flat_bottom] [--full_cell] [--fill_isolated_cells #]                    ",
   "              [--dont_change_landmask] [--kmt_min #] [--dont_adjust_topo ]               ",
   "              [--fraction_full_cell #] [--dont_open_very_this_cell ] [--min_thickness #] ",
@@ -69,7 +68,7 @@ char *usage[] = {
   "                              --fill_first_row  --filter_topog                           ",
   "                              --round_shallow] --fill_shallow --deepen_shallow]          ",
   "                              --smooth_topo_allow_deepening --vgrid_file                 ",
-  "                              --full_cell --dont_fill_isolated_cells                     ",
+  "                              --full_cell --dont_fill_isolated_cells --on_grid           ",
   "                              --dont_change_landmask --kmt_min  --dont_adjust_topo       ",
   "                              --fraction_full_cell --dont_open_very_this_cell            ",
   "                              --min_thickness  are optional arguments.                   ",
@@ -240,7 +239,11 @@ char *usage[] = {
   "                                                                                         ",
   "   --rotate_poly                 Set to calculate polar polygon areas by caculating the  ",
   "                                 area of a copy of the polygon, with the copy being      ",
-  "                                 rotated far away from the pole.                                    ",
+  "                                 rotated far away from the pole.                         ",
+  "                                                                                         ",
+  "   --on_grid                     Assume that the topography is already on the model      ",
+  "                                 grid. This prevents interpolation which especially      ",
+  "                                 on fine grain resolution smears out the topography.     ",
   "                                                                                         ",
   "   --help                        Print out this message and then exit.                   ",
   "                                                                                         ",
@@ -316,6 +319,7 @@ int main(int argc, char* argv[])
   double min_thickness = 0.1;
   int    my_topog_type;
   int    use_great_circle_algorithm=0;
+  int    on_grid=0;
   int    cyclic_x, cyclic_y, tripolar_grid;
   int    errflg = (argc == 1);
   int    option_index, i, c;
@@ -375,6 +379,7 @@ int main(int argc, char* argv[])
     {"rotate_poly",                 no_argument,       NULL, 'z'},
     {"help",                        no_argument,       NULL, 'h'},
     {"verbose",                     no_argument,       NULL, 'V'},
+    {"on_grid",                     no_argument,       NULL, 'W'},
     {0, 0, 0, 0},
   };
 
@@ -527,6 +532,9 @@ int main(int argc, char* argv[])
     case 'V':
       verbose = 1;
       break;
+    case 'W':
+      on_grid=1;
+      break;
     case '?':
       errflg++;
       break;
@@ -618,6 +626,7 @@ int main(int argc, char* argv[])
       if(dont_change_landmask) printf("NOTE from make_topog ==> not change land/sea mask when filling isolated cells\n");
       if(open_very_this_cell) printf("NOTE from make_topog ==> open this cell\n");
       if(adjust_topo) printf("NOTE from make_topog ==> adjust topography\n");
+      if(on_grid) printf("NOTE from make_topog ==> topography is on model grid\n");
       printf("\n\n ************************************************************\n\n");
     }
   }
@@ -814,7 +823,7 @@ int main(int argc, char* argv[])
 			       smooth_topo_allow_deepening, round_shallow, fill_shallow,
 			       deepen_shallow, full_cell, flat_bottom, adjust_topo,
 			       fill_isolated_cells, dont_change_landmask, kmt_min, min_thickness, open_very_this_cell,
-			       fraction_full_cell, depth, num_levels, domain, verbose, use_great_circle_algorithm );
+			       fraction_full_cell, depth, num_levels, domain, verbose, use_great_circle_algorithm, on_grid );
 	break;
       case BOX_CHANNEL:
 	create_box_channel_topog(nx[n], ny[n], bottom_depth,
