@@ -43,17 +43,17 @@ typedef struct {
   double *lat_vertices[NLON*NLAT];
 } Answers;
 
-void copy_cell_to_host(Cell *cell);
-void reset_cell_on_host(Cell *cell);
+void copy_cell_to_host(Grid_cells_struct_config *grid_cells);
+void reset_cell_on_host(Grid_cells_struct_config *grid_cells);
 void get_answers(const double *lon, const double *lat, Answers *answers);
-void check_answers( const Cell *cell, const Answers *answers);
+void check_answers( const Grid_cells_struct_config *grid_cells, const Answers *answers);
 void check_ranswer( const int n, const double *answer, const double *checkme);
 
 
 int main(){
 
   Answers answers;
-  Cell cell;
+  Grid_cells_struct_config grid_cells;
   Grid_config grid[1];
 
   grid[0].nxc=NLON;
@@ -72,14 +72,14 @@ int main(){
   }
 
   copy_grid_to_device_acc((NLON+1)*(NLAT+1), grid[0].latc, grid[0].lonc);
-  get_cell_minmaxavg_latlons_acc( NLON, NLAT, grid[0].lonc, grid[0].latc, &cell);
+  get_grid_cells_struct_acc( NLON, NLAT, grid[0].lonc, grid[0].latc, &grid_cells);
 
   get_answers(grid[0].lonc, grid[0].latc, &answers);
 
-  reset_cell_on_host(&cell); //to verify data is copied out from device
-  copy_cell_to_host(&cell);
+  reset_cell_on_host(&grid_cells); //to verify data is copied out from device
+  copy_cell_to_host(&grid_cells);
 
-  check_answers(&cell, &answers);
+  check_answers(&grid_cells, &answers);
 
   return 0;
 }
@@ -127,70 +127,70 @@ void get_answers(const double *lon, const double *lat, Answers *answers ){
 
 }
 
-void reset_cell_on_host(Cell *cell)
+void reset_cell_on_host(Grid_cells_struct_config *grid_cells)
 {
 
   for( int icell=0 ; icell<NLON*NLAT; icell++) {
-    cell->lon_min[icell]=-99.;
-    cell->lon_max[icell]=-99.;
-    cell->lat_min[icell]=-99.;
-    cell->lat_max[icell]=-99.;
-    cell->lon_cent[icell]=-99.;
-    cell->n_vertices[icell]=-99;
+    grid_cells->lon_min[icell]=-99.;
+    grid_cells->lon_max[icell]=-99.;
+    grid_cells->lat_min[icell]=-99.;
+    grid_cells->lat_max[icell]=-99.;
+    grid_cells->lon_cent[icell]=-99.;
+    grid_cells->n_vertices[icell]=-99;
     for(int ipt=0 ; ipt<MAX_V ; ipt++){
-      cell->lon_vertices[icell][ipt]=-99.;
-      cell->lat_vertices[icell][ipt]=-99.;
+      grid_cells->lon_vertices[icell][ipt]=-99.;
+      grid_cells->lat_vertices[icell][ipt]=-99.;
     }
   }
 
 }
 
-void copy_cell_to_host(Cell *cell)
+void copy_cell_to_host(Grid_cells_struct_config *grid_cells)
 {
 
   int ncell = NLON*NLAT;
-#pragma acc exit data copyout( cell->lon_min[:ncell], cell->lon_max[:ncell], \
-                               cell->lat_min[:ncell], cell->lat_max[:ncell], \
-                               cell->lon_cent[:ncell], cell->n_vertices[:ncell], \
-                               cell->lon_vertices[:ncell][:MAX_V],\
-                               cell->lat_vertices[:ncell][:MAX_V])
+#pragma acc exit data copyout( grid_cells->lon_min[:ncell], grid_cells->lon_max[:ncell], \
+                               grid_cells->lat_min[:ncell], grid_cells->lat_max[:ncell], \
+                               grid_cells->lon_cent[:ncell], grid_cells->n_vertices[:ncell], \
+                               grid_cells->lon_vertices[:ncell][:MAX_V],\
+                               grid_cells->lat_vertices[:ncell][:MAX_V])
 
 }
 
-void check_answers( const Cell *cell, const Answers *answers)
+void check_answers( const Grid_cells_struct_config *grid_cells, const Answers *answers)
 {
 
   printf("Checking for nubmer of cell vertices\n");
   for(int i=0 ; i<NLON*NLAT ; i++) {
-    if( cell->n_vertices[i] != 4 ) {
-      printf("ERROR element %d:  %d vs %d\n", i, cell->n_vertices[i], 4);
+    if( grid_cells->n_vertices[i] != 4 ) {
+      printf("ERROR element %d:  %d vs %d\n", i, grid_cells->n_vertices[i], 4);
       exit(1);
     }
   }
 
   printf("Checking for min longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_min, cell->lon_min);
+  check_ranswer(NLON*NLAT, answers->lon_min, grid_cells->lon_min);
 
   printf("Checking for max longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_max, cell->lon_max);
+  check_ranswer(NLON*NLAT, answers->lon_max, grid_cells->lon_max);
 
   printf("Checking for min latitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lat_min, cell->lat_min);
+  check_ranswer(NLON*NLAT, answers->lat_min, grid_cells->lat_min);
 
   printf("Checking for max latitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lat_max, cell->lat_max);
+  check_ranswer(NLON*NLAT, answers->lat_max, grid_cells->lat_max);
 
   printf("Checking for avg longitudinal point for each cell\n");
-  check_ranswer(NLON*NLAT, answers->lon_cent, cell->lon_cent);
+  check_ranswer(NLON*NLAT, answers->lon_cent, grid_cells->lon_cent);
 
   printf("Checking for longitudinal vertices for each cell\n");
   for(int icell=0 ; icell<NLAT*NLON ; icell++) {
-    check_ranswer(MAX_V, answers->lon_vertices[icell], cell->lon_vertices[icell]);
+    check_ranswer(MAX_V, answers->lon_vertices[icell], grid_cells->lon_vertices[icell]);
   }
 
   printf("Checking for latitudinal vertices for each cell\n");
   for(int icell=0 ; icell<NLAT*NLON ; icell++) {
-    check_ranswer(MAX_V, answers->lat_vertices[icell], cell->lat_vertices[icell]);
+    check_ranswer(MAX_V, answers->lat_vertices[icell], grid_cells->lat_vertices[icell]);
   }
 
 
