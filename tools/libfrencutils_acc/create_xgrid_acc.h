@@ -22,13 +22,6 @@
 
 #include "globals_acc.h"
 
-int get_nxgrid_upbound_2dx2d_acc(const int nlon_input_cells, const int nlat_input_cells,
-                                 const int nlon_output_cells, const int nlat_output_cells,
-                                 const double *intput_grid_lon, const double *input_grid_lat,
-                                 const double *output_grid_lon, const double *output_grid_lat,
-                                 const double *skip_input_cells, const Grid_cells_struct_config *output_grid_cell,
-                                 int *xcells_per_ij1, int *ij2_start, int *ij2_end);
-
 int create_xgrid_2dx2d_order1_acc(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
