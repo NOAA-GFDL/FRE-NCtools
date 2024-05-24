@@ -50,6 +50,7 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
   double *xcell_area=NULL, *tmp_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
 
   Grid_cells_struct_config *input_cells;
+  Grid_cells_struct_config *output_cells;
 
   if( opcode & READ) {
     read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
@@ -76,11 +77,22 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         input_cells[m].centroid_lat[n] = 0;
       }
     }
+
     for(n=0; n<ntiles_output_grid; n++) {
+
+      int npts_output_grid;
 
       nlon_output_cells = output_grid[n].nxc;
       nlat_output_cells = output_grid[n].nyc;
+      npts_output_grid = (nlon_output_cells+1)*(nlat_output_cells+1);
+
       xgrid[n].nxcells = 0;
+
+      copy_grid_to_device_acc(npts_output_grid, output_grid[n].latc, output_grid[n].lonc);
+
+      get_grid_cells_struct_acc( nlon_output_cells, nlat_output_cells,
+                                 output_grid[n].lonc, output_grid[n].latc, &output_cells );
+
       for(m=0; m<ntiles_input_grid; m++){
         int jlat_overlap_starts_offset, nlat_overlapping_cells;
         int start_from_this_corner;
@@ -88,7 +100,12 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         nlon_input_cells = input_grid[m].nx;
         nlat_input_cells = input_grid[m].ny;
 
-        get_skip_cells(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
+        get_skip_cells_acc(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
+
+        //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
+        get_bounding_indices(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
+                             output_grid[n].latc, input_grid[m].latc, &jlat_overlap_starts_offset, &nlat_overlapping_cells);
+        start_from_this_corner = jlat_overlap_starts_offset*(nlon_input_cells+1);
 
         if(opcode & GREAT_CIRCLE) {
           nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
@@ -100,10 +117,6 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
                                                   xcell_area, xcell_centroid_lon, xcell_centroid_lat);
         }
         else {
-          //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
-          get_bounding_indices(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
-                               output_grid[n].latc, input_grid[m].latc, &jlat_overlap_starts_offset, &nlat_overlapping_cells);
-          start_from_this_corner = jlat_overlap_starts_offset*(nlon_input_cells+1);
 
           if(opcode & CONSERVE_ORDER1) {
             nxcells = create_xgrid_2dx2d_order1_acc(&nlon_input_cells, &nlat_overlapping_cells,

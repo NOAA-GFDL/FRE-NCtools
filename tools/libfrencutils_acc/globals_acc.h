@@ -50,7 +50,6 @@ typedef struct {
   int    file_exist;
 } Xgrid_config;
 
-//Will be removed
 typedef struct {
   double *lon_min;
   double *lon_max;
@@ -66,6 +65,5 @@ typedef struct {
   int skip_cells;
 
 } Grid_cells_struct_config;
-
 
 #endif
