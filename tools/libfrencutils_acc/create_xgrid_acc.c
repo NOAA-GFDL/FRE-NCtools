@@ -23,8 +23,7 @@
 #include "general_utils_acc.h"
 #include "create_xgrid_acc.h"
 #include "create_xgrid_utils_acc.h"
-#include "globals.h"
-#include "parameters.h"
+#include "globals_acc.h"
 
 /*******************************************************************************
 void get_nxgrid_upbound_2dx2d_acc
@@ -35,7 +34,7 @@ int get_nxgrid_upbound_2dx2d_acc(const int nlon_input_cells, const int nlat_inpu
                                  const int nlon_output_cells, const int nlat_output_cells,
                                  const double *intput_grid_lon, const double *input_grid_lat,
                                  const double *output_grid_lon, const double *output_grid_lat,
-                                 const double *mask_skip_input_cell, const Cell *output_grid_cell,
+                                 const double *skip_input_cells, const Grid_cells_struct_config *output_grid_cell,
                                  int *xcells_per_ij1, int *ij2_start, int *ij2_end)
 {
 
@@ -50,11 +49,11 @@ int get_nxgrid_upbound_2dx2d_acc(const int nlon_input_cells, const int nlat_inpu
                          intput_grid_lon[:input_grid_npts], input_grid_lat[:input_grid_npts],    \
                          output_grid_cell[:1], xcells_per_ij1[0:input_grid_ncells],              \
                          ij2_start[0:input_grid_ncells], ij2_end[0:input_grid_ncells],           \
-                         mask_skip_input_cell[:input_grid_ncells])
+                         skip_input_cells[:input_grid_ncells])
 #pragma acc data copyin(input_grid_ncells, output_grid_ncells) copy(nxgrid_upbound)
 #pragma acc parallel loop independent reduction(+:nxgrid_upbound)
   for( int ij1=0 ; ij1<input_grid_ncells ; ij1++) {
-    if( mask_skip_input_cell[ij1] > MASK_THRESH ) {
+    if( skip_input_cells[ij1] > MASK_THRESH ) {
       int nvertices;
       int i_xcells_per_ij1=0;
       int ij2_max=0;
@@ -129,7 +128,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_input_cells, const int *nlat_i
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
 {
 
@@ -191,7 +190,7 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_input_cells, const int *nlat_i
   nxgrid = 0;
 
   for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
-      if(mask_skip_input_cell[j1*nx1+i1] > MASK_THRESH)  {
+      if(skip_input_cells[j1*nx1+i1] > MASK_THRESH)  {
         int n0, n1, n2, n3, l,n1_in;
         double input_grid_lat_min,input_grid_lat_max,input_grid_lon_min,input_grid_lon_max,input_grid_lon_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
@@ -286,7 +285,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_i
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
                                   double *xgrid_clon, double *xgrid_clat)
 {
@@ -349,7 +348,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_i
   nxgrid = 0;
 
   for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
-      if( mask_skip_input_cell[j1*nx1+i1] > MASK_THRESH ) {
+      if( skip_input_cells[j1*nx1+i1] > MASK_THRESH ) {
         int n0, n1, n2, n3, l,n1_in;
         double input_grid_lat_min,input_grid_lat_max,input_grid_lon_min,input_grid_lon_max,input_grid_lon_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
@@ -439,7 +438,7 @@ int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_i
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
 {
@@ -484,7 +483,7 @@ int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_i
   n2_in = 4;
 
   for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
-      if( mask_skip_input_cell[j1*nx1+i1] > MASK_THRESH ) {
+      if( skip_input_cells[j1*nx1+i1] > MASK_THRESH ) {
           /* clockwise */
           n0 = j1*nx1p+i1;       n1 = (j1+1)*nx1p+i1;
           n2 = (j1+1)*nx1p+i1+1; n3 = j1*nx1p+i1+1;

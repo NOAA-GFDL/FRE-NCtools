@@ -20,27 +20,27 @@
 #ifndef CREATE_XGRID_ACC_H_
 #define CREATE_XGRID_ACC_H_
 
-#include "globals.h"
+#include "globals_acc.h"
 
 int get_nxgrid_upbound_2dx2d_acc(const int nlon_input_cells, const int nlat_input_cells,
                                  const int nlon_output_cells, const int nlat_output_cells,
                                  const double *intput_grid_lon, const double *input_grid_lat,
                                  const double *output_grid_lon, const double *output_grid_lat,
-                                 const double *mask_skip_input_cell, const Cell *output_grid_cell,
+                                 const double *skip_input_cells, const Grid_cells_struct_config *output_grid_cell,
                                  int *xcells_per_ij1, int *ij2_start, int *ij2_end);
 
 int create_xgrid_2dx2d_order1_acc(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area);
 
 int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
                                   double *xgrid_clon, double *xgrid_clat);
 
@@ -48,7 +48,7 @@ int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_i
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *mask_skip_input_cell,
+                                  const double *skip_input_cells,
                                   int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 

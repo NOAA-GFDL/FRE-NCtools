@@ -84,41 +84,41 @@ for out_itile in (1,nout_tiles) :
   write_answers(myfile,[str(ncells)]) #total_nxgrid
   write_answers(myfile, [str(tile1_data.count(i)) for i in range(1,7) ]) #nxgrid per gridin tile
 
-  #answer for interp[n].interp_mini[m].i_in
+  #answer for interp[n].per_intile[m].i_in
   # -1 to be consistent with zhi....
   for itile in range(1,7) :
     answer = [ str(i_in[i]-1) for i in range(ncells) if tile1_data[i]==itile ]
     write_answers(myfile, answer)
 
-  #answer for interp[n].interp_mini[m].j_in
+  #answer for interp[n].per_intile[m].j_in
   # -1 to be consistent with zhi....
   for itile in range(1,7) :
     answer = [ str(j_in[i]-1) for i in range(ncells) if tile1_data[i]==itile ]
     write_answers(myfile, answer)
 
-  #answer for interp[n].interp_mini[m].i_out
+  #answer for interp[n].per_intile[m].i_out
   # -1 to be consistent with zhi....
   for itile in range(1,7) :
     answer = [ str(i_out[i]-1) for i in range(ncells) if tile1_data[i]==itile ]
     write_answers(myfile, answer)
 
-  #answer for interp[n].interp_mini[m].j_out
+  #answer for interp[n].per_intile[m].j_out
   # -1 to be consistent with zhi....
   for itile in range(1,7) :
     answer = [ str(j_out[i]-1) for i in range(ncells) if tile1_data[i]==itile ]
     write_answers(myfile, answer)
 
-  #answer for interp[n].interp_mini[m].area
+  #answer for interp[n].per_intile[m].area
   for itile in range(1,7) :
     answer = [ str(xgrid_area_data[i]) for i in range(ncells) if tile1_data[i]==itile ]
     write_answers(myfile, answer)
 
   if( interp_method == 2 ) :
-    #answer for interp[n].interp_mini[m].di_in
+    #answer for interp[n].per_intile[m].di_in
     for itile in range(1,7) :
       answer = [ str(di_in[i]) for i in range(ncells) if tile1_data[i]==itile ]
       write_answers(myfile, answer)
-    #answer for interp[n].interp_mini[m].di_in
+    #answer for interp[n].per_intile[m].di_in
     for itile in range(1,7) :
       answer = [ str(dj_in[i]) for i in range(ncells) if tile1_data[i]==itile ]
       write_answers(myfile, answer)

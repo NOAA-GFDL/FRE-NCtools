@@ -22,8 +22,7 @@
 #include <math.h>
 #include "general_utils_acc.h"
 #include "create_xgrid_utils_acc.h"
-#include "globals.h"
-#include "parameters.h"
+#include "globals_acc.h"
 
 /*******************************************************************************
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, const double *area)
@@ -650,55 +649,55 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
   return n_out;
 }
 
-void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const double *lon, const double *lat,
-                                     Cell *cell )
+void  get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lon, const double *lat,
+                                 Grid_cells_struct_config *grid_cells )
 {
 
-  int ncell=nlon*nlat;
+  int ncells=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  cell->lon_min  = (double *)malloc(ncell*sizeof(double));
-  cell->lon_max  = (double *)malloc(ncell*sizeof(double));
-  cell->lat_min  = (double *)malloc(ncell*sizeof(double));
-  cell->lat_max  = (double *)malloc(ncell*sizeof(double));
-  cell->lon_cent = (double *)malloc(ncell*sizeof(double));
-  cell->n_vertices = (int *)malloc(ncell*sizeof(int));
-  cell->lon_vertices  = (double **)malloc(ncell*sizeof(double));
-  cell->lat_vertices  = (double **)malloc(ncell*sizeof(double));
+  grid_cells->lon_min  = (double *)malloc(ncells*sizeof(double));
+  grid_cells->lon_max  = (double *)malloc(ncells*sizeof(double));
+  grid_cells->lat_min  = (double *)malloc(ncells*sizeof(double));
+  grid_cells->lat_max  = (double *)malloc(ncells*sizeof(double));
+  grid_cells->lon_cent = (double *)malloc(ncells*sizeof(double));
+  grid_cells->n_vertices = (int *)malloc(ncells*sizeof(int));
+  grid_cells->lon_vertices  = (double **)malloc(ncells*sizeof(double));
+  grid_cells->lat_vertices  = (double **)malloc(ncells*sizeof(double));
 
-  for(int icell=0 ; icell<ncell ; icell++) {
-    cell->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
-    cell->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
+  for(int icell=0 ; icell<ncells ; icell++) {
+    grid_cells->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
+    grid_cells->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
   }
 
-#pragma acc enter data copyin(cell[:1])
-#pragma acc enter data copyin(cell->lon_min[:ncell], cell->lon_max[:ncell], \
-                              cell->lat_min[:ncell], cell->lat_max[:ncell], \
-                              cell->lon_cent[:ncell], cell->n_vertices[:ncell])
-#pragma acc enter data copyin(cell->lon_vertices[:ncell][:MAX_V], \
-                              cell->lat_vertices[:ncell][:MAX_V])
+#pragma acc enter data copyin(grid_cells[:1])
+#pragma acc enter data copyin(grid_cells->lon_min[:ncells], grid_cells->lon_max[:ncells], \
+                              grid_cells->lat_min[:ncells], grid_cells->lat_max[:ncells], \
+                              grid_cells->lon_cent[:ncells], grid_cells->n_vertices[:ncells])
+#pragma acc enter data copyin(grid_cells->lon_vertices[:ncells][:MAX_V], \
+                              grid_cells->lat_vertices[:ncells][:MAX_V])
 
-#pragma acc data present(cell[:1], lon[:npts], lat[:npts])
+#pragma acc data present(grid_cells[:1], lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
-  for(int icell=0; icell<ncell; icell++){
+  for(int icell=0; icell<ncells; icell++){
     int n;
     double x[MV], y[MV];
 
     get_cell_vertices_acc( icell, nlon, lon, lat, x, y );
-    cell->lat_min[icell] = minval_double_acc(4, y);
-    cell->lat_max[icell] = maxval_double_acc(4, y);
+    grid_cells->lat_min[icell] = minval_double_acc(4, y);
+    grid_cells->lat_max[icell] = maxval_double_acc(4, y);
 
     n = fix_lon_acc(x, y, 4, M_PI);
-    cell->n_vertices[icell] = n;
+    grid_cells->n_vertices[icell] = n;
 
     if(n > MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
-    cell->lon_min[icell]  = minval_double_acc(n, x);
-    cell->lon_max[icell]  = maxval_double_acc(n, x);
-    cell->lon_cent[icell] = avgval_double_acc(n, x);
+    grid_cells->lon_min[icell]  = minval_double_acc(n, x);
+    grid_cells->lon_max[icell]  = maxval_double_acc(n, x);
+    grid_cells->lon_cent[icell] = avgval_double_acc(n, x);
 
     for(int ivertex=0 ; ivertex<n ; ivertex++) {
-      cell->lon_vertices[icell][ivertex] = x[ivertex];
-      cell->lat_vertices[icell][ivertex] = y[ivertex];
+      grid_cells->lon_vertices[icell][ivertex] = x[ivertex];
+      grid_cells->lat_vertices[icell][ivertex] = y[ivertex];
     }
   }
 

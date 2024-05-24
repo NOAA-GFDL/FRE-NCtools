@@ -26,8 +26,7 @@
 #include <math.h>
 #include <string.h>
 #include "general_utils_acc.h"
-#include "constant.h"
-#include "parameters.h"
+#include "globals_acc.h"
 
 const double from_pole_threshold_rad_acc = 0.0174533;  // 1.0 deg
 

@@ -22,7 +22,7 @@
 #include <string.h>
 #include <netcdf.h>
 #include <math.h>
-#include "globals.h"
+#include "globals_acc.h"
 #include "conserve_interp_acc.h"
 #include "interp_utils_acc.h"
 #include "create_xgrid_acc.h"
@@ -31,276 +31,284 @@
 #include "mpp.h"
 #include "mpp_io.h"
 #include "read_mosaic.h"
-#include "parameters.h"
 
 /*******************************************************************************
   void setup_conserve_interp
   Setup the interpolation weight for conservative interpolation
 *******************************************************************************/
-void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int ntiles_out,
-			   Grid_config *grid_out, Interp_config *interp, unsigned int opcode)
+void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_grid, int ntiles_output_grid,
+			   Grid_config *output_grid, Xgrid_config *xgrid, unsigned int opcode)
 {
-  int    n, m, i, ii, jj, nx_in, ny_in, ny_in2, nx_out, ny_out, tile;
-  size_t nxgrid, nxgrid_prev;
-  int    *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
-  int   *tmp_t_in=NULL, *tmp_i_in=NULL, *tmp_j_in=NULL, *tmp_i_out=NULL, *tmp_j_out=NULL;
-  double *tmp_di_in, *tmp_dj_in;
-  double *xgrid_area=NULL, *tmp_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
+  int n, m, i, ii, jj, nlon_input_cells, nlat_input_cells, nlat_input_cells2;
+  int nlon_output_cells, nlat_output_cells, tile;
+  size_t nxcells, nxcells_prev;
+  int *input_parent_lon_indices=NULL, *input_parent_lat_indices=NULL;
+  int *output_parent_lon_indices=NULL, *output_parent_lat_indices=NULL;
+  int *tmp_input_parent_tile=NULL, *tmp_input_parent_lon_indices=NULL;
+  int *tmp_input_parent_lat_indices=NULL, *tmp_output_parent_lon_indices=NULL, *tmp_output_parent_lat_indices=NULL;
+  double *tmp_dcentroid_lon, *tmp_dcentroid_lat;
+  double *xcell_area=NULL, *tmp_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
 
-  typedef struct{
-    double *area;
-    double *clon;
-    double *clat;
-  } CellStruct;
-  CellStruct *cell_in;
+  Grid_cells_struct_config *input_cells;
 
   if( opcode & READ) {
-    read_remap_file_acc(ntiles_in, ntiles_out, interp, opcode);
-    copy_interp_to_device_acc(ntiles_in, ntiles_out, interp, opcode);
+    read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
+    copy_xgrid_to_device_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
   }
   else {
-    i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    j_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    i_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    j_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    xgrid_area = (double *)malloc(MAXXGRID   * sizeof(double));
-    xgrid_clon = (double *)malloc(MAXXGRID   * sizeof(double));
-    xgrid_clat = (double *)malloc(MAXXGRID   * sizeof(double));;
-    cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
-    for(m=0; m<ntiles_in; m++) {
-      nx_in = grid_in[m].nx;
-      ny_in = grid_in[m].ny;
-      cell_in[m].area = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clon = (double *)malloc(nx_in*ny_in*sizeof(double));
-      cell_in[m].clat = (double *)malloc(nx_in*ny_in*sizeof(double));
-      for(n=0; n<nx_in*ny_in; n++) {
-        cell_in[m].area[n] = 0;
-        cell_in[m].clon[n] = 0;
-        cell_in[m].clat[n] = 0;
+    input_parent_lon_indices       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
+    input_parent_lat_indices       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
+    output_parent_lon_indices      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
+    output_parent_lat_indices      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
+    xcell_area = (double *)malloc(MAXXGRID   * sizeof(double));
+    xcell_centroid_lon = (double *)malloc(MAXXGRID   * sizeof(double));
+    xcell_centroid_lat = (double *)malloc(MAXXGRID   * sizeof(double));
+    input_cells    = (Grid_cells_struct_config *)malloc(ntiles_input_grid * sizeof(Grid_cells_struct_config));
+    for(m=0; m<ntiles_input_grid; m++) {
+      nlon_input_cells = input_grid[m].nx;
+      nlat_input_cells = input_grid[m].ny;
+      input_cells[m].recomputed_area = (double *)malloc(nlon_input_cells*nlat_input_cells*sizeof(double));
+      input_cells[m].centroid_lon = (double *)malloc(nlon_input_cells*nlat_input_cells*sizeof(double));
+      input_cells[m].centroid_lat = (double *)malloc(nlon_input_cells*nlat_input_cells*sizeof(double));
+      for(n=0; n<nlon_input_cells*nlat_input_cells; n++) {
+        input_cells[m].recomputed_area[n] = 0;
+        input_cells[m].centroid_lon[n] = 0;
+        input_cells[m].centroid_lat[n] = 0;
       }
     }
-    for(n=0; n<ntiles_out; n++) {
+    for(n=0; n<ntiles_output_grid; n++) {
 
-      nx_out    = grid_out[n].nxc;
-      ny_out    = grid_out[n].nyc;
-      interp[n].nxgrid = 0;
-      for(m=0; m<ntiles_in; m++){
+      nlon_output_cells = output_grid[n].nxc;
+      nlat_output_cells = output_grid[n].nyc;
+      xgrid[n].nxcells = 0;
+      for(m=0; m<ntiles_input_grid; m++){
         int jstart, jend;
-        double *mask_skip_input_cell;
 
-        nx_in = grid_in[m].nx;
-        ny_in = grid_in[m].ny;
+        nlon_input_cells = input_grid[m].nx;
+        nlat_input_cells = input_grid[m].ny;
 
-        create_mask_on_device(nx_in*ny_in, &mask_skip_input_cell);
+        create_mask_on_device(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
 
         if(opcode & GREAT_CIRCLE) {
-          nxgrid = create_xgrid_great_circle_acc(&nx_in, &ny_in, &nx_out, &ny_out, grid_in[m].lonc,
-                                                 grid_in[m].latc,  grid_out[n].lonc,  grid_out[n].latc,
-                                                 mask_skip_input_cell,
-                                                 i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+          nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
+                                                  &nlon_output_cells, &nlat_output_cells,
+                                                  input_grid[m].lonc, input_grid[m].latc,
+                                                  output_grid[n].lonc, output_grid[n].latc, input_cells[m].skip_cells,
+                                                  input_parent_lon_indices, input_parent_lat_indices,
+                                                  output_parent_lon_indices, output_parent_lat_indices,
+                                                  xcell_area, xcell_centroid_lon, xcell_centroid_lat);
         }
         else {
-          get_bounding_indices(nx_out, ny_out, nx_in, ny_in, grid_out[n].latc, grid_in[m].latc, &jstart, &jend, &ny_in2);
+          get_bounding_indices(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
+                               output_grid[n].latc, input_grid[m].latc, &jstart, &jend, &nlat_input_cells2);
 
           if(opcode & CONSERVE_ORDER1) {
-            nxgrid = create_xgrid_2dx2d_order1_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
-                                                   grid_in[m].latc+jstart*(nx_in+1), grid_out[n].lonc, grid_out[n].latc,
-                                                   mask_skip_input_cell, i_in, j_in, i_out, j_out, xgrid_area);
-            for(i=0; i<nxgrid; i++) j_in[i] += jstart;
+            nxcells = create_xgrid_2dx2d_order1_acc(&nlon_input_cells, &nlat_input_cells2,
+                                                    &nlon_output_cells, &nlat_output_cells,
+                                                    input_grid[m].lonc+jstart*(nlon_input_cells+1),
+                                                    input_grid[m].latc+jstart*(nlon_input_cells+1),
+                                                    output_grid[n].lonc, output_grid[n].latc, input_cells[m].skip_cells,
+                                                    input_parent_lon_indices, input_parent_lat_indices,
+                                                    output_parent_lon_indices, output_parent_lat_indices, xcell_area);
+            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jstart;
           }
           else if(opcode & CONSERVE_ORDER2) {
-            int g_nxgrid;
-            int    *g_i_in, *g_j_in;
-            double *g_area, *g_clon, *g_clat;
+            int g_nxcells;
+            int    *g_input_parent_lon_indices, *g_input_parent_lat_indices;
+            double *g_xcell_area, *g_xcell_centroid_lon, *g_xcell_centroid_lat;
 
-            nxgrid = create_xgrid_2dx2d_order2_acc(&nx_in, &ny_in2, &nx_out, &ny_out, grid_in[m].lonc+jstart*(nx_in+1),
-                                                   grid_in[m].latc+jstart*(nx_in+1),  grid_out[n].lonc,  grid_out[n].latc,
-                                                   mask_skip_input_cell,  i_in, j_in, i_out, j_out, xgrid_area,
-                                                   xgrid_clon, xgrid_clat);
-            for(i=0; i<nxgrid; i++) j_in[i] += jstart;
+            nxcells = create_xgrid_2dx2d_order2_acc(&nlon_input_cells, &nlat_input_cells2,
+                                                    &nlon_output_cells, &nlat_output_cells,
+                                                    input_grid[m].lonc+jstart*(nlon_input_cells+1),
+                                                    input_grid[m].latc+jstart*(nlon_input_cells+1),
+                                                    output_grid[n].lonc,  output_grid[n].latc, input_cells[m].skip_cells,
+                                                    input_parent_lon_indices, input_parent_lat_indices,
+                                                    output_parent_lon_indices, output_parent_lat_indices, xcell_area,
+                                                    xcell_centroid_lon, xcell_centroid_lat);
+            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jstart;
 
 	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
-	    g_nxgrid = nxgrid;
-	    mpp_sum_int(1, &g_nxgrid);
-	    if(g_nxgrid > 0) {
-	      g_i_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
-	      g_j_in = (int    *)malloc(g_nxgrid*sizeof(int   ));
-	      g_area = (double *)malloc(g_nxgrid*sizeof(double));
-	      g_clon = (double *)malloc(g_nxgrid*sizeof(double));
-	      g_clat = (double *)malloc(g_nxgrid*sizeof(double));
-	      mpp_gather_field_int   (nxgrid, i_in,       g_i_in);
-	      mpp_gather_field_int   (nxgrid, j_in,       g_j_in);
-	      mpp_gather_field_double(nxgrid, xgrid_area, g_area);
-	      mpp_gather_field_double(nxgrid, xgrid_clon, g_clon);
-	      mpp_gather_field_double(nxgrid, xgrid_clat, g_clat);
-	      for(i=0; i<g_nxgrid; i++) {
-          ii = g_j_in[i]*nx_in+g_i_in[i];
-          cell_in[m].area[ii] += g_area[i];
-          cell_in[m].clon[ii] += g_clon[i];
-          cell_in[m].clat[ii] += g_clat[i];
+	    g_nxcells = nxcells;
+	    mpp_sum_int(1, &g_nxcells);
+	    if(g_nxcells > 0) {
+	      g_input_parent_lon_indices = (int *)malloc(g_nxcells*sizeof(int));
+	      g_input_parent_lat_indices = (int *)malloc(g_nxcells*sizeof(int));
+	      g_xcell_area = (double *)malloc(g_nxcells*sizeof(double));
+	      g_xcell_centroid_lon = (double *)malloc(g_nxcells*sizeof(double));
+	      g_xcell_centroid_lat = (double *)malloc(g_nxcells*sizeof(double));
+	      mpp_gather_field_int   (nxcells, input_parent_lon_indices,  g_input_parent_lon_indices);
+	      mpp_gather_field_int   (nxcells, input_parent_lat_indices,  g_input_parent_lat_indices);
+	      mpp_gather_field_double(nxcells, xcell_area, g_xcell_area);
+	      mpp_gather_field_double(nxcells, xcell_centroid_lon, g_xcell_centroid_lon);
+	      mpp_gather_field_double(nxcells, xcell_centroid_lat, g_xcell_centroid_lat);
+	      for(i=0; i<g_nxcells; i++) {
+          ii = g_input_parent_lat_indices[i]*nlon_input_cells+g_input_parent_lon_indices[i];
+          input_cells[m].recomputed_area[ii] += g_xcell_area[i];
+          input_cells[m].centroid_lon[ii] += g_xcell_centroid_lon[i];
+          input_cells[m].centroid_lat[ii] += g_xcell_centroid_lat[i];
 	      }
-	      free(g_i_in);
-	      free(g_j_in);
-	      free(g_area);
-	      free(g_clon);
-	      free(g_clat);
+	      free(g_input_parent_lon_indices);
+	      free(g_input_parent_lat_indices);
+	      free(g_xcell_area);
+	      free(g_xcell_centroid_lon);
+	      free(g_xcell_centroid_lat);
 	    }
 	  }
 	  else
 	    mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
 	}
 
-	if(nxgrid > 0) {
-	  nxgrid_prev = interp[n].nxgrid;
-	  interp[n].nxgrid += nxgrid;
-	  if(nxgrid_prev == 0 ) {
-	    interp[n].i_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].j_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].i_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].j_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].area   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	    interp[n].t_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    for(i=0; i<interp[n].nxgrid; i++) {
-	      interp[n].t_in [i] = m;
-	      interp[n].i_in [i] = i_in [i];
-	      interp[n].j_in [i] = j_in [i];
-	      interp[n].i_out[i] = i_out[i];
-	      interp[n].j_out[i] = j_out[i];
-	      interp[n].area[i]  = xgrid_area[i];
+	if(nxcells > 0) {
+	  nxcells_prev = xgrid[n].nxcells;
+	  xgrid[n].nxcells += nxcells;
+	  if(nxcells_prev == 0 ) {
+	    xgrid[n].input_parent_lon_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].input_parent_lat_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].output_parent_lon_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].output_parent_lat_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].xcell_area        = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	    xgrid[n].input_parent_tile   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    for(i=0; i<xgrid[n].nxcells; i++) {
+	      xgrid[n].input_parent_tile [i] = m;
+	      xgrid[n].input_parent_lon_indices [i] = input_parent_lon_indices [i];
+	      xgrid[n].input_parent_lat_indices [i] = input_parent_lat_indices [i];
+	      xgrid[n].output_parent_lon_indices[i] = output_parent_lon_indices[i];
+	      xgrid[n].output_parent_lat_indices[i] = output_parent_lat_indices[i];
+	      xgrid[n].xcell_area[i]  = xcell_area[i];
 	    }
 	    if(opcode & CONSERVE_ORDER2) {
-	      interp[n].di_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	      interp[n].dj_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	      for(i=0; i<interp[n].nxgrid; i++) {
-		interp[n].di_in [i] = xgrid_clon[i]/xgrid_area[i];
-		interp[n].dj_in [i] = xgrid_clat[i]/xgrid_area[i];
+	      xgrid[n].dcentroid_lon   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	      xgrid[n].dcentroid_lat   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	      for(i=0; i<xgrid[n].nxcells; i++) {
+		xgrid[n].dcentroid_lon [i] = xcell_centroid_lon[i]/xcell_area[i];
+		xgrid[n].dcentroid_lat [i] = xcell_centroid_lat[i]/xcell_area[i];
 	      }
 	    }
 	  }
 	  else {
-	    tmp_i_in  = interp[n].i_in;
-	    tmp_j_in  = interp[n].j_in;
-	    tmp_i_out = interp[n].i_out;
-	    tmp_j_out = interp[n].j_out;
-	    tmp_area  = interp[n].area;
-	    tmp_t_in  = interp[n].t_in;
-	    interp[n].i_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].j_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].i_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].j_out  = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    interp[n].area   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	    interp[n].t_in   = (int    *)malloc(interp[n].nxgrid*sizeof(int   ));
-	    for(i=0; i<nxgrid_prev; i++) {
-	      interp[n].t_in [i] = tmp_t_in [i];
-	      interp[n].i_in [i] = tmp_i_in [i];
-	      interp[n].j_in [i] = tmp_j_in [i];
-	      interp[n].i_out[i] = tmp_i_out[i];
-	      interp[n].j_out[i] = tmp_j_out[i];
-	      interp[n].area [i] = tmp_area [i];
+	    tmp_input_parent_lon_indices  = xgrid[n].input_parent_lon_indices;
+	    tmp_input_parent_lat_indices  = xgrid[n].input_parent_lat_indices;
+	    tmp_output_parent_lon_indices = xgrid[n].output_parent_lon_indices;
+	    tmp_output_parent_lat_indices = xgrid[n].output_parent_lat_indices;
+	    tmp_area  = xgrid[n].xcell_area;
+	    tmp_input_parent_tile  = xgrid[n].input_parent_tile;
+	    xgrid[n].input_parent_lon_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].input_parent_lat_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].output_parent_lon_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].output_parent_lat_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    xgrid[n].xcell_area   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	    xgrid[n].input_parent_tile   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
+	    for(i=0; i<nxcells_prev; i++) {
+	      xgrid[n].input_parent_tile [i] = tmp_input_parent_tile [i];
+	      xgrid[n].input_parent_lon_indices [i] = tmp_input_parent_lon_indices [i];
+	      xgrid[n].input_parent_lat_indices [i] = tmp_input_parent_lat_indices [i];
+	      xgrid[n].output_parent_lon_indices[i] = tmp_output_parent_lon_indices[i];
+	      xgrid[n].output_parent_lat_indices[i] = tmp_output_parent_lat_indices[i];
+	      xgrid[n].xcell_area [i] = tmp_area [i];
 	    }
-	    for(i=0; i<nxgrid; i++) {
-	      ii = i + nxgrid_prev;
-	      interp[n].t_in [ii] = m;
-	      interp[n].i_in [ii] = i_in [i];
-	      interp[n].j_in [ii] = j_in [i];
-	      interp[n].i_out[ii] = i_out[i];
-	      interp[n].j_out[ii] = j_out[i];
-	      interp[n].area [ii] = xgrid_area[i];
+	    for(i=0; i<nxcells; i++) {
+	      ii = i + nxcells_prev;
+	      xgrid[n].input_parent_tile [ii] = m;
+	      xgrid[n].input_parent_lon_indices [ii] = input_parent_lon_indices [i];
+	      xgrid[n].input_parent_lat_indices [ii] = input_parent_lat_indices [i];
+	      xgrid[n].output_parent_lon_indices[ii] = output_parent_lon_indices[i];
+	      xgrid[n].output_parent_lat_indices[ii] = output_parent_lat_indices[i];
+	      xgrid[n].xcell_area [ii] = xcell_area[i];
 	    }
 	    if(opcode & CONSERVE_ORDER2) {
-	      tmp_di_in  = interp[n].di_in;
-	      tmp_dj_in  = interp[n].dj_in;
-	      interp[n].di_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	      interp[n].dj_in   = (double *)malloc(interp[n].nxgrid*sizeof(double));
-	      for(i=0; i<nxgrid_prev; i++) {
-		interp[n].di_in [i] = tmp_di_in [i];
-		interp[n].dj_in [i] = tmp_dj_in [i];
+	      tmp_dcentroid_lon  = xgrid[n].dcentroid_lon;
+	      tmp_dcentroid_lat  = xgrid[n].dcentroid_lat;
+	      xgrid[n].dcentroid_lon   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	      xgrid[n].dcentroid_lat   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
+	      for(i=0; i<nxcells_prev; i++) {
+		xgrid[n].dcentroid_lon [i] = tmp_dcentroid_lon [i];
+		xgrid[n].dcentroid_lat [i] = tmp_dcentroid_lat [i];
 	      }
-	      for(i=0; i<nxgrid; i++) {
-		ii = i + nxgrid_prev;
-		jj = j_in [i]*nx_in+i_in [i];
-		interp[n].di_in [ii] = xgrid_clon[i]/xgrid_area[i];
-		interp[n].dj_in [ii] = xgrid_clat[i]/xgrid_area[i];
+	      for(i=0; i<nxcells; i++) {
+		ii = i + nxcells_prev;
+		jj = input_parent_lat_indices [i]*nlon_input_cells+input_parent_lon_indices [i];
+		xgrid[n].dcentroid_lon [ii] = xcell_centroid_lon[i]/xcell_area[i];
+		xgrid[n].dcentroid_lat [ii] = xcell_centroid_lat[i]/xcell_area[i];
 	      }
-	      free(tmp_di_in);
-	      free(tmp_dj_in);
+	      free(tmp_dcentroid_lon);
+	      free(tmp_dcentroid_lat);
 	    }
-	    free(tmp_t_in);
-	    free(tmp_i_in);
-	    free(tmp_j_in);
-	    free(tmp_i_out);
-	    free(tmp_j_out);
+	    free(tmp_input_parent_tile);
+	    free(tmp_input_parent_lon_indices);
+	    free(tmp_input_parent_lat_indices);
+	    free(tmp_output_parent_lon_indices);
+	    free(tmp_output_parent_lat_indices);
 	    free(tmp_area);
 	  }
-	}  /* if(nxgrid>0) */
+	}  /* if(nxcells>0) */
       }
     }
     if(opcode & CONSERVE_ORDER2) {
-      /* subtrack the grid_in clon and clat to get the distance between xgrid and grid_in */
-      for(n=0; n<ntiles_in; n++) {
-	double x1_in[50], y1_in[50], lon_in_avg, clon, clat;
-	int    j, n0, n1, n2, n3, n1_in;
-	/* calcualte cell area */
-     	nx_in = grid_in[n].nx;
-	ny_in = grid_in[n].ny;
-	for(j=0; j<ny_in; j++) for(i=0; i<nx_in; i++) {
-	  ii = j*nx_in + i;
-	  if(cell_in[n].area[ii] > 0) {
-	    if( fabs(cell_in[n].area[ii]-grid_in[n].cell_area[ii])/grid_in[n].cell_area[ii] < AREA_RATIO ) {
-	      cell_in[n].clon[ii] /= cell_in[n].area[ii];
-	      cell_in[n].clat[ii] /= cell_in[n].area[ii];
-	    }
-	    else {
-	      n0 = j*(nx_in+1)+i;       n1 = j*(nx_in+1)+i+1;
-	      n2 = (j+1)*(nx_in+1)+i+1; n3 = (j+1)*(nx_in+1)+i;
-	      x1_in[0] = grid_in[n].lonc[n0]; y1_in[0] = grid_in[n].latc[n0];
-	      x1_in[1] = grid_in[n].lonc[n1]; y1_in[1] = grid_in[n].latc[n1];
-	      x1_in[2] = grid_in[n].lonc[n2]; y1_in[2] = grid_in[n].latc[n2];
-	      x1_in[3] = grid_in[n].lonc[n3]; y1_in[3] = grid_in[n].latc[n3];
-	      n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
-	      lon_in_avg = avgval_double_acc(n1_in, x1_in);
-              clon = poly_ctrlon_acc(x1_in, y1_in, n1_in, lon_in_avg);
-	      clat = poly_ctrlat_acc(x1_in, y1_in, n1_in );
-	      cell_in[n].clon[ii] = clon/grid_in[n].cell_area[ii];
-	      cell_in[n].clat[ii] = clat/grid_in[n].cell_area[ii];
-	    }
-	  }
-	}
+      /* subtract the input_grid centroid_lon and centroid_lat to get the distance between xgrid and input_grid */
+      for(n=0; n<ntiles_input_grid; n++) {
+        double x1_in[50], y1_in[50], lon_in_avg, centroid_lon, centroid_lat;
+        int    j, n0, n1, n2, n3, n1_in;
+        /* calcualte cell area */
+        nlon_input_cells = input_grid[n].nx;
+        nlat_input_cells = input_grid[n].ny;
+        for(j=0; j<nlat_input_cells; j++) for(i=0; i<nlon_input_cells; i++) {
+            ii = j*nlon_input_cells + i;
+            if(input_cells[n].recomputed_area[ii] > 0) {
+              if( fabs(input_cells[n].recomputed_area[ii]-input_grid[n].cell_area[ii])/input_grid[n].cell_area[ii] < AREA_RATIO ) {
+                input_cells[n].centroid_lon[ii] /= input_cells[n].recomputed_area[ii];
+                input_cells[n].centroid_lat[ii] /= input_cells[n].recomputed_area[ii];
+              }
+              else {
+                n0 = j*(nlon_input_cells+1)+i;       n1 = j*(nlon_input_cells+1)+i+1;
+                n2 = (j+1)*(nlon_input_cells+1)+i+1; n3 = (j+1)*(nlon_input_cells+1)+i;
+                x1_in[0] = input_grid[n].lonc[n0]; y1_in[0] = input_grid[n].latc[n0];
+                x1_in[1] = input_grid[n].lonc[n1]; y1_in[1] = input_grid[n].latc[n1];
+                x1_in[2] = input_grid[n].lonc[n2]; y1_in[2] = input_grid[n].latc[n2];
+                x1_in[3] = input_grid[n].lonc[n3]; y1_in[3] = input_grid[n].latc[n3];
+                n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
+                lon_in_avg = avgval_double_acc(n1_in, x1_in);
+                centroid_lon = poly_ctrlon_acc(x1_in, y1_in, n1_in, lon_in_avg);
+                centroid_lat = poly_ctrlat_acc(x1_in, y1_in, n1_in );
+                input_cells[n].centroid_lon[ii] = centroid_lon/input_grid[n].cell_area[ii];
+                input_cells[n].centroid_lat[ii] = centroid_lat/input_grid[n].cell_area[ii];
+              }
+            }
+          }
       }
-      for(n=0; n<ntiles_out; n++) {
-	for(i=0; i<interp[n].nxgrid; i++) {
-	  tile = interp[n].t_in[i];
-	  ii   = interp[n].j_in[i] * grid_in[tile].nx + interp[n].i_in[i];
-          interp[n].di_in[i] -= cell_in[tile].clon[ii];
-	  interp[n].dj_in[i] -= cell_in[tile].clat[ii];
-	}
+      for(n=0; n<ntiles_output_grid; n++) {
+        for(i=0; i<xgrid[n].nxcells; i++) {
+          tile = xgrid[n].input_parent_tile[i];
+          ii   = xgrid[n].input_parent_lat_indices[i] * input_grid[tile].nx + xgrid[n].input_parent_lon_indices[i];
+          xgrid[n].dcentroid_lon[i] -= input_cells[tile].centroid_lon[ii];
+          xgrid[n].dcentroid_lat[i] -= input_cells[tile].centroid_lat[ii];
+        }
       }
 
       /* free the memory */
-      for(n=0; n<ntiles_in; n++) {
-	free(cell_in[n].area);
-	free(cell_in[n].clon);
-	free(cell_in[n].clat);
+      for(n=0; n<ntiles_input_grid; n++) {
+        free(input_cells[n].recomputed_area);
+        free(input_cells[n].centroid_lon);
+        free(input_cells[n].centroid_lat);
       }
-      free(cell_in);
+      free(input_cells);
     }
     if( opcode & WRITE) { /* write out remapping information */
-      for(n=0; n<ntiles_out; n++) {
-	int nxgrid;
+      for(n=0; n<ntiles_output_grid; n++) {
+	int nxcells;
 
-	nxgrid = interp[n].nxgrid;
-	mpp_sum_int(1, &nxgrid);
-	if(nxgrid > 0) {
+	nxcells = xgrid[n].nxcells;
+	mpp_sum_int(1, &nxcells);
+	if(nxcells > 0) {
 	  size_t start[4], nwrite[4];
 	  int    fid, dim_string, dim_ncells, dim_two, dims[4];
-	  int    id_xgrid_area, id_tile1_dist;
+	  int    id_xcell_area, id_tile1_dist;
 	  int    id_tile1_cell, id_tile2_cell, id_tile1;
 	  int    *gdata_int, *ldata_int;
 	  double *gdata_dbl;
 
-	  fid = mpp_open( interp[n].remap_file, MPP_WRITE);
+	  fid = mpp_open( xgrid[n].remap_file, MPP_WRITE);
 	  dim_string = mpp_def_dim(fid, "string", STRING);
-	  dim_ncells = mpp_def_dim(fid, "ncells", nxgrid);
+	  dim_ncells = mpp_def_dim(fid, "ncells", nxcells);
 	  dim_two    = mpp_def_dim(fid, "two", 2);
 	  dims[0] = dim_ncells; dims[1] = dim_two;
 	  id_tile1      = mpp_def_var(fid, "tile1",      NC_INT, 1, &dim_ncells, 1,
@@ -309,7 +317,7 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 				      "standard_name", "parent_cell_indices_in_mosaic1");
 	  id_tile2_cell = mpp_def_var(fid, "tile2_cell", NC_INT, 2, dims, 1,
 				      "standard_name", "parent_cell_indices_in_mosaic2");
-	  id_xgrid_area = mpp_def_var(fid, "xgrid_area", NC_DOUBLE, 1, &dim_ncells, 2,
+	  id_xcell_area = mpp_def_var(fid, "xcell_area", NC_DOUBLE, 1, &dim_ncells, 2,
 				      "standard_name", "exchange_grid_area", "units", "m2");
 	  if(opcode & CONSERVE_ORDER2) id_tile1_dist = mpp_def_var(fid, "tile1_distance", NC_DOUBLE, 2, dims, 1,
 								   "standard_name", "distance_from_parent1_cell_centroid");
@@ -317,43 +325,43 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
 	  for(i=0; i<4; i++) {
 	    start[i] = 0; nwrite[i] = 1;
 	  }
-	  nwrite[0] = nxgrid;
-	  gdata_int = (int *)malloc(nxgrid*sizeof(int));
-	  if(interp[n].nxgrid>0) ldata_int = (int *)malloc(interp[n].nxgrid*sizeof(int));
-          mpp_gather_field_int(interp[n].nxgrid, interp[n].t_in, gdata_int);
-	  for(i=0; i<nxgrid; i++) gdata_int[i]++;
+	  nwrite[0] = nxcells;
+	  gdata_int = (int *)malloc(nxcells*sizeof(int));
+	  if(xgrid[n].nxcells>0) ldata_int = (int *)malloc(xgrid[n].nxcells*sizeof(int));
+          mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_tile, gdata_int);
+	  for(i=0; i<nxcells; i++) gdata_int[i]++;
 	  mpp_put_var_value(fid, id_tile1, gdata_int);
 
-	  mpp_gather_field_int(interp[n].nxgrid, interp[n].i_in, gdata_int);
-	  for(i=0; i<nxgrid; i++) gdata_int[i]++;
+	  mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_lon_indices, gdata_int);
+	  for(i=0; i<nxcells; i++) gdata_int[i]++;
 	  mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, gdata_int);
 
-          for(i=0; i<interp[n].nxgrid; i++) ldata_int[i] = interp[n].i_out[i] + grid_out[n].isc + 1;
-	  mpp_gather_field_int(interp[n].nxgrid, ldata_int, gdata_int);
+          for(i=0; i<xgrid[n].nxcells; i++) ldata_int[i] = xgrid[n].output_parent_lon_indices[i] + output_grid[n].isc + 1;
+	  mpp_gather_field_int(xgrid[n].nxcells, ldata_int, gdata_int);
 	  mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, gdata_int);
 
-	  mpp_gather_field_int(interp[n].nxgrid, interp[n].j_in, gdata_int);
-	  for(i=0; i<nxgrid; i++) gdata_int[i]++;
+	  mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_lat_indices, gdata_int);
+	  for(i=0; i<nxcells; i++) gdata_int[i]++;
 	  start[1] = 1;
 	  mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, gdata_int);
 
-          for(i=0; i<interp[n].nxgrid; i++) ldata_int[i] = interp[n].j_out[i] + grid_out[n].jsc + 1;
-	  mpp_gather_field_int(interp[n].nxgrid, ldata_int, gdata_int);
+          for(i=0; i<xgrid[n].nxcells; i++) ldata_int[i] = xgrid[n].output_parent_lat_indices[i] + output_grid[n].jsc + 1;
+	  mpp_gather_field_int(xgrid[n].nxcells, ldata_int, gdata_int);
 	  mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, gdata_int);
 
 	  free(gdata_int);
-	  if(interp[n].nxgrid>0)free(ldata_int);
+	  if(xgrid[n].nxcells>0)free(ldata_int);
 
-	  gdata_dbl = (double *)malloc(nxgrid*sizeof(double));
-	  mpp_gather_field_double(interp[n].nxgrid, interp[n].area, gdata_dbl);
-	  mpp_put_var_value(fid, id_xgrid_area, gdata_dbl);
+	  gdata_dbl = (double *)malloc(nxcells*sizeof(double));
+	  mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].xcell_area, gdata_dbl);
+	  mpp_put_var_value(fid, id_xcell_area, gdata_dbl);
 
 	  if(opcode & CONSERVE_ORDER2) {
 	    start[1] = 0;
-	    mpp_gather_field_double(interp[n].nxgrid, interp[n].di_in, gdata_dbl);
+	    mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].dcentroid_lon, gdata_dbl);
 	    mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, gdata_dbl);
 	    start[1] = 1;
-	    mpp_gather_field_double(interp[n].nxgrid, interp[n].dj_in, gdata_dbl);
+	    mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].dcentroid_lat, gdata_dbl);
 	    mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, gdata_dbl);
 	  }
 
@@ -369,52 +377,54 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
   if(opcode & CHECK_CONSERVE) {
     int nx1, ny1, max_i, max_j, i, j;
     double max_ratio, ratio_change;
-    double *area2;
+    double *computed_output_area;
 
-    /* sum over exchange grid to get the area of grid_in */
-    nx1  = grid_out[0].nxc;
-    ny1  = grid_out[0].nyc;
+    /* sum over exchange grid to get the area of input_grid */
+    nx1  = output_grid[0].nxc;
+    ny1  = output_grid[0].nyc;
 
-    area2 = (double *)malloc(nx1*ny1*sizeof(double));
+    computed_output_area = (double *)malloc(nx1*ny1*sizeof(double));
 
-    for(n=0; n<ntiles_out; n++) {
-      for(i=0; i<nx1*ny1; i++) area2[i] = 0;
-      for(i=0; i<interp[n].nxgrid; i++) {
-	ii = interp[n].j_out[i]*nx1 + interp[n].i_out[i];
-	area2[ii] +=  interp[n].area[i];
+    for(n=0; n<ntiles_output_grid; n++) {
+      for(i=0; i<nx1*ny1; i++) computed_output_area[i] = 0;
+      for(i=0; i<xgrid[n].nxcells; i++) {
+	ii = xgrid[n].output_parent_lat_indices[i]*nx1 + xgrid[n].output_parent_lon_indices[i];
+	computed_output_area[ii] +=  xgrid[n].xcell_area[i];
       }
       max_ratio = 0;
       max_i = 0;
       max_j = 0;
-      /* comparing area1 and area2 */
+      /* comparing area1 and computed_output_area */
       for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
 	ii = j*nx1+i;
-	ratio_change = fabs(grid_out[n].cell_area[ii]-area2[ii])/grid_out[n].cell_area[ii];
+	ratio_change = fabs(output_grid[n].cell_area[ii]-computed_output_area[ii])/output_grid[n].cell_area[ii];
 	if(ratio_change > max_ratio) {
 	  max_ratio = ratio_change;
 	  max_i = i;
 	  max_j = j;
 	}
 	if( ratio_change > 1.e-4 ) {
-	  printf("(i,j)=(%d,%d), change = %g, area1=%g, area2=%g\n", i, j, ratio_change, grid_out[n].cell_area[ii],area2[ii]);
+	  printf("(i,j)=(%d,%d), change = %g, area1=%g, computed_output_area=%g\n",
+           i, j, ratio_change, output_grid[n].cell_area[ii],computed_output_area[ii]);
 	}
       }
       ii = max_j*nx1+max_i;
-      printf("The maximum ratio change at (%d,%d) = %g, area1=%g, area2=%g\n", max_i, max_j, max_ratio, grid_out[n].cell_area[ii],area2[ii]);
+      printf("The maximum ratio change at (%d,%d) = %g, area1=%g, computed_output_area=%g\n",
+             max_i, max_j, max_ratio, output_grid[n].cell_area[ii],computed_output_area[ii]);
 
     }
 
-    free(area2);
+    free(computed_output_area);
 
   }
 
-  free(i_in);
-  free(j_in);
-  free(i_out);
-  free(j_out);
-  free(xgrid_area);
-  if(xgrid_clon) free(xgrid_clon);
-  if(xgrid_clat) free(xgrid_clat);
+  free(input_parent_lon_indices);
+  free(input_parent_lat_indices);
+  free(output_parent_lon_indices);
+  free(output_parent_lat_indices);
+  free(xcell_area);
+  if(xcell_centroid_lon) free(xcell_centroid_lon);
+  if(xcell_centroid_lat) free(xcell_centroid_lat);
 
 }; /* setup_conserve_interp */
 
@@ -423,87 +433,92 @@ void setup_conserve_interp_acc(int ntiles_in, const Grid_config *grid_in, int nt
  void read_remap_file
  Reads in the weight/remap file if provided and copies the data to the device
 *******************************************************************************/
-void read_remap_file_acc(int ntiles_in, int ntiles_out, Interp_config *interp, unsigned int opcode)
+void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_config *xgrid, unsigned int opcode)
 {
 
-  int *i_in=NULL, *j_in=NULL, *i_out=NULL, *j_out=NULL;
-  double *xgrid_area=NULL, *xgrid_clon=NULL, *xgrid_clat=NULL;
+  int *input_parent_lon_indices=NULL, *input_parent_lat_indices=NULL, *output_parent_lon_indices=NULL, *output_parent_lat_indices=NULL;
+  double *xcell_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
 
-  size_t nxgrid;
-  int nxgrid_acc;
+  size_t nxcells;
+  int nxcells_acc;
 
-  for(int n=0; n<ntiles_out; n++) {
-    if( interp[n].file_exist ) {
+  for(int n=0; n<ntiles_output_grid; n++) {
+    if( xgrid[n].file_exist ) {
       int *t_in, *ind_acc;
       int fid, vid;
 
-      nxgrid = read_mosaic_xgrid_size(interp[n].remap_file);
-      interp[n].nxgrid = nxgrid;
+      nxcells = read_mosaic_xgrid_size(xgrid[n].remap_file);
+      xgrid[n].nxcells = nxcells;
 
-      t_in  = (int *)malloc(nxgrid*sizeof(int));
-      i_in  = (int *)malloc(nxgrid*sizeof(int));
-      j_in  = (int *)malloc(nxgrid*sizeof(int));
-      i_out = (int *)malloc(nxgrid*sizeof(int));
-      j_out = (int *)malloc(nxgrid*sizeof(int));
-      xgrid_area = (double *)malloc(nxgrid*sizeof(double));
+      t_in  = (int *)malloc(nxcells*sizeof(int));
+      input_parent_lon_indices  = (int *)malloc(nxcells*sizeof(int));
+      input_parent_lat_indices  = (int *)malloc(nxcells*sizeof(int));
+      output_parent_lon_indices = (int *)malloc(nxcells*sizeof(int));
+      output_parent_lat_indices = (int *)malloc(nxcells*sizeof(int));
+      xcell_area = (double *)malloc(nxcells*sizeof(double));
       if( opcode & CONSERVE_ORDER2) {
-        xgrid_clon = (double *)malloc(nxgrid*sizeof(double));
-        xgrid_clat = (double *)malloc(nxgrid*sizeof(double));
+        xcell_centroid_lon = (double *)malloc(nxcells*sizeof(double));
+        xcell_centroid_lat = (double *)malloc(nxcells*sizeof(double));
       }
 
       if(opcode & CONSERVE_ORDER1)
-        read_mosaic_xgrid_order1(interp[n].remap_file, i_in, j_in, i_out, j_out, xgrid_area);
+        read_mosaic_xgrid_order1(xgrid[n].remap_file, input_parent_lon_indices, input_parent_lat_indices,
+                                 output_parent_lon_indices, output_parent_lat_indices, xcell_area);
       else
-        read_mosaic_xgrid_order2(interp[n].remap_file, i_in, j_in, i_out, j_out, xgrid_area, xgrid_clon, xgrid_clat);
+        read_mosaic_xgrid_order2(xgrid[n].remap_file, input_parent_lon_indices, input_parent_lat_indices,
+                                 output_parent_lon_indices, output_parent_lat_indices, xcell_area,
+                                 xcell_centroid_lon, xcell_centroid_lat);
 
       //rescale the xgrid area
-      for(int i=0; i<interp[n].nxgrid; i++) xgrid_area[i] *= GAREA;
+      for(int i=0; i<xgrid[n].nxcells; i++) xcell_area[i] *= GAREA;
 
       //read in tile number of input parent cells
-      fid = mpp_open(interp[n].remap_file, MPP_READ);
+      fid = mpp_open(xgrid[n].remap_file, MPP_READ);
       vid = mpp_get_varid(fid, "tile1");
       mpp_get_var_value(fid, vid, t_in);
       mpp_close(fid);
 
       //tile number starts from 1, not 0, in the weight files
-      for(int i=0 ; i<nxgrid ; i++) t_in[i]--;
+      for(int i=0 ; i<nxcells ; i++) t_in[i]--;
 
-      //get number of nxgrid per input tile
-      for(int m=0 ; m<ntiles_in ; m++) interp[n].interp_mini[m].nxgrid=0;
-      for(int i=0 ; i<nxgrid ; i++) interp[n].interp_mini[ t_in[i] ].nxgrid++;
+      //get number of nxcells per input tile
+      for(int m=0 ; m<ntiles_input_grid ; m++) xgrid[n].per_intile[m].nxcells=0;
+      for(int i=0 ; i<nxcells ; i++) xgrid[n].per_intile[ t_in[i] ].nxcells++;
 
-      for(int m=0 ; m<ntiles_in ; m++) {
-        nxgrid_acc = interp[n].interp_mini[m].nxgrid;
-        interp[n].interp_mini[m].i_in  = (int *)malloc(nxgrid_acc*sizeof(int));
-        interp[n].interp_mini[m].j_in  = (int *)malloc(nxgrid_acc*sizeof(int));
-        interp[n].interp_mini[m].i_out = (int *)malloc(nxgrid_acc*sizeof(int));
-        interp[n].interp_mini[m].j_out = (int *)malloc(nxgrid_acc*sizeof(int));
-        interp[n].interp_mini[m].area  = (double *)malloc(nxgrid_acc*sizeof(double));
+      for(int m=0 ; m<ntiles_input_grid ; m++) {
+        nxcells_acc = xgrid[n].per_intile[m].nxcells;
+        xgrid[n].per_intile[m].input_parent_lon_indices  = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].input_parent_lat_indices  = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].output_parent_lon_indices = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].output_parent_lat_indices = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].xcell_area  = (double *)malloc(nxcells_acc*sizeof(double));
         if(opcode & CONSERVE_ORDER2) {
-          interp[n].interp_mini[m].di_in = (double *)malloc(nxgrid_acc*sizeof(double));
-          interp[n].interp_mini[m].dj_in = (double *)malloc(nxgrid_acc*sizeof(double));
+          xgrid[n].per_intile[m].dcentroid_lon = (double *)malloc(nxcells_acc*sizeof(double));
+          xgrid[n].per_intile[m].dcentroid_lat = (double *)malloc(nxcells_acc*sizeof(double));
         }
       }
 
-      ind_acc = (int *)calloc(ntiles_in, sizeof(int));
-      for(int i=0 ; i<nxgrid ; i++) {
+      ind_acc = (int *)calloc(ntiles_input_grid, sizeof(int));
+      for(int i=0 ; i<nxcells ; i++) {
         int itile, ii;
         itile = t_in[i];
         ii=ind_acc[itile];
-        interp[n].interp_mini[itile].i_in[ii] = i_in[i];
-        interp[n].interp_mini[itile].j_in[ii] = j_in[i];
-        interp[n].interp_mini[itile].i_out[ii] = i_out[i];
-        interp[n].interp_mini[itile].j_out[ii] = j_out[i];
-        interp[n].interp_mini[itile].area[ii] = xgrid_area[i];
+        xgrid[n].per_intile[itile].input_parent_lon_indices[ii] = input_parent_lon_indices[i];
+        xgrid[n].per_intile[itile].input_parent_lat_indices[ii] = input_parent_lat_indices[i];
+        xgrid[n].per_intile[itile].output_parent_lon_indices[ii] = output_parent_lon_indices[i];
+        xgrid[n].per_intile[itile].output_parent_lat_indices[ii] = output_parent_lat_indices[i];
+        xgrid[n].per_intile[itile].xcell_area[ii] = xcell_area[i];
         if( opcode & CONSERVE_ORDER2) {
-          interp[n].interp_mini[itile].di_in[ii] = xgrid_clon[i];
-          interp[n].interp_mini[itile].dj_in[ii] = xgrid_clat[i];
+          xgrid[n].per_intile[itile].dcentroid_lon[ii] = xcell_centroid_lon[i];
+          xgrid[n].per_intile[itile].dcentroid_lat[ii] = xcell_centroid_lat[i];
         }
         ind_acc[itile]++;
       }
 
-      free(t_in) ; free(ind_acc); free(i_in) ; free(j_in); free(i_out); free(j_out);
-      free(xgrid_area); free(xgrid_clon); free(xgrid_clat);
+      free(t_in) ; free(ind_acc);
+      free(input_parent_lon_indices) ; free(input_parent_lat_indices);
+      free(output_parent_lon_indices); free(output_parent_lat_indices);
+      free(xcell_area); free(xcell_centroid_lon); free(xcell_centroid_lat);
 
     }//if file exists
   } //ntiles out
@@ -518,9 +533,9 @@ void read_remap_file_acc(int ntiles_in, int ntiles_out, Interp_config *interp, u
  void do_scalar_conserve_interp( )
  doing conservative interpolation
 *******************************************************************************/
-void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in,
-			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
-			       Field_config *field_out, unsigned int opcode, int nz)
+void do_scalar_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_input_grid, const Grid_config *input_grid,
+                                   int ntiles_output_grid, const Grid_config *output_grid, const Field_config *field_in,
+                                   Field_config *field_out, unsigned int opcode, int nz)
 {
   int nx1, ny1, nx2, ny2, i1, j1, i2, j2, tile, n, m, i, j, n1, n2;
   int k, n0;
@@ -546,7 +561,7 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 
   area_missing = field_in->var[varid].area_missing;
   has_missing = field_in->var[varid].has_missing;
-  weight_exist = grid_in[0].weight_exist;
+  weight_exist = input_grid[0].weight_exist;
   cell_measures = field_in->var[varid].cell_measures;
   cell_methods = field_in->var[varid].cell_methods;
   target_grid = opcode & TARGET;
@@ -560,11 +575,11 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
   if( nz>1 && cell_methods == CELL_METHODS_SUM ) mpp_error("conserve_interp: cell_methods should not be sum when nz > 1");
   /*  if( nz>1 && monotonic ) mpp_error("conserve_interp: monotonic should be false when nz > 1"); */
 
-  if(monotonic) monotone_data = (Monotone_config *)malloc(ntiles_in*sizeof(Monotone_config));
+  if(monotonic) monotone_data = (Monotone_config *)malloc(ntiles_input_grid*sizeof(Monotone_config));
 
-  for(m=0; m<ntiles_out; m++) {
-    nx2 = grid_out[m].nxc;
-    ny2 = grid_out[m].nyc;
+  for(m=0; m<ntiles_output_grid; m++) {
+    nx2 = output_grid[m].nxc;
+    ny2 = output_grid[m].nyc;
     out_area = (double *)malloc(nx2*ny2*nz*sizeof(double));
     out_miss = (int *)malloc(nx2*ny2*nz*sizeof(int));
     for(i=0; i<nx2*ny2*nz; i++) {
@@ -574,28 +589,28 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
     }
     if(interp_method == CONSERVE_ORDER1) {
       if(has_missing) {
-	for(n=0; n<interp[m].nxgrid; n++) {
-	  i2   = interp[m].i_out[n];
-	  j2   = interp[m].j_out[n];
-	  i1   = interp[m].i_in [n];
-	  j1   = interp[m].j_in [n];
-	  tile = interp[m].t_in [n];
-	  area = interp[m].area [n];
-	  nx1  = grid_in[tile].nx;
-	  ny1  = grid_in[tile].ny;
-          if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	for(n=0; n<xgrid[m].nxcells; n++) {
+	  i2   = xgrid[m].output_parent_lon_indices[n];
+	  j2   = xgrid[m].output_parent_lat_indices[n];
+	  i1   = xgrid[m].input_parent_lon_indices [n];
+	  j1   = xgrid[m].input_parent_lat_indices [n];
+	  tile = xgrid[m].input_parent_tile [n];
+	  area = xgrid[m].xcell_area [n];
+	  nx1  = input_grid[tile].nx;
+	  ny1  = input_grid[tile].ny;
+          if(weight_exist) area *= input_grid[tile].weight[j1*nx1+i1];
 	  n1 = j1*nx1+i1;
 	  n0 = j2*nx2+i2;
 
 	  if( field_in[tile].data[n1] != missing ) {
 	    if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];
+	      area /= input_grid[tile].cell_area[n1];
             else if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
 	         printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	         mpp_error("conserve_interp: data is not missing but area is missing");
 	      }
-	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	      area *= (field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
 	    }
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
             out_area[n0] += area;
@@ -604,23 +619,23 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
         }
       }
       else {
-	for(n=0; n<interp[m].nxgrid; n++) {
-	  i2   = interp[m].i_out[n];
-	  j2   = interp[m].j_out[n];
-	  i1   = interp[m].i_in [n];
-	  j1   = interp[m].j_in [n];
-	  tile = interp[m].t_in [n];
-	  area = interp[m].area [n];
-	  nx1  = grid_in[tile].nx;
-	  ny1  = grid_in[tile].ny;
-	  if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	for(n=0; n<xgrid[m].nxcells; n++) {
+	  i2   = xgrid[m].output_parent_lon_indices[n];
+	  j2   = xgrid[m].output_parent_lat_indices[n];
+	  i1   = xgrid[m].input_parent_lon_indices [n];
+	  j1   = xgrid[m].input_parent_lat_indices [n];
+	  tile = xgrid[m].input_parent_tile [n];
+	  area = xgrid[m].xcell_area [n];
+	  nx1  = input_grid[tile].nx;
+	  ny1  = input_grid[tile].ny;
+	  if(weight_exist) area *= input_grid[tile].weight[j1*nx1+i1];
 	  for(k=0; k<nz; k++) {
 	    n1 = k*nx1*ny1 + j1*nx1+i1;
 	    n0 = k*nx2*ny2 + j2*nx2+i2;
 	    if(  cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];
+	      area /= input_grid[tile].cell_area[n1];
             else if( cell_measures )
-	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	      area *= (field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
   	    field_out[m].data[n0] += (field_in[tile].data[n1]*area);
 	    out_area[n0] += area;
 	    out_miss[n0] = 1;
@@ -632,9 +647,9 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
       int ii, jj;
       double f_bar;
       double *xdata;
-      for(n=0; n<ntiles_in; n++) {
-	nx1 =  grid_in[n].nx;
-	ny1 =  grid_in[n].ny;
+      for(n=0; n<ntiles_input_grid; n++) {
+	nx1 =  input_grid[n].nx;
+	ny1 =  input_grid[n].ny;
 	monotone_data[n].f_bar_max = (double *)malloc(nx1*ny1*sizeof(double));
 	monotone_data[n].f_bar_min = (double *)malloc(nx1*ny1*sizeof(double));
 	monotone_data[n].f_max     = (double *)malloc(nx1*ny1*sizeof(double));
@@ -657,13 +672,13 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 	}
       }
 
-      xdata = (double *)malloc(interp[m].nxgrid*sizeof(double));
-      for(n=0; n<interp[m].nxgrid; n++) {
-	i1   = interp[m].i_in [n];
-	j1   = interp[m].j_in [n];
-	di   = interp[m].di_in[n];
-	dj   = interp[m].dj_in[n];
-	tile = interp[m].t_in [n];
+      xdata = (double *)malloc(xgrid[m].nxcells*sizeof(double));
+      for(n=0; n<xgrid[m].nxcells; n++) {
+	i1   = xgrid[m].input_parent_lon_indices [n];
+	j1   = xgrid[m].input_parent_lat_indices [n];
+	di   = xgrid[m].dcentroid_lon[n];
+	dj   = xgrid[m].dcentroid_lat[n];
+	tile = xgrid[m].input_parent_tile [n];
 	n1 = j1*nx1+i1;
         n2 = (j1+1)*(nx1+2)+i1+1;
 	if( field_in[tile].data[n2] != missing ) {
@@ -684,17 +699,17 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 
       /* get the global f_max and f_min */
       if(mpp_npes() >1) {
-	for(n=0; n<ntiles_in; n++) {
+	for(n=0; n<ntiles_input_grid; n++) {
 	  mpp_min_double(nx1*ny1, monotone_data[n].f_min);
 	  mpp_max_double(nx1*ny1, monotone_data[n].f_max);
 	}
       }
 
       /* adjust the exchange grid cell data to make it monotonic */
-      for(n=0; n<interp[m].nxgrid; n++) {
-	i1   = interp[m].i_in [n];
-	j1   = interp[m].j_in [n];
-	tile = interp[m].t_in [n];
+      for(n=0; n<xgrid[m].nxcells; n++) {
+	i1   = xgrid[m].input_parent_lon_indices [n];
+	j1   = xgrid[m].input_parent_lat_indices [n];
+	tile = xgrid[m].input_parent_tile [n];
 	n1 = j1*nx1+i1;
 	n2 = (j1+1)*(nx1+2)+i1+1;
 	f_bar = field_in[tile].data[n2];
@@ -726,7 +741,7 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 	  }
 	}
       }
-      for(n=0; n<ntiles_in; n++) {
+      for(n=0; n<ntiles_input_grid; n++) {
 	free(monotone_data[n].f_bar_max);
 	free(monotone_data[n].f_bar_min);
 	free(monotone_data[n].f_max);
@@ -734,21 +749,21 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
       }
 
       /* remap onto destination grid */
-      for(n=0; n<interp[m].nxgrid; n++) {
-	i2   = interp[m].i_out[n];
-	j2   = interp[m].j_out[n];
-	i1   = interp[m].i_in [n];
-	j1   = interp[m].j_in [n];
-	tile = interp[m].t_in [n];
-	area = interp[m].area [n];
+      for(n=0; n<xgrid[m].nxcells; n++) {
+	i2   = xgrid[m].output_parent_lon_indices[n];
+	j2   = xgrid[m].output_parent_lat_indices[n];
+	i1   = xgrid[m].input_parent_lon_indices [n];
+	j1   = xgrid[m].input_parent_lat_indices [n];
+	tile = xgrid[m].input_parent_tile [n];
+	area = xgrid[m].xcell_area [n];
 	if(xdata[n] == missing) continue;
-	if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	if(weight_exist) area *= input_grid[tile].weight[j1*nx1+i1];
 	n1 = j1*nx1+i1;
 	n0 = j2*nx2+i2;
 	if( cell_methods == CELL_METHODS_SUM )
-	  area /= grid_in[tile].cell_area[n1];
+	  area /= input_grid[tile].cell_area[n1];
 	else if( cell_measures )
-	  area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	  area *= (field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
 	field_out[m].data[n0] += xdata[n]*area;
 	out_area[n0] += area;
       }
@@ -756,32 +771,32 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
     }
     else {
       if(has_missing) {
-	for(n=0; n<interp[m].nxgrid; n++) {
-	  i2   = interp[m].i_out[n];
-	  j2   = interp[m].j_out[n];
-	  i1   = interp[m].i_in [n];
-	  j1   = interp[m].j_in [n];
-	  di   = interp[m].di_in[n];
-	  dj   = interp[m].dj_in[n];
-	  tile = interp[m].t_in [n];
-	  area = interp[m].area [n];
-	  nx1  = grid_in[tile].nx;
-	  ny1  = grid_in[tile].ny;
+	for(n=0; n<xgrid[m].nxcells; n++) {
+	  i2   = xgrid[m].output_parent_lon_indices[n];
+	  j2   = xgrid[m].output_parent_lat_indices[n];
+	  i1   = xgrid[m].input_parent_lon_indices [n];
+	  j1   = xgrid[m].input_parent_lat_indices [n];
+	  di   = xgrid[m].dcentroid_lon[n];
+	  dj   = xgrid[m].dcentroid_lat[n];
+	  tile = xgrid[m].input_parent_tile [n];
+	  area = xgrid[m].xcell_area [n];
+	  nx1  = input_grid[tile].nx;
+	  ny1  = input_grid[tile].ny;
 
-	  if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	  if(weight_exist) area *= input_grid[tile].weight[j1*nx1+i1];
 	  n2 = (j1+1)*(nx1+2)+i1+1;
 	  n0 = j2*nx2+i2;
 	  if( field_in[tile].data[n2] != missing ) {
 	    n1 = j1*nx1+i1;
 	    n0 = j2*nx2+i2;
             if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];
+	      area /= input_grid[tile].cell_area[n1];
             else if( cell_measures ) {
 	      if(field_in[tile].area[n1] == area_missing) {
                 printf("name=%s,tile=%d,i1,j1=%d,%d,i2,j2=%d,%d\n",field_in->var[varid].name,tile,i1,j1,i2,j2);
 	        mpp_error("conserve_interp: data is not missing but area is missing");
               }
-	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	      area *= (field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
             }
 	    if(field_in[tile].grad_mask[n1]) { /* use zero gradient */
 	      field_out[m].data[n0] += field_in[tile].data[n2]*area;
@@ -796,27 +811,27 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 	}
       }
       else {
-	for(n=0; n<interp[m].nxgrid; n++) {
-	  i2   = interp[m].i_out[n];
-	  j2   = interp[m].j_out[n];
-	  i1   = interp[m].i_in [n];
-	  j1   = interp[m].j_in [n];
-	  di   = interp[m].di_in[n];
-	  dj   = interp[m].dj_in[n];
-	  tile = interp[m].t_in [n];
-	  area = interp[m].area [n];
+	for(n=0; n<xgrid[m].nxcells; n++) {
+	  i2   = xgrid[m].output_parent_lon_indices[n];
+	  j2   = xgrid[m].output_parent_lat_indices[n];
+	  i1   = xgrid[m].input_parent_lon_indices [n];
+	  j1   = xgrid[m].input_parent_lat_indices [n];
+	  di   = xgrid[m].dcentroid_lon[n];
+	  dj   = xgrid[m].dcentroid_lat[n];
+	  tile = xgrid[m].input_parent_tile [n];
+	  area = xgrid[m].xcell_area [n];
 
-	  nx1  = grid_in[tile].nx;
-	  ny1  = grid_in[tile].ny;
-	  if(weight_exist) area *= grid_in[tile].weight[j1*nx1+i1];
+	  nx1  = input_grid[tile].nx;
+	  ny1  = input_grid[tile].ny;
+	  if(weight_exist) area *= input_grid[tile].weight[j1*nx1+i1];
 	  for(k=0; k<nz; k++) {
 	    n0 = k*nx2*ny2 + j2*nx2+i2;
 	    n1 = k*nx1*ny1+j1*nx1+i1;
 	    n2 = k*(nx1+2)*(ny1+2)+(j1+1)*(nx1+2)+i1+1;
 	    if( cell_methods == CELL_METHODS_SUM )
-	      area /= grid_in[tile].cell_area[n1];
+	      area /= input_grid[tile].cell_area[n1];
 	    else if( cell_measures )
-	      area *= (field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	      area *= (field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
 	    field_out[m].data[n0] += (field_in[tile].data[n2]+field_in[tile].grad_x[n1]*di
 				      +field_in[tile].grad_y[n1]*dj)*area;
 	    out_area[n0] += area;
@@ -854,26 +869,26 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 
       if( (target_grid) ) {
 	for(i=0; i<nx2*ny2; i++) out_area[i] = 0.0;
-	for(n=0; n<interp[m].nxgrid; n++) {
-	  i2   = interp[m].i_out[n];
-	  j2   = interp[m].j_out[n];
-	  i1   = interp[m].i_in [n];
-	  j1   = interp[m].j_in [n];
-	  tile = interp[m].t_in [n];
-	  area = interp[m].area [n];
-	  nx1  = grid_in[tile].nx;
-	  ny1  = grid_in[tile].ny;
+	for(n=0; n<xgrid[m].nxcells; n++) {
+	  i2   = xgrid[m].output_parent_lon_indices[n];
+	  j2   = xgrid[m].output_parent_lat_indices[n];
+	  i1   = xgrid[m].input_parent_lon_indices [n];
+	  j1   = xgrid[m].input_parent_lat_indices [n];
+	  tile = xgrid[m].input_parent_tile [n];
+	  area = xgrid[m].xcell_area [n];
+	  nx1  = input_grid[tile].nx;
+	  ny1  = input_grid[tile].ny;
 	  n0 = j2*nx2+i2;
 	  n1 = j1*nx1+i1;
 	  if(cell_measures )
-	    out_area[n0] += (area*field_in[tile].area[n1]/grid_in[tile].cell_area[n1]);
+	    out_area[n0] += (area*field_in[tile].area[n1]/input_grid[tile].cell_area[n1]);
 	  else
 	    out_area[n0] += area;
 	}
 	for(i=0; i<nx2*ny2*nz; i++) {
 	  if(field_out[m].data[i] != missing) {
 	    i2 = i%(nx2*ny2);
-	    field_out[m].data[i] *=  (out_area[i2]/grid_out[m].cell_area[i2]);
+	    field_out[m].data[i] *=  (out_area[i2]/output_grid[m].cell_area[i2]);
 	  }
 	}
       }
@@ -888,10 +903,10 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
   if(opcode & CHECK_CONSERVE) {
     double gsum_in, dd;
     gsum_in = 0;
-    for(n=0; n<ntiles_in; n++) {
+    for(n=0; n<ntiles_input_grid; n++) {
 
-      nx1  = grid_in[n].nx;
-      ny1  = grid_in[n].ny;
+      nx1  = input_grid[n].nx;
+      ny1  = input_grid[n].ny;
 
 
       if( cell_measures ) {
@@ -909,7 +924,7 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
       else {
         for(k=0; k<nz; k++) for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
 	  dd = field_in[n].data[k*(nx1+2*halo)*(ny1+2*halo)+(j+halo)*(nx1+2*halo)+i+halo];
-	  if(dd != missing) gsum_in += dd*grid_in[n].cell_area[j*nx1+i];
+	  if(dd != missing) gsum_in += dd*input_grid[n].cell_area[j*nx1+i];
         }
       }
     }
@@ -928,8 +943,8 @@ void do_scalar_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
  void do_vector_conserve_interp( )
  doing conservative interpolation
 *******************************************************************************/
-void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,
-                               const Grid_config *grid_out, const Field_config *u_in,  const Field_config *v_in,
+void do_vector_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_input_grid, const Grid_config *input_grid, int ntiles_output_grid,
+                               const Grid_config *output_grid, const Field_config *u_in,  const Field_config *v_in,
                                Field_config *u_out, Field_config *v_out, unsigned int opcode)
 {
   int          nx1, ny1, nx2, ny2, i1, j1, i2, j2, tile, n, m, i;
@@ -938,24 +953,24 @@ void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
 
   missing = u_in->var[varid].missing;
   /* first rotate input data */
-  for(n = 0; n < ntiles_in; n++) {
-    if(grid_in[n].rotate) {
-      nx1 = grid_in[n].nx;
-      ny1 = grid_in[n].ny;
+  for(n = 0; n < ntiles_input_grid; n++) {
+    if(input_grid[n].rotate) {
+      nx1 = input_grid[n].nx;
+      ny1 = input_grid[n].ny;
       for(i=0; i<nx1*ny1; i++) {
 	tmp_x = u_in[n].data[i];
 	tmp_y = v_in[n].data[i];
 	if( tmp_x != missing && tmp_y != missing) {
-	  u_in[n].data[i] = tmp_x * grid_in[n].cosrot[i] - tmp_y * grid_in[n].sinrot[i];
-	  v_in[n].data[i] = tmp_x * grid_in[n].sinrot[i] + tmp_y * grid_in[n].cosrot[i];
+	  u_in[n].data[i] = tmp_x * input_grid[n].cosrot[i] - tmp_y * input_grid[n].sinrot[i];
+	  v_in[n].data[i] = tmp_x * input_grid[n].sinrot[i] + tmp_y * input_grid[n].cosrot[i];
 	}
       }
     }
   }
 
-  for(m=0; m<ntiles_out; m++) {
-    nx2 = grid_out[m].nxc;
-    ny2 = grid_out[m].nyc;
+  for(m=0; m<ntiles_output_grid; m++) {
+    nx2 = output_grid[m].nxc;
+    ny2 = output_grid[m].nyc;
     out_area = (double *)malloc(nx2*ny2*sizeof(double));
 
     for(i=0; i<nx2*ny2; i++) {
@@ -964,15 +979,15 @@ void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
     }
     for(i=0; i<nx2*ny2; i++) out_area[i] = 0.0;
 
-    for(n=0; n<interp[m].nxgrid; n++) {
-      i2   = interp[m].i_out[n];
-      j2   = interp[m].j_out[n];
-      i1   = interp[m].i_in [n];
-      j1   = interp[m].j_in [n];
-      tile = interp[m].t_in [n];
-      area = interp[m].area [n];
-      nx1  = grid_in[tile].nx;
-      ny1  = grid_in[tile].ny;
+    for(n=0; n<xgrid[m].nxcells; n++) {
+      i2   = xgrid[m].output_parent_lon_indices[n];
+      j2   = xgrid[m].output_parent_lat_indices[n];
+      i1   = xgrid[m].input_parent_lon_indices [n];
+      j1   = xgrid[m].input_parent_lat_indices [n];
+      tile = xgrid[m].input_parent_tile [n];
+      area = xgrid[m].xcell_area [n];
+      nx1  = input_grid[tile].nx;
+      ny1  = input_grid[tile].ny;
       tmp_x = u_in[tile].data[j1*nx1+i1];
       tmp_y = v_in[tile].data[j1*nx1+i1];
       if( tmp_x != missing && tmp_y != missing ) {
@@ -984,8 +999,8 @@ void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
     if(opcode & TARGET) {
       for(i=0; i<nx2*ny2; i++) {
 	if(out_area[i] > 0) {
-	  u_out[m].data[i] /= grid_out[m].area[i];
-	  v_out[m].data[i] /= grid_out[m].area[i];
+	  u_out[m].data[i] /= output_grid[m].area[i];
+	  v_out[m].data[i] /= output_grid[m].area[i];
 	}
 	else {
 	  u_out[m].data[i] = missing;
@@ -1006,13 +1021,13 @@ void do_vector_conserve_interp_acc(Interp_config *interp, int varid, int ntiles_
       }
     }
     /* rotate the data if needed */
-    if(grid_out[m].rotate) {
+    if(output_grid[m].rotate) {
       for(i=0; i<nx2*ny2; i++) {
 	tmp_x = u_out[m].data[i];
 	tmp_y = v_out[m].data[i];
 	if( tmp_x != missing && tmp_y != missing) {
-	  u_out[m].data[i] =  tmp_x * grid_out[m].cosrot[i] + tmp_y * grid_out[m].sinrot[i];
-	  v_out[m].data[i] = -tmp_x * grid_out[m].sinrot[i] + tmp_y * grid_out[m].cosrot[i];
+	  u_out[m].data[i] =  tmp_x * output_grid[m].cosrot[i] + tmp_y * output_grid[m].sinrot[i];
+	  v_out[m].data[i] = -tmp_x * output_grid[m].sinrot[i] + tmp_y * output_grid[m].cosrot[i];
 	}
       }
     }

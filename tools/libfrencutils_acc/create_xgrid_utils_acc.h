@@ -20,7 +20,7 @@
 #ifndef CREATE_XGRID_UTILS_ACC_H_
 #define CREATE_XGRID_UTILS_ACC_H_
 
-#include "globals.h"
+#include "globals_acc.h"
 
 #define MV 50
 /* this value is small compare to earth area */
@@ -41,7 +41,8 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
                                 const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
                                 double x_out[], double y_out[], double z_out[]);
 
-void get_cell_minmaxavg_latlons_acc( const int nlon, const int nlat, const double *lon, const double *lat, Cell *cell);
+void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lon, const double *lat,
+                                Grid_cells_struct_config *cell);
 
 #pragma acc routine seq
 void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );

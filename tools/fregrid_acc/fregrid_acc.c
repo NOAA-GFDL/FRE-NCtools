@@ -45,7 +45,7 @@
 #include <getopt.h>
 #include <math.h>
 #include <time.h>
-#include "globals.h"
+#include "globals_acc.h"
 #include "read_mosaic.h"
 #include "mpp_io.h"
 #include "mpp.h"
@@ -350,7 +350,8 @@ int main(int argc, char* argv[])
   File_config   *file2_in   = NULL;   /* store input file information */
   File_config   *file2_out  = NULL;   /* store output file information */
   Bound_config  *bound_T    = NULL;   /* store halo update information for T-cell*/
-  Interp_config *interp     = NULL;   /* store remapping information */
+  Xgrid_config *xgrid     = NULL;     /* store remapping information */
+  Interp_config *interp   = NULL;     /* store remapping information */
   int save_weight_only      = 0;
   int nthreads = 1;
 
@@ -715,7 +716,9 @@ int main(int argc, char* argv[])
   grid_in   = (Grid_config *)malloc(ntiles_in *sizeof(Grid_config));
   grid_out  = (Grid_config *)malloc(ntiles_out*sizeof(Grid_config));
   bound_T   = (Bound_config *)malloc(ntiles_in *sizeof(Bound_config));
-  interp    = (Interp_config *)malloc(ntiles_out*sizeof(Interp_config));
+  //If statement will be removed once bilinear is on the GPU
+  if( opcode & BILINEAR ) interp  = (Interp_config *)malloc(ntiles_out*sizeof(Interp_config));
+  else xgrid = (Xgrid_config *)malloc(ntiles_out*sizeof(Xgrid_config));
 
   if(debug) {
     print_mem_usage("Before calling get_input_grid");
@@ -779,7 +782,7 @@ int main(int argc, char* argv[])
     if(extrapolate) mpp_error("fregrid: extrapolate is not supported for vector fields");
   }
 
-  if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, interp, &opcode, save_weight_only);
+  if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, xgrid, &opcode, save_weight_only);
 
   if(!save_weight_only) {
     file_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
@@ -951,7 +954,7 @@ int main(int argc, char* argv[])
     setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
   }
   else
-    setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode);
+    setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, xgrid, opcode);
   if(debug) {
     time_end = clock();
     time_setup_interp = 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -966,7 +969,7 @@ int main(int argc, char* argv[])
     if(mpp_pe() == mpp_root_pe() ) {
       printf("NOTE: Successfully running fregrid and the following files which store weight information are generated.\n");
       for(n=0; n<ntiles_out; n++) {
-        printf("****%s\n", interp[n].remap_file);
+        printf("****%s\n", xgrid[n].remap_file);
       }
     }
     mpp_end();
@@ -1015,7 +1018,7 @@ int main(int argc, char* argv[])
           if( opcode & BILINEAR )
             do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
           else
-            do_scalar_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+            do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
           write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
           if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
@@ -1045,7 +1048,7 @@ int main(int argc, char* argv[])
               if( opcode & BILINEAR )
                 do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
               else
-                do_scalar_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+                do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
               if(debug) {
                 time_end = clock();
                 time_do_interp += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -1082,7 +1085,7 @@ int main(int argc, char* argv[])
       if( opcode & BILINEAR )
         do_vector_bilinear_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, finer_step, fill_missing);
       else
-        do_vector_conserve_interp_acc(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
+        do_vector_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
 
       write_field_data(ntiles_out, u_out, grid_out, l, level_z, level_n, m);
       write_field_data(ntiles_out, v_out, grid_out, l, level_z, level_n, m);

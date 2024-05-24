@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <openacc.h>
-#include "globals.h"
+#include "globals_acc.h"
 #include "general_utils_acc.h"
 
 /*******************************************************************************
@@ -35,29 +35,29 @@ void copy_grid_to_device_acc( const int npoints, const double *lat, const double
 }
 
 /*******************************************************************************
-void copy_interp_to_device( Interp_config *interp )
+void copy_interp_to_device( Xgrid_config *interp )
 Copies the interp struct to device
 *******************************************************************************/
-void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
-                                const unsigned int opcode )
+void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const Xgrid_config *xgrid,
+                               const unsigned int opcode )
 {
 
-#pragma acc enter data copyin(interp[:ntiles_out])
+#pragma acc enter data copyin(xgrid[:ntiles_out])
   for(int n=0 ; n<ntiles_out; n++) {
 
-#pragma acc enter data copyin( interp[n].interp_mini[:ntiles_in] )
+#pragma acc enter data copyin( xgrid[n].per_intile[:ntiles_in] )
 
     for(int m=0 ; m<ntiles_in ; m++) {
 
-      int nxgrid_acc = interp[n].interp_mini[m].nxgrid;
-#pragma acc enter data copyin( interp[n].interp_mini[m].i_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].j_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].i_out[:nxgrid_acc], \
-                               interp[n].interp_mini[m].j_out[:nxgrid_acc], \
-                               interp[n].interp_mini[m].area[:nxgrid_acc] )
+      int nxcells = xgrid[n].per_intile[m].nxcells;
+#pragma acc enter data copyin( xgrid[n].per_intile[m].input_parent_lon_indices[:nxcells], \
+                               xgrid[n].per_intile[m].input_parent_lat_indices[:nxcells], \
+                               xgrid[n].per_intile[m].output_parent_lon_indices[:nxcells], \
+                               xgrid[n].per_intile[m].output_parent_lat_indices[:nxcells], \
+                               xgrid[n].per_intile[m].xcell_area[:nxcells] )
         if( opcode & CONSERVE_ORDER2) {
-#pragma acc enter data copyin( interp[n].interp_mini[m].di_in[:nxgrid_acc], \
-                               interp[n].interp_mini[m].dj_in[:nxgrid_acc])
+#pragma acc enter data copyin( xgrid[n].per_intile[m].dcentroid_lon[:nxcells], \
+                               xgrid[n].per_intile[m].dcentroid_lat[:nxcells])
         }
 
     } // ntiles_in

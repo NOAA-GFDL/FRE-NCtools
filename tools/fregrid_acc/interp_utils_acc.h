@@ -20,12 +20,12 @@
 #ifndef FREGRID_UTILS_ACC_H_
 #define FREGRID_UTILS_ACC_H_
 
-#include "globals.h"
+#include "globals_acc.h"
 
 void create_mask_on_device(const int mask_size, double **mask);
 
-void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config *interp,
-                                const unsigned int opcode );
+void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const Xgrid_config *xgrid,
+                               const unsigned int opcode );
 
 void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, const int ny,
                           const double *ref_lat, const double *lat, int *jstart, int *jend, int *new_ny);
