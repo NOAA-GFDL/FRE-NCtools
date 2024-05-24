@@ -39,7 +39,7 @@
 void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_grid, int ntiles_output_grid,
 			   Grid_config *output_grid, Xgrid_config *xgrid, unsigned int opcode)
 {
-  int n, m, i, ii, jj, nlon_input_cells, nlat_input_cells, nlat_input_cells2;
+  int n, m, i, ii, jj, nlon_input_cells, nlat_input_cells;
   int nlon_output_cells, nlat_output_cells, tile;
   size_t nxcells, nxcells_prev;
   int *input_parent_lon_indices=NULL, *input_parent_lat_indices=NULL;
@@ -82,7 +82,8 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
       nlat_output_cells = output_grid[n].nyc;
       xgrid[n].nxcells = 0;
       for(m=0; m<ntiles_input_grid; m++){
-        int jstart, jend;
+        int jlat_overlap_starts_offset, nlat_overlapping_cells;
+        int start_from_this_corner;
 
         nlon_input_cells = input_grid[m].nx;
         nlat_input_cells = input_grid[m].ny;
@@ -99,33 +100,35 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
                                                   xcell_area, xcell_centroid_lon, xcell_centroid_lat);
         }
         else {
+          //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
           get_bounding_indices(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
-                               output_grid[n].latc, input_grid[m].latc, &jstart, &jend, &nlat_input_cells2);
+                               output_grid[n].latc, input_grid[m].latc, &jlat_overlap_starts_offset, &nlat_overlapping_cells);
+          start_from_this_corner = jlat_overlap_starts_offset*(nlon_input_cells+1);
 
           if(opcode & CONSERVE_ORDER1) {
-            nxcells = create_xgrid_2dx2d_order1_acc(&nlon_input_cells, &nlat_input_cells2,
+            nxcells = create_xgrid_2dx2d_order1_acc(&nlon_input_cells, &nlat_overlapping_cells,
                                                     &nlon_output_cells, &nlat_output_cells,
-                                                    input_grid[m].lonc+jstart*(nlon_input_cells+1),
-                                                    input_grid[m].latc+jstart*(nlon_input_cells+1),
+                                                    input_grid[m].lonc+start_from_this_corner,
+                                                    input_grid[m].latc+start_from_this_corner,
                                                     output_grid[n].lonc, output_grid[n].latc, input_cells[m].skip_cells,
                                                     input_parent_lon_indices, input_parent_lat_indices,
                                                     output_parent_lon_indices, output_parent_lat_indices, xcell_area);
-            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jstart;
+            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jlat_overlap_starts_offset;
           }
           else if(opcode & CONSERVE_ORDER2) {
             int g_nxcells;
             int    *g_input_parent_lon_indices, *g_input_parent_lat_indices;
             double *g_xcell_area, *g_xcell_centroid_lon, *g_xcell_centroid_lat;
 
-            nxcells = create_xgrid_2dx2d_order2_acc(&nlon_input_cells, &nlat_input_cells2,
+            nxcells = create_xgrid_2dx2d_order2_acc(&nlon_input_cells, &nlat_overlapping_cells,
                                                     &nlon_output_cells, &nlat_output_cells,
-                                                    input_grid[m].lonc+jstart*(nlon_input_cells+1),
-                                                    input_grid[m].latc+jstart*(nlon_input_cells+1),
+                                                    input_grid[m].lonc+start_from_this_corner,
+                                                    input_grid[m].latc+start_from_this_corner,
                                                     output_grid[n].lonc,  output_grid[n].latc, input_cells[m].skip_cells,
                                                     input_parent_lon_indices, input_parent_lat_indices,
                                                     output_parent_lon_indices, output_parent_lat_indices, xcell_area,
                                                     xcell_centroid_lon, xcell_centroid_lat);
-            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jstart;
+            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jlat_overlap_starts_offset;
 
 	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
 	    g_nxcells = nxcells;

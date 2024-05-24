@@ -67,33 +67,39 @@ void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const 
 
 /*******************************************************************************
 void get_bounding_indices
-gets indices for kat that overlap with the ref_lat
+gets indices for kat that overlap with the ref_grid_lat
 TODO: THIS FUNCTION NEEDS A UNIT TEST
 *******************************************************************************/
-void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, const int ny,
-                          const double *ref_lat, const double *lat, int *jstart, int *jend, int *new_ny)
+void get_bounding_indices(const int ref_nlon_cells, const int ref_nlat_cells,
+                          const int nlon_cells, const int nlat_cells,
+                          const double *ref_grid_lat, const double *grid_lat,
+                          int *overlap_starts_here_index, int *nlat_overlapping_cells)
 {
 
-  int ref_min, ref_max, yy;
-  int jstart2, jend2;
+  int ref_min_lat, ref_max_lat, lat;
+  int overlap_starts_here_index_tmp = nlat_cells; //declared to avoid dereferencing
+  int overlap_ends_here_index = -1;
+  int igridpt=0;
 
-  ref_min = minval_double((ref_ny+1)*(ref_nx+1), ref_lat);
-  ref_max = maxval_double((ref_ny+1)*(ref_nx+1), ref_lat);
+  int nlat_gridpts = nlat_cells+1;
+  int nlon_gridpts = nlon_cells+1;
 
-  jstart2 = ny;
-  jend2 = -1;
+  ref_min_lat = minval_double((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
+  ref_max_lat = maxval_double((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
 
-  for(int j=0; j<ny+1; j++) {
-    for(int i=0; i<nx+1; i++) {
-      yy = lat[j*(nx+1)+i];
-      if( yy > ref_min ) jstart2 = min(jstart2, j);
-      if( yy < ref_max ) jend2   = max(jend2, j);
+  for(int jlat=0; jlat<nlat_gridpts; jlat++) {
+    for(int ilon=0; ilon<nlon_gridpts; ilon++) {
+      lat = grid_lat[igridpt];
+      if( lat > ref_min_lat ) overlap_starts_here_index_tmp = min(overlap_starts_here_index_tmp, jlat);
+      if( lat < ref_max_lat ) overlap_ends_here_index       = max(overlap_ends_here_index, jlat);
+      igridpt++;
     }
   }
 
-  *jstart = max(0, jstart2-1);
-  *jend   = min(ny-1, jend2+1);
-  *new_ny = jend2-jstart2+1;
+  // top and bottom cells share grid points. -1 to get bottom cell; +1 to get top cells
+  *overlap_starts_here_index = max(0, overlap_starts_here_index_tmp-1);
+  overlap_ends_here_index    = min(nlat_cells-1, overlap_ends_here_index+1);
+  *nlat_overlapping_cells = overlap_ends_here_index-overlap_starts_here_index_tmp+1;
 
 }
 /*******************************************************************************
