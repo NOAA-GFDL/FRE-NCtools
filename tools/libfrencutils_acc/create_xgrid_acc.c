@@ -31,18 +31,18 @@ void get_nxgrid_upbound_2dx2d_acc
 This function computes the upperbound to nxgrid.  This upper bound will be used
 to malloc arrays used in create_xgrid
 *******************************************************************************/
-int get_nxgrid_upbound_2dx2d_acc(const int input_grid_nlon, const int input_grid_nlat,
-                                 const int output_grid_nlon, const int output_grid_nlat,
+int get_nxgrid_upbound_2dx2d_acc(const int nlon_input_cells, const int nlat_input_cells,
+                                 const int nlon_output_cells, const int nlat_output_cells,
                                  const double *intput_grid_lon, const double *input_grid_lat,
                                  const double *output_grid_lon, const double *output_grid_lat,
                                  const double *mask_skip_input_cell, const Cell *output_grid_cell,
                                  int *xcells_per_ij1, int *ij2_start, int *ij2_end)
 {
 
-  int input_grid_ncells  = input_grid_nlon*input_grid_nlat;
-  int output_grid_ncells = output_grid_nlon*output_grid_nlat;
-  int input_grid_npts    = (input_grid_nlon+1)*(input_grid_nlat+1);
-  int output_grid_npts   = (output_grid_nlon+1)*(output_grid_nlat+1);
+  int input_grid_ncells  = nlon_input_cells*nlat_input_cells;
+  int output_grid_ncells = nlon_output_cells*nlat_output_cells;
+  int input_grid_npts    = (nlon_input_cells+1)*(nlat_input_cells+1);
+  int output_grid_npts   = (nlon_output_cells+1)*(nlat_output_cells+1);
 
   int nxgrid_upbound=0;
 
@@ -64,7 +64,7 @@ int get_nxgrid_upbound_2dx2d_acc(const int input_grid_nlon, const int input_grid
 
       xcells_per_ij1[ij1]=0;
 
-      get_cell_vertices_acc(ij1, input_grid_nlon, intput_grid_lon, input_grid_lat, x1, y1);
+      get_cell_vertices_acc(ij1, nlon_input_cells, intput_grid_lon, input_grid_lat, x1, y1);
 
       input_cell_lat_min = minval_double_acc(4, y1);
       input_cell_lat_max = maxval_double_acc(4, y1);
@@ -122,42 +122,45 @@ int get_nxgrid_upbound_2dx2d_acc(const int input_grid_nlon, const int input_grid
 /*******************************************************************************
   void create_xgrid_2DX2D_order1
   This routine generate exchange grids between two grids for the first order
-  conservative interpolation. nlon_in,nlat_in,nlon_out,nlat_out are the size of the grid cell
-  and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
+  conservative interpolation. nlon_input_cells,ninput_grid_lat,nlon_output_cells,nlat_output_cells are the size of the grid cell
+  and input_grid_lon,input_grid_lat, output_grid_lon,output_grid_lat are geographic grid location of grid cell bounds.
 *******************************************************************************/
-int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-                                  const double *lon_in, const double *lat_in,
-                                  const double *lon_out, const double *lat_out, const double *mask_skip_input_cell,
+int create_xgrid_2dx2d_order1_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+                                  const int *nlon_output_cells, const int *nlat_output_cells,
+                                  const double *input_grid_lon, const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
+                                  const double *mask_skip_input_cell,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area)
 {
 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
   int  ij;
-  double *lon_out_min_list,*lon_out_max_list,*lon_out_avg,*lat_out_min_list,*lat_out_max_list;
-  double *lon_out_list, *lat_out_list;
+  double *output_grid_lon_min_list,*output_grid_lon_max_list,*output_grid_lon_avg;
+  double *output_grid_lat_min_list,*output_grid_lat_max_list;
+  double *output_grid_lon_list, *output_grid_lat_list;
   int    *n2_list;
 
-  nx1 = *nlon_in;
-  ny1 = *nlat_in;
-  nx2 = *nlon_out;
-  ny2 = *nlat_out;
+  nx1 = *nlon_input_cells;
+  ny1 = *nlat_input_cells;
+  nx2 = *nlon_output_cells;
+  ny2 = *nlat_output_cells;
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
 
   area_in  = (double *)malloc(nx1*ny1*sizeof(double));
   area_out = (double *)malloc(nx2*ny2*sizeof(double));
-  get_grid_area_acc(nlon_in, nlat_in, lon_in, lat_in, area_in);
-  get_grid_area_acc(nlon_out, nlat_out, lon_out, lat_out, area_out);
+  get_grid_area_acc(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area_in);
+  get_grid_area_acc(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area_out);
 
-  lon_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_avg = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_min_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_max_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lat_min_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lat_max_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_avg = (double *)malloc(nx2*ny2*sizeof(double));
   n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
-  lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-  lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
+  output_grid_lon_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
+  output_grid_lat_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
 
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
@@ -167,21 +170,21 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
     n = j2*nx2+i2;
     n0 = j2*nx2p+i2; n1 = j2*nx2p+i2+1;
     n2 = (j2+1)*nx2p+i2+1; n3 = (j2+1)*nx2p+i2;
-    x2_in[0] = lon_out[n0]; y2_in[0] = lat_out[n0];
-    x2_in[1] = lon_out[n1]; y2_in[1] = lat_out[n1];
-    x2_in[2] = lon_out[n2]; y2_in[2] = lat_out[n2];
-    x2_in[3] = lon_out[n3]; y2_in[3] = lat_out[n3];
+    x2_in[0] = output_grid_lon[n0]; y2_in[0] = output_grid_lat[n0];
+    x2_in[1] = output_grid_lon[n1]; y2_in[1] = output_grid_lat[n1];
+    x2_in[2] = output_grid_lon[n2]; y2_in[2] = output_grid_lat[n2];
+    x2_in[3] = output_grid_lon[n3]; y2_in[3] = output_grid_lat[n3];
 
-    lat_out_min_list[n] = minval_double_acc(4, y2_in);
-    lat_out_max_list[n] = maxval_double_acc(4, y2_in);
+    output_grid_lat_min_list[n] = minval_double_acc(4, y2_in);
+    output_grid_lat_max_list[n] = maxval_double_acc(4, y2_in);
     n2_in = fix_lon_acc(x2_in, y2_in, 4, M_PI);
-    lon_out_min_list[n] = minval_double_acc(n2_in, x2_in);
-    lon_out_max_list[n] = maxval_double_acc(n2_in, x2_in);
-    lon_out_avg[n] = avgval_double_acc(n2_in, x2_in);
+    output_grid_lon_min_list[n] = minval_double_acc(n2_in, x2_in);
+    output_grid_lon_max_list[n] = maxval_double_acc(n2_in, x2_in);
+    output_grid_lon_avg[n] = avgval_double_acc(n2_in, x2_in);
     n2_list[n] = n2_in;
     for(l=0; l<n2_in; l++) {
-      lon_out_list[n*MAX_V+l] = x2_in[l];
-      lat_out_list[n*MAX_V+l] = y2_in[l];
+      output_grid_lon_list[n*MAX_V+l] = x2_in[l];
+      output_grid_lat_list[n*MAX_V+l] = y2_in[l];
     }
   }
 
@@ -190,54 +193,54 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
   for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
       if(mask_skip_input_cell[j1*nx1+i1] > MASK_THRESH)  {
         int n0, n1, n2, n3, l,n1_in;
-        double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
+        double input_grid_lat_min,input_grid_lat_max,input_grid_lon_min,input_grid_lon_max,input_grid_lon_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
         n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
         n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-        x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
-        x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
-        x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
-        x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-        lat_in_min = minval_double_acc(4, y1_in);
-        lat_in_max = maxval_double_acc(4, y1_in);
+        x1_in[0] = input_grid_lon[n0]; y1_in[0] = input_grid_lat[n0];
+        x1_in[1] = input_grid_lon[n1]; y1_in[1] = input_grid_lat[n1];
+        x1_in[2] = input_grid_lon[n2]; y1_in[2] = input_grid_lat[n2];
+        x1_in[3] = input_grid_lon[n3]; y1_in[3] = input_grid_lat[n3];
+        input_grid_lat_min = minval_double_acc(4, y1_in);
+        input_grid_lat_max = maxval_double_acc(4, y1_in);
         n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
-        lon_in_min = minval_double_acc(n1_in, x1_in);
-        lon_in_max = maxval_double_acc(n1_in, x1_in);
-        lon_in_avg = avgval_double_acc(n1_in, x1_in);
+        input_grid_lon_min = minval_double_acc(n1_in, x1_in);
+        input_grid_lon_max = maxval_double_acc(n1_in, x1_in);
+        input_grid_lon_avg = avgval_double_acc(n1_in, x1_in);
         for(ij=0; ij<nx2*ny2; ij++) {
           int n_in, n_out, i2, j2, n2_in;
-          double xarea, dx, lon_out_min, lon_out_max;
+          double xarea, dx, output_grid_lon_min, output_grid_lon_max;
           double x2_in[MAX_V], y2_in[MAX_V];
 
           i2 = ij%nx2;
           j2 = ij/nx2;
 
-          if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
-          /* adjust x2_in according to lon_in_avg*/
+          if(output_grid_lat_min_list[ij] >= input_grid_lat_max || output_grid_lat_max_list[ij] <= input_grid_lat_min ) continue;
+          /* adjust x2_in according to input_grid_lon_avg*/
           n2_in = n2_list[ij];
           for(l=0; l<n2_in; l++) {
-            x2_in[l] = lon_out_list[ij*MAX_V+l];
-            y2_in[l] = lat_out_list[ij*MAX_V+l];
+            x2_in[l] = output_grid_lon_list[ij*MAX_V+l];
+            y2_in[l] = output_grid_lat_list[ij*MAX_V+l];
           }
-          lon_out_min = lon_out_min_list[ij];
-          lon_out_max = lon_out_max_list[ij];
-          dx = lon_out_avg[ij] - lon_in_avg;
+          output_grid_lon_min = output_grid_lon_min_list[ij];
+          output_grid_lon_max = output_grid_lon_max_list[ij];
+          dx = output_grid_lon_avg[ij] - input_grid_lon_avg;
           if(dx < -M_PI ) {
-            lon_out_min += TPI;
-            lon_out_max += TPI;
+            output_grid_lon_min += TPI;
+            output_grid_lon_max += TPI;
             for (l=0; l<n2_in; l++) x2_in[l] += TPI;
           }
           else if (dx >  M_PI) {
-            lon_out_min -= TPI;
-            lon_out_max -= TPI;
+            output_grid_lon_min -= TPI;
+            output_grid_lon_max -= TPI;
             for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
           }
 
           /* x2_in should in the same range as x1_in after lon_fix, so no need to
              consider cyclic condition
           */
-          if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
+          if(output_grid_lon_min >= input_grid_lon_max || output_grid_lon_max <= input_grid_lon_min ) continue;
           if (  (n_out = clip_2dx2d_acc( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
             double min_area;
             int    nn;
@@ -260,14 +263,14 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
 
   free(area_in);
   free(area_out);
-  free(lon_out_min_list);
-  free(lon_out_max_list);
-  free(lat_out_min_list);
-  free(lat_out_max_list);
-  free(lon_out_avg);
+  free(output_grid_lon_min_list);
+  free(output_grid_lon_max_list);
+  free(output_grid_lat_min_list);
+  free(output_grid_lat_max_list);
+  free(output_grid_lon_avg);
   free(n2_list);
-  free(lon_out_list);
-  free(lat_out_list);
+  free(output_grid_lon_list);
+  free(output_grid_lat_list);
 
   return nxgrid;
 
@@ -276,11 +279,13 @@ int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const 
 /********************************************************************************
   void create_xgrid_2dx1d_order2
   This routine generate exchange grids between two grids for the second order
-  conservative interpolation. nlon_in,nlat_in,nlon_out,nlat_out are the size of the grid cell
-  and lon_in,lat_in, lon_out,lat_out are geographic grid location of grid cell bounds.
+  conservative interpolation. nlon_input_cells,nlat_input_cells,nlon_output_cells,nlat_output_cells are the size of the grid cell
+  and input_grid_lon,input_grid_lat, output_grid_lon,output_grid_lat are geographic grid location of grid cell bounds.
 ********************************************************************************/
-int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+                                  const int *nlon_output_cells, const int *nlat_output_cells,
+                                  const double *input_grid_lon, const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
                                   const double *mask_skip_input_cell,
                                   int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
                                   double *xgrid_clon, double *xgrid_clat)
@@ -289,30 +294,31 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
   double *area_in, *area_out;
   int ij;
-  double *lon_out_min_list,*lon_out_max_list,*lon_out_avg,*lat_out_min_list,*lat_out_max_list;
-  double *lon_out_list, *lat_out_list;
+  double *output_grid_lon_min_list,*output_grid_lon_max_list;
+  double *output_grid_lon_avg,*output_grid_lat_min_list,*output_grid_lat_max_list;
+  double *output_grid_lon_list, *output_grid_lat_list;
   int    *n2_list;
 
-  nx1 = *nlon_in;
-  ny1 = *nlat_in;
-  nx2 = *nlon_out;
-  ny2 = *nlat_out;
+  nx1 = *nlon_input_cells;
+  ny1 = *nlat_input_cells;
+  nx2 = *nlon_output_cells;
+  ny2 = *nlat_output_cells;
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
 
   area_in  = (double *)malloc(nx1*ny1*sizeof(double));
   area_out = (double *)malloc(nx2*ny2*sizeof(double));
-  get_grid_area_acc(nlon_in, nlat_in, lon_in, lat_in, area_in);
-  get_grid_area_acc(nlon_out, nlat_out, lon_out, lat_out, area_out);
+  get_grid_area_acc(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area_in);
+  get_grid_area_acc(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area_out);
 
-  lon_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lat_out_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  lon_out_avg = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_min_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_max_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lat_min_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lat_max_list = (double *)malloc(nx2*ny2*sizeof(double));
+  output_grid_lon_avg = (double *)malloc(nx2*ny2*sizeof(double));
   n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
-  lon_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-  lat_out_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
+  output_grid_lon_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
+  output_grid_lat_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
 
   for(ij=0; ij<nx2*ny2; ij++){
     int i2, j2, n, n0, n1, n2, n3, n2_in, l;
@@ -322,21 +328,21 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
     n = j2*nx2+i2;
     n0 = j2*nx2p+i2; n1 = j2*nx2p+i2+1;
     n2 = (j2+1)*nx2p+i2+1; n3 = (j2+1)*nx2p+i2;
-    x2_in[0] = lon_out[n0]; y2_in[0] = lat_out[n0];
-    x2_in[1] = lon_out[n1]; y2_in[1] = lat_out[n1];
-    x2_in[2] = lon_out[n2]; y2_in[2] = lat_out[n2];
-    x2_in[3] = lon_out[n3]; y2_in[3] = lat_out[n3];
+    x2_in[0] = output_grid_lon[n0]; y2_in[0] = output_grid_lat[n0];
+    x2_in[1] = output_grid_lon[n1]; y2_in[1] = output_grid_lat[n1];
+    x2_in[2] = output_grid_lon[n2]; y2_in[2] = output_grid_lat[n2];
+    x2_in[3] = output_grid_lon[n3]; y2_in[3] = output_grid_lat[n3];
 
-    lat_out_min_list[n] = minval_double_acc(4, y2_in);
-    lat_out_max_list[n] = maxval_double_acc(4, y2_in);
+    output_grid_lat_min_list[n] = minval_double_acc(4, y2_in);
+    output_grid_lat_max_list[n] = maxval_double_acc(4, y2_in);
     n2_in = fix_lon_acc(x2_in, y2_in, 4, M_PI);
-    lon_out_min_list[n] = minval_double_acc(n2_in, x2_in);
-    lon_out_max_list[n] = maxval_double_acc(n2_in, x2_in);
-    lon_out_avg[n] = avgval_double_acc(n2_in, x2_in);
+    output_grid_lon_min_list[n] = minval_double_acc(n2_in, x2_in);
+    output_grid_lon_max_list[n] = maxval_double_acc(n2_in, x2_in);
+    output_grid_lon_avg[n] = avgval_double_acc(n2_in, x2_in);
     n2_list[n] = n2_in;
     for(l=0; l<n2_in; l++) {
-      lon_out_list[n*MAX_V+l] = x2_in[l];
-      lat_out_list[n*MAX_V+l] = y2_in[l];
+      output_grid_lon_list[n*MAX_V+l] = x2_in[l];
+      output_grid_lat_list[n*MAX_V+l] = y2_in[l];
     }
   }
 
@@ -345,54 +351,54 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
   for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
       if( mask_skip_input_cell[j1*nx1+i1] > MASK_THRESH ) {
         int n0, n1, n2, n3, l,n1_in;
-        double lat_in_min,lat_in_max,lon_in_min,lon_in_max,lon_in_avg;
+        double input_grid_lat_min,input_grid_lat_max,input_grid_lon_min,input_grid_lon_max,input_grid_lon_avg;
         double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
 
         n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
         n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-        x1_in[0] = lon_in[n0]; y1_in[0] = lat_in[n0];
-        x1_in[1] = lon_in[n1]; y1_in[1] = lat_in[n1];
-        x1_in[2] = lon_in[n2]; y1_in[2] = lat_in[n2];
-        x1_in[3] = lon_in[n3]; y1_in[3] = lat_in[n3];
-        lat_in_min = minval_double_acc(4, y1_in);
-        lat_in_max = maxval_double_acc(4, y1_in);
+        x1_in[0] = input_grid_lon[n0]; y1_in[0] = input_grid_lat[n0];
+        x1_in[1] = input_grid_lon[n1]; y1_in[1] = input_grid_lat[n1];
+        x1_in[2] = input_grid_lon[n2]; y1_in[2] = input_grid_lat[n2];
+        x1_in[3] = input_grid_lon[n3]; y1_in[3] = input_grid_lat[n3];
+        input_grid_lat_min = minval_double_acc(4, y1_in);
+        input_grid_lat_max = maxval_double_acc(4, y1_in);
         n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
-        lon_in_min = minval_double_acc(n1_in, x1_in);
-        lon_in_max = maxval_double_acc(n1_in, x1_in);
-        lon_in_avg = avgval_double_acc(n1_in, x1_in);
+        input_grid_lon_min = minval_double_acc(n1_in, x1_in);
+        input_grid_lon_max = maxval_double_acc(n1_in, x1_in);
+        input_grid_lon_avg = avgval_double_acc(n1_in, x1_in);
         for(ij=0; ij<nx2*ny2; ij++) {
           int n_in, n_out, i2, j2, n2_in;
-          double xarea, dx, lon_out_min, lon_out_max;
+          double xarea, dx, output_grid_lon_min, output_grid_lon_max;
           double x2_in[MAX_V], y2_in[MAX_V];
 
           i2 = ij%nx2;
           j2 = ij/nx2;
 
-          if(lat_out_min_list[ij] >= lat_in_max || lat_out_max_list[ij] <= lat_in_min ) continue;
-          /* adjust x2_in according to lon_in_avg*/
+          if(output_grid_lat_min_list[ij] >= input_grid_lat_max || output_grid_lat_max_list[ij] <= input_grid_lat_min ) continue;
+          /* adjust x2_in according to input_grid_lon_avg*/
           n2_in = n2_list[ij];
           for(l=0; l<n2_in; l++) {
-            x2_in[l] = lon_out_list[ij*MAX_V+l];
-            y2_in[l] = lat_out_list[ij*MAX_V+l];
+            x2_in[l] = output_grid_lon_list[ij*MAX_V+l];
+            y2_in[l] = output_grid_lat_list[ij*MAX_V+l];
           }
-          lon_out_min = lon_out_min_list[ij];
-          lon_out_max = lon_out_max_list[ij];
-          dx = lon_out_avg[ij] - lon_in_avg;
+          output_grid_lon_min = output_grid_lon_min_list[ij];
+          output_grid_lon_max = output_grid_lon_max_list[ij];
+          dx = output_grid_lon_avg[ij] - input_grid_lon_avg;
           if(dx < -M_PI ) {
-            lon_out_min += TPI;
-            lon_out_max += TPI;
+            output_grid_lon_min += TPI;
+            output_grid_lon_max += TPI;
             for (l=0; l<n2_in; l++) x2_in[l] += TPI;
           }
           else if (dx >  M_PI) {
-            lon_out_min -= TPI;
-            lon_out_max -= TPI;
+            output_grid_lon_min -= TPI;
+            output_grid_lon_max -= TPI;
             for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
           }
 
           /* x2_in should in the same range as x1_in after lon_fix, so no need to
              consider cyclic condition
           */
-          if(lon_out_min >= lon_in_max || lon_out_max <= lon_in_min ) continue;
+          if(output_grid_lon_min >= input_grid_lon_max || output_grid_lon_max <= input_grid_lon_min ) continue;
           if (  (n_out = clip_2dx2d_acc( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
             double min_area;
             int nn;
@@ -400,7 +406,7 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
             min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
             if( xarea/min_area > AREA_RATIO_THRESH ) {
               xgrid_area[nxgrid] = xarea;
-              xgrid_clon[nxgrid] = poly_ctrlon_acc(x_out, y_out, n_out, lon_in_avg);
+              xgrid_clon[nxgrid] = poly_ctrlon_acc(x_out, y_out, n_out, input_grid_lon_avg);
               xgrid_clat[nxgrid] = poly_ctrlat_acc(x_out, y_out, n_out );
               i_in[nxgrid]       = i1;
               j_in[nxgrid]       = j1;
@@ -415,22 +421,24 @@ int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const 
 
   free(area_in);
   free(area_out);
-  free(lon_out_min_list);
-  free(lon_out_max_list);
-  free(lat_out_min_list);
-  free(lat_out_max_list);
-  free(lon_out_avg);
+  free(output_grid_lon_min_list);
+  free(output_grid_lon_max_list);
+  free(output_grid_lat_min_list);
+  free(output_grid_lat_max_list);
+  free(output_grid_lon_avg);
   free(n2_list);
-  free(lon_out_list);
-  free(lat_out_list);
+  free(output_grid_lon_list);
+  free(output_grid_lat_list);
 
   return nxgrid;
 
 };/* get_xgrid_2Dx2D_order2 */
 
 
-int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-                                  const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
+int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+                                  const int *nlon_output_cells, const int *nlat_output_cells,
+                                  const double *input_grid_lon, const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
                                   const double *mask_skip_input_cell,
                                   int *i_in, int *j_in, int *i_out, int *j_out,
                                   double *xgrid_area, double *xgrid_clon, double *xgrid_clat)
@@ -447,10 +455,10 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
   double xctrlon, xctrlat;
   double *area1, *area2, min_area;
 
-  nx1 = *nlon_in;
-  ny1 = *nlat_in;
-  nx2 = *nlon_out;
-  ny2 = *nlat_out;
+  nx1 = *nlon_input_cells;
+  ny1 = *nlat_input_cells;
+  nx2 = *nlon_output_cells;
+  ny2 = *nlat_output_cells;
   nxgrid = 0;
   nx1p = nx1 + 1;
   nx2p = nx2 + 1;
@@ -465,13 +473,13 @@ int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const 
   y2 = (double *)malloc(nx2p*ny2p*sizeof(double));
   z2 = (double *)malloc(nx2p*ny2p*sizeof(double));
 
-  latlon2xyz_acc(nx1p*ny1p, lon_in, lat_in, x1, y1, z1);
-  latlon2xyz_acc(nx2p*ny2p, lon_out, lat_out, x2, y2, z2);
+  latlon2xyz_acc(nx1p*ny1p, input_grid_lon, input_grid_lat, x1, y1, z1);
+  latlon2xyz_acc(nx2p*ny2p, output_grid_lon, output_grid_lat, x2, y2, z2);
 
   area1  = (double *)malloc(nx1*ny1*sizeof(double));
   area2 = (double *)malloc(nx2*ny2*sizeof(double));
-  get_grid_great_circle_area_acc(nlon_in, nlat_in, lon_in, lat_in, area1);
-  get_grid_great_circle_area_acc(nlon_out, nlat_out, lon_out, lat_out, area2);
+  get_grid_great_circle_area_acc(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area1);
+  get_grid_great_circle_area_acc(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area2);
   n1_in = 4;
   n2_in = 4;
 
