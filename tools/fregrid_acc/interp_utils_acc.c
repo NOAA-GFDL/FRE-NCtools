@@ -106,7 +106,7 @@ void get_bounding_indices(const int ref_nlon_cells, const int ref_nlat_cells,
 void get_input_skip_cells
 assign mask to skip input cells in xgrid creation
 *******************************************************************************/
-void get_input_skip_cells(const int mask_size, double **skip_cells)
+void get_skip_cells(const int mask_size, double **skip_cells)
 {
 
   double *p_skip_cells;

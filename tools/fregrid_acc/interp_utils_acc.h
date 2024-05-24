@@ -22,7 +22,7 @@
 
 #include "globals_acc.h"
 
-void get_input_skip_cells(const int mask_size, double **skip_cells);
+void get_skip_cells(const int mask_size, double **skip_cells);
 
 void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const Xgrid_config *xgrid,
                                const unsigned int opcode );

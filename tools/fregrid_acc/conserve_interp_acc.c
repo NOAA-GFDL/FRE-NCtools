@@ -88,7 +88,7 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         nlon_input_cells = input_grid[m].nx;
         nlat_input_cells = input_grid[m].ny;
 
-        get_input_skip_cells(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
+        get_skip_cells(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
 
         if(opcode & GREAT_CIRCLE) {
           nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
