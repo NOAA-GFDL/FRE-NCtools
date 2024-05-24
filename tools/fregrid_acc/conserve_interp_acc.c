@@ -87,7 +87,7 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         nlon_input_cells = input_grid[m].nx;
         nlat_input_cells = input_grid[m].ny;
 
-        create_mask_on_device(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
+        get_input_skip_cells(nlon_input_cells*nlat_input_cells, &(input_cells[m].skip_cells));
 
         if(opcode & GREAT_CIRCLE) {
           nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
@@ -244,7 +244,7 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
       }
     }
     if(opcode & CONSERVE_ORDER2) {
-      /* subtract the input_grid centroid_lon and centroid_lat to get the distance between xgrid and input_grid */
+      /* subtract the input_grid centroid_lon and xgrid_centroid_lat to get the distance between xgrid and input_grid */
       for(n=0; n<ntiles_input_grid; n++) {
         double x1_in[50], y1_in[50], lon_in_avg, centroid_lon, centroid_lat;
         int    j, n0, n1, n2, n3, n1_in;
@@ -377,44 +377,44 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
   if(opcode & CHECK_CONSERVE) {
     int nx1, ny1, max_i, max_j, i, j;
     double max_ratio, ratio_change;
-    double *computed_output_area;
+    double *recomputed_output_area;
 
     /* sum over exchange grid to get the area of input_grid */
     nx1  = output_grid[0].nxc;
     ny1  = output_grid[0].nyc;
 
-    computed_output_area = (double *)malloc(nx1*ny1*sizeof(double));
+    recomputed_output_area = (double *)malloc(nx1*ny1*sizeof(double));
 
     for(n=0; n<ntiles_output_grid; n++) {
-      for(i=0; i<nx1*ny1; i++) computed_output_area[i] = 0;
+      for(i=0; i<nx1*ny1; i++) recomputed_output_area[i] = 0;
       for(i=0; i<xgrid[n].nxcells; i++) {
 	ii = xgrid[n].output_parent_lat_indices[i]*nx1 + xgrid[n].output_parent_lon_indices[i];
-	computed_output_area[ii] +=  xgrid[n].xcell_area[i];
+	recomputed_output_area[ii] +=  xgrid[n].xcell_area[i];
       }
       max_ratio = 0;
       max_i = 0;
       max_j = 0;
-      /* comparing area1 and computed_output_area */
+      /* comparing area1 and recomputed_output_area */
       for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
 	ii = j*nx1+i;
-	ratio_change = fabs(output_grid[n].cell_area[ii]-computed_output_area[ii])/output_grid[n].cell_area[ii];
+	ratio_change = fabs(output_grid[n].cell_area[ii]-recomputed_output_area[ii])/output_grid[n].cell_area[ii];
 	if(ratio_change > max_ratio) {
 	  max_ratio = ratio_change;
 	  max_i = i;
 	  max_j = j;
 	}
 	if( ratio_change > 1.e-4 ) {
-	  printf("(i,j)=(%d,%d), change = %g, area1=%g, computed_output_area=%g\n",
-           i, j, ratio_change, output_grid[n].cell_area[ii],computed_output_area[ii]);
+	  printf("(i,j)=(%d,%d), change = %g, area1=%g, recomputed_output_area=%g\n",
+           i, j, ratio_change, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
 	}
       }
       ii = max_j*nx1+max_i;
-      printf("The maximum ratio change at (%d,%d) = %g, area1=%g, computed_output_area=%g\n",
-             max_i, max_j, max_ratio, output_grid[n].cell_area[ii],computed_output_area[ii]);
+      printf("The maximum ratio change at (%d,%d) = %g, area1=%g, recomputed_output_area=%g\n",
+             max_i, max_j, max_ratio, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
 
     }
 
-    free(computed_output_area);
+    free(recomputed_output_area);
 
   }
 

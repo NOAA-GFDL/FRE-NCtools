@@ -97,19 +97,19 @@ void get_bounding_indices(const int ref_nx, const int ref_ny, const int nx, cons
 
 }
 /*******************************************************************************
-void get_mask
-get mask between input and output grid.
+void get_input_skip_cells
+assign mask to skip input cells in xgrid creation
 *******************************************************************************/
-void create_mask_on_device(const int mask_size, double **mask)
+void get_input_skip_cells(const int mask_size, double **skip_cells)
 {
 
-  double *pmask;
-  pmask = mask;
+  double *p_skip_cells;
+  p_skip_cells = *skip_cells;
 
-  pmask = (double *)malloc(mask_size*sizeof(double));
+  p_skip_cells = (double *)malloc(mask_size*sizeof(double));
 
-#pragma acc enter data create(pmask[:mask_size])
-#pragma acc parallel loop independent present(pmask[:mask_size])
-  for( int i=0 ; i<mask_size; i++) pmask[i]=1.0;
+#pragma acc enter data create(p_skip_cells[:mask_size])
+#pragma acc parallel loop independent present(p_skip_cells[:mask_size])
+  for( int i=0 ; i<mask_size; i++) p_skip_cells[i]=1.0;
 
 }
