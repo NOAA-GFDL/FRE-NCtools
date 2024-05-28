@@ -70,10 +70,10 @@ void get_bounding_indices
 gets indices for kat that overlap with the ref_grid_lat
 TODO: THIS FUNCTION NEEDS A UNIT TEST
 *******************************************************************************/
-void get_bounding_indices(const int ref_nlon_cells, const int ref_nlat_cells,
-                          const int nlon_cells, const int nlat_cells,
-                          const double *ref_grid_lat, const double *grid_lat,
-                          int *overlap_starts_here_index, int *nlat_overlapping_cells)
+void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells,
+                              const int nlon_cells, const int nlat_cells,
+                              const double *ref_grid_lat, const double *grid_lat,
+                              int *overlap_starts_here_index, int *nlat_overlapping_cells)
 {
 
   int ref_min_lat, ref_max_lat, lat;
@@ -84,8 +84,8 @@ void get_bounding_indices(const int ref_nlon_cells, const int ref_nlat_cells,
   int nlat_gridpts = nlat_cells+1;
   int nlon_gridpts = nlon_cells+1;
 
-  ref_min_lat = minval_double((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
-  ref_max_lat = maxval_double((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
+  ref_min_lat = minval_double_acc((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
+  ref_max_lat = maxval_double_acc((ref_nlat_cells+1)*(ref_nlon_cells+1), ref_grid_lat);
 
   for(int jlat=0; jlat<nlat_gridpts; jlat++) {
     for(int ilon=0; ilon<nlon_gridpts; ilon++) {
@@ -117,5 +117,34 @@ void get_skip_cells_acc(const int mask_size, double **skip_cells)
 #pragma acc enter data create(p_skip_cells[:mask_size])
 #pragma acc parallel loop independent present(p_skip_cells[:mask_size])
   for( int i=0 ; i<mask_size; i++) p_skip_cells[i]=1.0;
+
+}
+
+void create_xgrid_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
+                                                  Xinfo_per_input_tile *xgrid_per_intile)
+{
+
+  xgrid_per_intile->input_parent_lon_indices = (int *)malloc(nxcells *sizeof(int));
+  xgrid_per_intile->input_parent_lat_indices = (int *)malloc(nxcells *sizeof(int));
+  xgrid_per_intile->output_parent_lon_indices = (int *)malloc(nxcells *sizeof(int));
+  xgrid_per_intile->output_parent_lat_indices = (int *)malloc(nxcells *sizeof(int));
+  xgrid_per_intile->xcell_area = (double *)malloc(nxcells * sizeof(double));
+
+  if(opcode & CONSERVE_ORDER2) {
+    xgrid_per_intile->dcentroid_lon = (double *)malloc(nxcells*sizeof(double));
+    xgrid_per_intile->dcentroid_lat = (double *)malloc(nxcells*sizeof(double));
+  }
+
+#pragma acc enter data create(xgrid_per_intile)
+#pragma acc enter data create(xgrid_per_intile->input_parent_lon_indices[:nxcells], \
+                              xgrid_per_intile->input_parent_lat_indices[:nxcells], \
+                              xgrid_per_intile->output_parent_lon_indices[:nxcells], \
+                              xgrid_per_intile->output_parent_lon_indices[:nxcells], \
+                              xgrid_per_intile->xcell_area[:nxcells])
+  if(opcode & CONSERVE_ORDER2) {
+#pragma acc enter data create(xgrid_per_intile->dcentroid_lon[:nxcells], \
+                              xgrid_per_intile->dcentroid_lat[:nxcells])
+  }
+
 
 }

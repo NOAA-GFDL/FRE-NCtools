@@ -56,13 +56,14 @@ typedef struct {
   double *lat_min;
   double *lat_max;
   double *lon_cent;
-  int *n_vertices;
+  double *area;
+  int *nvertices;
   double **lon_vertices;
   double **lat_vertices;
   double *recomputed_area;
   double *centroid_lon;
   double *centroid_lat;
-  int skip_cells;
+  double *skip_cells;
 
 } Grid_cells_struct_config;
 

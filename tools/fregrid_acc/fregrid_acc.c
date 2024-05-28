@@ -53,6 +53,7 @@
 #include "conserve_interp_acc.h"
 #include "bilinear_interp.h"
 #include "fregrid_util.h"
+#include "fregrid_utils_acc.h"
 
 char *usage[] = {
                  "",
@@ -782,7 +783,8 @@ int main(int argc, char* argv[])
     if(extrapolate) mpp_error("fregrid: extrapolate is not supported for vector fields");
   }
 
-  if(remap_file) set_remap_file(ntiles_out, mosaic_out, remap_file, xgrid, &opcode, save_weight_only);
+  if(opcode & BILINEAR && remap_file) mpp_error("does not work yet with bilinear");
+  if(remap_file) set_remap_file_acc(ntiles_out, mosaic_out, remap_file, xgrid, &opcode, save_weight_only);
 
   if(!save_weight_only) {
     file_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));

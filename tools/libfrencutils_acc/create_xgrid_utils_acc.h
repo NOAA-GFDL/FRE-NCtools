@@ -42,9 +42,12 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
                                 double x_out[], double y_out[], double z_out[]);
 
 void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lon, const double *lat,
-                                Grid_cells_struct_config *cell);
+                                Grid_cells_struct_config *grid_cells);
 
 #pragma acc routine seq
 void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
+
+void create_get_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
+                                                     int **ij2_start, int **ij2_end);
 
 #endif

@@ -24,6 +24,7 @@
 #include "create_xgrid_utils_acc.h"
 #include "interp_utils_acc.h"
 #include "parameters.h"
+#include "globals_acc.h"
 
 #define NLON 36 // 36 cells in lon direction (36+1 grid points in the lon direction for each lat point)
 #define NLAT 4  // 4 cells in lat direction ( 4+1 grid points in the lat direction for each lon point)
@@ -49,6 +50,7 @@ void get_answers(const double *lon, const double *lat, Answers *answers);
 void check_answers( const Grid_cells_struct_config *grid_cells, const Answers *answers);
 void check_ranswer( const int n, const double *answer, const double *checkme);
 
+//TODO:  test for compute poly_area
 
 int main(){
 
@@ -80,6 +82,8 @@ int main(){
   copy_cell_to_host(&grid_cells);
 
   check_answers(&grid_cells, &answers);
+
+  printf("TODO:  add check for areas");
 
   return 0;
 }
@@ -136,7 +140,7 @@ void reset_cell_on_host(Grid_cells_struct_config *grid_cells)
     grid_cells->lat_min[icell]=-99.;
     grid_cells->lat_max[icell]=-99.;
     grid_cells->lon_cent[icell]=-99.;
-    grid_cells->n_vertices[icell]=-99;
+    grid_cells->nvertices[icell]=-99;
     for(int ipt=0 ; ipt<MAX_V ; ipt++){
       grid_cells->lon_vertices[icell][ipt]=-99.;
       grid_cells->lat_vertices[icell][ipt]=-99.;
@@ -151,10 +155,9 @@ void copy_cell_to_host(Grid_cells_struct_config *grid_cells)
   int ncell = NLON*NLAT;
 #pragma acc exit data copyout( grid_cells->lon_min[:ncell], grid_cells->lon_max[:ncell], \
                                grid_cells->lat_min[:ncell], grid_cells->lat_max[:ncell], \
-                               grid_cells->lon_cent[:ncell], grid_cells->n_vertices[:ncell], \
+                               grid_cells->lon_cent[:ncell], grid_cells->nvertices[:ncell], \
                                grid_cells->lon_vertices[:ncell][:MAX_V],\
                                grid_cells->lat_vertices[:ncell][:MAX_V])
-
 }
 
 void check_answers( const Grid_cells_struct_config *grid_cells, const Answers *answers)
@@ -162,8 +165,8 @@ void check_answers( const Grid_cells_struct_config *grid_cells, const Answers *a
 
   printf("Checking for nubmer of cell vertices\n");
   for(int i=0 ; i<NLON*NLAT ; i++) {
-    if( grid_cells->n_vertices[i] != 4 ) {
-      printf("ERROR element %d:  %d vs %d\n", i, grid_cells->n_vertices[i], 4);
+    if( grid_cells->nvertices[i] != 4 ) {
+      printf("ERROR element %d:  %d vs %d\n", i, grid_cells->nvertices[i], 4);
       exit(1);
     }
   }

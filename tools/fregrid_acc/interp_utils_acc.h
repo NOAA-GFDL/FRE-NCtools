@@ -27,11 +27,14 @@ void copy_grid_to_device_acc( const int npoints, const double *lat, const double
 void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const Xgrid_config *xgrid,
                                const unsigned int opcode );
 
-void get_bounding_indices(const int ref_nlon_cells, const int ref_nlat_cells,
-                          const int nlon_cells, const int nlat_cells,
-                          const double *ref_grid_lat, const double *grid_lat,
-                          int *overlap_starts_here_index, int *nlat_overlapping_cells);
+void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells,
+                              const int nlon_cells, const int nlat_cells,
+                              const double *ref_grid_lat, const double *grid_lat,
+                              int *overlap_starts_here_index, int *nlat_overlapping_cells);
 
 void get_skip_cells_acc(const int mask_size, double **skip_cells);
+
+void create_xgrid_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
+                                                  Xinfo_per_input_tile *xgrid_per_intile);
 
 #endif
