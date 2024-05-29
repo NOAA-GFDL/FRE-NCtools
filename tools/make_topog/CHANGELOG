@@ -5,4 +5,6 @@
 
 2017-03-18 Seth Underwood <Seth.Underwood@noaa.gov>
     * Changed Makefile to match new build system
+2024-02-10 TN
+    * added option --on_grid => skip the call auf regridding function
 
