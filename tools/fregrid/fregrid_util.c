@@ -1780,6 +1780,7 @@ void set_output_metadata (int ntiles_in, int nfiles, const File_config *file1_in
 	    char name[256], coords[512];
 	    memset(coords,0,512);
 	    mpp_get_var_attname(file_in[0].fid, scalar_in[0].var[l].vid, i, name);
+      if (strcmp(name, "time_avg_info") == 0) continue;
 	    /* check if we need to output coordinates attribute */
 	    if( !standard_dimension || !dst_is_latlon || strcmp(name, "coordinates") )
 	      mpp_copy_att_by_name(file_in[0].fid, scalar_in[0].var[l].vid, file_out[n].fid,
