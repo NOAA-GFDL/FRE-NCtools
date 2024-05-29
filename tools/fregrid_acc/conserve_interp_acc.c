@@ -104,13 +104,8 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
                                  &jlat_overlap_starts_offset, &nlat_overlapping_cells);
         start_from_this_corner = jlat_overlap_starts_offset*(nlon_input_cells+1);
 
-        create_get_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1,
-                                                         &ij2_start, &ij2_end);
-
-        printf("HERE %d\n", upbound_nxcells);
-        exit(1);
-
-
+        create_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1,
+                                                     &ij2_start, &ij2_end);
 
         upbound_nxcells = get_upbound_nxcells_2dx2d_acc( nlon_input_cells, nlat_overlapping_cells,
                                                          nlon_output_cells, nlat_output_cells,

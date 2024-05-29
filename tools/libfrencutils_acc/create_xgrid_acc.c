@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <openacc.h>
 #include "general_utils_acc.h"
 #include "create_xgrid_acc.h"
 #include "create_xgrid_utils_acc.h"
@@ -32,7 +33,7 @@ to malloc arrays used in create_xgrid
 *******************************************************************************/
 int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
-                                  const double *intput_grid_lon, const double *input_grid_lat,
+                                  const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
                                   const double *skip_input_cells,
                                   const Grid_cells_struct_config *output_grid_cells,
@@ -48,12 +49,12 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
 
 #pragma acc data present(output_grid_lon[:output_grid_npts],  \
                          output_grid_lat[:output_grid_npts],  \
-                         intput_grid_lon[:input_grid_npts],   \
+                         input_grid_lon[:input_grid_npts],   \
                          input_grid_lat[:input_grid_npts],    \
-                         output_grid_cells[:1],               \
-                         approx_xcells_per_ij1[0:input_grid_ncells], \
-                         ij2_start[0:input_grid_ncells],      \
-                         ij2_end[0:input_grid_ncells],        \
+                         output_grid_cells[:1],                     \
+                         approx_xcells_per_ij1[:input_grid_ncells], \
+                         ij2_start[:input_grid_ncells],             \
+                         ij2_end[:input_grid_ncells],               \
                          skip_input_cells[:input_grid_ncells])
 #pragma acc data copyin(input_grid_ncells, \
                         output_grid_ncells)
@@ -71,8 +72,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
       double input_cell_lon_vertices[MV], input_cell_lat_vertices[MV];
 
       approx_xcells_per_ij1[ij1]=0;
-
-      get_cell_vertices_acc(ij1, nlon_input_cells, intput_grid_lon, input_grid_lat,
+      get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
                             input_cell_lon_vertices, input_cell_lat_vertices);
 
       input_cell_lat_min = minval_double_acc(4, input_cell_lat_vertices);
@@ -92,7 +92,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
         if(output_grid_cells->lat_min[ij2] >= input_cell_lat_max) continue;
         if(output_grid_cells->lat_max[ij2] <= input_cell_lat_min) continue;
 
-        // adjust according to intput_grid_lon_cent
+        // adjust according to input_grid_lon_cent
         // TODO: breakup grid into quadrants to avoid if statements?
         output_cell_lon_min = output_grid_cells->lon_min[ij2];
         output_cell_lon_max = output_grid_cells->lon_max[ij2];

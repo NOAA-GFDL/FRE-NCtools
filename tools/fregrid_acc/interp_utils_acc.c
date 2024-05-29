@@ -110,9 +110,9 @@ void get_skip_cells_acc(const int mask_size, double **skip_cells)
 {
 
   double *p_skip_cells;
-  p_skip_cells = *skip_cells;
 
-  p_skip_cells = (double *)malloc(mask_size*sizeof(double));
+  *skip_cells = (double *)malloc(mask_size*sizeof(double));
+  p_skip_cells = *skip_cells;
 
 #pragma acc enter data create(p_skip_cells[:mask_size])
 #pragma acc parallel loop independent present(p_skip_cells[:mask_size])

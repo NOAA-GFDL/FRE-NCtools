@@ -47,7 +47,7 @@ void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lo
 #pragma acc routine seq
 void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
 
-void create_get_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
-                                                     int **ij2_start, int **ij2_end);
+void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
+                                                 int **ij2_start, int **ij2_end);
 
 #endif

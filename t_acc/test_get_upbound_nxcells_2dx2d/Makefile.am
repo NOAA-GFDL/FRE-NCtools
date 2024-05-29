@@ -17,4 +17,18 @@
 #* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-SUBDIRS = test_read_remap_file test_get_cell_minmaxavg_latlons test_get_upbound_nxcells_2dx2d
+check_PROGRAMS = test_get_upbound_nxcells_2dx2d
+
+AM_CFLAGS =  $(NETCDF_CFLAGS) \
+            -I$(top_srcdir)/tools/fregrid_acc \
+            -I$(top_srcdir)/tools/libfrencutils \
+            -I$(top_srcdir)/tools/libfrencutils_acc -acc
+
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
+        $(top_builddir)/tools/fregrid_acc/interp_utils_acc.o \
+        $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+        $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a
+
+test_get_upbound_nxcells_2dx2d = test_get_upbound_nxcells_2dx2d.c
+
+TESTS = test_get_upbound_nxcells_2dx2d

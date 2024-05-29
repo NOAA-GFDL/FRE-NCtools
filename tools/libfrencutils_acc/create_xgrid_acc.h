@@ -24,7 +24,7 @@
 
 int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
-                                  const double *intput_grid_lon, const double *input_grid_lat,
+                                  const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
                                   const double *skip_input_cells,
                                   const Grid_cells_struct_config *output_grid_cells,
