@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <openacc.h>
 #include "general_utils_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "globals_acc.h"
@@ -746,5 +747,51 @@ void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcel
 #pragma acc enter data copyin(p_approx_nxcells_per_ij1[:n],   \
                               p_ij2_start[:n],                \
                               p_ij2_end[:n])
+
+}
+
+void free_upbound_xcells_array_from_all_acc( const int n, int *approx_nxcells_per_ij1,
+                                             int *ij2_start, int *ij2_end)
+{
+#pragma acc exit data delete(approx_nxcells_per_ij1[:n],  \
+                             ij2_start[:n],               \
+                             ij2_end[:n])
+
+  free(approx_nxcells_per_ij1);
+  free(ij2_start);
+  free(ij2_end);
+}
+
+void free_output_grid_cell_struct_from_all_acc(const int n, Grid_cells_struct_config *grid_cells)
+{
+
+#pragma acc exit data delete(grid_cells->lon_min[:n],   \
+                             grid_cells->lon_max[:n],   \
+                             grid_cells->lon_min[:n],   \
+                             grid_cells->lat_max[:n],   \
+                             grid_cells->lat_min[:n],   \
+                             grid_cells->area[:n],      \
+                             grid_cells->nvertices[:n])
+  for(int icell=0 ; icell<n; icell++){
+#pragma acc exit data delete(grid_cells->lon_vertices[icell][:MAX_V], \
+                             grid_cells->lat_vertices[icell][:MAX_V])
+  }
+#pragma acc exit data delete(grid_cells->lon_vertices[:n],  \
+                             grid_cells->lat_vertices[:n])
+#pragma acc exit data delete(grid_cells[:1])
+
+  free(grid_cells->lon_min);
+  free(grid_cells->lon_max);
+  free(grid_cells->lat_min);
+  free(grid_cells->lat_max);
+  free(grid_cells->lon_cent);
+  free(grid_cells->area);
+  free(grid_cells->nvertices);
+  for(int icell=0 ; icell<n ; icell++) {
+    free(grid_cells->lat_vertices[icell]);
+    free(grid_cells->lon_vertices[icell]);
+  }
+  free(grid_cells->lon_vertices);
+  free(grid_cells->lat_vertices);
 
 }

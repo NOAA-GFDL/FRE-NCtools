@@ -34,6 +34,13 @@ void copy_grid_to_device_acc( const int npoints, const double *lat, const double
 
 }
 
+void delete_grid_from_device_acc( const int npoints, const double *lat, const double *lon )
+{
+
+#pragma acc exit data delete(lat[:npoints], lon[:npoints])
+
+}
+
 /*******************************************************************************
 void copy_interp_to_device( Xgrid_config *interp )
 Copies the interp struct to device
@@ -118,6 +125,12 @@ void get_skip_cells_acc(const int mask_size, double **skip_cells)
 #pragma acc parallel loop independent present(p_skip_cells[:mask_size])
   for( int i=0 ; i<mask_size; i++) p_skip_cells[i]=1.0;
 
+}
+
+void free_skip_cells_on_all_acc(const int mask_size, double *skip_cells)
+{
+#pragma acc exit data delete(skip_cells[:mask_size])
+  free(skip_cells);
 }
 
 void create_xgrid_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,

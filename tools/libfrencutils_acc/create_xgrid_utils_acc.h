@@ -50,4 +50,9 @@ void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, con
 void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
                                                  int **ij2_start, int **ij2_end);
 
+void free_upbound_xcells_array_from_all_acc( const int n, int *approx_nxcells_per_ij1,
+                                             int *ij2_start, int *ij2_end);
+
+void free_output_grid_cell_struct_from_all_acc(const int n, Grid_cells_struct_config *grid_cells);
+
 #endif

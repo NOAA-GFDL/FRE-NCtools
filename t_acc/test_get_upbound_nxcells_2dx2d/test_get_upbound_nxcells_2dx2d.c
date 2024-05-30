@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <openacc.h>
 #include "globals_acc.h"
 #include "interp_utils_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "create_xgrid_acc.h"
-#include <openacc.h>
 
 typedef struct {
   int ncells_input;
@@ -15,6 +15,7 @@ typedef struct {
 } Answers;
 
 void generate_input_is_same_as_output_grids(Grid_config *input_grid, Grid_config *output_grid, Answers *answers);
+void generate_two_ouput_cells_per_input_cell(Grid_config *input_grid, Grid_config *output_grid, Answers *answers);
 void check_data_on_device(Grid_config *input_grid, Grid_config *output_grid,
                           int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
                           Grid_cells_struct_config *input_grid_cells,
@@ -22,10 +23,14 @@ void check_data_on_device(Grid_config *input_grid, Grid_config *output_grid,
 int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
               Grid_cells_struct_config *output_grid_cells, int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end,
               int *upbound_nxcells);
+void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output_grid,
+                  Grid_cells_struct_config *input_grid_cells, Grid_cells_struct_config *output_grid_cells,
+                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end);
 void check_answers(const Answers *answers, int *approx_nxcells_per_ij1, int *ij2_start,
                    int *ij2_end, const int upbound_nxcells);
-void check_ianswers( const int n, const int *answers, const int *checkme);
+void check_ianswers(const int n, const int *answers, const int *checkme);
 
+//TODO:  add more complicated tests
 int main()
 {
 
@@ -36,10 +41,17 @@ int main()
 
   Answers answers;
 
+  printf("CHECKING CASE 1:  Input grid = Output_grid\n");
   generate_input_is_same_as_output_grids(&input_grid, &output_grid, &answers);
   run_tests(&input_grid, &output_grid, &input_grid_cells, &output_grid_cells, &approx_nxcells_per_ij1, &ij2_start, &ij2_end,
             &upbound_nxcells);
   check_answers(&answers, approx_nxcells_per_ij1, ij2_start, ij2_end, upbound_nxcells);
+  cleanup_test(&answers, &input_grid, &output_grid, &input_grid_cells, &output_grid_cells, approx_nxcells_per_ij1,
+               ij2_start, ij2_end);
+
+  generate_two_ouput_cells_per_input_cell(&input_grid, &output_grid, &answers);
+  run_tests(&input_grid, &output_grid, &input_grid_cells, &output_grid_cells, &approx_nxcells_per_ij1, &ij2_start, &ij2_end,
+            &upbound_nxcells);
 
   return 0;
 
@@ -89,6 +101,71 @@ void generate_input_is_same_as_output_grids(Grid_config *input_grid, Grid_config
   }
 
 }
+
+/*
+void generate_two_ouput_cells_per_input_cell(Grid_config *input_grid, Grid_config *output_grid, Answers *answers)
+{
+
+  int nlat_input_cells = 2;   //[0, 30, 60]
+  int nlon_input_cells = 180; //[0, 1, 2...180]
+
+  int nlat_output_cells = 2*nlat_input_cells ; //[0, 15, 30, 45, 60]
+  int nlon_output_cells = 2*nlon_input_cells ; //[0, 0.5, 1..]
+
+  int ncells_input  = nlon_input_cells * nlat_input_cells;
+  int ncells_output = nlon_output_cells * nlat_output_cells;
+  int ngridpts_input  = (nlon_input_cells+1)*(nlat_input_cells+1);
+  int ngridpts_output = (nlon_output_cells+1)*(nlat_output_cells+1);
+
+  double dlat_input = 30.0;
+  double dlon_input = 1.0;
+  double dlat_output = 15.0;
+  double dlon_output = 0.5;
+
+  int i=0;
+
+  input_grid->nxc  = nlon_input_cells  ; input_grid->nyc  = nlat_input_cells;
+  output_grid->nxc = nlon_output_cells ; output_grid->nyc = nlat_output_cells;
+
+  input_grid->latc = (double *)malloc(ngridpts_input*sizeof(double));
+  input_grid->lonc = (double *)malloc(ngridpts_input*sizeof(double));
+  output_grid->latc = (double *)malloc(ngridpts_output*sizeof(double));
+  output_grid->lonc = (double *)malloc(ngridpts_output*sizeof(double));
+
+  //input grid
+  for( int ilat=0 ; ilat<nlat_input_cells+1 ; ilat++){
+    double latitude = (dlat_input*ilat)*D2R ;
+    for(int ilon=0; ilon<nlon_input_cells+1 ; ilon++) {
+      input_grid->latc[ilat] = latitude;
+      input_grid->lonc[ilat] = (ilon * dlon_input)*D2R ;
+    }
+  }
+
+  for(int ilat=0 ; ilat<nlat_output_cells+1 ; ilat++) {
+    double latitude = (dlat_output*ilat)*D2R;
+    for(int ilon=0 ; ilon<nlon_output_cells+1; ilon++) {
+      output_grid->latc[ilat] = latitude;
+      output_grid->lonc[ilat] = (ilon *dlon_output) * D2R;
+    }
+  }
+
+  //answers
+  answers->ncells_input = ncells_input;
+  answers->upbound_nxcells = ncells_output;
+  answers->approx_nxcells_per_ij1 = (int *)malloc(ncells_input*sizeof(int));
+  answers->ij2_start = (int *)malloc(ncells_input*sizeof(int));
+  answers->ij2_end = (int *)malloc(ncells_input*sizeof(int));
+  for( int ilat=0 ; ilat<nlat_input_cells; ilat++) {
+    for( int ilon=0 ; ilon<nlon_input_cells ; ilon++) {
+      answers->approx_nxcells_per_ij1[i] = 4;
+      answers->ij2_start[i] = (ilat*2)*nlon_output_cells + ilon*2;
+      answers->ij2_end[i] = (2*ilat+1)*nlon_output_cells + ilon*2+1;
+      i++;
+    }
+  }
+
+}
+*/
 
 void check_data_on_device( Grid_config *input_grid, Grid_config *output_grid,
                            int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
@@ -247,6 +324,20 @@ int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Gri
 
 }
 
+void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output_grid,
+                Grid_cells_struct_config *input_grid_cells, Grid_cells_struct_config *output_grid_cells,
+                int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end)
+{
+
+  int ncells_output = output_grid->nxc * output_grid->nyc;
+  int ncells_input  = input_grid->nxc * input_grid->nyc;
+
+  free_output_grid_cell_struct_from_all_acc(ncells_output, output_grid_cells);
+  free_upbound_xcells_array_from_all_acc(ncells_input, approx_nxcells_per_ij1, ij2_start, ij2_end);
+  free_skip_cells_on_all_acc(ncells_input, input_grid_cells->skip_cells);
+
+}
+
 void check_ianswers( const int n, const int *answers, const int *checkme)
 {
 
@@ -259,6 +350,4 @@ void check_ianswers( const int n, const int *answers, const int *checkme)
 
 }
 
-
-
-  // void offset by half
+// void offset by half
