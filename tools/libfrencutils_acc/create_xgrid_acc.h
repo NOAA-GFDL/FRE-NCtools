@@ -24,6 +24,7 @@
 
 int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
+                                  const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
                                   const double *skip_input_cells,
@@ -32,12 +33,13 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
 
 int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
+                                  const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon,  const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
-                                  const int upbound_nxgrid, const double *skip_input_cells,
+                                  const int upbound_nxcells, const double *skip_input_cells,
                                   const Grid_cells_struct_config *output_grid_cells,
                                   int *approx_xcells_per_ij1, int *ij2_start, int *ij2_end,
-                                  Xgrid_config *xgrid);
+                                  Xinfo_per_input_tile *xgrid_gor_input_tile);
 
 int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,

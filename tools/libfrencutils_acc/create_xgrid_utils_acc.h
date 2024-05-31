@@ -33,6 +33,7 @@ double poly_ctrlon_acc(const double x[], const double y[], int n, double clon);
 
 double poly_ctrlat_acc(const double x[], const double y[], int n);
 
+#pragma acc routine seq
 int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
                    const double lon2_in[], const double lat2_in[], int n2_in,
                    double lon_out[], double lat_out[]);
@@ -50,9 +51,14 @@ void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, con
 void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
                                                  int **ij2_start, int **ij2_end);
 
-void free_upbound_xcells_array_from_all_acc( const int n, int *approx_nxcells_per_ij1,
-                                             int *ij2_start, int *ij2_end);
+void free_upbound_nxcells_array_from_all_acc( const int n, int *approx_nxcells_per_ij1,
+                                              int *ij2_start, int *ij2_end);
 
 void free_output_grid_cell_struct_from_all_acc(const int n, Grid_cells_struct_config *grid_cells);
+
+void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells, const int upbound_nxcells,
+                                      int *xcells_per_ij1, int *approx_xcells_per_ij1,
+                                      int *parent_input_indices, int *parent_output_indices, double *xcell_areas,
+                                      Xinfo_per_input_tile *xgrid_for_input_tile);
 
 #endif

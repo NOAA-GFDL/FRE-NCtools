@@ -36,24 +36,19 @@
   void setup_conserve_interp
   Setup the interpolation weight for conservative interpolation
 *******************************************************************************/
-void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_grid, int ntiles_output_grid,
+void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, int ntiles_output_grid,
 			   Grid_config *output_grid, Xgrid_config *xgrid, unsigned int opcode)
 {
   int n, m, i, ii, jj, nlon_input_cells, nlat_input_cells, ncells_input;
   int nlon_output_cells, nlat_output_cells, tile;
   size_t nxcells, nxcells_prev, upbound_nxcells;
-  int *input_parent_lon_indices=NULL, *input_parent_lat_indices=NULL;
-  int *output_parent_lon_indices=NULL, *output_parent_lat_indices=NULL;
-  int *tmp_input_parent_tile=NULL, *tmp_input_parent_lon_indices=NULL;
-  int *tmp_input_parent_lat_indices=NULL, *tmp_output_parent_lon_indices=NULL, *tmp_output_parent_lat_indices=NULL;
-  double *tmp_dcentroid_lon, *tmp_dcentroid_lat;
-  double *xcell_area=NULL, *tmp_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
 
-  Grid_cells_struct_config *input_grid_cells=(Grid_cells_struct_config *)malloc(ntiles_input_grid * sizeof(Grid_cells_struct_config));
+  Grid_cells_struct_config *input_grid_cells=
+    (Grid_cells_struct_config *)malloc(ntiles_input_grid * sizeof(Grid_cells_struct_config));
   Grid_cells_struct_config output_grid_cells;
 
   if( opcode & READ) {
-    read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
+    read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, output_grid, input_grid, xgrid, opcode);
     copy_xgrid_to_device_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
   }
   else {
@@ -83,25 +78,26 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         int nlon_input_cells = input_grid[m].nx;
         int nlat_input_cells = input_grid[m].ny;
         int ncells_input = nlon_input_cells * nlat_input_cells;
-        int jlat_overlap_starts_offset, nlat_overlapping_cells;
-        int start_from_this_corner;
+        int npts_input_grid = (nlon_input_cells+1)*(nlat_input_cells+1);
+        int jlat_overlap_starts, jlat_overlap_ends, nlat_overlapping_cells;
         int *approx_nxcells_per_ij1, *ij2_start, *ij2_end;
+
+        copy_grid_to_device_acc(npts_input_grid, input_grid[m].latc, input_grid[m].lonc);
 
         get_skip_cells_acc(nlon_input_cells*nlat_input_cells, &(input_grid_cells[m].skip_cells));
 
         //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
         get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
                                  output_grid[n].latc, input_grid[m].latc,
-                                 &jlat_overlap_starts_offset, &nlat_overlapping_cells);
-        start_from_this_corner = jlat_overlap_starts_offset*(nlon_input_cells+1);
+                                 &jlat_overlap_starts, &jlat_overlap_ends, &nlat_overlapping_cells);
 
         create_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1,
                                                      &ij2_start, &ij2_end);
 
-        upbound_nxcells = get_upbound_nxcells_2dx2d_acc( nlon_input_cells, nlat_overlapping_cells,
+        upbound_nxcells = get_upbound_nxcells_2dx2d_acc( nlon_input_cells, nlat_input_cells,
                                                          nlon_output_cells, nlat_output_cells,
-                                                         input_grid[m].lonc+start_from_this_corner,
-                                                         input_grid[m].latc+start_from_this_corner,
+                                                         jlat_overlap_starts, jlat_overlap_ends,
+                                                         input_grid[m].lonc, input_grid[m].latc,
                                                          output_grid[n].lonc, output_grid[n].latc,
                                                          input_grid_cells[m].skip_cells,
                                                          &output_grid_cells,
@@ -109,9 +105,8 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
 
         create_xgrid_per_intile_arrays_on_device_acc(upbound_nxcells, opcode, xgrid[n].per_intile+m);
 
-
         if(opcode & GREAT_CIRCLE) {
-          nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
+          /*nxcells = create_xgrid_great_circle_acc(&nlon_input_cells, &nlat_input_cells,
                                                   &nlon_output_cells, &nlat_output_cells,
                                                   input_grid[m].lonc, input_grid[m].latc,
                                                   output_grid[n].lonc, output_grid[n].latc,
@@ -119,193 +114,42 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
                                                   input_parent_lon_indices, input_parent_lat_indices,
                                                   output_parent_lon_indices, output_parent_lat_indices,
                                                   xcell_area, xcell_centroid_lon, xcell_centroid_lat);
+          */
         }
         else {
 
           if(opcode & CONSERVE_ORDER1) {
-            nxcells = create_xgrid_2dx2d_order1_acc( nlon_input_cells, nlat_overlapping_cells,
-                                                     nlon_output_cells, nlat_output_cells,
-                                                     input_grid[m].lonc+start_from_this_corner,
-                                                     input_grid[m].latc+start_from_this_corner,
-                                                     output_grid[n].lonc, output_grid[n].latc,
-                                                     upbound_nxcells,
-                                                     input_grid_cells[m].skip_cells,
-                                                     &output_grid_cells,
-                                                     approx_nxcells_per_ij1, ij2_start, ij2_end,
-                                                     xgrid+n);
-            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jlat_overlap_starts_offset;
+            xgrid[n].nxcells += create_xgrid_2dx2d_order1_acc( nlon_input_cells, nlat_input_cells,
+                                                               nlon_output_cells, nlat_output_cells,
+                                                               jlat_overlap_starts, jlat_overlap_ends,
+                                                               input_grid[m].lonc, input_grid[m].latc,
+                                                               output_grid[n].lonc, output_grid[n].latc,
+                                                               upbound_nxcells,
+                                                               input_grid_cells[m].skip_cells,
+                                                               &output_grid_cells,
+                                                               approx_nxcells_per_ij1, ij2_start, ij2_end,
+                                                               xgrid[n].per_intile+m);
           }
           else if(opcode & CONSERVE_ORDER2) {
-            int g_nxcells;
-            int    *g_input_parent_lon_indices, *g_input_parent_lat_indices;
-            double *g_xcell_area, *g_xcell_centroid_lon, *g_xcell_centroid_lat;
-
-            nxcells = create_xgrid_2dx2d_order2_acc(&nlon_input_cells, &nlat_overlapping_cells,
+            /*nxcells = create_xgrid_2dx2d_order2_acc(&nlon_input_cells, &nlat_input_cells,
                                                     &nlon_output_cells, &nlat_output_cells,
-                                                    input_grid[m].lonc+start_from_this_corner,
-                                                    input_grid[m].latc+start_from_this_corner,
+                                                    input_grid[m].lonc, input_grid[m].latc,
                                                     output_grid[n].lonc,  output_grid[n].latc, input_grid_cells[m].skip_cells,
                                                     input_parent_lon_indices, input_parent_lat_indices,
                                                     output_parent_lon_indices, output_parent_lat_indices, xcell_area,
                                                     xcell_centroid_lon, xcell_centroid_lat);
-            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jlat_overlap_starts_offset;
+            for(i=0; i<nxcells; i++) input_parent_lat_indices[i] += jlat_overlap_starts;
+            */
 
-	    /* For the purpose of bitiwise reproducing, the following operation is needed. */
-	    g_nxcells = nxcells;
-	    mpp_sum_int(1, &g_nxcells);
-	    if(g_nxcells > 0) {
-	      g_input_parent_lon_indices = (int *)malloc(g_nxcells*sizeof(int));
-	      g_input_parent_lat_indices = (int *)malloc(g_nxcells*sizeof(int));
-	      g_xcell_area = (double *)malloc(g_nxcells*sizeof(double));
-	      g_xcell_centroid_lon = (double *)malloc(g_nxcells*sizeof(double));
-	      g_xcell_centroid_lat = (double *)malloc(g_nxcells*sizeof(double));
-	      mpp_gather_field_int   (nxcells, input_parent_lon_indices,  g_input_parent_lon_indices);
-	      mpp_gather_field_int   (nxcells, input_parent_lat_indices,  g_input_parent_lat_indices);
-	      mpp_gather_field_double(nxcells, xcell_area, g_xcell_area);
-	      mpp_gather_field_double(nxcells, xcell_centroid_lon, g_xcell_centroid_lon);
-	      mpp_gather_field_double(nxcells, xcell_centroid_lat, g_xcell_centroid_lat);
-	      for(i=0; i<g_nxcells; i++) {
-          ii = g_input_parent_lat_indices[i]*nlon_input_cells+g_input_parent_lon_indices[i];
-          input_grid_cells[m].recomputed_area[ii] += g_xcell_area[i];
-          input_grid_cells[m].centroid_lon[ii] += g_xcell_centroid_lon[i];
-          input_grid_cells[m].centroid_lat[ii] += g_xcell_centroid_lat[i];
-	      }
-	      free(g_input_parent_lon_indices);
-	      free(g_input_parent_lat_indices);
-	      free(g_xcell_area);
-	      free(g_xcell_centroid_lon);
-	      free(g_xcell_centroid_lat);
-	    }
-	  }
-	  else
-	    mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
-	}
-
-	if(nxcells > 0) {
-	  nxcells_prev = xgrid[n].nxcells;
-	  xgrid[n].nxcells += nxcells;
-	  if(nxcells_prev == 0 ) {
-	    xgrid[n].input_parent_lon_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].input_parent_lat_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].output_parent_lon_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].output_parent_lat_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].xcell_area        = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	    xgrid[n].input_parent_tile   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    for(i=0; i<xgrid[n].nxcells; i++) {
-	      xgrid[n].input_parent_tile [i] = m;
-	      xgrid[n].input_parent_lon_indices [i] = input_parent_lon_indices [i];
-	      xgrid[n].input_parent_lat_indices [i] = input_parent_lat_indices [i];
-	      xgrid[n].output_parent_lon_indices[i] = output_parent_lon_indices[i];
-	      xgrid[n].output_parent_lat_indices[i] = output_parent_lat_indices[i];
-	      xgrid[n].xcell_area[i]  = xcell_area[i];
-	    }
-	    if(opcode & CONSERVE_ORDER2) {
-	      xgrid[n].dcentroid_lon   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	      xgrid[n].dcentroid_lat   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	      for(i=0; i<xgrid[n].nxcells; i++) {
-		xgrid[n].dcentroid_lon [i] = xcell_centroid_lon[i]/xcell_area[i];
-		xgrid[n].dcentroid_lat [i] = xcell_centroid_lat[i]/xcell_area[i];
-	      }
-	    }
-	  }
-	  else {
-	    tmp_input_parent_lon_indices  = xgrid[n].input_parent_lon_indices;
-	    tmp_input_parent_lat_indices  = xgrid[n].input_parent_lat_indices;
-	    tmp_output_parent_lon_indices = xgrid[n].output_parent_lon_indices;
-	    tmp_output_parent_lat_indices = xgrid[n].output_parent_lat_indices;
-	    tmp_area  = xgrid[n].xcell_area;
-	    tmp_input_parent_tile  = xgrid[n].input_parent_tile;
-	    xgrid[n].input_parent_lon_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].input_parent_lat_indices   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].output_parent_lon_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].output_parent_lat_indices  = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    xgrid[n].xcell_area   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	    xgrid[n].input_parent_tile   = (int    *)malloc(xgrid[n].nxcells*sizeof(int   ));
-	    for(i=0; i<nxcells_prev; i++) {
-	      xgrid[n].input_parent_tile [i] = tmp_input_parent_tile [i];
-	      xgrid[n].input_parent_lon_indices [i] = tmp_input_parent_lon_indices [i];
-	      xgrid[n].input_parent_lat_indices [i] = tmp_input_parent_lat_indices [i];
-	      xgrid[n].output_parent_lon_indices[i] = tmp_output_parent_lon_indices[i];
-	      xgrid[n].output_parent_lat_indices[i] = tmp_output_parent_lat_indices[i];
-	      xgrid[n].xcell_area [i] = tmp_area [i];
-	    }
-	    for(i=0; i<nxcells; i++) {
-	      ii = i + nxcells_prev;
-	      xgrid[n].input_parent_tile [ii] = m;
-	      xgrid[n].input_parent_lon_indices [ii] = input_parent_lon_indices [i];
-	      xgrid[n].input_parent_lat_indices [ii] = input_parent_lat_indices [i];
-	      xgrid[n].output_parent_lon_indices[ii] = output_parent_lon_indices[i];
-	      xgrid[n].output_parent_lat_indices[ii] = output_parent_lat_indices[i];
-	      xgrid[n].xcell_area [ii] = xcell_area[i];
-	    }
-	    if(opcode & CONSERVE_ORDER2) {
-	      tmp_dcentroid_lon  = xgrid[n].dcentroid_lon;
-	      tmp_dcentroid_lat  = xgrid[n].dcentroid_lat;
-	      xgrid[n].dcentroid_lon   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	      xgrid[n].dcentroid_lat   = (double *)malloc(xgrid[n].nxcells*sizeof(double));
-	      for(i=0; i<nxcells_prev; i++) {
-		xgrid[n].dcentroid_lon [i] = tmp_dcentroid_lon [i];
-		xgrid[n].dcentroid_lat [i] = tmp_dcentroid_lat [i];
-	      }
-	      for(i=0; i<nxcells; i++) {
-		ii = i + nxcells_prev;
-		jj = input_parent_lat_indices [i]*nlon_input_cells+input_parent_lon_indices [i];
-		xgrid[n].dcentroid_lon [ii] = xcell_centroid_lon[i]/xcell_area[i];
-		xgrid[n].dcentroid_lat [ii] = xcell_centroid_lat[i]/xcell_area[i];
-	      }
-	      free(tmp_dcentroid_lon);
-	      free(tmp_dcentroid_lat);
-	    }
-	    free(tmp_input_parent_tile);
-	    free(tmp_input_parent_lon_indices);
-	    free(tmp_input_parent_lat_indices);
-	    free(tmp_output_parent_lon_indices);
-	    free(tmp_output_parent_lat_indices);
-	    free(tmp_area);
-	  }
-	}  /* if(nxcells>0) */
-      }
-    }
-    if(opcode & CONSERVE_ORDER2) {
-      /* subtract the input_grid centroid_lon and xgrid_centroid_lat to get the distance between xgrid and input_grid */
-      for(n=0; n<ntiles_input_grid; n++) {
-        double x1_in[50], y1_in[50], lon_in_avg, centroid_lon, centroid_lat;
-        int    j, n0, n1, n2, n3, n1_in;
-        /* calcualte cell area */
-        nlon_input_cells = input_grid[n].nx;
-        nlat_input_cells = input_grid[n].ny;
-        for(j=0; j<nlat_input_cells; j++) for(i=0; i<nlon_input_cells; i++) {
-            ii = j*nlon_input_cells + i;
-            if(input_grid_cells[n].recomputed_area[ii] > 0) {
-              if( fabs(input_grid_cells[n].recomputed_area[ii]-input_grid[n].cell_area[ii])/input_grid[n].cell_area[ii] < AREA_RATIO ) {
-                input_grid_cells[n].centroid_lon[ii] /= input_grid_cells[n].recomputed_area[ii];
-                input_grid_cells[n].centroid_lat[ii] /= input_grid_cells[n].recomputed_area[ii];
-              }
-              else {
-                n0 = j*(nlon_input_cells+1)+i;       n1 = j*(nlon_input_cells+1)+i+1;
-                n2 = (j+1)*(nlon_input_cells+1)+i+1; n3 = (j+1)*(nlon_input_cells+1)+i;
-                x1_in[0] = input_grid[n].lonc[n0]; y1_in[0] = input_grid[n].latc[n0];
-                x1_in[1] = input_grid[n].lonc[n1]; y1_in[1] = input_grid[n].latc[n1];
-                x1_in[2] = input_grid[n].lonc[n2]; y1_in[2] = input_grid[n].latc[n2];
-                x1_in[3] = input_grid[n].lonc[n3]; y1_in[3] = input_grid[n].latc[n3];
-                n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
-                lon_in_avg = avgval_double_acc(n1_in, x1_in);
-                centroid_lon = poly_ctrlon_acc(x1_in, y1_in, n1_in, lon_in_avg);
-                centroid_lat = poly_ctrlat_acc(x1_in, y1_in, n1_in );
-                input_grid_cells[n].centroid_lon[ii] = centroid_lon/input_grid[n].cell_area[ii];
-                input_grid_cells[n].centroid_lat[ii] = centroid_lat/input_grid[n].cell_area[ii];
-              }
-            }
           }
-      }
-      for(n=0; n<ntiles_output_grid; n++) {
-        for(i=0; i<xgrid[n].nxcells; i++) {
-          tile = xgrid[n].input_parent_tile[i];
-          ii   = xgrid[n].input_parent_lat_indices[i] * input_grid[tile].nx + xgrid[n].input_parent_lon_indices[i];
-          xgrid[n].dcentroid_lon[i] -= input_grid_cells[tile].centroid_lon[ii];
-          xgrid[n].dcentroid_lat[i] -= input_grid_cells[tile].centroid_lat[ii];
-        }
-      }
+          else
+            mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
+        } //conserve_order methods
+
+        free_upbound_nxcells_array_from_all_acc(ncells_input, approx_nxcells_per_ij1, ij2_start, ij2_end);
+        free_skip_cells_on_all_acc( ncells_input, input_grid_cells[n].skip_cells);
+
+      } //input tile
 
       /* free the memory */
       for(n=0; n<ntiles_input_grid; n++) {
@@ -314,140 +158,59 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
         free(input_grid_cells[n].centroid_lat);
       }
       free(input_grid_cells);
-    }
+
+    }//output tile
+
     if( opcode & WRITE) { /* write out remapping information */
+      write_remap_file(ntiles_output_grid, ntiles_input_grid, output_grid, input_grid, xgrid);
+      if(mpp_pe() == mpp_root_pe())printf("NOTE: done calculating index and weight for conservative interpolation\n");
+    }
+
+    exit(0);
+
+    /* check the input area match exchange grid area */
+    if(opcode & CHECK_CONSERVE) {
+      int nx1, ny1, max_i, max_j, i, j;
+      double max_ratio, ratio_change;
+      double *recomputed_output_area;
+
+      /* sum over exchange grid to get the area of input_grid */
+      nx1  = output_grid[0].nxc;
+      ny1  = output_grid[0].nyc;
+
+      recomputed_output_area = (double *)malloc(nx1*ny1*sizeof(double));
+
       for(n=0; n<ntiles_output_grid; n++) {
-	int nxcells;
+        for(i=0; i<nx1*ny1; i++) recomputed_output_area[i] = 0;
+        for(i=0; i<xgrid[n].nxcells; i++) {
+          ii = xgrid[n].output_parent_lat_indices[i]*nx1 + xgrid[n].output_parent_lon_indices[i];
+          recomputed_output_area[ii] +=  xgrid[n].xcell_area[i];
+        }
+        max_ratio = 0;
+        max_i = 0;
+        max_j = 0;
+        /* comparing area1 and recomputed_output_area */
+        for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
+            ii = j*nx1+i;
+            ratio_change = fabs(output_grid[n].cell_area[ii]-recomputed_output_area[ii])/output_grid[n].cell_area[ii];
+            if(ratio_change > max_ratio) {
+              max_ratio = ratio_change;
+              max_i = i;
+              max_j = j;
+            }
+            if( ratio_change > 1.e-4 ) {
+              printf("(i,j)=(%d,%d), change = %g, area1=%g, recomputed_output_area=%g\n",
+                     i, j, ratio_change, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
+            }
+          }
+        ii = max_j*nx1+max_i;
+        printf("The maximum ratio change at (%d,%d) = %g, area1=%g, recomputed_output_area=%g\n",
+               max_i, max_j, max_ratio, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
 
-	nxcells = xgrid[n].nxcells;
-	mpp_sum_int(1, &nxcells);
-	if(nxcells > 0) {
-	  size_t start[4], nwrite[4];
-	  int    fid, dim_string, dim_ncells, dim_two, dims[4];
-	  int    id_xcell_area, id_tile1_dist;
-	  int    id_tile1_cell, id_tile2_cell, id_tile1;
-	  int    *gdata_int, *ldata_int;
-	  double *gdata_dbl;
-
-	  fid = mpp_open( xgrid[n].remap_file, MPP_WRITE);
-	  dim_string = mpp_def_dim(fid, "string", STRING);
-	  dim_ncells = mpp_def_dim(fid, "ncells", nxcells);
-	  dim_two    = mpp_def_dim(fid, "two", 2);
-	  dims[0] = dim_ncells; dims[1] = dim_two;
-	  id_tile1      = mpp_def_var(fid, "tile1",      NC_INT, 1, &dim_ncells, 1,
-				      "standard_name", "tile_number_in_mosaic1");
-	  id_tile1_cell = mpp_def_var(fid, "tile1_cell", NC_INT, 2, dims, 1,
-				      "standard_name", "parent_cell_indices_in_mosaic1");
-	  id_tile2_cell = mpp_def_var(fid, "tile2_cell", NC_INT, 2, dims, 1,
-				      "standard_name", "parent_cell_indices_in_mosaic2");
-	  id_xcell_area = mpp_def_var(fid, "xcell_area", NC_DOUBLE, 1, &dim_ncells, 2,
-				      "standard_name", "exchange_grid_area", "units", "m2");
-	  if(opcode & CONSERVE_ORDER2) id_tile1_dist = mpp_def_var(fid, "tile1_distance", NC_DOUBLE, 2, dims, 1,
-								   "standard_name", "distance_from_parent1_cell_centroid");
-	  mpp_end_def(fid);
-	  for(i=0; i<4; i++) {
-	    start[i] = 0; nwrite[i] = 1;
-	  }
-	  nwrite[0] = nxcells;
-	  gdata_int = (int *)malloc(nxcells*sizeof(int));
-	  if(xgrid[n].nxcells>0) ldata_int = (int *)malloc(xgrid[n].nxcells*sizeof(int));
-          mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_tile, gdata_int);
-	  for(i=0; i<nxcells; i++) gdata_int[i]++;
-	  mpp_put_var_value(fid, id_tile1, gdata_int);
-
-	  mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_lon_indices, gdata_int);
-	  for(i=0; i<nxcells; i++) gdata_int[i]++;
-	  mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, gdata_int);
-
-          for(i=0; i<xgrid[n].nxcells; i++) ldata_int[i] = xgrid[n].output_parent_lon_indices[i] + output_grid[n].isc + 1;
-	  mpp_gather_field_int(xgrid[n].nxcells, ldata_int, gdata_int);
-	  mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, gdata_int);
-
-	  mpp_gather_field_int(xgrid[n].nxcells, xgrid[n].input_parent_lat_indices, gdata_int);
-	  for(i=0; i<nxcells; i++) gdata_int[i]++;
-	  start[1] = 1;
-	  mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, gdata_int);
-
-          for(i=0; i<xgrid[n].nxcells; i++) ldata_int[i] = xgrid[n].output_parent_lat_indices[i] + output_grid[n].jsc + 1;
-	  mpp_gather_field_int(xgrid[n].nxcells, ldata_int, gdata_int);
-	  mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, gdata_int);
-
-	  free(gdata_int);
-	  if(xgrid[n].nxcells>0)free(ldata_int);
-
-	  gdata_dbl = (double *)malloc(nxcells*sizeof(double));
-	  mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].xcell_area, gdata_dbl);
-	  mpp_put_var_value(fid, id_xcell_area, gdata_dbl);
-
-	  if(opcode & CONSERVE_ORDER2) {
-	    start[1] = 0;
-	    mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].dcentroid_lon, gdata_dbl);
-	    mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, gdata_dbl);
-	    start[1] = 1;
-	    mpp_gather_field_double(xgrid[n].nxcells, xgrid[n].dcentroid_lat, gdata_dbl);
-	    mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, gdata_dbl);
-	  }
-
-	  free(gdata_dbl);
-	  mpp_close(fid);
-	}
       }
+      free(recomputed_output_area);
     }
-    if(mpp_pe() == mpp_root_pe())printf("NOTE: done calculating index and weight for conservative interpolation\n");
-  }
-
-  /* check the input area match exchange grid area */
-  if(opcode & CHECK_CONSERVE) {
-    int nx1, ny1, max_i, max_j, i, j;
-    double max_ratio, ratio_change;
-    double *recomputed_output_area;
-
-    /* sum over exchange grid to get the area of input_grid */
-    nx1  = output_grid[0].nxc;
-    ny1  = output_grid[0].nyc;
-
-    recomputed_output_area = (double *)malloc(nx1*ny1*sizeof(double));
-
-    for(n=0; n<ntiles_output_grid; n++) {
-      for(i=0; i<nx1*ny1; i++) recomputed_output_area[i] = 0;
-      for(i=0; i<xgrid[n].nxcells; i++) {
-	ii = xgrid[n].output_parent_lat_indices[i]*nx1 + xgrid[n].output_parent_lon_indices[i];
-	recomputed_output_area[ii] +=  xgrid[n].xcell_area[i];
-      }
-      max_ratio = 0;
-      max_i = 0;
-      max_j = 0;
-      /* comparing area1 and recomputed_output_area */
-      for(j=0; j<ny1; j++) for(i=0; i<nx1; i++) {
-	ii = j*nx1+i;
-	ratio_change = fabs(output_grid[n].cell_area[ii]-recomputed_output_area[ii])/output_grid[n].cell_area[ii];
-	if(ratio_change > max_ratio) {
-	  max_ratio = ratio_change;
-	  max_i = i;
-	  max_j = j;
-	}
-	if( ratio_change > 1.e-4 ) {
-	  printf("(i,j)=(%d,%d), change = %g, area1=%g, recomputed_output_area=%g\n",
-           i, j, ratio_change, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
-	}
-      }
-      ii = max_j*nx1+max_i;
-      printf("The maximum ratio change at (%d,%d) = %g, area1=%g, recomputed_output_area=%g\n",
-             max_i, max_j, max_ratio, output_grid[n].cell_area[ii],recomputed_output_area[ii]);
-
-    }
-
-    free(recomputed_output_area);
-
-  }
-
-  free(input_parent_lon_indices);
-  free(input_parent_lat_indices);
-  free(output_parent_lon_indices);
-  free(output_parent_lat_indices);
-  free(xcell_area);
-  if(xcell_centroid_lon) free(xcell_centroid_lon);
-  if(xcell_centroid_lat) free(xcell_centroid_lat);
+  } //check_conserve
 
 }; /* setup_conserve_interp */
 
@@ -456,13 +219,13 @@ void setup_conserve_interp_acc(int ntiles_input_grid, const Grid_config *input_g
  void read_remap_file
  Reads in the weight/remap file if provided and copies the data to the device
 *******************************************************************************/
-void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_config *xgrid, unsigned int opcode)
+void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_config *output_grid, Grid_config *input_grid,
+                         Xgrid_config *xgrid, unsigned int opcode)
 {
 
-  int *input_parent_lon_indices=NULL, *input_parent_lat_indices=NULL, *output_parent_lon_indices=NULL, *output_parent_lat_indices=NULL;
+  int *input_lon=NULL, *input_lat=NULL, *output_lon=NULL, *output_lat=NULL;
   double *xcell_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
 
-  size_t nxcells;
   int nxcells_acc;
 
   for(int n=0; n<ntiles_output_grid; n++) {
@@ -470,14 +233,15 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
       int *t_in, *ind_acc;
       int fid, vid;
 
-      nxcells = read_mosaic_xgrid_size(xgrid[n].remap_file);
+      int nlon_output = output_grid[n].nxc;
+      int nxcells = read_mosaic_xgrid_size(xgrid[n].remap_file);
       xgrid[n].nxcells = nxcells;
 
       t_in  = (int *)malloc(nxcells*sizeof(int));
-      input_parent_lon_indices  = (int *)malloc(nxcells*sizeof(int));
-      input_parent_lat_indices  = (int *)malloc(nxcells*sizeof(int));
-      output_parent_lon_indices = (int *)malloc(nxcells*sizeof(int));
-      output_parent_lat_indices = (int *)malloc(nxcells*sizeof(int));
+      input_lon = (int *)malloc(nxcells*sizeof(int));
+      input_lat = (int *)malloc(nxcells*sizeof(int));
+      output_lat = (int *)malloc(nxcells*sizeof(int));
+      output_lon = (int *)malloc(nxcells*sizeof(int));
       xcell_area = (double *)malloc(nxcells*sizeof(double));
       if( opcode & CONSERVE_ORDER2) {
         xcell_centroid_lon = (double *)malloc(nxcells*sizeof(double));
@@ -485,11 +249,9 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
       }
 
       if(opcode & CONSERVE_ORDER1)
-        read_mosaic_xgrid_order1(xgrid[n].remap_file, input_parent_lon_indices, input_parent_lat_indices,
-                                 output_parent_lon_indices, output_parent_lat_indices, xcell_area);
+        read_mosaic_xgrid_order1(xgrid[n].remap_file, input_lon, input_lat, output_lon, output_lat, xcell_area);
       else
-        read_mosaic_xgrid_order2(xgrid[n].remap_file, input_parent_lon_indices, input_parent_lat_indices,
-                                 output_parent_lon_indices, output_parent_lat_indices, xcell_area,
+        read_mosaic_xgrid_order2(xgrid[n].remap_file, input_lon, input_lat, output_lon, output_lat, xcell_area,
                                  xcell_centroid_lon, xcell_centroid_lat);
 
       //rescale the xgrid area
@@ -510,10 +272,8 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
 
       for(int m=0 ; m<ntiles_input_grid ; m++) {
         nxcells_acc = xgrid[n].per_intile[m].nxcells;
-        xgrid[n].per_intile[m].input_parent_lon_indices  = (int *)malloc(nxcells_acc*sizeof(int));
-        xgrid[n].per_intile[m].input_parent_lat_indices  = (int *)malloc(nxcells_acc*sizeof(int));
-        xgrid[n].per_intile[m].output_parent_lon_indices = (int *)malloc(nxcells_acc*sizeof(int));
-        xgrid[n].per_intile[m].output_parent_lat_indices = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].input_parent_cell_indices  = (int *)malloc(nxcells_acc*sizeof(int));
+        xgrid[n].per_intile[m].output_parent_cell_indices = (int *)malloc(nxcells_acc*sizeof(int));
         xgrid[n].per_intile[m].xcell_area  = (double *)malloc(nxcells_acc*sizeof(double));
         if(opcode & CONSERVE_ORDER2) {
           xgrid[n].per_intile[m].dcentroid_lon = (double *)malloc(nxcells_acc*sizeof(double));
@@ -523,13 +283,12 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
 
       ind_acc = (int *)calloc(ntiles_input_grid, sizeof(int));
       for(int i=0 ; i<nxcells ; i++) {
-        int itile, ii;
+        int itile, ii, nlon_input;
         itile = t_in[i];
         ii=ind_acc[itile];
-        xgrid[n].per_intile[itile].input_parent_lon_indices[ii] = input_parent_lon_indices[i];
-        xgrid[n].per_intile[itile].input_parent_lat_indices[ii] = input_parent_lat_indices[i];
-        xgrid[n].per_intile[itile].output_parent_lon_indices[ii] = output_parent_lon_indices[i];
-        xgrid[n].per_intile[itile].output_parent_lat_indices[ii] = output_parent_lat_indices[i];
+        nlon_input = input_grid[itile].nxc;
+        xgrid[n].per_intile[itile].input_parent_cell_indices[ii] = input_lat[i]*nlon_input + input_lon[i];
+        xgrid[n].per_intile[itile].output_parent_cell_indices[ii] = output_lat[i]*nlon_output + output_lon[i];
         xgrid[n].per_intile[itile].xcell_area[ii] = xcell_area[i];
         if( opcode & CONSERVE_ORDER2) {
           xgrid[n].per_intile[itile].dcentroid_lon[ii] = xcell_centroid_lon[i];
@@ -539,8 +298,7 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
       }
 
       free(t_in) ; free(ind_acc);
-      free(input_parent_lon_indices) ; free(input_parent_lat_indices);
-      free(output_parent_lon_indices); free(output_parent_lat_indices);
+      free(input_lon) ; free(input_lat); free(output_lon); free(output_lat);
       free(xcell_area); free(xcell_centroid_lon); free(xcell_centroid_lat);
 
     }//if file exists
@@ -550,7 +308,139 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Xgrid_co
 
 } //end read_remap_file
 
+/*******************************************************************************
+ void write_remap_file
+ write out the traditional remap file.
+*******************************************************************************/
+void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *output_grid,
+                      Grid_config *input_grid, Xgrid_config *xgrid)
+{
 
+  //copy and pasted from the original code with start and write
+
+  for(int n=0 ; n<ntiles_out ; n++) {
+
+    Xgrid_config *p_xgrid = xgrid+n;
+    int nxcells=p_xgrid->nxcells;
+    int nlon_cells, ii;
+
+    size_t start[4]  = {0,0,0,0};
+    size_t nwrite[4] = {nxcells, 0, 0, 0};
+    int    fid, dim_string, dim_ncells, dim_two, dims[4];
+    int    id_xgrid_area, id_tile1_dist, id_tile1_cell, id_tile2_cell, id_tile1;
+    int    *data_int;
+    double *data_double;
+
+    fid = mpp_open( xgrid[n].remap_file, MPP_WRITE);
+    dim_string = mpp_def_dim(fid, "string", STRING);
+    dim_ncells = mpp_def_dim(fid, "ncells", nxcells);
+    dim_two    = mpp_def_dim(fid, "two", 2);
+    dims[0] = dim_ncells; dims[1] = dim_two;
+    id_tile1      = mpp_def_var(fid, "tile1", NC_INT, 1, &dim_ncells, 1,
+                                "standard_name", "tile_number_in_mosaic1");
+    id_tile1_cell = mpp_def_var(fid, "tile1_cell", NC_INT, 2, dims, 1,
+                                "standard_name", "parent_cell_indices_in_mosaic1");
+    id_tile2_cell = mpp_def_var(fid, "tile2_cell", NC_INT, 2, dims, 1,
+                                "standard_name", "parent_cell_indices_in_mosaic2");
+    id_xgrid_area = mpp_def_var(fid, "xgrid_area", NC_DOUBLE, 1, &dim_ncells, 2,
+                                "standard_name", "exchange_grid_area", "units", "m2");
+    mpp_end_def(fid);
+
+    data_int = (int *)malloc(nxcells*sizeof(int));
+
+    //update data on host
+    for(int m=0 ; m<ntiles_in ; m++) {
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+#pragma acc update host( p_xgrid_for_tile_m->input_parent_cell_indices[:m_nxcells], \
+                         p_xgrid_for_tile_m->output_parent_cell_indices[:m_nxcells], \
+                         p_xgrid_for_tile_m->xcell_area[:m_nxcells])
+    }
+
+    //input tile
+    ii = 0;
+    for( int m=0 ; m<ntiles_in ; m++ ) {
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      for( int i=0 ; i<m_nxcells ; i++ ){
+        data_int[ii] = m+1;
+        ii++;
+      }
+    }
+    mpp_put_var_value(fid, id_tile1, data_int);
+
+    // i (x, lon) indices of input parent
+    ii=0;
+    for( int m=0 ; m<ntiles_in ; m++){
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      nlon_cells = input_grid[m].nxc;
+      for( int i=0 ; i<m_nxcells; i++) {
+        data_int[ii] = p_xgrid_for_tile_m->input_parent_cell_indices[i]%nlon_cells+1;
+        ii++;
+      }
+    }
+    mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, data_int);
+
+    // i (x, lon) indices of output parent
+    ii=0;
+    nlon_cells = output_grid[n].nxc;
+    for( int m=0 ; m<ntiles_in ; m++){
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      for( int i=0 ; i<m_nxcells; i++) {
+        data_int[ii] = p_xgrid_for_tile_m->output_parent_cell_indices[i]%nlon_cells+1;
+        ii++;
+      }
+    }
+    mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, data_int);
+
+    start[1]=1;
+
+    // j (y, lat) indices of input parent
+    ii=0;
+    for( int m=0 ; m<ntiles_in ; m++){
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      nlon_cells = input_grid[m].nxc;
+      for( int i=0 ; i<m_nxcells; i++) {
+        data_int[ii] = p_xgrid_for_tile_m->input_parent_cell_indices[i]/nlon_cells+1;
+        ii++;
+      }
+    }
+    mpp_put_var_value_block(fid, id_tile1_cell, start, nwrite, data_int);
+
+    // j (y, lat) indices of output parent
+    ii=0;
+    nlon_cells = output_grid[n].nxc;
+    for( int m=0 ; m<ntiles_in ; m++){
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      for( int i=0 ; i<m_nxcells; i++) {
+        data_int[ii] = p_xgrid_for_tile_m->output_parent_cell_indices[i]/nlon_cells+1;
+        ii++;
+      }
+    }
+    mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, data_int);
+
+    free(data_int);
+    data_double = (double *)malloc(nxcells*sizeof(double));
+
+    // exchange cell area
+    ii=0;
+    for( int m=0 ; m<ntiles_in ; m++){
+      Xinfo_per_input_tile *p_xgrid_for_tile_m = p_xgrid->per_intile+m;
+      int m_nxcells = p_xgrid_for_tile_m->nxcells;
+      for( int i=0 ; i<m_nxcells; i++) {
+        data_double[ii] = p_xgrid_for_tile_m->xcell_area[i];
+        ii++;
+      }
+    }
+    mpp_put_var_value(fid, id_xgrid_area, data_double);
+
+  }//ntiles_out
+
+}
 
 /*******************************************************************************
  void do_scalar_conserve_interp( )

@@ -719,7 +719,12 @@ int main(int argc, char* argv[])
   bound_T   = (Bound_config *)malloc(ntiles_in *sizeof(Bound_config));
   //If statement will be removed once bilinear is on the GPU
   if( opcode & BILINEAR ) interp  = (Interp_config *)malloc(ntiles_out*sizeof(Interp_config));
-  else xgrid = (Xgrid_config *)malloc(ntiles_out*sizeof(Xgrid_config));
+  else {
+    xgrid = (Xgrid_config *)malloc(ntiles_out*sizeof(Xgrid_config));
+    for(int i=0 ; i<ntiles_out ; i++) {
+      xgrid[i].per_intile = (Xinfo_per_input_tile *)malloc(ntiles_in*sizeof(Xinfo_per_input_tile));
+    }
+  }
 
   if(debug) {
     print_mem_usage("Before calling get_input_grid");

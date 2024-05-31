@@ -20,7 +20,7 @@ void check_data_on_device(Grid_config *input_grid, Grid_config *output_grid,
                           int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
                           Grid_cells_struct_config *input_grid_cells,
                           Grid_cells_struct_config *output_grid_cells);
-int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
+int run_tests(Grid_config *input_grid,  Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
               Grid_cells_struct_config *output_grid_cells, int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end,
               int *upbound_nxcells);
 void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output_grid,
@@ -48,10 +48,6 @@ int main()
   check_answers(&answers, approx_nxcells_per_ij1, ij2_start, ij2_end, upbound_nxcells);
   cleanup_test(&answers, &input_grid, &output_grid, &input_grid_cells, &output_grid_cells, approx_nxcells_per_ij1,
                ij2_start, ij2_end);
-
-  generate_two_ouput_cells_per_input_cell(&input_grid, &output_grid, &answers);
-  run_tests(&input_grid, &output_grid, &input_grid_cells, &output_grid_cells, &approx_nxcells_per_ij1, &ij2_start, &ij2_end,
-            &upbound_nxcells);
 
   return 0;
 
@@ -278,7 +274,7 @@ void check_answers(const Answers *answers, int *approx_nxcells_per_ij1, int *ij2
 
 }
 
-int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
+int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
               Grid_cells_struct_config *output_grid_cells, int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end,
               int *upbound_nxcells)
 {
@@ -291,6 +287,8 @@ int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Gri
   int ncells_output = nlon_output_cells * nlat_output_cells;
   int ngridpts_input = (nlon_input_cells+1)*(nlat_input_cells+1);
   int ngridpts_output = (nlon_output_cells+1)*(nlat_output_cells+1);
+
+  int jlat_overlap_starts, jlat_overlap_ends, nlat_overlapping_cells;
 
   int *p_approx_nxcells_per_ij1, *p_ij2_start, *p_ij2_end;
 
@@ -305,6 +303,14 @@ int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Gri
   get_grid_cells_struct_acc(nlon_output_cells, nlat_output_cells, output_grid->lonc, output_grid->latc,
                             output_grid_cells);
 
+  //get bounding indices
+  get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
+                           output_grid->latc, input_grid->latc, &jlat_overlap_starts, &jlat_overlap_ends,
+                           &nlat_overlapping_cells);
+  if(jlat_overlap_starts != 0) printf("SMETHING IS WRONG WITH JLAT_OVERLAP_STARTS %d\n", jlat_overlap_starts);
+  if(jlat_overlap_ends != nlat_input_cells) printf("SOMETHING IS WRONG WITH JLAT_OVERLAP_ENDS %d %d\n", jlat_overlap_ends, nlat_input_cells);
+  if(nlat_overlapping_cells != nlat_input_cells) printf("SOMETHING IS WRONG WITH NLAT_OVERLAPPING_CELLS\n");
+
   //malloc and create arrays
   create_upbound_nxcells_arrays_on_device_acc(ncells_input, &p_approx_nxcells_per_ij1, &p_ij2_start, &p_ij2_end);
 
@@ -312,6 +318,7 @@ int run_tests(const Grid_config *input_grid, const Grid_config *output_grid, Gri
                        input_grid_cells, output_grid_cells);
 
   *upbound_nxcells = get_upbound_nxcells_2dx2d_acc(input_grid->nxc, input_grid->nyc, output_grid->nxc, output_grid->nyc,
+                                                   jlat_overlap_starts, jlat_overlap_ends,
                                                    input_grid->lonc, input_grid->latc, output_grid->lonc, output_grid->latc,
                                                    input_grid_cells->skip_cells, output_grid_cells,
                                                    p_approx_nxcells_per_ij1, p_ij2_start, p_ij2_end);
