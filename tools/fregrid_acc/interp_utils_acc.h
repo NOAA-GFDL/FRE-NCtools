@@ -32,8 +32,7 @@ void copy_xgrid_to_device_acc( const int ntiles_in, const int ntiles_out, const 
 void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells,
                               const int nlon_cells, const int nlat_cells,
                               const double *ref_grid_lat, const double *grid_lat,
-                              int *overlap_starts_here_index, int *overlap_ends_here_index,
-                              int *nlat_overlapping_cells);
+                              int *overlap_starts_here_index, int *overlap_ends_here_index);
 
 void get_skip_cells_acc(const int mask_size, double **skip_cells);
 

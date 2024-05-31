@@ -687,6 +687,7 @@ void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lo
     double lon_vertices[MV], lat_vertices[MV];
 
     get_cell_vertices_acc( icell, nlon, lon, lat, lon_vertices, lat_vertices );
+
     grid_cells->lat_min[icell] = minval_double_acc(4, lat_vertices);
     grid_cells->lat_max[icell] = maxval_double_acc(4, lat_vertices);
 
@@ -803,35 +804,40 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
 {
 
   xgrid_for_input_tile->nxcells = nxcells;
-  xgrid_for_input_tile->input_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
-  xgrid_for_input_tile->output_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
-  xgrid_for_input_tile->xcell_area = (double *)malloc(nxcells*sizeof(double));
+
+  if(nxcells>0) {
+
+    xgrid_for_input_tile->input_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
+    xgrid_for_input_tile->output_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
+    xgrid_for_input_tile->xcell_area = (double *)malloc(nxcells*sizeof(double));
 
 #pragma acc enter data copyin(xgrid_for_input_tile)
 #pragma acc enter data create(xgrid_for_input_tile->input_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->output_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->xcell_area[:nxcells])
 
-#pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells],\
-                         parent_input_indices[:upbound_nxcells],   \
-                         parent_output_indices[:upbound_nxcells],  \
+#pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
+                         parent_input_indices[:upbound_nxcells],        \
+                         parent_output_indices[:upbound_nxcells],       \
                          xcell_areas[:upbound_nxcells])
 #pragma acc parallel loop independent
-  for(int ij1=0 ; ij1<input_ncells ; ij1++) {
-    int xcells_before_ij1 = 0, approx_xcells=0 ;
+    for(int ij1=0 ; ij1<input_ncells ; ij1++) {
+      int xcells_before_ij1 = 0, approx_xcells=0 ;
 
 #pragma acc loop
-    for(int i=1 ; i<=ij1 ; i++) {
-      xcells_before_ij1 += xcells_per_ij1[i-1];
-      approx_xcells += approx_xcells_per_ij1[i-1];
-    }
+      for(int i=1 ; i<=ij1 ; i++) {
+        xcells_before_ij1 += xcells_per_ij1[i-1];
+        approx_xcells += approx_xcells_per_ij1[i-1];
+      }
 
 #pragma acc loop independent
-    for(int i=0 ; i<xcells_per_ij1[ij1]; i++){
-      xgrid_for_input_tile->input_parent_cell_indices[xcells_before_ij1+i]  = parent_input_indices[approx_xcells+i];
-      xgrid_for_input_tile->output_parent_cell_indices[xcells_before_ij1+i] = parent_output_indices[approx_xcells+i];
-      xgrid_for_input_tile->xcell_area[xcells_before_ij1+i] = xcell_areas[approx_xcells+i];
+      for(int i=0 ; i<xcells_per_ij1[ij1]; i++){
+        xgrid_for_input_tile->input_parent_cell_indices[xcells_before_ij1+i]  = parent_input_indices[approx_xcells+i];
+        xgrid_for_input_tile->output_parent_cell_indices[xcells_before_ij1+i] = parent_output_indices[approx_xcells+i];
+        xgrid_for_input_tile->xcell_area[xcells_before_ij1+i] = xcell_areas[approx_xcells+i];
+      }
     }
-  }
+
+  }//if nxcells>0
 
 }

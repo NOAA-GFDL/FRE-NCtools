@@ -78,11 +78,10 @@ TODO: THIS FUNCTION NEEDS A UNIT TEST
 void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells,
                               const int nlon_cells, const int nlat_cells,
                               const double *ref_grid_lat, const double *grid_lat,
-                              int *overlap_starts_here_index, int *overlap_ends_here_index,
-                              int *nlat_overlapping_cells)
+                              int *overlap_starts_here_index, int *overlap_ends_here_index)
 {
 
-  int ref_min_lat, ref_max_lat, lat;
+  int ref_min_lat, ref_max_lat;
   int overlap_starts_here_index_tmp = nlat_cells; //declared to avoid dereferencing
   int overlap_ends_here_index_tmp = -1;
 
@@ -94,12 +93,12 @@ void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells
 
 #pragma acc parallel loop collapse(2) present(grid_lat[:nlat_gridpts]) \
                                       copyin(ref_min_lat, ref_max_lat) \
-                                      copyout(overlap_starts_here_index_tmp, overlap_ends_here_index_tmp)\
+                                      copy(overlap_starts_here_index_tmp, overlap_ends_here_index_tmp)\
                                       reduction(min:overlap_starts_here_index_tmp) \
                                       reduction(max:overlap_ends_here_index_tmp)
   for(int jlat=0; jlat<nlat_gridpts; jlat++) {
     for(int ilon=0; ilon<nlon_gridpts; ilon++) {
-      lat = grid_lat[jlat*nlon_gridpts+ilon];
+      double lat = grid_lat[jlat*nlon_gridpts+ilon];
       if( lat > ref_min_lat ) overlap_starts_here_index_tmp = min(overlap_starts_here_index_tmp, jlat);
       if( lat < ref_max_lat ) overlap_ends_here_index_tmp   = max(overlap_ends_here_index_tmp, jlat);
     }
@@ -108,7 +107,6 @@ void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells
   // top and bottom cells share grid points. -1 to get bottom cell; +1 to get top cells
   *overlap_starts_here_index = max(0, overlap_starts_here_index_tmp-1);
   *overlap_ends_here_index   = min(nlat_cells-1, overlap_ends_here_index_tmp+1);
-  *nlat_overlapping_cells = overlap_ends_here_index_tmp-overlap_starts_here_index_tmp+1;
 
 }
 /*******************************************************************************
