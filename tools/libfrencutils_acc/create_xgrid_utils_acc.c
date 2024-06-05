@@ -98,29 +98,29 @@ void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const doub
   double poly_ctrlon(const double x[], const double y[], int n, double clon)
   This routine is used to calculate the lontitude of the centroid.
 ---------------------------------------------------------------------------*/
-double poly_ctrlon_acc(const double x[], const double y[], int n, double clon)
+double poly_ctrlon_acc(const double *x, const double *y, int n, double clon, double *ctrlon)
 {
-  double ctrlon = 0.0;
+  double *ctrlon = 0.0;
   int    i;
 
   clon = clon;
   for (i=0;i<n;i++) {
     int ip = (i+1) % n;
-    double phi1, phi2, dphi, lat1, lat2, dphi1, dphi2;
+    double phi1 = x[ip];
+    double phi2 = x[i];
+    double dphi = phi1 - phi2;
+    double lat1 = y[ip];
+    double lat2 = y[ip];
+    double dphi1, dphi2;
     double f1, f2, fac, fint;
-    phi1   = x[ip];
-    phi2   = x[i];
-    lat1 = y[ip];
-    lat2 = y[i];
-    dphi   = phi1 - phi2;
 
-    if      (dphi==0.0) continue;
+    if (dphi==0.0) continue;
 
     f1 = 0.5*(cos(lat1)*sin(lat1)+lat1);
     f2 = 0.5*(cos(lat2)*sin(lat2)+lat2);
 
-     /* this will make sure longitude of centroid is at
-        the same interval as the center of any grid */
+    //this will make sure longitude of centroid is at
+    //the same interval as the center of any grid
     if(dphi > M_PI)  dphi = dphi - 2.0*M_PI;
     if(dphi < -M_PI) dphi = dphi + 2.0*M_PI;
     dphi1 = phi1 - clon;
@@ -130,21 +130,16 @@ double poly_ctrlon_acc(const double x[], const double y[], int n, double clon)
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
-    if(fabs(dphi2 -dphi1) < M_PI) {
-      ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
-    }
+    if(fabs(dphi2 -dphi1) < M_PI) *ctrlon -= dphi * (dphi1*f1+dphi2*f2)/2.0;
     else {
-      if(dphi1 > 0.0)
-        fac = M_PI;
-      else
-        fac = -M_PI;
+      fac = -M_PI; if(dphi1 > 0.0) fac = M_PI;
       fint = f1 + (f2-f1)*(fac-dphi1)/fabs(dphi);
-      ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
+      *ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
         + 0.5*fac*(dphi1+dphi2)*fint;
-        }
+    }
 
   }
-  return (ctrlon*RADIUS*RADIUS);
+  //return (ctrlon*RADIUS*RADIUS);
 };   /* poly_ctrlon */
 
 /*------------------------------------------------------------------------------
@@ -162,6 +157,9 @@ double poly_ctrlat_acc(const double x[], const double y[], int n)
 {
   double ctrlat = 0.0;
   int    i;
+
+#pramga acc data present(x[:MV], y[:MV], n) copyin(ctrlat)
+#pragma acc parallel loop independent
   for (i=0;i<n;i++) {
     int ip = (i+1) % n;
     double dx = (x[ip]-x[i]);

@@ -28,7 +28,7 @@
 
 #define MAXXGRID 1e6
 
-#define MV 50
+#define MV 16
 
 #define TOLERENCE (1.e-6)
 #define EPSLN8 (1.e-8)

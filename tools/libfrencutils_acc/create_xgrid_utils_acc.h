@@ -29,8 +29,10 @@ void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, cons
 
 void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 
-double poly_ctrlon_acc(const double x[], const double y[], int n, double clon);
+#pragma acc routine seq
+double poly_ctrlon_acc(const double *x, const double *y, int n, double *clon);
 
+#pragma acc routine seq
 double poly_ctrlat_acc(const double x[], const double y[], int n);
 
 #pragma acc routine seq
