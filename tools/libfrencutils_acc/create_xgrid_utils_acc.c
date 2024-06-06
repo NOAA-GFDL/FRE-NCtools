@@ -98,19 +98,17 @@ void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const doub
   double poly_ctrlon(const double x[], const double y[], int n, double clon)
   This routine is used to calculate the lontitude of the centroid.
 ---------------------------------------------------------------------------*/
-double poly_ctrlon_acc(const double *x, const double *y, int n, double clon, double *ctrlon)
+void poly_ctrlon_acc(const double *x, const double *y, int n, double clon_in, double *ctrlon)
 {
-  double *ctrlon = 0.0;
-  int    i;
 
-  clon = clon;
-  for (i=0;i<n;i++) {
+  *ctrlon = 0.0;
+  for (int i=0;i<n;i++) {
     int ip = (i+1) % n;
     double phi1 = x[ip];
     double phi2 = x[i];
     double dphi = phi1 - phi2;
     double lat1 = y[ip];
-    double lat2 = y[ip];
+    double lat2 = y[i];
     double dphi1, dphi2;
     double f1, f2, fac, fint;
 
@@ -123,10 +121,10 @@ double poly_ctrlon_acc(const double *x, const double *y, int n, double clon, dou
     //the same interval as the center of any grid
     if(dphi > M_PI)  dphi = dphi - 2.0*M_PI;
     if(dphi < -M_PI) dphi = dphi + 2.0*M_PI;
-    dphi1 = phi1 - clon;
+    dphi1 = phi1 - clon_in;
     if( dphi1 > M_PI) dphi1 -= 2.0*M_PI;
     if( dphi1 <-M_PI) dphi1 += 2.0*M_PI;
-    dphi2 = phi2 -clon;
+    dphi2 = phi2 -clon_in;
     if( dphi2 > M_PI) dphi2 -= 2.0*M_PI;
     if( dphi2 <-M_PI) dphi2 += 2.0*M_PI;
 
@@ -137,8 +135,8 @@ double poly_ctrlon_acc(const double *x, const double *y, int n, double clon, dou
       *ctrlon -= 0.5*dphi1*(dphi1-fac)*f1 - 0.5*dphi2*(dphi2+fac)*f2
         + 0.5*fac*(dphi1+dphi2)*fint;
     }
-
   }
+  *ctrlon = *ctrlon * RADIUS *RADIUS;
   //return (ctrlon*RADIUS*RADIUS);
 };   /* poly_ctrlon */
 
@@ -153,34 +151,31 @@ double poly_ctrlon_acc(const double *x, const double *y, int n, double clon, dou
   (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
   line integral along the sides of the polygon  \int_c.
  ---------------------------------------------------------------------------*/
-double poly_ctrlat_acc(const double x[], const double y[], int n)
+void poly_ctrlat_acc(const double *x, const double *y, int n, double *ctrlat)
 {
-  double ctrlat = 0.0;
-  int    i;
 
-#pramga acc data present(x[:MV], y[:MV], n) copyin(ctrlat)
-#pragma acc parallel loop independent
-  for (i=0;i<n;i++) {
+  *ctrlat = 0.0;
+  for (int i=0;i<n;i++) {
     int ip = (i+1) % n;
     double dx = (x[ip]-x[i]);
-    double dy, avg_y, hdy;
-    double lat1, lat2;
-    lat1 = y[ip];
-    lat2 = y[i];
-    dy = lat2 - lat1;
-    hdy = dy*0.5;
-    avg_y = (lat1+lat2)*0.5;
-    if      (dx==0.0) continue;
-    if(dx > M_PI)  dx = dx - 2.0*M_PI;
+    double lat1 = y[ip];
+    double lat2 = y[i];
+    double dy = lat2 - lat1;
+    double avg_y = (lat1+lat2)*0.5;
+    double hdy = dy*0.5;
+
+    if (dx==0.0) continue;
+    if(dx > M_PI)   dx = dx - 2.0*M_PI;
     if(dx <= -M_PI) dx = dx + 2.0*M_PI; // flip sign for dx=-pi to fix huge value see comments in function poly_area
 
     if ( fabs(hdy)< SMALL_VALUE ) /* cheap area calculation along latitude */
-      ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
+      *ctrlat -= dx*(2*cos(avg_y) + lat2*sin(avg_y) - cos(lat1) );
     else
-      ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
+      *ctrlat -= dx*( (sin(hdy)/hdy)*(2*cos(avg_y) + lat2*sin(avg_y)) - cos(lat1) );
   }
-  if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
-  return (ctrlat*RADIUS*RADIUS);
+  *ctrlat = *ctrlat * RADIUS*RADIUS;
+  //if(fabs(ctrlat) > HPI) printf("WARNING poly_ctrlat: Large values for ctrlat: %19.15f\n", ctrlat);
+  //return (ctrlat*RADIUS*RADIUS);
 
 }; /* poly_ctrlat */
 
@@ -796,11 +791,11 @@ void free_output_grid_cell_struct_from_all_acc(const int n, Grid_cells_struct_co
 }
 
 void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells, const int upbound_nxcells,
-                                      int *xcells_per_ij1, int *approx_xcells_per_ij1,
-                                      int *parent_input_indices, int *parent_output_indices, double *xcell_areas,
-                                      Xinfo_per_input_tile *xgrid_for_input_tile)
+                                      int *xcells_per_ij1, double *xcell_dclon, double *xcell_dclat,
+                                      int *approx_xcells_per_ij1, int *parent_input_indices, int *parent_output_indices,
+                                      double *xcell_areas, Xinfo_per_input_tile *xgrid_for_input_tile)
 {
-
+  int copy_xcentroid = (*xcell_dclon != -99.99 ) ? nxcells : 0;
   xgrid_for_input_tile->nxcells = nxcells;
 
   if(nxcells>0) {
@@ -808,16 +803,22 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
     xgrid_for_input_tile->input_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
     xgrid_for_input_tile->output_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
     xgrid_for_input_tile->xcell_area = (double *)malloc(nxcells*sizeof(double));
+    if(copy_xcentroid) {
+      xgrid_for_input_tile->dcentroid_lon = (double *)malloc(nxcells*sizeof(double));
+      xgrid_for_input_tile->dcentroid_lat = (double *)malloc(nxcells*sizeof(double));
+    }
 
 #pragma acc enter data copyin(xgrid_for_input_tile)
 #pragma acc enter data create(xgrid_for_input_tile->input_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->output_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->xcell_area[:nxcells])
-
+#pragma acc enter data create(xgrid_for_input_tile->dcentroid_lon[:nxcells], \
+                              xgrid_for_input_tile->dcentroid_lat[:nxcells]) if(copy_xcentroid)
 #pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
                          parent_input_indices[:upbound_nxcells],        \
                          parent_output_indices[:upbound_nxcells],       \
-                         xcell_areas[:upbound_nxcells])
+                         xcell_areas[:upbound_nxcells], xgrid_for_input_tile[:1])
+#pragma acc data present(xcell_dclon[:nxcells], xcell_dclat[:nxcells]) if(copy_xcentroid)
 #pragma acc parallel loop independent
     for(int ij1=0 ; ij1<input_ncells ; ij1++) {
       int xcells_before_ij1 = 0, approx_xcells=0 ;
@@ -834,8 +835,15 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
         xgrid_for_input_tile->output_parent_cell_indices[xcells_before_ij1+i] = parent_output_indices[approx_xcells+i];
         xgrid_for_input_tile->xcell_area[xcells_before_ij1+i] = xcell_areas[approx_xcells+i];
       }
-    }
 
+      if(copy_xcentroid) {
+#pragma acc loop independent
+        for(int i=0 ; i<xcells_per_ij1[ij1]; i++){
+          xgrid_for_input_tile->dcentroid_lon[xcells_before_ij1+i] = xcell_dclon[approx_xcells+i];
+          xgrid_for_input_tile->dcentroid_lat[xcells_before_ij1+i] = xcell_dclat[approx_xcells+i];
+        }
+      }
+    }
   }//if nxcells>0
 
-}
+  }

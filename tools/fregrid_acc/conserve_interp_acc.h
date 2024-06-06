@@ -35,7 +35,7 @@ void read_remap_file_acc(int ntiles_in, int ntiles_out, Grid_config *output_grid
                          Xgrid_config *xgrid, unsigned int opcode);
 
 void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *output_grid,
-                      Grid_config *input_grid, Xgrid_config *xgrid);
+                      Grid_config *input_grid, Xgrid_config *xgrid, unsigned int opcode);
 
 void check_area_conservation(const int ntiles_output_grid, const int ntiles_input_grid, Grid_config *output_grid,
                              Xgrid_config *xgrid);

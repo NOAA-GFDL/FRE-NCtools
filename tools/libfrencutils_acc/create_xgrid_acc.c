@@ -166,6 +166,8 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
   int xcells_per_ij1[input_grid_ncells];
   double xcell_areas[upbound_nxcells];
 
+  double xcell_dclon=-99.99, xcell_dclat=-99.99;
+
 #pragma acc enter data create(parent_input_indices[:upbound_nxcells],  \
                               parent_output_indices[:upbound_nxcells], \
                               xcell_areas[:upbound_nxcells],           \
@@ -269,6 +271,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
   }
 
   copy_data_to_xgrid_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, xcells_per_ij1,
+                                   &xcell_dclon, &xcell_dclat,
                                    approx_xcells_per_ij1, parent_input_indices, parent_output_indices,
                                    xcell_areas, xgrid_for_input_tile);
 
@@ -297,7 +300,7 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
                                       const int upbound_nxcells, const double *skip_input_cells,
                                       const Grid_cells_struct_config *output_grid_cells,
                                       int *approx_xcells_per_ij1, int *ij2_start, int *ij2_end,
-                                      Xinfo_per_input_tile *xgrid_for_input_tile)
+                                      Xinfo_per_input_tile *xgrid_for_input_tile, double *readin_input_area)
 {
 
   if(upbound_nxcells<1) return 0;
@@ -316,15 +319,22 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
   int parent_output_indices[upbound_nxcells];
   int xcells_per_ij1[input_grid_ncells];
   double xcell_areas[upbound_nxcells];
-  double xcell_clon[upbound_nxcells];
-  double xcell_clat[upbound_nxcells];
+  double xcell_dclon[upbound_nxcells];
+  double xcell_dclat[upbound_nxcells];
+
+  double summed_input_area[input_grid_ncells];
+  double summed_input_clon[input_grid_ncells];
+  double summed_input_clat[input_grid_ncells];
 
 #pragma acc enter data create(parent_input_indices[:upbound_nxcells],  \
                               parent_output_indices[:upbound_nxcells], \
                               xcell_areas[:upbound_nxcells],           \
-                              xcells_per_ij1[:input_grid_ncells], \
-                              xcell_clon[:upbound_nxcells],       \
-                              xcell_clat[:upbound_nxcells])
+                              xcells_per_ij1[:input_grid_ncells],      \
+                              xcell_dclon[:upbound_nxcells],           \
+                              xcell_dclat[:upbound_nxcells],           \
+                              summed_input_area[:input_grid_ncells],   \
+                              summed_input_clon[:input_grid_ncells],   \
+                              summed_input_clat[:input_grid_ncells])
 
 #pragma acc data present(output_grid_lon[:output_grid_npts],         \
                          output_grid_lat[:output_grid_npts],         \
@@ -335,12 +345,12 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
                          ij2_start[:input_grid_ncells],              \
                          ij2_end[:input_grid_ncells],                \
                          skip_input_cells[:input_grid_ncells],       \
-                         xcells_per_ij1[:input_grid_ncells],         \
-                         parent_input_indices[:upbound_nxcells],     \
-                         parent_output_indices[:upbound_nxcells],    \
-                         xcell_areas[:upbound_nxcells],              \
-                         xcell_clon[:upbound_nxcells],               \
-                         xcell_clat[:upbound_nxcells])
+                         xcells_per_ij1[:input_grid_ncells],          \
+                         parent_input_indices[:upbound_nxcells],      \
+                         parent_output_indices[:upbound_nxcells],     \
+                         xcell_areas[:upbound_nxcells],               \
+                         xcell_dclon[:upbound_nxcells],               \
+                         xcell_dclat[:upbound_nxcells])               \
   copyin(input_grid_ncells, output_grid_ncells)                      \
   copy(nxcells)
 #pragma acc parallel loop reduction(+:nxcells)
@@ -352,6 +362,10 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
       double input_cell_lon_min, input_cell_lon_max, input_cell_lon_cent;
       double input_cell_area;
       double input_cell_lon_vertices[MV], input_cell_lat_vertices[MV];
+
+      double summed_input_area_ij1=0.;
+      double summed_input_clon_ij1=0.;
+      double summed_input_clat_ij1=0.;
 
       int approx_xcells_b4_ij1=0, ixcell=0;
       xcells_per_ij1[ij1]=0;
@@ -369,7 +383,8 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
 #pragma acc loop seq
       for(int i=1; i<=ij1 ; i++) approx_xcells_b4_ij1 += approx_xcells_per_ij1[i-1];
 
-#pragma acc loop seq reduction(+:ixcell)
+#pragma acc loop seq reduction(+:ixcell) reduction(+:summed_input_area_ij1) \
+                     reduction(+:summed_input_clon_ij1) reduction(+:summed_input_clat_ij1)
       for(int ij2=ij2_start[ij1]; ij2<=ij2_end[ij1]; ij2++) {
 
         int nvertices2, xvertices;
@@ -413,195 +428,80 @@ int create_xgrid_2dx2d_order2test_acc(const int nlon_input_cells,  const int nla
           xcell_area = poly_area_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices);
           min_parent_area = min(input_cell_area, output_cell_area);
           if( xcell_area/min_parent_area > AREA_RATIO_THRESH ) {
+            double xcell_clon, xcell_clat;
             xcell_areas[approx_xcells_b4_ij1+ixcell] = xcell_area;
             parent_input_indices[approx_xcells_b4_ij1+ixcell]  = ij1;
             parent_output_indices[approx_xcells_b4_ij1+ixcell] = ij2;
-
-            xgrid_clon[approx_xcells_b4_ij1+ixcell] =
-              poly_ctrlon_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices, input_cell_lon_cent);
-            xgrid_clat[approx_xcells_b4_ij1+ixcell]
-              = poly_ctrlat_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices );
+            poly_ctrlon_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices, input_cell_lon_cent, &xcell_clon);
+            poly_ctrlat_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices, &xcell_clat);
+            xcell_dclon[approx_xcells_b4_ij1+ixcell] = xcell_clon/xcell_area;
+            xcell_dclat[approx_xcells_b4_ij1+ixcell] = xcell_clat/xcell_area;
+            summed_input_area_ij1 += xcell_area;
+            summed_input_clon_ij1 += xcell_clon;
+            summed_input_clat_ij1 += xcell_clat;
             ixcell++;
           }
         }
       }
+
       nxcells+=ixcell;
       xcells_per_ij1[ij1]=ixcell;
+      summed_input_area[ij1] = summed_input_area_ij1;
+      summed_input_clon[ij1] = summed_input_clon_ij1;
+      summed_input_clat[ij1] = summed_input_clat_ij1;
+
     }
   }
 
   copy_data_to_xgrid_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, xcells_per_ij1,
+                                   xcell_dclon, xcell_dclat,
                                    approx_xcells_per_ij1, parent_input_indices, parent_output_indices,
                                    xcell_areas, xgrid_for_input_tile);
 
+#pragma acc parallel loop present(xgrid_for_input_tile->dcentroid_lat[:nxcells], \
+                                  xgrid_for_input_tile->dcentroid_lat[:nxcells], \
+                                  input_grid_lon[:input_grid_ncells],   \
+                                  input_grid_lat[:input_grid_ncells],   \
+                                  summed_input_area[:input_grid_ncells], \
+                                  summed_input_clon[:input_grid_ncells], \
+                                  summed_input_clat[:input_grid_ncells], \
+                                  xgrid_for_input_tile->input_parent_cell_indices[:nxcells]) \
+                           copyin(readin_input_area[:input_grid_ncells])
+    for(int ix=0 ; ix<nxcells ; ix++){
+      int ij1 = xgrid_for_input_tile->input_parent_cell_indices[ix];
+      double input_area = summed_input_area[ij1];
+      double input_clon = summed_input_clon[ij1];
+      double input_clat = summed_input_clat[ij1];
+      double readin_area = readin_input_area[ij1];
+      if(fabs(input_area - readin_area)/readin_area > AREA_RATIO) {
+        int n;
+        double x[4], y[4], input_cell_lon_cent;
+        get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat, x, y);
+        n = fix_lon_acc(x, y, 4, M_PI);
+        input_cell_lon_cent = avgval_double_acc(n, x);
+        poly_ctrlon_acc(x, y, n, input_cell_lon_cent, &input_clon);
+        poly_ctrlat_acc(x, y, n, &input_clat);
+        input_area = readin_area;
+      }
+      xgrid_for_input_tile->dcentroid_lon[ix] -= input_clon/input_area;
+      xgrid_for_input_tile->dcentroid_lat[ix] -= input_clat/input_area;
+    }
+
 #pragma acc exit data delete( approx_xcells_per_ij1[:input_grid_ncells], \
-                              parent_input_indices[:upbound_nxcells],   \
+                              parent_input_indices[:upbound_nxcells],  \
                               parent_output_indices[:upbound_nxcells],  \
                               xcell_areas[:upbound_nxcells],            \
-                              xcells_per_ij1[:input_grid_ncells])
+                              xcells_per_ij1[:input_grid_ncells],       \
+                              xcell_dclon[:upbound_nxcells],            \
+                              xcell_dclat[:upbound_nxcells],            \
+                              summed_input_area[:input_grid_ncells],    \
+                              summed_input_clon[:input_grid_ncells],    \
+                              summed_input_clat[:input_grid_ncells])
+
 
   return nxcells;
 
 };/* get_xgrid_2Dx2D_order1 */
-
-
-/********************************************************************************
-  void create_xgrid_2dx1d_order2
-  This routine generate exchange grids between two grids for the second order
-  conservative interpolation. nlon_input_cells,nlat_input_cells,nlon_output_cells,nlat_output_cells are the size of the grid cell
-  and input_grid_lon,input_grid_lat, output_grid_lon,output_grid_lat are geographic grid location of grid cell bounds.
-********************************************************************************/
-int create_xgrid_2dx2d_order2_acc(const int *nlon_input_cells, const int *nlat_input_cells,
-                                  const int *nlon_output_cells, const int *nlat_output_cells,
-                                  const double *input_grid_lon, const double *input_grid_lat,
-                                  const double *output_grid_lon, const double *output_grid_lat,
-                                  const double *skip_input_cells,
-                                  int *i_in, int *j_in, int *i_out, int *j_out, double *xgrid_area,
-                                  double *xgrid_clon, double *xgrid_clat)
-{
-
-  int nx1, nx2, ny1, ny2, nx1p, nx2p, nxgrid;
-  double *area_in, *area_out;
-  int ij;
-  double *output_grid_lon_min_list,*output_grid_lon_max_list;
-  double *output_grid_lon_avg,*output_grid_lat_min_list,*output_grid_lat_max_list;
-  double *output_grid_lon_list, *output_grid_lat_list;
-  int    *n2_list;
-
-  nx1 = *nlon_input_cells;
-  ny1 = *nlat_input_cells;
-  nx2 = *nlon_output_cells;
-  ny2 = *nlat_output_cells;
-  nx1p = nx1 + 1;
-  nx2p = nx2 + 1;
-
-  area_in  = (double *)malloc(nx1*ny1*sizeof(double));
-  area_out = (double *)malloc(nx2*ny2*sizeof(double));
-  get_grid_area_acc(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area_in);
-  get_grid_area_acc(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area_out);
-
-  output_grid_lon_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  output_grid_lon_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  output_grid_lat_min_list = (double *)malloc(nx2*ny2*sizeof(double));
-  output_grid_lat_max_list = (double *)malloc(nx2*ny2*sizeof(double));
-  output_grid_lon_avg = (double *)malloc(nx2*ny2*sizeof(double));
-  n2_list     = (int *)malloc(nx2*ny2*sizeof(int));
-  output_grid_lon_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-  output_grid_lat_list = (double *)malloc(MAX_V*nx2*ny2*sizeof(double));
-
-  for(ij=0; ij<nx2*ny2; ij++){
-    int i2, j2, n, n0, n1, n2, n3, n2_in, l;
-    double x2_in[MV], y2_in[MV];
-    i2 = ij%nx2;
-    j2 = ij/nx2;
-    n = j2*nx2+i2;
-    n0 = j2*nx2p+i2; n1 = j2*nx2p+i2+1;
-    n2 = (j2+1)*nx2p+i2+1; n3 = (j2+1)*nx2p+i2;
-    x2_in[0] = output_grid_lon[n0]; y2_in[0] = output_grid_lat[n0];
-    x2_in[1] = output_grid_lon[n1]; y2_in[1] = output_grid_lat[n1];
-    x2_in[2] = output_grid_lon[n2]; y2_in[2] = output_grid_lat[n2];
-    x2_in[3] = output_grid_lon[n3]; y2_in[3] = output_grid_lat[n3];
-
-    output_grid_lat_min_list[n] = minval_double_acc(4, y2_in);
-    output_grid_lat_max_list[n] = maxval_double_acc(4, y2_in);
-    n2_in = fix_lon_acc(x2_in, y2_in, 4, M_PI);
-    output_grid_lon_min_list[n] = minval_double_acc(n2_in, x2_in);
-    output_grid_lon_max_list[n] = maxval_double_acc(n2_in, x2_in);
-    output_grid_lon_avg[n] = avgval_double_acc(n2_in, x2_in);
-    n2_list[n] = n2_in;
-    for(l=0; l<n2_in; l++) {
-      output_grid_lon_list[n*MAX_V+l] = x2_in[l];
-      output_grid_lat_list[n*MAX_V+l] = y2_in[l];
-    }
-  }
-
-  nxgrid = 0;
-
-  for(int j1=0; j1<ny1; j1++) for(int i1=0; i1<nx1; i1++) {
-      if( skip_input_cells[j1*nx1+i1] > MASK_THRESH ) {
-        int n0, n1, n2, n3, l,n1_in;
-        double input_grid_lat_min,input_grid_lat_max,input_grid_lon_min,input_grid_lon_max,input_grid_lon_avg;
-        double x1_in[MV], y1_in[MV], x_out[MV], y_out[MV];
-
-        n0 = j1*nx1p+i1;       n1 = j1*nx1p+i1+1;
-        n2 = (j1+1)*nx1p+i1+1; n3 = (j1+1)*nx1p+i1;
-        x1_in[0] = input_grid_lon[n0]; y1_in[0] = input_grid_lat[n0];
-        x1_in[1] = input_grid_lon[n1]; y1_in[1] = input_grid_lat[n1];
-        x1_in[2] = input_grid_lon[n2]; y1_in[2] = input_grid_lat[n2];
-        x1_in[3] = input_grid_lon[n3]; y1_in[3] = input_grid_lat[n3];
-        input_grid_lat_min = minval_double_acc(4, y1_in);
-        input_grid_lat_max = maxval_double_acc(4, y1_in);
-        n1_in = fix_lon_acc(x1_in, y1_in, 4, M_PI);
-        input_grid_lon_min = minval_double_acc(n1_in, x1_in);
-        input_grid_lon_max = maxval_double_acc(n1_in, x1_in);
-        input_grid_lon_avg = avgval_double_acc(n1_in, x1_in);
-        for(ij=0; ij<nx2*ny2; ij++) {
-          int n_in, n_out, i2, j2, n2_in;
-          double xarea, dx, output_grid_lon_min, output_grid_lon_max;
-          double x2_in[MAX_V], y2_in[MAX_V];
-
-          i2 = ij%nx2;
-          j2 = ij/nx2;
-
-          if(output_grid_lat_min_list[ij] >= input_grid_lat_max || output_grid_lat_max_list[ij] <= input_grid_lat_min ) continue;
-          /* adjust x2_in according to input_grid_lon_avg*/
-          n2_in = n2_list[ij];
-          for(l=0; l<n2_in; l++) {
-            x2_in[l] = output_grid_lon_list[ij*MAX_V+l];
-            y2_in[l] = output_grid_lat_list[ij*MAX_V+l];
-          }
-          output_grid_lon_min = output_grid_lon_min_list[ij];
-          output_grid_lon_max = output_grid_lon_max_list[ij];
-          dx = output_grid_lon_avg[ij] - input_grid_lon_avg;
-          if(dx < -M_PI ) {
-            output_grid_lon_min += TPI;
-            output_grid_lon_max += TPI;
-            for (l=0; l<n2_in; l++) x2_in[l] += TPI;
-          }
-          else if (dx >  M_PI) {
-            output_grid_lon_min -= TPI;
-            output_grid_lon_max -= TPI;
-            for (l=0; l<n2_in; l++) x2_in[l] -= TPI;
-          }
-
-          /* x2_in should in the same range as x1_in after lon_fix, so no need to
-             consider cyclic condition
-          */
-          if(output_grid_lon_min >= input_grid_lon_max || output_grid_lon_max <= input_grid_lon_min ) continue;
-          if (  (n_out = clip_2dx2d_acc( x1_in, y1_in, n1_in, x2_in, y2_in, n2_in, x_out, y_out )) > 0) {
-            double min_area;
-            int nn;
-            xarea = poly_area_acc(x_out, y_out, n_out ) ;
-            min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
-            if( xarea/min_area > AREA_RATIO_THRESH ) {
-              xgrid_area[nxgrid] = xarea;
-              xgrid_clon[nxgrid] = poly_ctrlon_acc(x_out, y_out, n_out, input_grid_lon_avg);
-              xgrid_clat[nxgrid] = poly_ctrlat_acc(x_out, y_out, n_out );
-              i_in[nxgrid]       = i1;
-              j_in[nxgrid]       = j1;
-              i_out[nxgrid]      = i2;
-              j_out[nxgrid]      = j2;
-              nxgrid++;
-            }
-          }
-        }
-      }
-  }
-
-  free(area_in);
-  free(area_out);
-  free(output_grid_lon_min_list);
-  free(output_grid_lon_max_list);
-  free(output_grid_lat_min_list);
-  free(output_grid_lat_max_list);
-  free(output_grid_lon_avg);
-  free(n2_list);
-  free(output_grid_lon_list);
-  free(output_grid_lat_list);
-
-  return nxgrid;
-
-};/* get_xgrid_2Dx2D_order2 */
 
 
 int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_input_cells,
