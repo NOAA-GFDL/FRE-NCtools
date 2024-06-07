@@ -307,9 +307,9 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
       int m_nxcells = p_xgrid_for_tile_m->nxcells;
 #pragma acc update host( p_xgrid_for_tile_m->input_parent_cell_indices[:m_nxcells], \
                          p_xgrid_for_tile_m->output_parent_cell_indices[:m_nxcells], \
-                         p_xgrid_for_tile_m->xcell_area[:m_nxcells],    \
-                         p_xgrid_for_tile_m->dcentroid_lon[:m_nxcells], \
-                         p_xgrid_for_tile_m->dcentroid_lat[:m_nxcells])
+                         p_xgrid_for_tile_m->xcell_area[:m_nxcells])
+#pragma acc update if(opcode &CONSERVE_ORDER2) host(p_xgrid_for_tile_m->dcentroid_lon[:m_nxcells], \
+                                                    p_xgrid_for_tile_m->dcentroid_lat[:m_nxcells])
     }
 
     //input tile
@@ -481,7 +481,7 @@ void do_scalar_conserve_interp_order1_acc(Xgrid_config *xgrid, int varid, int nt
                                           Field_config *field_out, unsigned int opcode, int nz)
 {
   int has_missing = field_in->var[varid].has_missing;
-  int weight_exist = input_grid[0].weight_exist;;
+  int weights_exist = input_grid[0].weight_exist;;
   int cell_measures = field_in->var[varid].cell_measures;
   int cell_methods = field_in->var[varid].cell_methods;
   int target_grid = ( field_in->var[varid].use_volume ) ? 0 : (opcode & TARGET);
@@ -490,108 +490,131 @@ void do_scalar_conserve_interp_order1_acc(Xgrid_config *xgrid, int varid, int nt
   double gsum_out=0.0;
 
   for(int n=0; n<ntiles_output_grid; n++) {
-    int nx2 = output_grid[n].nxc;
-    int ny2 = output_grid[n].nyc;
-    double *out_area = (double *)calloc(nx2*ny2, sizeof(double));
-    int *out_miss = (int *)calloc(nx2*ny2, sizeof(int));
-    for(int i=0; i<nx2*ny2; i++) field_out[n].data[i] = 0.0;
+    int output_ncells = output_grid[n].nxc * output_grid[n].nyc;
+    double *out_area = (double *)malloc(output_ncells*sizeof(double));
+    int *out_miss = (int *)malloc(output_ncells*sizeof(int));
 
-    if(has_missing) {
-      for(int m=0 ; m<ntiles_input_grid; m++) {
-        Xinfo_per_input_tile *mxgrid = xgrid[n].per_intile+m;
-        for(int nx=0; nx<mxgrid->nxcells; nx++) {
+    double *p_fieldout_data = field_out[n].data; //to avoid copying field_out struct to device
 
-          int ij1   = mxgrid->input_parent_cell_indices[nx];
-          int ij2   = mxgrid->output_parent_cell_indices[nx];
-          double area = mxgrid->xcell_area[nx];
+#pragma acc enter data create( p_fieldout_data[:output_ncells],   \
+                               out_area[:output_ncells],          \
+                               out_miss[:output_ncells])
 
-          if( field_in[m].data[ij1] != missing ) continue;
-          if(weight_exist) area *= input_grid[m].weight[ij1];
-
-          if( cell_methods == CELL_METHODS_SUM ) area /= input_grid[m].cell_area[ij1];
-          if( cell_measures ) {
-            area *= (field_in[m].area[ij1]/input_grid[m].cell_area[ij1]);
-            if(field_in[m].area[ij1] == area_missing) {
-              printf("name=%s,tile=%d,ij1,ii2=%d\n",field_in->var[varid].name,m,ij1,ij2);
-              //mpp_error("conserve_interp: data is not missing but area is missing");
-            }
-          }
-          field_out[n].data[ij2] += (field_in[m].data[ij1]*area);
-          out_area[ij2] += area;
-          out_miss[ij2] = 1;
-        }
-      } //m
+#pragma acc parallel loop present(p_fieldout_data[:output_ncells], out_area[:output_ncells], out_miss[:output_ncells])
+    for(int i=0; i<output_ncells; i++) {
+      p_fieldout_data[i] = 0.0;
+      out_area[i] = 0.0;
+      out_miss[i] = 0;
     }
-    else {
-      for(int m=0 ; m<ntiles_input_grid; m++) {
-        Xinfo_per_input_tile *mxgrid = xgrid[n].per_intile+m;
-        for(int ix=0; ix<mxgrid->nxcells; ix++) {
-          int ij1 = mxgrid->input_parent_cell_indices[ix];
-          int ij2 = mxgrid->output_parent_cell_indices[ix];
-          int area = mxgrid->xcell_area[ix];
-          if(weight_exist) area *= input_grid[m].weight[ij1];
-          if( cell_methods == CELL_METHODS_SUM ) area /= input_grid[m].cell_area[ij1];
-          if( cell_measures ) area *= (field_in[m].area[ij1]/input_grid[m].cell_area[ij1]);
-          field_out[n].data[ij2] += (field_in[m].data[ij1]*area);
-          out_area[ij2] += area;
-          out_miss[ij2] = 1;
-        }
+
+
+    for(int m=0 ; m<ntiles_input_grid; m++) {
+      Xinfo_per_input_tile *mxgrid = xgrid[n].per_intile+m;
+      int input_ncells = input_grid[m].nxc * input_grid[m].nyc ;
+      int ixcell = mxgrid->nxcells;
+      double *input_area_weight = (double *)malloc(input_ncells*sizeof(double));
+      double *p_fieldin_data = field_in[m].data;
+
+#pragma acc enter data create(input_area_weight[:input_ncells])
+      get_input_area_weight_order1(weights_exist, cell_measures, cell_methods,
+                                   input_ncells, field_in+m, input_grid+m, input_area_weight);
+
+#pragma acc data present( mxgrid[:1],                                   \
+                          mxgrid->input_parent_cell_indices[:ixcell],   \
+                          mxgrid->output_parent_cell_indices[:ixcell],  \
+                          mxgrid->xcell_area[:ixcell],                  \
+                          input_area_weight[:input_ncells])             \
+                  copyin(p_fieldin_data[:input_ncells])
+#pragma acc parallel loop
+      for(int ix=0; ix<ixcell; ix++) {
+        int ij1 = mxgrid->input_parent_cell_indices[ix];
+        int ij2 = mxgrid->output_parent_cell_indices[ix];
+        double area = mxgrid->xcell_area[ix];
+
+        if( p_fieldin_data[ij1] == missing ) continue;
+
+        area *= input_area_weight[ij1] ;
+#pragma acc atomic update
+        p_fieldout_data[ij2] += p_fieldin_data[ij1]*area ;
+#pragma acc atomic update
+        out_area[ij2] += area;
+        out_miss[ij2] = 1;
       }
-    }
+
+#pragma acc exit data delete(input_area_weight[:input_ncells])
+    } //m
 
     if(opcode & CHECK_CONSERVE) {
-      for(int i=0; i<nx2*ny2; i++) {
-        if(out_area[i] > 0) gsum_out += field_out[n].data[i];
+#pragma acc enter data copyin(gsum_out)
+#pragma acc parallel loop present(out_area[:output_ncells], p_fieldout_data[:output_ncells]) reduction(+:gsum_out)
+      for(int i=0; i<output_ncells; i++) {
+        if(out_area[i] > 0) gsum_out += p_fieldout_data[i];
       }
     }
 
     if ( cell_methods == CELL_METHODS_SUM ) {
-      if(has_missing) {
-        for(int i=0; i<nx2*ny2; i++) {
-          if(out_area[i] == 0) {
-            if(out_miss[i] == 0) field_out[n].data[i] = missing;
-          }
+#pragma acc parallel loop present(out_area[:output_ncells], out_miss[:output_ncells], p_fieldout_data[:output_ncells])
+      for(int i=0; i<output_ncells; i++) {
+        if(out_area[i] == 0) {
+          p_fieldout_data[i] = 0.0;
+          if(out_miss[i] == 0) p_fieldout_data[i] = missing;
         }
-      }
-      else {
-        for(int i=0; i<nx2*ny2; i++)
-          if(out_area[i]==0) field_out[n].data[i] = 0.0;
       }
     }
     else {
-      for(int i=0; i<nx2*ny2; i++) {
+#pragma acc parallel loop present(out_area[:output_ncells], out_miss[:output_ncells], p_fieldout_data[:output_ncells])
+      for(int i=0; i<output_ncells; i++) {
         if(out_area[i] > 0) {
-          field_out[n].data[i] /= out_area[i];
-          continue;
+          p_fieldout_data[i] /= out_area[i];
         }
-        else if(out_miss[i] == 1) field_out[n].data[i] = 0.0;
-        else field_out[n].data[i] = missing;
+        else {
+          p_fieldout_data[i] = 0.0;
+          if(out_miss[i] == 0) p_fieldout_data[i] = missing;
+        }
       }
 
       if( (target_grid) ) {
-        for(int i=0; i<nx2*ny2; i++) out_area[i] = 0.0;
+#pragma acc parallel loop present(out_area[:output_ncells])
+        for(int i=0; i<output_ncells; i++) out_area[i] = 0.0;
 
         for(int m=0 ; m<ntiles_input_grid; m++) {
           Xinfo_per_input_tile *mxgrid = xgrid[n].per_intile+m;
-          for(int ix=0; ix<mxgrid->nxcells; ix++) {
-          int ij2   = mxgrid->output_parent_cell_indices[ix];
-          int ij1   = mxgrid->input_parent_cell_indices[ix];
-          double area = mxgrid->xcell_area [ix];
-          if(cell_measures ) out_area[ij2] += (area*field_in[m].area[ij1]/input_grid[m].cell_area[ij1]);
-          else out_area[ij2] += area;
+          int input_ncells = input_grid[m].nxc * input_grid[m].nyc;
+          int ixcells = mxgrid->nxcells;
+          double *p_gridin_area = input_grid[m].cell_area;
+          double *p_fieldin_area = field_in[m].area;
+#pragma acc parallel loop present(mxgrid->output_parent_cell_indices[:ixcells], \
+                                  mxgrid->input_parent_cell_indices[:ixcells], \
+                                  mxgrid->xcell_area[:ixcells],         \
+                                  out_area[:output_ncells])\
+                           copyin(p_fieldin_area[:input_ncells],\
+                                  p_gridin_area[:input_ncells])
+          for(int ix=0; ix<ixcells; ix++) {
+            int ij2   = mxgrid->output_parent_cell_indices[ix];
+            int ij1   = mxgrid->input_parent_cell_indices[ix];
+            double area = mxgrid->xcell_area[ix];
+            if(cell_measures ) out_area[ij2] += (area*p_fieldin_area[ij1]/p_gridin_area[ij1]);
+            else out_area[ij2] += area;
           }
-          for(int i=0; i<nx2*ny2; i++) {
-            if(field_out[n].data[i] != missing)
-              field_out[n].data[i] *=  (out_area[i]/output_grid[n].cell_area[i]);
+#pragma acc parallel loop present(p_fieldout_data[:output_ncells], out_area[:output_ncells], \
+                                  output_grid[n].cell_area[:output_ncells])
+          for(int i=0; i<output_ncells; i++) {
+            if(p_fieldout_data[i] != missing)
+              p_fieldout_data[i] *=  (out_area[i]/output_grid[n].cell_area[i]);
           }
         }
       }
     }
 
+#pragma acc exit data copyout(p_fieldout_data[:output_ncells])
+#pragma acc exit data delete(out_area[:output_ncells],\
+                             out_miss[:output_ncells])
+
     free(out_area);
     free(out_miss);
-  }
+  } // n
 
+  return;
 
   /* conservation check if needed */
   if(opcode & CHECK_CONSERVE) {
@@ -1234,3 +1257,36 @@ void do_vector_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_in
   }
 
 }; /* do_vector_conserve_interp */
+
+void get_input_area_weight_order1(const int weights_exist, const int cell_measures, const int cell_methods,
+                                  const int input_ncells, const Field_config *mfield_in, const Grid_config *minput_grid,
+                                  double *input_area_weight)
+{
+
+  double *p_gridin_area  = minput_grid->cell_area;
+  double *p_fieldin_area = mfield_in->area;
+  double *p_weight = minput_grid->weight;
+
+  if(cell_methods == CELL_METHODS_SUM) {
+#pragma acc parallel loop present(input_area_weight[:input_ncells]) copyin(p_gridin_area[:input_ncells])
+    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i] = 1.0/p_gridin_area[i];
+  }
+
+  else if(cell_measures) {
+#pragma acc parallel loop present(input_area_weight[:input_ncells]) \
+                          copyin(p_gridin_area[:input_ncells],     \
+                                 p_fieldin_area[:input_ncells])
+    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i] = p_fieldin_area[i]/p_gridin_area[i];
+  }
+
+  else {
+#pragma acc parallel loop present(input_area_weight[:input_ncells])
+    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i]=1.0;
+  }
+
+  if(weights_exist){
+#pragma acc parallel loop independent present(input_area_weight[:input_ncells]) copyin(p_weight[:input_ncells])
+    for(int i=0; i<input_ncells; i++) input_area_weight[i] *= p_weight[i];
+  }
+
+}

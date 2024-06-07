@@ -46,4 +46,7 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 void check_area_conservation(const int ntiles_output_grid, const int ntiles_input_grid, Grid_config *output_grid,
                              Xgrid_config *xgrid);
 
+void get_input_area_weight_order1(const int weights_exist, const int cell_measures, const int cell_methods,
+                                  const int input_ncells, const Field_config *mfield_in, const Grid_config *minput_grid,
+                                  double *input_area_weight);
 #endif

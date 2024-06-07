@@ -837,8 +837,6 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
       }
     }
 
-
-
     if(copy_xcentroid==1) {
 #pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
                          parent_input_indices[:upbound_nxcells],        \
@@ -864,7 +862,6 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
     }
 
 #pragma acc wait
-
 
   }//if nxcells>0
 

@@ -271,16 +271,10 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
                                    approx_xcells_per_ij1, parent_input_indices, parent_output_indices,
                                    xcell_areas, xgrid_for_input_tile);
 
-#pragma acc exit data delete( approx_xcells_per_ij1[:input_grid_ncells], \
-                              parent_input_indices[:upbound_nxcells],   \
+#pragma acc exit data delete( parent_input_indices[:upbound_nxcells],   \
                               parent_output_indices[:upbound_nxcells],  \
                               xcell_areas[:upbound_nxcells],            \
                               xcells_per_ij1[:input_grid_ncells])
-
-  free(parent_input_indices);
-  free(parent_output_indices);
-  free(xcell_areas);
-  free(xcells_per_ij1);
 
   return nxcells;
 
@@ -489,15 +483,6 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
                               summed_input_clon[:input_grid_ncells],    \
                               summed_input_clat[:input_grid_ncells])
 
-    free(parent_input_indices);
-    free(parent_output_indices);
-    free(xcell_areas);
-    free(xcells_per_ij1);
-    free(xcell_dclon);
-    free(xcell_dclat);
-    free(summed_input_area);
-    free(summed_input_clon);
-    free(summed_input_clat);
   return nxcells;
 
 };/* get_xgrid_2Dx2D_order2 */
