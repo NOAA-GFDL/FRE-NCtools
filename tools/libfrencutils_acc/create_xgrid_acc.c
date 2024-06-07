@@ -86,7 +86,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
       input_cell_lon_cent = avgval_double_acc(nvertices, input_cell_lon_vertices);
 
 #pragma acc loop independent reduction(+:upbound_nxcells) reduction(+:i_approx_xcells_per_ij1) \
-                             reduction(min:ij2_min) reduction(max:ij2_max)
+  reduction(min:ij2_min) reduction(max:ij2_max) collapse(2)
 
       for(int ij2=0; ij2<output_grid_ncells; ij2++) {
 
@@ -96,17 +96,14 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
         if(output_grid_cells->lat_min[ij2] >= input_cell_lat_max) continue;
         if(output_grid_cells->lat_max[ij2] <= input_cell_lat_min) continue;
 
-        // adjust according to input_grid_lon_cent
-        // TODO: breakup grid into quadrants to avoid if statements?
-        output_cell_lon_min = output_grid_cells->lon_min[ij2];
-        output_cell_lon_max = output_grid_cells->lon_max[ij2];
-
         dlon_cent = output_grid_cells->lon_cent[ij2] - input_cell_lon_cent;
         if(dlon_cent < -M_PI) rotate= +TPI;
         if(dlon_cent > M_PI)  rotate = -TPI;
 
-        output_cell_lon_min += rotate;
-        output_cell_lon_max += rotate;
+        // adjust according to input_grid_lon_cent
+        // TODO: breakup grid into quadrants to avoid if statements?
+        output_cell_lon_min = output_grid_cells->lon_min[ij2] + rotate;
+        output_cell_lon_max = output_grid_cells->lon_max[ij2] + rotate;
 
         //output_cell_lon should in the same range as input_cell_lon after lon_fix,
         // so no need to consider cyclic condition
