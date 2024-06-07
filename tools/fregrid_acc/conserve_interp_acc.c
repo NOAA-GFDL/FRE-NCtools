@@ -40,9 +40,8 @@
 void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, int ntiles_output_grid,
 			   Grid_config *output_grid, Xgrid_config *xgrid, unsigned int opcode)
 {
-  int n, m, i, ii, jj, nlon_input_cells, nlat_input_cells, ncells_input;
+  int nlon_input_cells, nlat_input_cells, ncells_input;
   int nlon_output_cells, nlat_output_cells, tile;
-  size_t nxcells, upbound_nxcells;
 
   Grid_cells_struct_config *input_grid_cells=
     (Grid_cells_struct_config *)malloc(ntiles_input_grid * sizeof(Grid_cells_struct_config));
@@ -51,10 +50,11 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
   if( opcode & READ) {
     read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, output_grid, input_grid, xgrid, opcode);
     copy_xgrid_to_device_acc(ntiles_input_grid, ntiles_output_grid, xgrid, opcode);
+    exit(0);
     return;
   }
 
-  for(n=0; n<ntiles_output_grid; n++) {
+  for(int n=0; n<ntiles_output_grid; n++) {
 
     int nlon_output_cells = output_grid[n].nxc;
     int nlat_output_cells = output_grid[n].nyc;
@@ -67,13 +67,13 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
     get_grid_cells_struct_acc( nlon_output_cells, nlat_output_cells,
                                output_grid[n].lonc, output_grid[n].latc, &output_grid_cells );
 
-    for(m=0; m<ntiles_input_grid; m++){
+    for(int m=0; m<ntiles_input_grid; m++){
 
       int nlon_input_cells = input_grid[m].nx;
       int nlat_input_cells = input_grid[m].ny;
       int ncells_input = nlon_input_cells * nlat_input_cells;
       int npts_input_grid = (nlon_input_cells+1)*(nlat_input_cells+1);
-      int jlat_overlap_starts=0, jlat_overlap_ends=0, nlat_overlapping_cells=0, nxcells=0;
+      int jlat_overlap_starts=0, jlat_overlap_ends=0, nxcells=0, upbound_nxcells=0;
       int *approx_nxcells_per_ij1, *ij2_start, *ij2_end;
 
       copy_grid_to_device_acc(npts_input_grid, input_grid[m].latc, input_grid[m].lonc);
@@ -82,13 +82,9 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
 
       //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
       get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
-                               output_grid[n].latc, input_grid[m].latc,
-                               &jlat_overlap_starts, &jlat_overlap_ends);
+                               output_grid[n].latc, input_grid[m].latc, &jlat_overlap_starts, &jlat_overlap_ends);
 
-      create_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1,
-                                                   &ij2_start, &ij2_end);
-
-      printf("%d %d ", jlat_overlap_starts, jlat_overlap_ends);
+      create_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
 
       upbound_nxcells = get_upbound_nxcells_2dx2d_acc( nlon_input_cells, nlat_input_cells,
                                                        nlon_output_cells, nlat_output_cells,
@@ -131,16 +127,16 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
         else if(opcode & CONSERVE_ORDER2) {
           clock_t time_start, time_end;
           time_start = clock();
-          nxcells= create_xgrid_2dx2d_order2test_acc( nlon_input_cells, nlat_input_cells,
-                                                      nlon_output_cells, nlat_output_cells,
-                                                      jlat_overlap_starts, jlat_overlap_ends,
-                                                      input_grid[m].lonc, input_grid[m].latc,
-                                                      output_grid[n].lonc, output_grid[n].latc,
-                                                      upbound_nxcells,
-                                                      input_grid_cells[m].skip_cells,
-                                                      &output_grid_cells,
-                                                      approx_nxcells_per_ij1, ij2_start, ij2_end,
-                                                      xgrid[n].per_intile+m, input_grid[m].cell_area);
+          nxcells= create_xgrid_2dx2d_order2_acc( nlon_input_cells, nlat_input_cells,
+                                                  nlon_output_cells, nlat_output_cells,
+                                                  jlat_overlap_starts, jlat_overlap_ends,
+                                                  input_grid[m].lonc, input_grid[m].latc,
+                                                  output_grid[n].lonc, output_grid[n].latc,
+                                                  upbound_nxcells,
+                                                  input_grid_cells[m].skip_cells,
+                                                  &output_grid_cells,
+                                                  approx_nxcells_per_ij1, ij2_start, ij2_end,
+                                                  xgrid[n].per_intile+m, input_grid[m].cell_area);
           time_end = clock();
           xgrid[n].nxcells+=nxcells;
           printf("HERE %d %d %f\n", upbound_nxcells, nxcells, (float)(time_end - time_start)/CLOCKS_PER_SEC);
@@ -162,16 +158,11 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
 
   }//output tile
 
-  if( opcode & WRITE) { /* write out remapping information */
-    write_remap_file(ntiles_output_grid, ntiles_input_grid, output_grid, input_grid, xgrid, opcode);
-    if(mpp_pe() == mpp_root_pe())printf("NOTE: done calculating index and weight for conservative interpolation\n");
-  }
-
-  /* check the input area match exchange grid area */
+  if( opcode & WRITE) write_remap_file(ntiles_output_grid, ntiles_input_grid, output_grid, input_grid, xgrid, opcode);
   if(opcode & CHECK_CONSERVE) check_area_conservation(ntiles_output_grid, ntiles_input_grid, output_grid, xgrid);
 
+  if(mpp_pe() == mpp_root_pe())printf("NOTE: done calculating index and weight for conservative interpolation\n");
   exit(0);
-
 }; /* setup_conserve_interp */
 
 
