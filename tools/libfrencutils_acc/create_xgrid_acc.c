@@ -86,7 +86,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
       input_cell_lon_cent = avgval_double_acc(nvertices, input_cell_lon_vertices);
 
 #pragma acc loop independent reduction(+:upbound_nxcells) reduction(+:i_approx_xcells_per_ij1) \
-  reduction(min:ij2_min) reduction(max:ij2_max) collapse(2)
+  reduction(min:ij2_min) reduction(max:ij2_max)
 
       for(int ij2=0; ij2<output_grid_ncells; ij2++) {
 

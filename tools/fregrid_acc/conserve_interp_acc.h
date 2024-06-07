@@ -24,7 +24,13 @@
 
 void setup_conserve_interp_acc(int ntiles_in, Grid_config *grid_in, int ntiles_out,
 			   Grid_config *grid_out, Xgrid_config *xgrid, unsigned int opcode);
-void do_scalar_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
+void do_scalar_conserve_interp_order1_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
+			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
+			       Field_config *field_out, unsigned int opcode, int nz);
+void do_scalar_conserve_interp_order2_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
+			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
+			       Field_config *field_out, unsigned int opcode, int nz);
+void do_scalar_conserve_interp_monotonic_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
 			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
 			       Field_config *field_out, unsigned int opcode, int nz);
 void do_vector_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,

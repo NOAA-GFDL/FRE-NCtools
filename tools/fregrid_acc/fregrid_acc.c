@@ -604,13 +604,15 @@ int main(int argc, char* argv[])
   if( nfiles == 0) {
     if(nvector > 0 || nscalar > 0 || nvector2 > 0)
       mpp_error("fregrid: when --input_file is not specified, --scalar_field, --u_field and --v_field should also not be specified");
-    if(!remap_file) mpp_error("fregrid: when --input_file is not specified, remap_file must be specified to save weight information");
+    if(!remap_file)
+      mpp_error("fregrid: when --input_file is not specified, remap_file must be specified to save weight information");
     save_weight_only = 1;
     if(mpp_pe()==mpp_root_pe())printf("NOTE: No input file specified in this run, no data file will be regridded "
                                       "and only weight information is calculated.\n");
   }
   else if( nfiles == 1 || nfiles ==2) {
-    if( nvector != nvector2 ) mpp_error("fregrid: number of fields specified in u_field must be the same as specified in v_field");
+    if( nvector != nvector2 )
+      mpp_error("fregrid: number of fields specified in u_field must be the same as specified in v_field");
     if( nscalar+nvector==0 ) mpp_error("fregrid: both scalar_field and vector_field are not specified");
     /* when nvector =2 and nscalar=0, nfiles can be 2 otherwise nfiles must be 1 */
     if( nscalar && nfiles != 1 )
@@ -637,7 +639,7 @@ int main(int argc, char* argv[])
     if(nvector >0) mpp_error("fregrid: weight_field should not be specified for vector interpolation, contact developer");
     if(!weight_file) {
 
-      if(nfiles==0) mpp_error("fregrid: weight_field is specified, but both weight_file and input_file are not specified");
+      if(nfiles==0) mpp_error("fregrid: weight_field is specified, but weight_file and input_file are not specified");
       if(dir_in)
         sprintf(wt_file_obj, "%s/%s", dir_in, input_file[0]);
       else
@@ -648,16 +650,12 @@ int main(int argc, char* argv[])
 
   if(nvector > 0) {
     opcode |= VECTOR;
-    if(grid_type == AGRID)
-      opcode |= AGRID;
-    else if(grid_type == BGRID)
-      opcode |= BGRID;
+    if(grid_type == AGRID) opcode |= AGRID;
+    else if(grid_type == BGRID) opcode |= BGRID;
   }
 
-  if (shuffle < -1 || shuffle > 1)
-    mpp_error("fregrid: shuffle must be 0 (off) or 1 (on)");
-  if (deflation < -1 || deflation > 9)
-    mpp_error("fregrid: deflation must be between 0 (off) and 9");
+  if (shuffle < -1 || shuffle > 1) mpp_error("fregrid: shuffle must be 0 (off) or 1 (on)");
+  if (deflation < -1 || deflation > 9) mpp_error("fregrid: deflation must be between 0 (off) and 9");
 
   /* define history to be the history in the grid file */
   strcpy(history,argv[0]);
@@ -667,11 +665,11 @@ int main(int argc, char* argv[])
     if(strlen(argv[i]) > MAXENTRY) { /* limit the size of each entry, here we are assume the only entry that is longer than
                                         MAXENTRY= 256 is the option --scalar_field --u_field and v_field */
       if(strcmp(argv[i-1], "--scalar_field") && strcmp(argv[i-1], "--u_field") && strcmp(argv[i-1], "--v_field") )
-        mpp_error("fregrid: the entry ( is not scalar_field, u_field, v_field ) is too long, need to increase parameter MAXENTRY");
+        mpp_error("fregrid: the entry ( is not scalar_field, u_field, v_field )\
+                   is too long, need to increase parameter MAXENTRY");
       strcat(history, "(**please see the field list in this file**)" );
     }
-    else
-      strcat(history, argv[i]);
+    else strcat(history, argv[i]);
   }
 
   /* get the mosaic information of input and output mosaic*/
@@ -683,13 +681,13 @@ int main(int argc, char* argv[])
   if( ntiles_in != 6 && (opcode & CONSERVE_ORDER2) )
     mpp_error("fregrid: when the input grid is not cubic sphere grid, interp_method can not be conserve_order2");
 
+  ntiles_out = 1;
   if(mosaic_out) {
     fid = mpp_open(mosaic_out, MPP_READ);
     ntiles_out = mpp_get_dimlen(fid, "ntiles");
     mpp_close(fid);
   }
-  else
-    ntiles_out = 1;
+
 
   if(test_case) {
     if(nfiles != 1) mpp_error("fregrid: when test_case is specified, nfiles should be 1");
@@ -701,15 +699,13 @@ int main(int argc, char* argv[])
   if( opcode & STANDARD_DIMENSION ) printf("fregrid: --standard_dimension is set\n");
 
   if( opcode & BILINEAR ) {
-    int ncontact;
-    ncontact = read_mosaic_ncontacts(mosaic_in);
+    int ncontact = read_mosaic_ncontacts(mosaic_in);
     if( nlon == 0 || nlat == 0) mpp_error("fregrid: when interp_method is bilinear, nlon and nlat should be specified");
     if(ntiles_in != 6) mpp_error("fregrid: when interp_method is bilinear, the input mosaic should be 6 tile cubic grid");
     if(ncontact !=12)  mpp_error("fregrid: when interp_method is bilinear, the input mosaic should be 12 contact cubic grid");
     if(mpp_npes() > 1) mpp_error("fregrid: parallel is not implemented for bilinear remapping");
   }
-  else
-    y_at_center = 1;
+  else y_at_center = 1;
 
   if(extrapolate) opcode |= EXTRAPOLATE;
 
@@ -751,8 +747,7 @@ int main(int argc, char* argv[])
   }
   /* find out if great_circle algorithm is used in the input grid or output grid */
 
-  if( great_circle_algorithm_in == 0 && great_circle_algorithm_out == 0 )
-    opcode |= LEGACY_CLIP;
+  if( great_circle_algorithm_in == 0 && great_circle_algorithm_out == 0 ) opcode |= LEGACY_CLIP;
   else {
     opcode |= GREAT_CIRCLE;
     /* currently only first-order conservative is implemented */
@@ -765,19 +760,19 @@ int main(int argc, char* argv[])
   if(debug) print_mem_usage("After get_input_output_cell_area");
   /* currently extrapolate are limited to ntiles = 1. extrapolate are limited to lat-lon input grid */
   if( extrapolate ) {
-    int i, j, ind0, ind1, ind2;
     if(test_case ) mpp_error("fregrid: extrapolate is limited to test_case is false");
     if(ntiles_in != 1) mpp_error("fregrid: extrapolate is limited to ntile_in = 1");
     /* check if the grid is lat-lon grid */
-    for(j=1; j<=grid_in[0].ny; j++) for(i=1; i<=grid_in[0].nx; i++) {
-        ind0 = j*(grid_in[0].nx+2)+i;
-        ind1 = j*(grid_in[0].nx+2)+1;
-        ind2 = 1*(grid_in[0].nx+2)+i;
+    for(int j=1; j<=grid_in[0].ny; j++) {
+      for(int i=1; i<=grid_in[0].nx; i++) {
+        int ind0 = j*(grid_in[0].nx+2)+i;
+        int ind1 = j*(grid_in[0].nx+2)+1;
+        int ind2 = 1*(grid_in[0].nx+2)+i;
         if(fabs( grid_in[0].lont[ind0]-grid_in[0].lont[ind2] ) > EPSLN10 ||
            fabs( grid_in[0].latt[ind0]-grid_in[0].latt[ind1] ) > EPSLN10 )
           mpp_error("fregrid: extrapolate is limited to lat-lon grid");
-
       }
+    }
   }
 
   /* when vertical_interp is set, extrapolate must be set */
@@ -827,9 +822,7 @@ int main(int argc, char* argv[])
     /* filter field with interp_method = "none"  */
     nscalar = 0;
     for(n=0; n<nscalar_orig; n++) {
-      int vid;
-
-      vid = mpp_get_varid(file_in[0].fid, scalar_name[n]);
+      int vid = mpp_get_varid(file_in[0].fid, scalar_name[n]);
       if(mpp_var_att_exist(file_in[0].fid, vid, "interp_method")) {
         char remap_method[STRING] = "";
         mpp_get_var_att(file_in[0].fid, vid, "interp_method", remap_method);
@@ -891,13 +884,9 @@ int main(int argc, char* argv[])
 
     //If the netcdf format was specified as an input argument, use that format. Otherwise
     // use the format from the first ( tile 0) input file.
-    if(format != NULL) {
-      set_in_format(format);
-    }else if (in_format_0 >= 0){
-      reset_in_format( in_format_0);
-    }else{
-      printf("WARNING: fregrid could not set in_format");
-    }
+    if(format != NULL) set_in_format(format);
+    else if (in_format_0 >= 0) reset_in_format( in_format_0);
+    else printf("WARNING: fregrid could not set in_format");
 
     set_output_metadata(ntiles_in, nfiles, file_in, file2_in, scalar_in, u_in, v_in,
                         ntiles_out, file_out, file2_out, scalar_out, u_out, v_out, grid_out, &vgrid_out, history, tagname, opcode,
@@ -941,27 +930,22 @@ int main(int argc, char* argv[])
     double dlon_in, dlat_in;
     double lonbegin_in, latbegin_in;
     /* when dlon_in is 0, bilinear_interp will use the default 2*M_PI */
-    if(fabs(lonend-lonbegin-360) < EPSLN10)
-      dlon_in = M_PI+M_PI;
-    else
-      dlon_in = (lonend-lonbegin)*D2R;
-    if(fabs(latend-latbegin-180) < EPSLN10)
-      dlat_in = M_PI;
-    else
-      dlat_in = (latend-latbegin)*D2R;
-    if(fabs(lonbegin) < EPSLN10)
-      lonbegin_in = 0.0;
-    else
-      lonbegin_in = lonbegin*D2R;
-    if(fabs(latbegin+90) < EPSLN10)
-      latbegin_in = -0.5*M_PI;
-    else
-      latbegin_in = latbegin*D2R;
+    if(fabs(lonend-lonbegin-360) < EPSLN10) dlon_in = M_PI+M_PI;
+    else dlon_in = (lonend-lonbegin)*D2R;
+
+    if(fabs(latend-latbegin-180) < EPSLN10) dlat_in = M_PI;
+    else dlat_in = (latend-latbegin)*D2R;
+
+    if(fabs(lonbegin) < EPSLN10) lonbegin_in = 0.0;
+    else lonbegin_in = lonbegin*D2R;
+
+    if(fabs(latbegin+90) < EPSLN10) latbegin_in = -0.5*M_PI;
+    else latbegin_in = latbegin*D2R;
 
     setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
   }
-  else
-    setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, xgrid, opcode);
+  else setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, xgrid, opcode);
+
   if(debug) {
     time_end = clock();
     time_setup_interp = 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -975,9 +959,7 @@ int main(int argc, char* argv[])
   if(save_weight_only) {
     if(mpp_pe() == mpp_root_pe() ) {
       printf("NOTE: Successfully running fregrid and the following files which store weight information are generated.\n");
-      for(n=0; n<ntiles_out; n++) {
-        printf("****%s\n", xgrid[n].remap_file);
-      }
+      for(n=0; n<ntiles_out; n++) printf("****%s\n", xgrid[n].remap_file);
     }
     mpp_end();
     return 0;
@@ -1017,6 +999,7 @@ int main(int argc, char* argv[])
       if( !scalar_in->var[l].has_taxis && m>0) continue;
       if( !scalar_in->var[l].do_regrid ) continue;
       level_t = m + scalar_in->var[l].lstart;
+
       /*--- to reduce memory usage, we are only do remapping for on horizontal level one time */
       for(level_n =0; level_n < scalar_in->var[l].nn; level_n++) {
         if(extrapolate) {
@@ -1024,8 +1007,12 @@ int main(int argc, char* argv[])
           allocate_field_data(ntiles_out, scalar_out, grid_out, scalar_in->var[l].nz);
           if( opcode & BILINEAR )
             do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
-          else
-            do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+          else if(opcode & CONSERVE_ORDER1 )
+            do_scalar_conserve_interp_order1_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+          else if(opcode & CONSERVE_ORDER2 )
+            do_scalar_conserve_interp_order2_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+          else if(opcode & MONOTONIC )
+            do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
           write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
           if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
@@ -1036,51 +1023,56 @@ int main(int argc, char* argv[])
           }
           for(n=0; n<ntiles_in; n++) free(scalar_in[n].data);
           for(n=0; n<ntiles_out; n++) free(scalar_out[n].data);
-        }
+        } //if extrapolate
         else {
-          for(level_z=scalar_in->var[l].kstart; level_z <= scalar_in->var[l].kend; level_z++)
-            {
-              if(debug) time_start = clock();
-              if(test_case)
-                get_test_input_data(test_case, test_param, ntiles_in, scalar_in, grid_in, bound_T, opcode);
-              else
-                get_input_data(ntiles_in, scalar_in, grid_in, bound_T, l, level_z, level_n, level_t, extrapolate, stop_crit);
-              if(debug) {
-                time_end = clock();
-                time_get_input += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
-              }
-
-              allocate_field_data(ntiles_out, scalar_out, grid_out, 1);
-              if(debug) time_start = clock();
-              if( opcode & BILINEAR )
-                do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
-              else
-                do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
-              if(debug) {
-                time_end = clock();
-                time_do_interp += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
-              }
-
-              if(debug) time_start = clock();
-              write_field_data(ntiles_out, scalar_out, grid_out, l, level_z, level_n, m);
-              if(debug) {
-                time_end = clock();
-                time_write += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
-              }
-              if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
-                for(n=0; n<ntiles_in; n++) {
-                  free(scalar_in[n].grad_x);
-                  free(scalar_in[n].grad_y);
-                  free(scalar_in[n].grad_mask);
-                }
-              }
-              for(n=0; n<ntiles_in; n++) free(scalar_in[n].data);
-              for(n=0; n<ntiles_out; n++) free(scalar_out[n].data);
+          for(level_z=scalar_in->var[l].kstart; level_z <= scalar_in->var[l].kend; level_z++) {
+            if(debug) time_start = clock();
+            if(test_case)
+              get_test_input_data(test_case, test_param, ntiles_in, scalar_in, grid_in, bound_T, opcode);
+            else
+              get_input_data(ntiles_in, scalar_in, grid_in, bound_T, l, level_z, level_n, level_t, extrapolate, stop_crit);
+            if(debug) {
+              time_end = clock();
+              time_get_input += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
             }
-        }
-      }
-    }
+
+            allocate_field_data(ntiles_out, scalar_out, grid_out, 1);
+            if(debug) time_start = clock();
+            if( opcode & BILINEAR )
+              do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
+            else if( opcode & CONSERVE_ORDER1)
+              do_scalar_conserve_interp_order1_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+            else if( opcode & CONSERVE_ORDER2)
+              do_scalar_conserve_interp_order2_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+            else if( opcode & MONOTONIC)
+              do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+
+            if(debug) {
+              time_end = clock();
+              time_do_interp += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
+            }
+
+            if(debug) time_start = clock();
+            write_field_data(ntiles_out, scalar_out, grid_out, l, level_z, level_n, m);
+            if(debug) {
+              time_end = clock();
+              time_write += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
+            }
+            if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
+              for(n=0; n<ntiles_in; n++) {
+                free(scalar_in[n].grad_x);
+                free(scalar_in[n].grad_y);
+                free(scalar_in[n].grad_mask);
+              }
+            }
+            for(n=0; n<ntiles_in; n++) free(scalar_in[n].data);
+            for(n=0; n<ntiles_out; n++) free(scalar_out[n].data);
+          }//for level_z
+        } //no extrapolate
+      } // level_n
+    } // nscalar
     if(debug) print_mem_usage("After do interp");
+
     /* then interp vector field */
     for(l=0; l<nvector; l++) {
       if( !u_in[n].var[l].has_taxis && m>0) continue;

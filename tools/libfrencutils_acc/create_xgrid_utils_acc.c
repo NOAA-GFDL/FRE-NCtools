@@ -795,7 +795,7 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
                                       int *approx_xcells_per_ij1, int *parent_input_indices, int *parent_output_indices,
                                       double *xcell_areas, Xinfo_per_input_tile *xgrid_for_input_tile)
 {
-  int copy_xcentroid = (*xcell_dclon != -99.99 ) ? nxcells : 0;
+  int copy_xcentroid = ( xcell_dclon[0] != -99.99 ) ? 1 : 0; //true=1; false=0
   xgrid_for_input_tile->nxcells = nxcells;
 
   if(nxcells>0) {
@@ -808,18 +808,18 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
       xgrid_for_input_tile->dcentroid_lat = (double *)malloc(nxcells*sizeof(double));
     }
 
-#pragma acc enter data copyin(xgrid_for_input_tile)
+#pragma acc enter data copyin(xgrid_for_input_tile[:1])
 #pragma acc enter data create(xgrid_for_input_tile->input_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->output_parent_cell_indices[:nxcells], \
                               xgrid_for_input_tile->xcell_area[:nxcells])
-#pragma acc enter data create(xgrid_for_input_tile->dcentroid_lon[:nxcells], \
-                              xgrid_for_input_tile->dcentroid_lat[:nxcells]) if(copy_xcentroid)
+#pragma acc enter data if(copy_xcentroid) create(xgrid_for_input_tile->dcentroid_lon[:nxcells], \
+                                                 xgrid_for_input_tile->dcentroid_lat[:nxcells])
+
 #pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
                          parent_input_indices[:upbound_nxcells],        \
                          parent_output_indices[:upbound_nxcells],       \
                          xcell_areas[:upbound_nxcells], xgrid_for_input_tile[:1])
-#pragma acc data present(xcell_dclon[:nxcells], xcell_dclat[:nxcells]) if(copy_xcentroid)
-#pragma acc parallel loop independent
+#pragma acc parallel loop independent async(0)
     for(int ij1=0 ; ij1<input_ncells ; ij1++) {
       int xcells_before_ij1 = 0, approx_xcells=0 ;
 
@@ -835,8 +835,26 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
         xgrid_for_input_tile->output_parent_cell_indices[xcells_before_ij1+i] = parent_output_indices[approx_xcells+i];
         xgrid_for_input_tile->xcell_area[xcells_before_ij1+i] = xcell_areas[approx_xcells+i];
       }
+    }
 
-      if(copy_xcentroid) {
+
+
+    if(copy_xcentroid==1) {
+#pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
+                         parent_input_indices[:upbound_nxcells],        \
+                         parent_output_indices[:upbound_nxcells],       \
+                         xcell_areas[:upbound_nxcells], xgrid_for_input_tile[:1], \
+                         xcell_dclon[:upbound_nxcells], xcell_dclat[:upbound_nxcells])
+#pragma acc parallel loop independent async(1)
+      for(int ij1=0 ; ij1<input_ncells ; ij1++) {
+        int xcells_before_ij1 = 0, approx_xcells=0 ;
+
+#pragma acc loop
+        for(int i=1 ; i<=ij1 ; i++) {
+          xcells_before_ij1 += xcells_per_ij1[i-1];
+          approx_xcells += approx_xcells_per_ij1[i-1];
+        }
+
 #pragma acc loop independent
         for(int i=0 ; i<xcells_per_ij1[ij1]; i++){
           xgrid_for_input_tile->dcentroid_lon[xcells_before_ij1+i] = xcell_dclon[approx_xcells+i];
@@ -844,6 +862,10 @@ void copy_data_to_xgrid_on_device_acc(const int nxcells, const int input_ncells,
         }
       }
     }
+
+#pragma acc wait
+
+
   }//if nxcells>0
 
   }
