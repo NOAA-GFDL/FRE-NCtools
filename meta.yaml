@@ -1,0 +1,22 @@
+package:
+  name: fre-nctools
+  version: 2022.02.01
+
+source:
+  path: .
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - libnetcdf
+    - netcdf-fortran
+  run:
+
+test:
+  commands:
+
+about:
+  license: LGPL-3.0
+  summary: Tools for manipulating and creating netCDF inputs for FMS managed models
