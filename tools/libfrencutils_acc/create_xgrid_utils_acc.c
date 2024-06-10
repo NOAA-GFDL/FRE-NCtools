@@ -702,6 +702,43 @@ void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lo
 
 }
 
+void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid_cells)
+{
+
+  for(int icell=0 ; icell<MAX_V ; icell++) {
+#pragma acc exit data delete( grid_cells->lon_vertices[icell])
+  }
+
+  for(int icell=0 ; icell<MAX_V ; icell++) {
+#pragma acc exit data delete( grid_cells->lat_vertices[icell])
+  }
+
+#pragma acc exit data delete( grid_cells->lon_vertices,  \
+                              grid_cells->lat_vertices,  \
+                              grid_cells->lon_min,       \
+                              grid_cells->lon_max,       \
+                              grid_cells->lon_cent,      \
+                              grid_cells->lat_max,       \
+                              grid_cells->lat_min,       \
+                              grid_cells->nvertices,     \
+                              grid_cells->area)
+#pragma acc exit data delete(grid_cells)
+
+  for(int icell=0 ; icell<MAX_V ; icell++) {
+    free(grid_cells->lon_vertices[icell]);
+    free(grid_cells->lat_vertices[icell]);
+  }
+  free(grid_cells->lon_min);
+  free(grid_cells->lon_max);
+  free(grid_cells->lon_cent);
+  free(grid_cells->lat_min);
+  free(grid_cells->lat_max);
+  free(grid_cells->area);
+  free(grid_cells->nvertices);
+
+}
+
+
 void get_cell_vertices_acc( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
 {
 

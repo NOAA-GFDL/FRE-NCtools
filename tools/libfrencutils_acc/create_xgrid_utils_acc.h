@@ -47,6 +47,8 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lon, const double *lat,
                                 Grid_cells_struct_config *grid_cells);
 
+void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid_cells);
+
 #pragma acc routine seq
 void get_cell_vertices_acc( const int ij, const int nlon, const double *lon, const double *lat, double *x, double *y );
 
