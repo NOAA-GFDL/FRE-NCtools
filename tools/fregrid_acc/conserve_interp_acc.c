@@ -1119,8 +1119,8 @@ void interp_data_order2( const Grid_config *output_grid, const Grid_config *inpu
     double dx = mxgrid->dcentroid_lon[ix];
     double dy = mxgrid->dcentroid_lat[ix];
 
-    int i1 = ij1%output_nlon_cells;
-    int j1=ij1/output_nlon_cells;
+    int i1 = ij1%input_nlon_cells;
+    int j1=ij1/input_nlon_cells;
     int data_pt = (j1+1)*(input_nlon_cells+n_halo_cells)+(i1+1);
 
     if( fieldin_data[data_pt] == missing ) continue;
