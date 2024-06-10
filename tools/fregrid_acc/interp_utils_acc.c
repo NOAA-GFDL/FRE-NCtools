@@ -113,17 +113,13 @@ void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells
 void get_input_skip_cells
 assign mask to skip input cells in xgrid creation
 *******************************************************************************/
-void get_skip_cells_acc(const int mask_size, double **skip_cells)
+void get_skip_cells_acc(const int mask_size, double *skip_cells)
 {
 
-  double *p_skip_cells;
 
-  *skip_cells = (double *)malloc(mask_size*sizeof(double));
-  p_skip_cells = *skip_cells;
-
-#pragma acc enter data create(p_skip_cells[:mask_size])
-#pragma acc parallel loop independent present(p_skip_cells[:mask_size])
-  for( int i=0 ; i<mask_size; i++) p_skip_cells[i]=1.0;
+#pragma acc enter data create(skip_cells[:mask_size])
+#pragma acc parallel loop independent present(skip_cells[:mask_size])
+  for( int i=0 ; i<mask_size; i++) skip_cells[i]=1.0;
 
 }
 

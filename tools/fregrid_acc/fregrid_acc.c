@@ -1008,9 +1008,9 @@ int main(int argc, char* argv[])
           if( opcode & BILINEAR )
             do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
           else if(opcode & CONSERVE_ORDER1 )
-            do_scalar_conserve_interp_order1_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+            do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           else if(opcode & CONSERVE_ORDER2 )
-            do_scalar_conserve_interp_order2_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
+            do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           else if(opcode & MONOTONIC )
             do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
@@ -1041,9 +1041,9 @@ int main(int argc, char* argv[])
             if( opcode & BILINEAR )
               do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
             else if( opcode & CONSERVE_ORDER1)
-              do_scalar_conserve_interp_order1_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+              do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
             else if( opcode & CONSERVE_ORDER2)
-              do_scalar_conserve_interp_order2_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
+              do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
             else if( opcode & MONOTONIC)
               do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
 
