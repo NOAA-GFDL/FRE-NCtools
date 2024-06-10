@@ -30,13 +30,6 @@ void do_scalar_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_in
 void do_scalar_conserve_interp_order2_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
 			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
 			       Field_config *field_out, unsigned int opcode, int nz);
-void do_scalar_conserve_interp_monotonic_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in,
-			       int ntiles_out, const Grid_config *grid_out, const Field_config *field_in,
-			       Field_config *field_out, unsigned int opcode, int nz);
-void do_vector_conserve_interp_acc(Xgrid_config *xgrid, int varid, int ntiles_in, const Grid_config *grid_in, int ntiles_out,
-                               const Grid_config *grid_out, const Field_config *u_in,  const Field_config *v_in,
-                               Field_config *u_out, Field_config *v_out, unsigned int opcode);
-
 void read_remap_file_acc(int ntiles_in, int ntiles_out, Grid_config *output_grid, Grid_config *input_grid,
                          Xgrid_config *xgrid, unsigned int opcode);
 

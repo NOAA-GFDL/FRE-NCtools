@@ -39,6 +39,10 @@
   675 Mass Ave, Cambridge, MA 02139, USA.
   -----------------------------------------------------------------------
 */
+
+// TODO:  vector and monotonic interpolation have been implemented yet.
+// TODO:  great_circle first order exchange grid creation has not been implemented yet.
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -65,7 +69,7 @@ char *usage[] = {
                  "          [--LstepBegin #integer] [--LstepEnd #integer]                               ",
                  "          [--output_file output_file] [--input_dir input_dir]                         ",
                  "          [--output_dir output_dir] [--remap_file remap_file]                         ",
-                 "          [--interp_method method] [--grid_type grid_type] [--test_case test_case]    ",
+                 "          [--interp_method method] [--grid_type grid_type]                            ",
                  "          [--symmetry] [--target_grid] [--finer_step #] [--fill_missing]              ",
                  "          [--center_y] [--check_conserve] [--weight_file weight_file]                 ",
                  "          [--weight_field --weight_field] [--dst_vgrid dst_vgrid]                     ",
@@ -182,7 +186,7 @@ char *usage[] = {
                  "                                                                                      ",
                  "--interp_method interp_method specify the remapping algorithm to be used. Default is  ",
                  "                              'conserve_order1'. Currently only 'conserve_order1',    ",
-                 "                              'conserve_order2', 'conserve_order2_monotonic' and      ",
+                 "                              'conserve_order2', and                                  ",
                  "                              'bilinear' remapping scheme are   ",
                  "                              implemented in this tool. The bilinear scheme can only  ",
                  "                              be used to remap data from cubic grid to regular latlon ",
@@ -190,8 +194,6 @@ char *usage[] = {
                  "                              must be specified and the output data in y-direction    ",
                  "                              will be located at the center of cell or bound of the   ",
                  "                              cell depending on the setting of y_center.              ",
-                 "                                                                                      ",
-                 "--test_case test_case         specify the test function to be used for testing.       ",
                  "                                                                                      ",
                  "--grid_type     grid_type     specify the vector field grid location. default is      ",
                  "                              AGRID and only AGRID is implemented yet.                ",
@@ -220,9 +222,6 @@ char *usage[] = {
                  "--check_conserve              check the conservation of conservative interpolation.   ",
                  "                              The area sum will be printed out for input and output   ",
                  "                              mosaic.                                                 ",
-                 "                                                                                      ",
-                 "--monotonic                   When specified, use monotonic interpolation when        ",
-                 "                              interp_method is 'conserve_order2'.                     ",
                  "                                                                                      ",
                  "--weight_file                 Specify the filename that store weight_field. The       ",
                  "                              suffix '.tile#.nc' should not present for multiple-tile ",
@@ -257,8 +256,6 @@ char *usage[] = {
                  "                              'netcdf4_classic', '64bit_offset', 'classic'. When      ",
                  "                              format is not specified, will use the format of         ",
                  "                              input_file.                                             ",
-                 "                                                                                      ",
-                 "--nthreads #                  Specify number of OpenMP threads.                       ",
                  "                                                                                      ",
                  "--deflation #                 If using NetCDF4 , use deflation of level #.            ",
                  "                              Defaults to input file settings.                        ",
@@ -302,8 +299,6 @@ int main(int argc, char* argv[])
   char    scalar_name_remap[NVAR][STRING];
   char    u_name     [NVAR] [STRING];
   char    v_name     [NVAR] [STRING];
-  char    *test_case = NULL;
-  double  test_param = 1;
   char    *associated_file_dir = NULL;
   int     check_conserve = 0; /* 0 means no check */
   double  lonbegin = 0, lonend = 360;
@@ -354,7 +349,6 @@ int main(int argc, char* argv[])
   Xgrid_config *xgrid     = NULL;     /* store remapping information */
   Interp_config *interp   = NULL;     /* store remapping information */
   int save_weight_only      = 0;
-  int nthreads = 1;
 
   double time_get_in_grid=0, time_get_out_grid=0, time_get_input=0;
   double time_setup_interp=0, time_do_interp=0, time_write=0;
@@ -371,9 +365,7 @@ int main(int argc, char* argv[])
                                          {"input_file",       required_argument, NULL, 'e'},
                                          {"output_file",      required_argument, NULL, 'f'},
                                          {"remap_file",       required_argument, NULL, 'g'},
-                                         {"test_case",        required_argument, NULL, 'i'},
                                          {"interp_method",    required_argument, NULL, 'j'},
-                                         {"test_parameter",   required_argument, NULL, 'k'},
                                          {"symmetry",         no_argument,       NULL, 'l'},
                                          {"grid_type",        required_argument, NULL, 'm'},
                                          {"target_grid",      no_argument,       NULL, 'n'},
@@ -401,7 +393,6 @@ int main(int argc, char* argv[])
                                          {"stop_crit",        required_argument, NULL, 'N'},
                                          {"standard_dimension", no_argument,     NULL, 'O'},
                                          {"debug",             no_argument,     NULL, 'P'},
-                                         {"nthreads",         required_argument, NULL, 'Q'},
                                          {"associated_file_dir", required_argument, NULL, 'R'},
                                          {"deflation",        required_argument, NULL, 'S'},
                                          {"shuffle",          required_argument, NULL, 'T'},
@@ -458,12 +449,6 @@ int main(int argc, char* argv[])
       break;
     case 'j':
       strcpy(interp_method, optarg);
-      break;
-    case 'i':
-      test_case = optarg;
-      break;
-    case 'k':
-      test_param = atof(optarg);
       break;
     case 'l':
       opcode |= SYMMETRY;
@@ -543,9 +528,6 @@ int main(int argc, char* argv[])
     case 'P':
       debug = 1;
       break;
-    case 'Q':
-      nthreads = atoi(optarg);
-      break;
     case 'R':
       associated_file_dir = optarg;
       break;
@@ -588,17 +570,12 @@ int main(int argc, char* argv[])
     if(mpp_pe() == mpp_root_pe())printf("****fregrid: second order conservative scheme will be used for regridding.\n");
     opcode |= CONSERVE_ORDER2;
   }
-  else if(!strcmp(interp_method, "conserve_order2_monotonic") ) {
-    if(mpp_pe() == mpp_root_pe())printf("****fregrid: second order monotonic conservative scheme will be used for regridding.\n");
-    opcode |= CONSERVE_ORDER2;
-    opcode |= MONOTONIC;
-  }
   else if(!strcmp(interp_method, "bilinear") ) {
     if(mpp_pe() == mpp_root_pe())printf("****fregrid: bilinear remapping scheme will be used for regridding.\n");
     opcode |= BILINEAR;
   }
   else
-    mpp_error("fregrid: interp_method must be 'conserve_order1', 'conserve_order2', 'conserve_order2_monotonic'  or 'bilinear'");
+    mpp_error("fregrid: interp_method must be 'conserve_order1', 'conserve_order2', or 'bilinear'");
 
   save_weight_only = 0;
   if( nfiles == 0) {
@@ -689,11 +666,6 @@ int main(int argc, char* argv[])
   }
 
 
-  if(test_case) {
-    if(nfiles != 1) mpp_error("fregrid: when test_case is specified, nfiles should be 1");
-    sprintf(output_file[0], "%s.%s.output", test_case, interp_method);
-  }
-
   if(check_conserve) opcode |= CHECK_CONSERVE;
 
   if( opcode & STANDARD_DIMENSION ) printf("fregrid: --standard_dimension is set\n");
@@ -760,7 +732,6 @@ int main(int argc, char* argv[])
   if(debug) print_mem_usage("After get_input_output_cell_area");
   /* currently extrapolate are limited to ntiles = 1. extrapolate are limited to lat-lon input grid */
   if( extrapolate ) {
-    if(test_case ) mpp_error("fregrid: extrapolate is limited to test_case is false");
     if(ntiles_in != 1) mpp_error("fregrid: extrapolate is limited to ntile_in = 1");
     /* check if the grid is lat-lon grid */
     for(int j=1; j<=grid_in[0].ny; j++) {
@@ -979,14 +950,6 @@ int main(int argc, char* argv[])
 
 
 
-  /* set time step to 1, only test scalar field now, nz need to be 1 */
-  if(test_case) {
-    if(nscalar != 1 || nvector != 0) mpp_error("fregrid: when test_case is specified, nscalar must be 1 and nvector must be 0");
-    if(scalar_in->var->nz != 1) mpp_error("fregrid: when test_case is specified, number of vertical level must be 1");
-    file_in->nt = 1;
-    file_out->nt = 1;
-  }
-
   /* Then doing the regridding */
   for(m=0; m<file_in->nt; m++) {
     int level_z, level_n, level_t;
@@ -1011,8 +974,6 @@ int main(int argc, char* argv[])
             do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           else if(opcode & CONSERVE_ORDER2 )
             do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
-          else if(opcode & MONOTONIC )
-            do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode, scalar_in->var[l].nz);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
           write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
           if(scalar_out->var[l].interp_method == CONSERVE_ORDER2) {
@@ -1027,9 +988,6 @@ int main(int argc, char* argv[])
         else {
           for(level_z=scalar_in->var[l].kstart; level_z <= scalar_in->var[l].kend; level_z++) {
             if(debug) time_start = clock();
-            if(test_case)
-              get_test_input_data(test_case, test_param, ntiles_in, scalar_in, grid_in, bound_T, opcode);
-            else
               get_input_data(ntiles_in, scalar_in, grid_in, bound_T, l, level_z, level_n, level_t, extrapolate, stop_crit);
             if(debug) {
               time_end = clock();
@@ -1044,9 +1002,6 @@ int main(int argc, char* argv[])
               do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
             else if( opcode & CONSERVE_ORDER2)
               do_scalar_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
-            else if( opcode & MONOTONIC)
-              do_scalar_conserve_interp_monotonic_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in, scalar_out, opcode,1);
-
             if(debug) {
               time_end = clock();
               time_do_interp += 1.0*(time_end - time_start)/CLOCKS_PER_SEC;
@@ -1084,8 +1039,7 @@ int main(int argc, char* argv[])
       if( opcode & BILINEAR )
         do_vector_bilinear_interp(interp, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, finer_step, fill_missing);
       else
-        do_vector_conserve_interp_acc(xgrid, l, ntiles_in, grid_in, ntiles_out, grid_out, u_in, v_in, u_out, v_out, opcode);
-
+        mpp_error("vector conservative interpolation has not been implemented yet");
       write_field_data(ntiles_out, u_out, grid_out, l, level_z, level_n, m);
       write_field_data(ntiles_out, v_out, grid_out, l, level_z, level_n, m);
       for(n=0; n<ntiles_in; n++) {
