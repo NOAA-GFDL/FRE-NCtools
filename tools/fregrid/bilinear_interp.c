@@ -225,7 +225,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
       for(l=0; l<3*ntiles_in; l++) index[l] = 0;
       for(l=0; l<ntiles_in; l++) shortest[l] = M_PI + M_PI;
       for(l=0; l<ntiles_in; l++) {
-	for(jc=0; jc<ny_in; j++) for(ic=0; ic<nx_in; ic++) {
+	for(jc=0; jc<ny_in; jc++) for(ic=0; ic<nx_in; ic++) {
 	  n1 = jc*nxd+ic;
 	  v1[0] = grid_in[l].xt[n1];
 	  v1[1] = grid_in[l].yt[n1];
@@ -233,7 +233,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	  v0[0] = grid_out[l].xt[n0];
 	  v0[1] = grid_out[l].yt[n0];
 	  v0[2] = grid_out[l].zt[n0];
-	  distance=normalize_great_circle_distance(v1, v2);
+	  distance=normalize_great_circle_distance(v1, v0);
 	  if (distance<shortest[l]) {
 	    shortest[l]=distance;
 	    index[3*l  ]=ic;
