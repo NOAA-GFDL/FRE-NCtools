@@ -233,7 +233,7 @@ void setup_bilinear_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
 	  v0[0] = grid_out[l].xt[n0];
 	  v0[1] = grid_out[l].yt[n0];
 	  v0[2] = grid_out[l].zt[n0];
-	  distance=normalize_great_circle_distance(v1, v2);
+	  distance=normalize_great_circle_distance(v1, v0);
 	  if (distance<shortest[l]) {
 	    shortest[l]=distance;
 	    index[3*l  ]=ic;
