@@ -34,9 +34,9 @@ void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells
                               const double *ref_grid_lat, const double *grid_lat,
                               int *overlap_starts_here_index, int *overlap_ends_here_index);
 
-void get_skip_cells_acc(const int mask_size, double *skip_cells);
+void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
-void free_skip_cells_on_all_acc(const int mask_size, double *skip_cells);
+void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
 void create_interp_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
                                                    Interp_per_input_tile *interp_per_mile);

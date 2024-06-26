@@ -50,19 +50,19 @@ void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const
 {
 
 #pragma acc enter data copyin(interp_acc[:ntiles_out])
-  for(int n=0 ; n<ntiles_out; n++) {
+  for(int otile=0 ; otile<ntiles_out; otile++) {
 
-#pragma acc enter data copyin( interp_acc[n].mtile[:ntiles_in] )
+#pragma acc enter data copyin( interp_acc[otile].mtile[:ntiles_in] )
 
-    for(int m=0 ; m<ntiles_in ; m++) {
+    for(int itile=0 ; itile<ntiles_in ; itile++) {
 
-      int nxcells = interp_acc[n].mtile[m].nxcells;
-#pragma acc enter data copyin( interp_acc[n].mtile[m].input_parent_cell_indices[:nxcells], \
-                               interp_acc[n].mtile[m].output_parent_cell_indices[:nxcells], \
-                               interp_acc[n].mtile[m].xcell_area[:nxcells] )
+      int nxcells = interp_acc[otile].mtile[itile].nxcells;
+#pragma acc enter data copyin( interp_acc[otile].mtile[itile].input_parent_cell_indices[:nxcells], \
+                               interp_acc[otile].mtile[itile].output_parent_cell_indices[:nxcells], \
+                               interp_acc[otile].mtile[itile].xcell_area[:nxcells] )
         if( opcode & CONSERVE_ORDER2) {
-#pragma acc enter data copyin( interp_acc[n].mtile[m].dcentroid_lon[:nxcells], \
-                               interp_acc[n].mtile[m].dcentroid_lat[:nxcells])
+#pragma acc enter data copyin( interp_acc[otile].mtile[itile].dcentroid_lon[:nxcells], \
+                               interp_acc[otile].mtile[itile].dcentroid_lat[:nxcells])
         }
 
     } // ntiles_in
@@ -113,20 +113,30 @@ void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells
 void get_input_skip_cells
 assign mask to skip input cells in xgrid creation
 *******************************************************************************/
-void get_skip_cells_acc(const int mask_size, double *skip_cells)
+void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
 {
 
+  double *p_input_grid_mask;
 
-#pragma acc enter data create(skip_cells[:mask_size])
-#pragma acc parallel loop independent present(skip_cells[:mask_size])
-  for( int i=0 ; i<mask_size; i++) skip_cells[i]=1.0;
+  *input_grid_mask = (double *)malloc(mask_size*sizeof(double));
+  p_input_grid_mask = *input_grid_mask;
+
+
+#pragma acc enter data create(p_input_grid_mask[:mask_size])
+#pragma acc parallel loop independent present(p_input_grid_mask[:mask_size])
+  for( int i=0 ; i<mask_size; i++) p_input_grid_mask[i]=1.0;
 
 }
 
-void free_skip_cells_on_all_acc(const int mask_size, double *skip_cells)
+void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
 {
-#pragma acc exit data delete(skip_cells[:mask_size])
-  free(skip_cells);
+  double *p_input_grid_mask;
+
+  p_input_grid_mask = *input_grid_mask;
+
+#pragma acc exit data delete(p_input_grid_mask[:mask_size])
+  free(p_input_grid_mask);
+  p_input_grid_mask = NULL;
 }
 
 void create_interp_acc_itile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
