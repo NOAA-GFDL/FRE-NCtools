@@ -29,7 +29,7 @@ typedef struct {
   double *xcell_area;
   double *dcentroid_lon;
   double *dcentroid_lat;
-} Xinfo_per_input_tile;
+} Interp_per_input_tile;
 
 typedef struct {
   size_t nxcells;
@@ -41,13 +41,13 @@ typedef struct {
   int *input_parent_tile;
   double *dcentroid_lon;
   double *dcentroid_lat;
-  Xinfo_per_input_tile *per_intile;
+  Interp_per_input_tile *mtile;
   double *xcell_area;
   double *weight;
   int    *index;
   char   remap_file[STRING];
   int    file_exist;
-} Xgrid_config;
+} Interp_config_acc;
 
 typedef struct {
   double *lon_min;

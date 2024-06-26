@@ -20,7 +20,7 @@
 #ifndef FREGRID_UTILS_ACC_H
 #define FREGRID_UTILS_ACC_H
 
-void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Xgrid_config *xgrid,
+void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_acc *interp_acc,
                          unsigned int *opcode, int save_weight_only);
 
 #endif
