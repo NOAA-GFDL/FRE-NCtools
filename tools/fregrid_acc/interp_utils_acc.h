@@ -29,11 +29,6 @@ void delete_grid_from_device_acc( const int npoints, const double *lat, const do
 void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config_acc *interp_acc,
                                 const unsigned int opcode );
 
-void get_bounding_indices_acc(const int ref_nlon_cells, const int ref_nlat_cells,
-                              const int nlon_cells, const int nlat_cells,
-                              const double *ref_grid_lat, const double *grid_lat,
-                              int *overlap_starts_here_index, int *overlap_ends_here_index);
-
 void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
 void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
