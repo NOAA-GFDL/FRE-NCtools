@@ -22,6 +22,10 @@ noinst_LIBRARIES = libfrencutils_acc.a
 AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_srcdir)/tools/libfrencutils -acc
 
 libfrencutils_acc_a_SOURCES = create_xgrid_acc.c \
-                              create_xgrid_acc.h
+                              create_xgrid_acc.h \
+                              create_xgrid_utils_acc.c \
+                              create_xgrid_utils_acc.h \
+                              general_utils_acc.c \
+                              general_utils_acc.h
 
 libfrencutils_acc_a_LIBADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a

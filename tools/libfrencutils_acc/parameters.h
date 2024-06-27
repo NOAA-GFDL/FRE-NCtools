@@ -18,31 +18,29 @@
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
-#ifndef NCTOOLS_CONSTANT_H
-#define NCTOOLS_CONSTANT_H
+#define AREA_RATIO_THRESH (1.e-6)
+#define MASK_THRESH       (0.5)
+#define MAX_V 8
 
-#define RADIUS        (6371000.)
-#define STRING        255
+#define AREA_RATIO (1.e-3)
+#define MAXVAL     (1.e20)
+#define TOLERANCE  (1.e-10)
 
-#include <math.h>
+#define MAXXGRID 1e6
 
-#ifndef M_PI
-#define M_PI	(3.14159265358979323846)
+#define MV 50
+
+#define TOLERENCE (1.e-6)
+#define EPSLN8 (1.e-8)
+#define EPSLN10 (1.e-10)
+#define EPSLN15 (1.e-15)
+#define EPSLN30 (1.e-30)
+#define SMALL_VALUE ( 1.e-10 )
+
+#ifndef RANGE_CHECK_CRITERIA
+#define RANGE_CHECK_CRITERIA 0.05
 #endif
 
-#ifndef M_PI_2
-#define M_PI_2  (1.57079632679489661923)
-#endif
-
-#ifndef M_SQRT2
-#define M_SQRT2  (1.41421356237309504880)
-#endif
-
-#define R2D (180/M_PI)
-#define D2R (M_PI/180)
-#define TPI (2.0*M_PI)
-#define HPI (0.5*M_PI)
-
-#define GAREA (4*M_PI*RADIUS*RADIUS)
-
+#ifndef MAXNODELIST
+#define MAXNODELIST 100
 #endif

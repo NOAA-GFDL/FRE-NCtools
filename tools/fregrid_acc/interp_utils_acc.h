@@ -17,32 +17,23 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef FREGRID_UTILS_ACC_H_
+#define FREGRID_UTILS_ACC_H_
 
-#ifndef NCTOOLS_CONSTANT_H
-#define NCTOOLS_CONSTANT_H
+#include "globals_acc.h"
 
-#define RADIUS        (6371000.)
-#define STRING        255
+void copy_grid_to_device_acc( const int npoints, const double *lat, const double *lon );
 
-#include <math.h>
+void delete_grid_from_device_acc( const int npoints, const double *lat, const double *lon );
 
-#ifndef M_PI
-#define M_PI	(3.14159265358979323846)
-#endif
+void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config_acc *interp_acc,
+                                const unsigned int opcode );
 
-#ifndef M_PI_2
-#define M_PI_2  (1.57079632679489661923)
-#endif
+void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
-#ifndef M_SQRT2
-#define M_SQRT2  (1.41421356237309504880)
-#endif
+void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
-#define R2D (180/M_PI)
-#define D2R (M_PI/180)
-#define TPI (2.0*M_PI)
-#define HPI (0.5*M_PI)
-
-#define GAREA (4*M_PI*RADIUS*RADIUS)
+void create_interp_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
+                                                   Interp_per_input_tile *interp_per_itile);
 
 #endif
