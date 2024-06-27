@@ -737,8 +737,8 @@ void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid
   free(grid_cells->lat_max);  grid_cells->lat_max = NULL;
   free(grid_cells->area);     grid_cells->area = NULL;
   free(grid_cells->nvertices); grid_cells->nvertices=NULL;
-  grid_cells->lon_vertices = NULL;
-  grid_cells->lat_vertices = NULL;
+  //grid_cells->lon_vertices = NULL;
+  //grid_cells->lat_vertices = NULL;
 }
 
 
@@ -799,9 +799,9 @@ void free_upbound_nxcells_arrays_acc( const int n, int **approx_nxcells_per_ij1,
                              p_ij2_start[:n],               \
                              p_ij2_end[:n])
 
-  free(p_approx_nxcells_per_ij1); p_approx_nxcells_per_ij1 = NULL;
-  free(p_ij2_start);              p_ij2_start = NULL;
-  free(p_ij2_end);                p_ij2_end = NULL;
+  free(*approx_nxcells_per_ij1); *approx_nxcells_per_ij1 = NULL;
+  free(*ij2_start)             ; *ij2_start = NULL;
+  free(*ij2_end)               ; *ij2_end = NULL;
 }
 
 void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells, const int upbound_nxcells,

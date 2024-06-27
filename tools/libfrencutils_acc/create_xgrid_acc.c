@@ -462,8 +462,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
       interp_for_input_tile->dcentroid_lat[ix] -= input_clat/input_area;
     }
 
-#pragma acc exit data delete( approx_nxcells_per_ij1[:input_grid_ncells],\
-                              parent_input_index[:upbound_nxcells],     \
+#pragma acc exit data delete( parent_input_index[:upbound_nxcells],     \
                               parent_output_index[:upbound_nxcells],    \
                               store_xcell_area[:upbound_nxcells],       \
                               nxcells_per_ij1[:input_grid_ncells],      \
@@ -473,7 +472,6 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
                               summed_input_clon[:input_grid_ncells],    \
                               summed_input_clat[:input_grid_ncells])
 
-    free(approx_nxcells_per_ij1); approx_nxcells_per_ij1 = NULL;
     free(parent_input_index)    ; parent_input_index = NULL;
     free(parent_output_index)   ; parent_output_index = NULL;
     free(store_xcell_area)      ; store_xcell_area = NULL;
