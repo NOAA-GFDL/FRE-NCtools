@@ -39,6 +39,6 @@ void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
 
 void create_interp_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
-                                                   Interp_per_input_tile *interp_per_mile);
+                                                   Interp_per_input_tile *interp_per_itile);
 
 #endif

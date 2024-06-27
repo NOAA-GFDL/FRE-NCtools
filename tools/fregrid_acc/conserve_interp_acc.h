@@ -48,11 +48,11 @@ void get_input_area_weight(const int weights_exist, const int cell_measures, con
                            double *input_area_weight);
 
 void interp_data_order1(const Grid_config *output_grid, const Grid_config *input_grid,
-                        Interp_per_input_tile *minterp_acc, double *input_area_weight, double *fieldin_data,
+                        Interp_per_input_tile *interp_for_itile, double *input_area_weight, double *fieldin_data,
                         double *fieldout_data, double *out_area, int *out_miss, double missing);
 
 void interp_data_order2( const Grid_config *output_grid, const Grid_config *input_grid,
-                         Interp_per_input_tile *minterp_acc, double *input_area_weight, double *fieldin_data,
+                         Interp_per_input_tile *interp_for_itile, double *input_area_weight, double *fieldin_data,
                          double *fieldout_data, double *out_area, int *out_miss,
                          int *grad_mask, double *grad_y, double *grad_x, double missing);
 

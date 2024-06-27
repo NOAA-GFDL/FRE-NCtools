@@ -689,7 +689,7 @@ int main(int argc, char* argv[])
   else {
     interp_acc = (Interp_config_acc *)malloc(ntiles_out*sizeof(Interp_config_acc));
     for(int i=0 ; i<ntiles_out ; i++) {
-      interp_acc[i].mtile = (Interp_per_input_tile *)malloc(ntiles_in*sizeof(Interp_per_input_tile));
+      interp_acc[i].input_tile = (Interp_per_input_tile *)malloc(ntiles_in*sizeof(Interp_per_input_tile));
     }
   }
 

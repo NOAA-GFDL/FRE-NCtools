@@ -41,7 +41,7 @@ typedef struct {
   int *input_parent_tile;
   double *dcentroid_lon;
   double *dcentroid_lat;
-  Interp_per_input_tile *mtile;
+  Interp_per_input_tile *input_tile;
   double *xcell_area;
   double *weight;
   int    *index;

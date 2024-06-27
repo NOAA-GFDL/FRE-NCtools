@@ -140,7 +140,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
                                   const int upbound_nxcells, const double *mask_input_grid,
                                   const Grid_cells_struct_config *output_grid_cells,
                                   int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
-                                  Interp_per_input_tile *interp_for_input_tile)
+                                  Interp_per_input_tile *interp_for_itile)
 {
 
   if(upbound_nxcells<1) return 0;
@@ -259,7 +259,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
   copy_data_to_interp_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
                                     &xcell_dclon, &xcell_dclat,
                                     approx_nxcells_per_ij1, parent_input_index, parent_output_index,
-                                    store_xcell_area, interp_for_input_tile);
+                                    store_xcell_area, interp_for_itile);
 
 #pragma acc exit data delete( parent_input_index[:upbound_nxcells],  \
                               parent_output_index[:upbound_nxcells], \
@@ -288,7 +288,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
                                   const int upbound_nxcells, const double *mask_input_grid,
                                   const Grid_cells_struct_config *output_grid_cells,
                                   int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
-                                  Interp_per_input_tile *interp_for_input_tile, double *readin_input_area)
+                                  Interp_per_input_tile *interp_for_itile, double *readin_input_area)
 {
 
   if(upbound_nxcells<1) return 0;
@@ -423,6 +423,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
 
       nxcells+=ixcell;
       nxcells_per_ij1[ij1]=ixcell;
+
       summed_input_area[ij1] = summed_input_area_ij1;
       summed_input_clon[ij1] = summed_input_clon_ij1;
       summed_input_clat[ij1] = summed_input_clat_ij1;
@@ -432,19 +433,19 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
 
   copy_data_to_interp_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
                                     store_xcell_dclon, store_xcell_dclat, approx_nxcells_per_ij1, parent_input_index,
-                                    parent_output_index, store_xcell_area, interp_for_input_tile);
+                                    parent_output_index, store_xcell_area, interp_for_itile);
 
-#pragma acc parallel loop present(interp_for_input_tile->dcentroid_lat[:nxcells], \
-                                  interp_for_input_tile->dcentroid_lat[:nxcells], \
+#pragma acc parallel loop present(interp_for_itile->dcentroid_lat[:nxcells], \
+                                  interp_for_itile->dcentroid_lat[:nxcells], \
                                   input_grid_lon[:input_grid_ncells],   \
                                   input_grid_lat[:input_grid_ncells],   \
                                   summed_input_area[:input_grid_ncells], \
                                   summed_input_clon[:input_grid_ncells], \
                                   summed_input_clat[:input_grid_ncells], \
-                                  interp_for_input_tile->input_parent_cell_index[:nxcells]) \
+                                  interp_for_itile->input_parent_cell_index[:nxcells]) \
                            copyin(readin_input_area[:input_grid_ncells])
     for(int ix=0 ; ix<nxcells ; ix++){
-      int ij1 = interp_for_input_tile->input_parent_cell_index[ix];
+      int ij1 = interp_for_itile->input_parent_cell_index[ix];
       double input_area = summed_input_area[ij1];
       double input_clon = summed_input_clon[ij1];
       double input_clat = summed_input_clat[ij1];
@@ -458,8 +459,8 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
         poly_ctrlat_acc(x, y, n, &input_clat);
         input_area = readin_area;
       }
-      interp_for_input_tile->dcentroid_lon[ix] -= input_clon/input_area;
-      interp_for_input_tile->dcentroid_lat[ix] -= input_clat/input_area;
+      interp_for_itile->dcentroid_lon[ix] -= input_clon/input_area;
+      interp_for_itile->dcentroid_lat[ix] -= input_clat/input_area;
     }
 
 #pragma acc exit data delete( parent_input_index[:upbound_nxcells],     \

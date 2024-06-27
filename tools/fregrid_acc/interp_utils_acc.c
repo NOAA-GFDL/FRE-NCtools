@@ -52,17 +52,17 @@ void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const
 #pragma acc enter data copyin(interp_acc[:ntiles_out])
   for(int otile=0 ; otile<ntiles_out; otile++) {
 
-#pragma acc enter data copyin( interp_acc[otile].mtile[:ntiles_in] )
+#pragma acc enter data copyin( interp_acc[otile].input_tile[:ntiles_in] )
 
     for(int itile=0 ; itile<ntiles_in ; itile++) {
 
-      int nxcells = interp_acc[otile].mtile[itile].nxcells;
-#pragma acc enter data copyin( interp_acc[otile].mtile[itile].input_parent_cell_index[:nxcells], \
-                               interp_acc[otile].mtile[itile].output_parent_cell_index[:nxcells], \
-                               interp_acc[otile].mtile[itile].xcell_area[:nxcells] )
+      int nxcells = interp_acc[otile].input_tile[itile].nxcells;
+#pragma acc enter data copyin( interp_acc[otile].input_tile[itile].input_parent_cell_index[:nxcells], \
+                               interp_acc[otile].input_tile[itile].output_parent_cell_index[:nxcells],\
+                               interp_acc[otile].input_tile[itile].xcell_area[:nxcells] )
         if( opcode & CONSERVE_ORDER2) {
-#pragma acc enter data copyin( interp_acc[otile].mtile[itile].dcentroid_lon[:nxcells], \
-                               interp_acc[otile].mtile[itile].dcentroid_lat[:nxcells])
+#pragma acc enter data copyin( interp_acc[otile].input_tile[itile].dcentroid_lon[:nxcells], \
+                               interp_acc[otile].input_tile[itile].dcentroid_lat[:nxcells])
         }
 
     } // ntiles_in
@@ -140,25 +140,25 @@ void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
 }
 
 void create_interp_acc_itile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
-                                                  Interp_per_input_tile *interp_acc_per_itile)
+                                                  Interp_per_input_tile *interp_per_itile)
 {
 
-  interp_acc_per_itile->input_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
-  interp_acc_per_itile->output_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
-  interp_acc_per_itile->xcell_area = (double *)malloc(nxcells * sizeof(double));
+  interp_per_itile->input_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
+  interp_per_itile->output_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
+  interp_per_itile->xcell_area = (double *)malloc(nxcells * sizeof(double));
 
   if(opcode & CONSERVE_ORDER2) {
-    interp_acc_per_itile->dcentroid_lon = (double *)malloc(nxcells*sizeof(double));
-    interp_acc_per_itile->dcentroid_lat = (double *)malloc(nxcells*sizeof(double));
+    interp_per_itile->dcentroid_lon = (double *)malloc(nxcells*sizeof(double));
+    interp_per_itile->dcentroid_lat = (double *)malloc(nxcells*sizeof(double));
   }
 
-#pragma acc enter data create(interp_acc_per_itile)
-#pragma acc enter data create(interp_acc_per_itile->input_parent_cell_index[:nxcells], \
-                              interp_acc_per_itile->output_parent_cell_index[:nxcells], \
-                              interp_acc_per_itile->xcell_area[:nxcells])
+#pragma acc enter data create(interp_per_itile)
+#pragma acc enter data create(interp_per_itile->input_parent_cell_index[:nxcells], \
+                              interp_per_itile->output_parent_cell_index[:nxcells], \
+                              interp_per_itile->xcell_area[:nxcells])
   if(opcode & CONSERVE_ORDER2) {
-#pragma acc enter data create(interp_acc_per_itile->dcentroid_lon[:nxcells], \
-                              interp_acc_per_itile->dcentroid_lat[:nxcells])
+#pragma acc enter data create(interp_per_itile->dcentroid_lon[:nxcells], \
+                              interp_per_itile->dcentroid_lat[:nxcells])
   }
 
 
