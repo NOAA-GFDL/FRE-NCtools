@@ -40,10 +40,6 @@
 void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, int ntiles_output_grid,
 			   Grid_config *output_grid, Interp_config_acc *interp_acc, unsigned int opcode)
 {
-  int nlon_input_cells, nlat_input_cells, ncells_input;
-  int nlon_output_cells, nlat_output_cells, tile;
-
-  Grid_cells_struct_config output_grid_cells;
 
   if( opcode & READ) {
     read_remap_file_acc(ntiles_input_grid, ntiles_output_grid, output_grid, input_grid, interp_acc, opcode);
@@ -55,34 +51,36 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
 
     int nlon_output_cells = output_grid[otile].nxc;
     int nlat_output_cells = output_grid[otile].nyc;
-    int npts_output_grid = (nlon_output_cells+1)*(nlat_output_cells+1);
+    int ncells_output_grid = nlon_output_cells*nlat_output_cells;
+    int ngridpts_output_grid = (nlon_output_cells+1)*(nlat_output_cells+1);
+
+    Grid_cells_struct_config output_grid_cells;
 
     interp_acc[otile].nxcells = 0;
 
-    copy_grid_to_device_acc(npts_output_grid, output_grid[otile].latc, output_grid[otile].lonc);
+    copy_grid_to_device_acc(ngridpts_output_grid, output_grid[otile].latc, output_grid[otile].lonc);
 
-    get_grid_cells_struct_acc( nlon_output_cells, nlat_output_cells,
-                               output_grid[otile].lonc, output_grid[otile].latc, &output_grid_cells );
+    get_grid_cell_struct_acc( nlon_output_cells, nlat_output_cells, output_grid+otile, &output_grid_cells );
 
     for(int itile=0; itile<ntiles_input_grid; itile++){
 
       int nlon_input_cells = input_grid[itile].nx;
       int nlat_input_cells = input_grid[itile].ny;
-      int ncells_input = nlon_input_cells * nlat_input_cells;
-      int npts_input_grid = (nlon_input_cells+1)*(nlat_input_cells+1);
+      int ncells_input_grid = nlon_input_cells * nlat_input_cells;
+      int ngridpts_input_grid = (nlon_input_cells+1)*(nlat_input_cells+1);
       int jlat_overlap_starts=0, jlat_overlap_ends=0, nxcells=0, upbound_nxcells=0;
-      int *approx_nxcells_per_ij1, *ij2_start, *ij2_end;
-      double *input_grid_mask;
+      int *approx_nxcells_per_ij1=NULL, *ij2_start=NULL, *ij2_end=NULL;
+      double *input_grid_mask=NULL;
 
-      copy_grid_to_device_acc(npts_input_grid, input_grid[itile].latc, input_grid[itile].lonc);
+      copy_grid_to_device_acc(ngridpts_input_grid, input_grid[itile].latc, input_grid[itile].lonc);
 
-      get_input_grid_mask_acc(nlon_input_cells*nlat_input_cells, &input_grid_mask);
+      get_input_grid_mask_acc(ncells_input_grid, &input_grid_mask);
 
-      //get the input grid portion (bounding indices) that overlaps with the output grid in the latitudonal direction.
+      //get the input grid portion (bounding index) that overlaps with the output grid in the latitudonal direction.
       get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
                                output_grid[otile].latc, input_grid[itile].latc, &jlat_overlap_starts, &jlat_overlap_ends);
 
-      create_upbound_nxcells_arrays_on_device_acc( ncells_input, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
+      create_upbound_nxcells_arrays_on_device_acc( ncells_input_grid, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
 
       upbound_nxcells = get_upbound_nxcells_2dx2d_acc( nlon_input_cells, nlat_input_cells,
                                                        nlon_output_cells, nlat_output_cells,
@@ -128,14 +126,14 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
         else mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
       } //conserve_order methods
 
-      free_upbound_nxcells_array_from_all_acc(ncells_input, approx_nxcells_per_ij1, ij2_start, ij2_end);
-      free_input_grid_mask_acc(ncells_input, &input_grid_mask);
-      delete_grid_from_device_acc(npts_input_grid, input_grid[itile].lonc, input_grid[itile].latc);
+      free_upbound_nxcells_arrays_acc(ncells_input_grid, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
+      free_input_grid_mask_acc(ncells_input_grid, &input_grid_mask);
+      delete_grid_from_device_acc(ngridpts_input_grid, input_grid[itile].lonc, input_grid[itile].latc);
 
     } //input tile
 
-    free_grid_cell_struct_acc( nlon_output_cells*nlat_output_cells, &output_grid_cells);
-    delete_grid_from_device_acc(npts_output_grid, output_grid[otile].lonc, output_grid[otile].latc);
+    free_grid_cell_struct_acc( ncells_output_grid, &output_grid_cells);
+    delete_grid_from_device_acc(ngridpts_output_grid, output_grid[otile].lonc, output_grid[otile].latc);
 
   }//output tile
 
@@ -151,29 +149,28 @@ void setup_conserve_interp_acc(int ntiles_input_grid, Grid_config *input_grid, i
  void read_remap_file
  Reads in the weight/remap file if provided and copies the data to the device
 *******************************************************************************/
-void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_config *output_grid, Grid_config *input_grid,
+void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid,
+                         Grid_config *output_grid, Grid_config *input_grid,
                          Interp_config_acc *interp_acc, unsigned int opcode)
 {
 
-  int *input_lon=NULL, *input_lat=NULL, *output_lon=NULL, *output_lat=NULL;
+  int *input_lon_index=NULL, *input_lat_index=NULL, *output_lon_index=NULL, *output_lat_index=NULL;
   double *xcell_area=NULL, *xcell_centroid_lon=NULL, *xcell_centroid_lat=NULL;
-
-  int nxcells_acc;
+  int *input_tile_index=NULL, *itile_nxcells=NULL;
 
   for(int otile=0; otile<ntiles_output_grid; otile++) {
     if( interp_acc[otile].file_exist ) {
-      int *t_in, *ind_acc;
-      int fid, vid;
 
-      int nlon_output = output_grid[otile].nxc;
+      int fid, vid;
+      int nlon_output_cells = output_grid[otile].nxc;
       int nxcells = read_mosaic_xgrid_size(interp_acc[otile].remap_file);
       interp_acc[otile].nxcells = nxcells;
 
-      t_in  = (int *)malloc(nxcells*sizeof(int));
-      input_lon = (int *)malloc(nxcells*sizeof(int));
-      input_lat = (int *)malloc(nxcells*sizeof(int));
-      output_lat = (int *)malloc(nxcells*sizeof(int));
-      output_lon = (int *)malloc(nxcells*sizeof(int));
+      input_tile_index  = (int *)malloc(nxcells*sizeof(int));
+      input_lon_index = (int *)malloc(nxcells*sizeof(int));
+      input_lat_index = (int *)malloc(nxcells*sizeof(int));
+      output_lat_index = (int *)malloc(nxcells*sizeof(int));
+      output_lon_index = (int *)malloc(nxcells*sizeof(int));
       xcell_area = (double *)malloc(nxcells*sizeof(double));
       if( opcode & CONSERVE_ORDER2) {
         xcell_centroid_lon = (double *)malloc(nxcells*sizeof(double));
@@ -181,9 +178,11 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_con
       }
 
       if(opcode & CONSERVE_ORDER1)
-        read_mosaic_xgrid_order1(interp_acc[otile].remap_file, input_lon, input_lat, output_lon, output_lat, xcell_area);
+        read_mosaic_xgrid_order1(interp_acc[otile].remap_file, input_lon_index, input_lat_index,
+                                 output_lon_index, output_lat_index, xcell_area);
       else
-        read_mosaic_xgrid_order2(interp_acc[otile].remap_file, input_lon, input_lat, output_lon, output_lat, xcell_area,
+        read_mosaic_xgrid_order2(interp_acc[otile].remap_file, input_lon_index, input_lat_index,
+                                 output_lon_index, output_lat_index, xcell_area,
                                  xcell_centroid_lon, xcell_centroid_lat);
 
       //rescale the xgrid area
@@ -192,20 +191,20 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_con
       //read in tile number of input parent cells
       fid = mpp_open(interp_acc[otile].remap_file, MPP_READ);
       vid = mpp_get_varid(fid, "tile1");
-      mpp_get_var_value(fid, vid, t_in);
+      mpp_get_var_value(fid, vid, input_tile_index);
       mpp_close(fid);
 
       //tile number starts from 1, not 0, in the weight files
-      for(int i=0 ; i<nxcells ; i++) t_in[i]--;
+      for(int i=0 ; i<nxcells ; i++) input_tile_index[i]--;
 
       //get number of nxcells per input tile
       for(int itile=0 ; itile<ntiles_input_grid ; itile++) interp_acc[otile].mtile[itile].nxcells=0;
-      for(int i=0 ; i<nxcells ; i++) interp_acc[otile].mtile[ t_in[i] ].nxcells++;
+      for(int i=0 ; i<nxcells ; i++) interp_acc[otile].mtile[ input_tile_index[i] ].nxcells++;
 
       for(int itile=0 ; itile<ntiles_input_grid ; itile++) {
-        nxcells_acc = interp_acc[otile].mtile[itile].nxcells;
-        interp_acc[otile].mtile[itile].input_parent_cell_indices  = (int *)malloc(nxcells_acc*sizeof(int));
-        interp_acc[otile].mtile[itile].output_parent_cell_indices = (int *)malloc(nxcells_acc*sizeof(int));
+        int nxcells_acc = interp_acc[otile].mtile[itile].nxcells;
+        interp_acc[otile].mtile[itile].input_parent_cell_index  = (int *)malloc(nxcells_acc*sizeof(int));
+        interp_acc[otile].mtile[itile].output_parent_cell_index = (int *)malloc(nxcells_acc*sizeof(int));
         interp_acc[otile].mtile[itile].xcell_area  = (double *)malloc(nxcells_acc*sizeof(double));
         if(opcode & CONSERVE_ORDER2) {
           interp_acc[otile].mtile[itile].dcentroid_lon = (double *)malloc(nxcells_acc*sizeof(double));
@@ -213,25 +212,32 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_con
         }
       }
 
-      ind_acc = (int *)calloc(ntiles_input_grid, sizeof(int));
+      itile_nxcells = (int *)calloc(ntiles_input_grid, sizeof(int));
       for(int i=0 ; i<nxcells ; i++) {
-        int ii, nlon_input;
-        int itile = t_in[i];
-        ii=ind_acc[itile];
-        nlon_input = input_grid[itile].nxc;
-        interp_acc[otile].mtile[itile].input_parent_cell_indices[ii] = input_lat[i]*nlon_input + input_lon[i];
-        interp_acc[otile].mtile[itile].output_parent_cell_indices[ii] = output_lat[i]*nlon_output + output_lon[i];
+        int itile = input_tile_index[i];
+        int ii=itile_nxcells[itile];
+        int nlon_input_cells = input_grid[itile].nxc;
+        interp_acc[otile].mtile[itile].input_parent_cell_index[ii]
+          = input_lat_index[i]*nlon_input_cells + input_lon_index[i];
+        interp_acc[otile].mtile[itile].output_parent_cell_index[ii]
+          = output_lat_index[i]*nlon_output_cells + output_lon_index[i];
         interp_acc[otile].mtile[itile].xcell_area[ii] = xcell_area[i];
         if( opcode & CONSERVE_ORDER2) {
           interp_acc[otile].mtile[itile].dcentroid_lon[ii] = xcell_centroid_lon[i];
           interp_acc[otile].mtile[itile].dcentroid_lat[ii] = xcell_centroid_lat[i];
         }
-        ind_acc[itile]++;
+        itile_nxcells[itile]++;
       }
 
-      free(t_in) ; free(ind_acc);
-      free(input_lon) ; free(input_lat); free(output_lon); free(output_lat);
-      free(xcell_area); free(xcell_centroid_lon); free(xcell_centroid_lat);
+      free(input_tile_index); input_tile_index = NULL;
+      free(itile_nxcells)   ; itile_nxcells = NULL;
+      free(input_lon_index) ; input_lon_index = NULL;
+      free(input_lat_index) ; input_lat_index = NULL;
+      free(output_lon_index); output_lon_index = NULL;
+      free(output_lat_index); output_lat_index = NULL;
+      free(xcell_area); xcell_area = NULL;
+      free(xcell_centroid_lon); xcell_centroid_lon = NULL;
+      free(xcell_centroid_lat); xcell_centroid_lat = NULL;
 
     }//if file exists
   } //ntiles out
@@ -244,21 +250,21 @@ void read_remap_file_acc(int ntiles_input_grid, int ntiles_output_grid, Grid_con
  void write_remap_file
  write out the traditional remap file.
 *******************************************************************************/
-void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *output_grid,
+void write_remap_file(const int ntiles_output_grid, const int ntiles_input_grid, Grid_config *output_grid,
                       Grid_config *input_grid, Interp_config_acc *interp_acc, unsigned int opcode)
 {
 
   //copy and pasted from the original code with start and write
 
-  for(int otile=0 ; otile<ntiles_out ; otile++) {
+  for(int otile=0 ; otile<ntiles_output_grid ; otile++) {
 
     Interp_config_acc *p_interp_acc = interp_acc+otile;
     int nxcells=p_interp_acc->nxcells;
-    int nlon_cells, ii;
+    int nlon_input_cells, ii;
 
     size_t start[4] = {0,0,0,0}, nwrite[4] = {1, 1, 1, 1};
-    int *data_int;
-    double *data_double;
+    int *data_int=NULL;
+    double *data_double=NULL;
 
     int fid = mpp_open( interp_acc[otile].remap_file, MPP_WRITE);
     int dim_string = mpp_def_dim(fid, "string", STRING);
@@ -282,13 +288,14 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
     mpp_end_def(fid);
 
     data_int = (int *)malloc(nxcells*sizeof(int));
+    data_double = (double *)malloc(nxcells*sizeof(double));
 
     //update data on host
-    for(int itile=0 ; itile<ntiles_in ; itile++) {
+    for(int itile=0 ; itile<ntiles_input_grid ; itile++) {
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
-#pragma acc update host( p_interp_for_mtile->input_parent_cell_indices[:m_nxcells], \
-                         p_interp_for_mtile->output_parent_cell_indices[:m_nxcells], \
+#pragma acc update host( p_interp_for_mtile->input_parent_cell_index[:m_nxcells], \
+                         p_interp_for_mtile->output_parent_cell_index[:m_nxcells], \
                          p_interp_for_mtile->xcell_area[:m_nxcells])
 #pragma acc update if(opcode &CONSERVE_ORDER2) host(p_interp_for_mtile->dcentroid_lon[:m_nxcells], \
                                                     p_interp_for_mtile->dcentroid_lat[:m_nxcells])
@@ -296,7 +303,7 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     //input tile
     ii = 0;
-    for( int itile=0 ; itile<ntiles_in ; itile++ ) {
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++ ) {
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
       for( int i=0 ; i<m_nxcells ; i++ ){
@@ -308,12 +315,12 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     // i (x, lon) indices of input parent
     ii=0;
-    for( int itile=0 ; itile<ntiles_in ; itile++){
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++){
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
-      nlon_cells = input_grid[itile].nxc;
+      nlon_input_cells = input_grid[itile].nxc;
       for( int i=0 ; i<m_nxcells; i++) {
-        data_int[ii] = p_interp_for_mtile->input_parent_cell_indices[i]%nlon_cells+1;
+        data_int[ii] = p_interp_for_mtile->input_parent_cell_index[i]%nlon_input_cells+1;
         ii++;
       }
     }
@@ -321,12 +328,12 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     // i (x, lon) indices of output parent
     ii=0;
-    nlon_cells = output_grid[otile].nxc;
-    for( int itile=0 ; itile<ntiles_in ; itile++){
+    nlon_input_cells = output_grid[otile].nxc;
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++){
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
       for( int i=0 ; i<m_nxcells; i++) {
-        data_int[ii] = p_interp_for_mtile->output_parent_cell_indices[i]%nlon_cells+1;
+        data_int[ii] = p_interp_for_mtile->output_parent_cell_index[i]%nlon_input_cells+1;
         ii++;
       }
     }
@@ -336,12 +343,12 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     // j (y, lat) indices of input parent
     ii=0;
-    for( int itile=0 ; itile<ntiles_in ; itile++){
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++){
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
-      nlon_cells = input_grid[itile].nxc;
+      nlon_input_cells = input_grid[itile].nxc;
       for( int i=0 ; i<m_nxcells; i++) {
-        data_int[ii] = p_interp_for_mtile->input_parent_cell_indices[i]/nlon_cells+1;
+        data_int[ii] = p_interp_for_mtile->input_parent_cell_index[i]/nlon_input_cells+1;
         ii++;
       }
     }
@@ -349,23 +356,20 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     // j (y, lat) indices of output parent
     ii=0;
-    nlon_cells = output_grid[otile].nxc;
-    for( int itile=0 ; itile<ntiles_in ; itile++){
+    nlon_input_cells = output_grid[otile].nxc;
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++){
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
       for( int i=0 ; i<m_nxcells; i++) {
-        data_int[ii] = p_interp_for_mtile->output_parent_cell_indices[i]/nlon_cells+1;
+        data_int[ii] = p_interp_for_mtile->output_parent_cell_index[i]/nlon_input_cells+1;
         ii++;
       }
     }
     mpp_put_var_value_block(fid, id_tile2_cell, start, nwrite, data_int);
 
-    free(data_int);
-    data_double = (double *)malloc(nxcells*sizeof(double));
-
     // exchange cell area
     ii=0;
-    for( int itile=0 ; itile<ntiles_in ; itile++){
+    for( int itile=0 ; itile<ntiles_input_grid ; itile++){
       Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
       int m_nxcells = p_interp_for_mtile->nxcells;
       for( int i=0 ; i<m_nxcells; i++) {
@@ -377,7 +381,7 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
 
     if(opcode & CONSERVE_ORDER2) {
       ii=0; start[1] = 0 ;
-      for( int itile=0 ; itile<ntiles_in ; itile++) {
+      for( int itile=0 ; itile<ntiles_input_grid ; itile++) {
         Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
         int m_nxcells = p_interp_for_mtile->nxcells;
         for( int i=0 ; i<m_nxcells ; i++) {
@@ -388,7 +392,7 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
       mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, data_double);
 
       ii=0; start[1] = 1 ;
-      for( int itile=0 ; itile<ntiles_in ; itile++) {
+      for( int itile=0 ; itile<ntiles_input_grid ; itile++) {
         Interp_per_input_tile *p_interp_for_mtile = p_interp_acc->mtile+itile;
         int m_nxcells = p_interp_for_mtile->nxcells;
         for( int i=0 ; i<m_nxcells ; i++) {
@@ -398,7 +402,9 @@ void write_remap_file(const int ntiles_out, const int ntiles_in, Grid_config *ou
       }
       mpp_put_var_value_block(fid, id_tile1_dist, start, nwrite, data_double);
     }
-    free(data_double);
+
+    free(data_int)   ; data_int = NULL;
+    free(data_double); data_double=NULL;
 
     mpp_close(fid);
 
@@ -412,20 +418,20 @@ void check_area_conservation(const int ntiles_output_grid, const int ntiles_inpu
 
   for(int otile=0; otile<ntiles_output_grid; otile++) {
 
-    int nlon_cells = output_grid[otile].nxc;
-    int nlat_cells = output_grid[otile].nyc;
-    int ncells = nlon_cells*nlat_cells;
+    int nlon_output_cells = output_grid[otile].nxc;
+    int nlat_output_cells = output_grid[otile].nyc;
+    int ncells = nlon_output_cells*nlat_output_cells;
 
     int max_ij=0;
     double max_ratio=0.0, ratio_change=0.0, max_area=0.0;
-    double *recomputed_output_area = (double *)calloc(ncells,sizeof(double));
+    double *recomputed_output_area = NULL; recomputed_output_area = (double *)calloc(ncells,sizeof(double));
 
     /* sum over exchange grid to get the area of output grid cells*/
     for(int itile=0; itile<ntiles_input_grid; itile++) {
       Interp_per_input_tile *m_interp = interp_acc[otile].mtile+itile;
       int nxcells = m_interp->nxcells;
       for(int i=0; i<nxcells; i++) {
-        int ii = m_interp->output_parent_cell_indices[i];
+        int ii = m_interp->output_parent_cell_index[i];
         recomputed_output_area[ii] += m_interp->xcell_area[i];
       }
     }
@@ -441,13 +447,14 @@ void check_area_conservation(const int ntiles_output_grid, const int ntiles_inpu
       }
       if( ratio_change > 1.e-4 ) {
         printf("(i,j)=(%d,%d), change = %g, area1=%g, recomputed_output_area=%g\n",
-               ij%nlon_cells, ij/nlon_cells, ratio_change, output_grid[otile].cell_area[ij],recomputed_output_area[ij]);
+               ij%nlon_output_cells, ij/nlon_output_cells, ratio_change, output_grid[otile].cell_area[ij],recomputed_output_area[ij]);
       }
     }
     printf("The maximum ratio change at (%d,%d) = %g, area1=%g, recomputed_output_area=%g\n",
-           max_ij%nlon_cells, max_ij/nlon_cells, max_ratio, output_grid[otile].cell_area[max_ij], max_area);
+           max_ij%nlon_output_cells, max_ij/nlon_output_cells, max_ratio, output_grid[otile].cell_area[max_ij], max_area);
 
-    free(recomputed_output_area);
+    free(recomputed_output_area); recomputed_output_area = NULL;
+
   }//for each output tile
 
 }
@@ -458,7 +465,7 @@ void check_area_conservation(const int ntiles_output_grid, const int ntiles_inpu
 *******************************************************************************/
 void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int ntiles_input_grid, const Grid_config *input_grid,
                                           int ntiles_output_grid, const Grid_config *output_grid, const Field_config *field_in,
-                                          Field_config *field_out, unsigned int opcode, int nz)
+                                   Field_config *field_out, unsigned int opcode, int nz)
 {
   int weights_exist = input_grid[0].weight_exist;;
   int cell_measures = field_in->var[varid].cell_measures;
@@ -470,17 +477,19 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
 
   for(int otile=0; otile<ntiles_output_grid; otile++) {
 
-    int output_ncells = output_grid[otile].nxc * output_grid[otile].nyc;
-    int *out_miss = (int *)malloc(output_ncells*sizeof(int));
-    double *out_area = (double *)malloc(output_ncells*sizeof(double));
-    double *p_fieldout_data = field_out[otile].data;
+    int ncells_output_grid = output_grid[otile].nxc * output_grid[otile].nyc;
+    double *p_fieldout_data = NULL; p_fieldout_data = field_out[otile].data;
+    int *out_miss    = NULL ; out_miss = (int *)malloc(ncells_output_grid*sizeof(int));
+    double *out_area = NULL ; out_area = (double *)malloc(ncells_output_grid*sizeof(double));
 
-#pragma acc enter data create( p_fieldout_data[:output_ncells],   \
-                               out_area[:output_ncells],          \
-                               out_miss[:output_ncells])
+#pragma acc enter data create(p_fieldout_data[:ncells_output_grid],    \
+                              out_area[:ncells_output_grid],           \
+                              out_miss[:ncells_output_grid])
 
-#pragma acc parallel loop present(p_fieldout_data[:output_ncells], out_area[:output_ncells], out_miss[:output_ncells])
-    for(int i=0; i<output_ncells; i++) {
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid], \
+                                  out_area[:ncells_output_grid],        \
+                                  out_miss[:ncells_output_grid])
+    for(int i=0; i<ncells_output_grid; i++) {
       p_fieldout_data[i] = 0.0;
       out_area[i] = 0.0;
       out_miss[i] = 0;
@@ -488,35 +497,41 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
 
     for(int itile=0 ; itile<ntiles_input_grid; itile++) {
 
-      int input_ncells = input_grid[itile].nxc * input_grid[itile].nyc;
-      double *input_area_weight = (double *)malloc(input_ncells*sizeof(double));
+      int ncells_input_grid = input_grid[itile].nxc * input_grid[itile].nyc;
+      double *input_area_weight = NULL; input_area_weight = (double *)malloc(ncells_input_grid*sizeof(double));
 
-#pragma acc enter data create(input_area_weight[:input_ncells])
-      get_input_area_weight(weights_exist, cell_measures, cell_methods, field_in+itile, input_grid+itile, input_area_weight);
+#pragma acc enter data create(input_area_weight[:ncells_input_grid])
+      get_input_area_weight(weights_exist, cell_measures, cell_methods, field_in+itile,
+                            input_grid+itile, input_area_weight);
 
       if(opcode & CONSERVE_ORDER1)
-        interp_data_order1(output_grid+otile, input_grid+itile, interp_acc[otile].mtile+itile, input_area_weight, field_in[itile].data,
-                           p_fieldout_data, out_area, out_miss, missing);
+        interp_data_order1(output_grid+otile, input_grid+itile, interp_acc[otile].mtile+itile,
+                           input_area_weight, field_in[itile].data, p_fieldout_data, out_area, out_miss, missing);
       if(opcode & CONSERVE_ORDER2)
-        interp_data_order2(output_grid+otile, input_grid+itile, interp_acc[otile].mtile+itile, input_area_weight, field_in[itile].data,
-                           p_fieldout_data, out_area, out_miss,
+        interp_data_order2(output_grid+otile, input_grid+itile, interp_acc[otile].mtile+itile,
+                           input_area_weight, field_in[itile].data, p_fieldout_data, out_area, out_miss,
                            field_in[itile].grad_mask, field_in[itile].grad_y, field_in[itile].grad_x,  missing);
 
-#pragma acc exit data delete(input_area_weight[:input_ncells])
+#pragma acc exit data delete(input_area_weight[:ncells_input_grid])
+      free(input_area_weight) ; input_area_weight=NULL;
 
     } //itile
 
     if(opcode & CHECK_CONSERVE) {
 #pragma acc enter data copyin(gsum_out)
-#pragma acc parallel loop present(out_area[:output_ncells], p_fieldout_data[:output_ncells]) reduction(+:gsum_out)
-      for(int i=0; i<output_ncells; i++) {
+#pragma acc parallel loop present(out_area[:ncells_output_grid],\
+                                  p_fieldout_data[:ncells_output_grid])\
+                          reduction(+:gsum_out)
+      for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] > 0) gsum_out += p_fieldout_data[i];
       }
     }
 
     if ( cell_methods == CELL_METHODS_SUM ) {
-#pragma acc parallel loop present(out_area[:output_ncells], out_miss[:output_ncells], p_fieldout_data[:output_ncells])
-      for(int i=0; i<output_ncells; i++) {
+#pragma acc parallel loop present(out_area[:ncells_output_grid], \
+                                  out_miss[:ncells_output_grid], \
+                                  p_fieldout_data[:ncells_output_grid])
+      for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] == 0) {
           p_fieldout_data[i] = 0.0;
           if(out_miss[i] == 0) p_fieldout_data[i] = missing;
@@ -524,8 +539,10 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
       }
     }
     else {
-#pragma acc parallel loop present(out_area[:output_ncells], out_miss[:output_ncells], p_fieldout_data[:output_ncells])
-      for(int i=0; i<output_ncells; i++) {
+#pragma acc parallel loop present(out_area[:ncells_output_grid], \
+                                  out_miss[:ncells_output_grid], \
+                                  p_fieldout_data[:ncells_output_grid])
+      for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] > 0) {
           p_fieldout_data[i] /= out_area[i];
         }
@@ -536,31 +553,31 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
       }
 
       if( (target_grid) ) {
-#pragma acc parallel loop present(out_area[:output_ncells])
-        for(int i=0; i<output_ncells; i++) out_area[i] = 0.0;
+#pragma acc parallel loop present(out_area[:ncells_output_grid])
+        for(int i=0; i<ncells_output_grid; i++) out_area[i] = 0.0;
 
         for(int itile=0 ; itile<ntiles_input_grid; itile++) {
-          Interp_per_input_tile *minterp_acc = interp_acc[otile].mtile+itile;
-          int input_ncells = input_grid[itile].nxc * input_grid[itile].nyc;
+          int ncells_input_grid = input_grid[itile].nxc * input_grid[itile].nyc;
+          Interp_per_input_tile *minterp_acc = NULL ; minterp_acc = interp_acc[otile].mtile+itile;
+          double *p_gridin_area  = NULL ; p_gridin_area  = input_grid[itile].cell_area;
+          double *p_fieldin_area = NULL ; p_fieldin_area = field_in[itile].area;
           int ixcells = minterp_acc->nxcells;
-          double *p_gridin_area = input_grid[itile].cell_area;
-          double *p_fieldin_area = field_in[itile].area;
-#pragma acc parallel loop present(minterp_acc->output_parent_cell_indices[:ixcells], \
-                                  minterp_acc->input_parent_cell_indices[:ixcells], \
+#pragma acc parallel loop present(minterp_acc->output_parent_cell_index[:ixcells], \
+                                  minterp_acc->input_parent_cell_index[:ixcells], \
                                   minterp_acc->xcell_area[:ixcells],         \
-                                  out_area[:output_ncells])\
-                           copyin(p_fieldin_area[:input_ncells],\
-                                  p_gridin_area[:input_ncells])
+                                  out_area[:ncells_output_grid])\
+                           copyin(p_fieldin_area[:ncells_input_grid],\
+                                  p_gridin_area[:ncells_input_grid])
           for(int ix=0; ix<ixcells; ix++) {
-            int ij2   = minterp_acc->output_parent_cell_indices[ix];
-            int ij1   = minterp_acc->input_parent_cell_indices[ix];
+            int ij2 = minterp_acc->output_parent_cell_index[ix];
+            int ij1 = minterp_acc->input_parent_cell_index[ix];
             double area = minterp_acc->xcell_area[ix];
             if(cell_measures ) out_area[ij2] += (area*p_fieldin_area[ij1]/p_gridin_area[ij1]);
             else out_area[ij2] += area;
           }
-#pragma acc parallel loop present(p_fieldout_data[:output_ncells], out_area[:output_ncells], \
-                                  output_grid[otile].cell_area[:output_ncells])
-          for(int i=0; i<output_ncells; i++) {
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid], out_area[:ncells_output_grid], \
+                                  output_grid[otile].cell_area[:ncells_output_grid])
+          for(int i=0; i<ncells_output_grid; i++) {
             if(p_fieldout_data[i] != missing)
               p_fieldout_data[i] *=  (out_area[i]/output_grid[otile].cell_area[i]);
           }
@@ -568,12 +585,12 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
       }
     }
 
-#pragma acc exit data copyout(p_fieldout_data[:output_ncells])
-#pragma acc exit data delete(out_area[:output_ncells],\
-                             out_miss[:output_ncells])
+#pragma acc exit data copyout(p_fieldout_data[:ncells_output_grid])
+#pragma acc exit data delete(out_area[:ncells_output_grid],\
+                             out_miss[:ncells_output_grid])
 
-    free(out_area);
-    free(out_miss);
+    free(out_area); out_area = NULL;
+    free(out_miss); out_miss = NULL;
   } // otile
 
   return;
@@ -621,31 +638,35 @@ void get_input_area_weight(const int weights_exist, const int cell_measures, con
                            const Field_config *field_in, const Grid_config *input_grid,
                            double *input_area_weight)
 {
-  int input_ncells = input_grid->nxc * input_grid->nyc;
-  double *p_gridin_area  = input_grid->cell_area;
-  double *p_fieldin_area = field_in->area;
-  double *p_weight = input_grid->weight;
+  int ncells_input_grid = input_grid->nxc * input_grid->nyc;
+  double *p_gridin_area  = NULL;
+  double *p_fieldin_area = NULL;
+  double *p_weight = NULL;
+
+  p_gridin_area = input_grid->cell_area;
+  p_fieldin_area = field_in->area;
+  p_weight = input_grid->weight;
 
   if(cell_methods == CELL_METHODS_SUM) {
-#pragma acc parallel loop present(input_area_weight[:input_ncells]) copyin(p_gridin_area[:input_ncells])
-    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i] = 1.0/p_gridin_area[i];
+#pragma acc parallel loop present(input_area_weight[:ncells_input_grid]) copyin(p_gridin_area[:ncells_input_grid])
+    for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i] = 1.0/p_gridin_area[i];
   }
 
   else if(cell_measures) {
-#pragma acc parallel loop present(input_area_weight[:input_ncells]) \
-                          copyin(p_gridin_area[:input_ncells],     \
-                                 p_fieldin_area[:input_ncells])
-    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i] = p_fieldin_area[i]/p_gridin_area[i];
+#pragma acc parallel loop present(input_area_weight[:ncells_input_grid]) \
+                          copyin(p_gridin_area[:ncells_input_grid],     \
+                                 p_fieldin_area[:ncells_input_grid])
+    for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i] = p_fieldin_area[i]/p_gridin_area[i];
   }
 
   else {
-#pragma acc parallel loop present(input_area_weight[:input_ncells])
-    for(int i=0 ; i<input_ncells ; i++) input_area_weight[i]=1.0;
+#pragma acc parallel loop present(input_area_weight[:ncells_input_grid])
+    for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i]=1.0;
   }
 
   if(weights_exist){
-#pragma acc parallel loop independent present(input_area_weight[:input_ncells]) copyin(p_weight[:input_ncells])
-    for(int i=0; i<input_ncells; i++) input_area_weight[i] *= p_weight[i];
+#pragma acc parallel loop independent present(input_area_weight[:ncells_input_grid]) copyin(p_weight[:ncells_input_grid])
+    for(int i=0; i<ncells_input_grid; i++) input_area_weight[i] *= p_weight[i];
   }
 
 }
@@ -656,22 +677,22 @@ void interp_data_order1( const Grid_config *output_grid, const Grid_config *inpu
 {
 
   int nxcells = minterp_acc->nxcells;
-  int input_ncells = input_grid->nxc * input_grid->nyc;
-  int output_ncells = output_grid->nxc * output_grid->nyc;
+  int ncells_input_grid = input_grid->nxc * input_grid->nyc;
+  int ncells_output_grid = output_grid->nxc * output_grid->nyc;
 
 #pragma acc data present(minterp_acc[:1],                                    \
-                         minterp_acc->input_parent_cell_indices[:nxcells],   \
-                         minterp_acc->output_parent_cell_indices[:nxcells],  \
+                         minterp_acc->input_parent_cell_index[:nxcells],   \
+                         minterp_acc->output_parent_cell_index[:nxcells],  \
                          minterp_acc->xcell_area[:nxcells],                  \
-                         input_area_weight[:input_ncells],              \
-                         fieldout_data[:output_ncells],                 \
-                         out_area[:output_ncells],                      \
-                         out_miss[:output_ncells])                      \
-  copyin(fieldin_data[:input_ncells])
+                         input_area_weight[:ncells_input_grid],              \
+                         fieldout_data[:ncells_output_grid],                 \
+                         out_area[:ncells_output_grid],                      \
+                         out_miss[:ncells_output_grid])                 \
+  copyin(fieldin_data[:ncells_input_grid])
 #pragma acc parallel loop
   for(int ix=0; ix<nxcells; ix++) {
-    int ij1 = minterp_acc->input_parent_cell_indices[ix];
-    int ij2 = minterp_acc->output_parent_cell_indices[ix];
+    int ij1 = minterp_acc->input_parent_cell_index[ix];
+    int ij2 = minterp_acc->output_parent_cell_index[ix];
     double area = minterp_acc->xcell_area[ix];
 
     if( fieldin_data[ij1] == missing ) continue;
@@ -697,26 +718,26 @@ void interp_data_order2( const Grid_config *output_grid, const Grid_config *inpu
   int input_nlon_cells = input_grid->nxc;
   int input_nlat_cells = input_grid->nyc;
   int input_data_ncells = (input_nlon_cells+n_halo_cells)*(input_nlat_cells+n_halo_cells);
-  int input_ncells = input_nlon_cells * input_nlat_cells;
+  int ncells_input_grid = input_nlon_cells * input_nlat_cells;
 
   int output_nlon_cells = output_grid->nxc;
-  int output_ncells = output_nlon_cells * (output_grid->nyc);
+  int ncells_output_grid = output_nlon_cells * (output_grid->nyc);
 
-#pragma acc data present( minterp_acc[:1],                                   \
-                          minterp_acc->input_parent_cell_indices[:nxcells],  \
-                          minterp_acc->output_parent_cell_indices[:nxcells], \
-                          minterp_acc->xcell_area[:nxcells],                 \
-                          input_area_weight[:input_ncells],             \
-                          fieldout_data[:output_ncells],                \
-                          out_area[:output_ncells],                     \
-                          out_miss[:output_ncells])                     \
+#pragma acc data present( minterp_acc[:1],                              \
+                          minterp_acc->input_parent_cell_index[:nxcells], \
+                          minterp_acc->output_parent_cell_index[:nxcells], \
+                          minterp_acc->xcell_area[:nxcells],            \
+                          input_area_weight[:ncells_input_grid],        \
+                          fieldout_data[:ncells_output_grid],           \
+                          out_area[:ncells_output_grid],                \
+                          out_miss[:ncells_output_grid])                \
   copyin(fieldin_data[:input_data_ncells],                              \
-         grad_mask[:input_ncells],                                      \
-         grad_x[:input_ncells], grad_y[:input_ncells])
+         grad_mask[:ncells_input_grid],                                 \
+         grad_x[:ncells_input_grid], grad_y[:ncells_input_grid])
 #pragma acc parallel loop
   for(int ix=0; ix<nxcells; ix++){
-    int ij1 = minterp_acc->input_parent_cell_indices[ix];
-    int ij2 = minterp_acc->output_parent_cell_indices[ix];
+    int ij1 = minterp_acc->input_parent_cell_index[ix];
+    int ij2 = minterp_acc->output_parent_cell_index[ix];
     double area = minterp_acc->xcell_area[ix];
     double dx = minterp_acc->dcentroid_lon[ix];
     double dy = minterp_acc->dcentroid_lat[ix];

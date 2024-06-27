@@ -57,8 +57,8 @@ void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const
     for(int itile=0 ; itile<ntiles_in ; itile++) {
 
       int nxcells = interp_acc[otile].mtile[itile].nxcells;
-#pragma acc enter data copyin( interp_acc[otile].mtile[itile].input_parent_cell_indices[:nxcells], \
-                               interp_acc[otile].mtile[itile].output_parent_cell_indices[:nxcells], \
+#pragma acc enter data copyin( interp_acc[otile].mtile[itile].input_parent_cell_index[:nxcells], \
+                               interp_acc[otile].mtile[itile].output_parent_cell_index[:nxcells], \
                                interp_acc[otile].mtile[itile].xcell_area[:nxcells] )
         if( opcode & CONSERVE_ORDER2) {
 #pragma acc enter data copyin( interp_acc[otile].mtile[itile].dcentroid_lon[:nxcells], \
@@ -143,8 +143,8 @@ void create_interp_acc_itile_arrays_on_device_acc(const int nxcells, const unsig
                                                   Interp_per_input_tile *interp_acc_per_itile)
 {
 
-  interp_acc_per_itile->input_parent_cell_indices = (int *)malloc(nxcells *sizeof(int));
-  interp_acc_per_itile->output_parent_cell_indices = (int *)malloc(nxcells *sizeof(int));
+  interp_acc_per_itile->input_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
+  interp_acc_per_itile->output_parent_cell_index = (int *)malloc(nxcells *sizeof(int));
   interp_acc_per_itile->xcell_area = (double *)malloc(nxcells * sizeof(double));
 
   if(opcode & CONSERVE_ORDER2) {
@@ -153,8 +153,8 @@ void create_interp_acc_itile_arrays_on_device_acc(const int nxcells, const unsig
   }
 
 #pragma acc enter data create(interp_acc_per_itile)
-#pragma acc enter data create(interp_acc_per_itile->input_parent_cell_indices[:nxcells], \
-                              interp_acc_per_itile->output_parent_cell_indices[:nxcells], \
+#pragma acc enter data create(interp_acc_per_itile->input_parent_cell_index[:nxcells], \
+                              interp_acc_per_itile->output_parent_cell_index[:nxcells], \
                               interp_acc_per_itile->xcell_area[:nxcells])
   if(opcode & CONSERVE_ORDER2) {
 #pragma acc enter data create(interp_acc_per_itile->dcentroid_lon[:nxcells], \

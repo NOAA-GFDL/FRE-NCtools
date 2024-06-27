@@ -643,9 +643,12 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
   return n_out;
 }
 
-void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lon, const double *lat,
-                                Grid_cells_struct_config *grid_cells )
+void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config *output_grid,
+                               Grid_cells_struct_config *grid_cells )
 {
+
+  double *lon = output_grid->lonc;
+  double *lat = output_grid->latc;
 
   int ncells=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
@@ -672,9 +675,8 @@ void get_grid_cells_struct_acc( const int nlon, const int nlat, const double *lo
 #pragma acc enter data create(grid_cells->lon_vertices[:ncells][:MAX_V], \
                               grid_cells->lat_vertices[:ncells][:MAX_V])
 
-
 #pragma acc data present(grid_cells[:1], lon[:npts], lat[:npts])
-#pragma acc parallel loop seq //independent
+#pragma acc parallel loop independent
   for(int icell=0; icell<ncells; icell++){
     int nvertices;
     double lon_vertices[MV], lat_vertices[MV];
@@ -728,14 +730,15 @@ void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid
     free(grid_cells->lon_vertices[icell]);
     free(grid_cells->lat_vertices[icell]);
   }
-  free(grid_cells->lon_min);
-  free(grid_cells->lon_max);
-  free(grid_cells->lon_cent);
-  free(grid_cells->lat_min);
-  free(grid_cells->lat_max);
-  free(grid_cells->area);
-  free(grid_cells->nvertices);
-
+  free(grid_cells->lon_min);  grid_cells->lon_min = NULL;
+  free(grid_cells->lon_max);  grid_cells->lon_max = NULL;
+  free(grid_cells->lon_cent); grid_cells->lon_cent = NULL;
+  free(grid_cells->lat_min);  grid_cells->lat_min = NULL;
+  free(grid_cells->lat_max);  grid_cells->lat_max = NULL;
+  free(grid_cells->area);     grid_cells->area = NULL;
+  free(grid_cells->nvertices); grid_cells->nvertices=NULL;
+  grid_cells->lon_vertices = NULL;
+  grid_cells->lat_vertices = NULL;
 }
 
 
@@ -781,55 +784,29 @@ void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcel
 
 }
 
-void free_upbound_nxcells_array_from_all_acc( const int n, int *approx_nxcells_per_ij1,
-                                              int *ij2_start, int *ij2_end)
+void free_upbound_nxcells_arrays_acc( const int n, int **approx_nxcells_per_ij1,
+                                      int **ij2_start, int **ij2_end)
 {
-#pragma acc exit data delete(approx_nxcells_per_ij1[:n],  \
-                             ij2_start[:n],               \
-                             ij2_end[:n])
+  int *p_approx_nxcells_per_ij1;
+  int *p_ij2_start ;
+  int *p_ij2_end;
 
-  free(approx_nxcells_per_ij1);
-  free(ij2_start);
-  free(ij2_end);
-}
+  p_approx_nxcells_per_ij1 = *approx_nxcells_per_ij1;
+  p_ij2_start = *ij2_start;
+  p_ij2_end = *ij2_end;
 
-void free_output_grid_cell_struct_from_all_acc(const int n, Grid_cells_struct_config *grid_cells)
-{
+#pragma acc exit data delete(p_approx_nxcells_per_ij1[:n],  \
+                             p_ij2_start[:n],               \
+                             p_ij2_end[:n])
 
-#pragma acc exit data delete(grid_cells->lon_min[:n],   \
-                             grid_cells->lon_max[:n],   \
-                             grid_cells->lon_min[:n],   \
-                             grid_cells->lat_max[:n],   \
-                             grid_cells->lat_min[:n],   \
-                             grid_cells->area[:n],      \
-                             grid_cells->nvertices[:n])
-  for(int icell=0 ; icell<n; icell++){
-#pragma acc exit data delete(grid_cells->lon_vertices[icell][:MAX_V], \
-                             grid_cells->lat_vertices[icell][:MAX_V])
-  }
-#pragma acc exit data delete(grid_cells->lon_vertices[:n],  \
-                             grid_cells->lat_vertices[:n])
-#pragma acc exit data delete(grid_cells[:1])
-
-  free(grid_cells->lon_min);
-  free(grid_cells->lon_max);
-  free(grid_cells->lat_min);
-  free(grid_cells->lat_max);
-  free(grid_cells->lon_cent);
-  free(grid_cells->area);
-  free(grid_cells->nvertices);
-  for(int icell=0 ; icell<n ; icell++) {
-    free(grid_cells->lat_vertices[icell]);
-    free(grid_cells->lon_vertices[icell]);
-  }
-  free(grid_cells->lon_vertices);
-  free(grid_cells->lat_vertices);
-
+  free(p_approx_nxcells_per_ij1); p_approx_nxcells_per_ij1 = NULL;
+  free(p_ij2_start);              p_ij2_start = NULL;
+  free(p_ij2_end);                p_ij2_end = NULL;
 }
 
 void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells, const int upbound_nxcells,
                                       int *xcells_per_ij1, double *xcell_dclon, double *xcell_dclat,
-                                      int *approx_xcells_per_ij1, int *parent_input_indices, int *parent_output_indices,
+                                      int *approx_xcells_per_ij1, int *parent_input_index, int *parent_output_index,
                                       double *xcell_areas, Interp_per_input_tile *interp_for_input_tile)
 {
   int copy_xcentroid = ( xcell_dclon[0] != -99.99 ) ? 1 : 0; //true=1; false=0
@@ -837,8 +814,8 @@ void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells
 
   if(nxcells>0) {
 
-    interp_for_input_tile->input_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
-    interp_for_input_tile->output_parent_cell_indices = (int *)malloc(nxcells*sizeof(int));
+    interp_for_input_tile->input_parent_cell_index = (int *)malloc(nxcells*sizeof(int));
+    interp_for_input_tile->output_parent_cell_index = (int *)malloc(nxcells*sizeof(int));
     interp_for_input_tile->xcell_area = (double *)malloc(nxcells*sizeof(double));
     if(copy_xcentroid) {
       interp_for_input_tile->dcentroid_lon = (double *)malloc(nxcells*sizeof(double));
@@ -846,15 +823,15 @@ void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells
     }
 
 #pragma acc enter data copyin(interp_for_input_tile[:1])
-#pragma acc enter data create(interp_for_input_tile->input_parent_cell_indices[:nxcells], \
-                              interp_for_input_tile->output_parent_cell_indices[:nxcells], \
+#pragma acc enter data create(interp_for_input_tile->input_parent_cell_index[:nxcells], \
+                              interp_for_input_tile->output_parent_cell_index[:nxcells], \
                               interp_for_input_tile->xcell_area[:nxcells])
 #pragma acc enter data if(copy_xcentroid) create(interp_for_input_tile->dcentroid_lon[:nxcells], \
                                                  interp_for_input_tile->dcentroid_lat[:nxcells])
 
 #pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
-                         parent_input_indices[:upbound_nxcells],        \
-                         parent_output_indices[:upbound_nxcells],       \
+                         parent_input_index[:upbound_nxcells],        \
+                         parent_output_index[:upbound_nxcells],       \
                          xcell_areas[:upbound_nxcells], interp_for_input_tile[:1])
 #pragma acc parallel loop independent async(0)
     for(int ij1=0 ; ij1<input_ncells ; ij1++) {
@@ -868,16 +845,16 @@ void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells
 
 #pragma acc loop independent
       for(int i=0 ; i<xcells_per_ij1[ij1]; i++){
-        interp_for_input_tile->input_parent_cell_indices[xcells_before_ij1+i]  = parent_input_indices[approx_xcells+i];
-        interp_for_input_tile->output_parent_cell_indices[xcells_before_ij1+i] = parent_output_indices[approx_xcells+i];
+        interp_for_input_tile->input_parent_cell_index[xcells_before_ij1+i]  = parent_input_index[approx_xcells+i];
+        interp_for_input_tile->output_parent_cell_index[xcells_before_ij1+i] = parent_output_index[approx_xcells+i];
         interp_for_input_tile->xcell_area[xcells_before_ij1+i] = xcell_areas[approx_xcells+i];
       }
     }
 
     if(copy_xcentroid==1) {
 #pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
-                         parent_input_indices[:upbound_nxcells],        \
-                         parent_output_indices[:upbound_nxcells],       \
+                         parent_input_index[:upbound_nxcells],        \
+                         parent_output_index[:upbound_nxcells],       \
                          xcell_areas[:upbound_nxcells], interp_for_input_tile[:1], \
                          xcell_dclon[:upbound_nxcells], xcell_dclat[:upbound_nxcells])
 #pragma acc parallel loop independent async(1)
