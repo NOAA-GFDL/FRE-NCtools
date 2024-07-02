@@ -7,24 +7,25 @@
 #include <unistd.h>
 #include "conserve_interp_acc.h"
 #include "interp_utils_acc.h"
-#include "globals.h"
+#include "globals_acc.h"
 
-#define NTILES_IN 6
-#define NTILES_OUT 2
+#define INPUT_GRID_NTILES 6
+#define OUTPUT_GRID_NTILES 2
 
 double const tolerance = 1.e-7;
+
+int const input_grid_nlon = 2;
+int const output_grid_nlon = 3;
 
 typedef struct {
   char answer_file[15];
   size_t total_nxcells;
-  int nxcells[NTILES_IN];
-  int *input_parent_lon_indices[NTILES_IN];
-  int *input_parent_lat_indices[NTILES_IN];
-  int *output_parent_lon_indices[NTILES_IN];
-  int *output_parent_lat_indices[NTILES_IN];
-  double *xcell_area[NTILES_IN];
-  double *dcentroid_lon[NTILES_IN];
-  double *dcentroid_lat[NTILES_IN];
+  int nxcells[INPUT_GRID_NTILES];
+  int *input_parent_cell_index[INPUT_GRID_NTILES];
+  int *output_parent_cell_index[INPUT_GRID_NTILES];
+  double *xcell_area[INPUT_GRID_NTILES];
+  double *dcentroid_lon[INPUT_GRID_NTILES];
+  double *dcentroid_lat[INPUT_GRID_NTILES];
 } Answers;
 
 typedef enum {
@@ -37,18 +38,18 @@ typedef enum {
   ON_HOST
 } Where_Am_I;
 
-char answer_files1[NTILES_OUT][30] = { "answers_conserve1.tile1.txt", "answers_conserve1.tile2.txt" };
-char answer_files2[NTILES_OUT][30] = { "answers_conserve2.tile1.txt", "answers_conserve2.tile2.txt" };
+char answer_files1[OUTPUT_GRID_NTILES][30] = { "answers_conserve1.tile1.txt", "answers_conserve1.tile2.txt" };
+char answer_files2[OUTPUT_GRID_NTILES][30] = { "answers_conserve2.tile1.txt", "answers_conserve2.tile2.txt" };
 
-char remap_files1[NTILES_OUT][30] = { "remap_conserve1.tile1.nc", "remap_conserve1.tile2.nc" };
-char remap_files2[NTILES_OUT][30] = { "remap_conserve2.tile1.nc", "remap_conserve2.tile2.nc" };
+char remap_files1[OUTPUT_GRID_NTILES][30] = { "remap_conserve1.tile1.nc", "remap_conserve1.tile2.nc" };
+char remap_files2[OUTPUT_GRID_NTILES][30] = { "remap_conserve2.tile1.nc", "remap_conserve2.tile2.nc" };
 
 void read_all_answers(Answers *answers, int myinterp_method);
 void read_ianswers( FILE *myfile, int *nxcells, int **ianswer);
 void read_ranswers( FILE *myfile, int *nxcells, double **ianswer);
-void check_answers_on_device(Answers *answers, Xgrid_config *xgrid, int myinterp_method);
-void check_answers_on_host(Answers *answers, Xgrid_config *xgrid, int myinterp_method);
-void reset_xgrid_on_host( Xgrid_config *xgrid, Answers *answers, int myinterp_method );
+void check_answers_on_device(Answers *answers, Interp_config_acc *interp_acc, int myinterp_method);
+void check_answers_on_host(Answers *answers, Interp_config_acc *interp_acc, int myinterp_method);
+void reset_interp_acc_on_host( Interp_config_acc *interp_acc, Answers *answers, int myinterp_method );
 void check_ianswers(int n, int *answers, int *checkme, int host_or_device);
 void check_ranswers(int n, double *answers, double *checkme, int host_or_device);
 void error(char *error_message);
@@ -56,8 +57,9 @@ void error(char *error_message);
 // start program
 int main(int argc, char *argv[]) {
 
-  Xgrid_config xgrid[NTILES_OUT];
-  Answers answers[NTILES_OUT];
+  Interp_config_acc interp_acc[OUTPUT_GRID_NTILES];
+  Grid_config       input_grid[INPUT_GRID_NTILES], output_grid[OUTPUT_GRID_NTILES];
+  Answers           answers[OUTPUT_GRID_NTILES];
 
   unsigned int opcode;
   myInterp_Method myinterp_method;
@@ -71,32 +73,40 @@ int main(int argc, char *argv[]) {
     myinterp_method = myCONSERVE_ORDER2;
   }
 
+  // assign number of cells in lon direction to Grid_config
+  for(int otile=0 ; otile<OUTPUT_GRID_NTILES ; otile++) output_grid[otile].nxc = output_grid_nlon;
+  for(int itile=0 ; itile<INPUT_GRID_NTILES ; itile++) input_grid[itile].nxc = input_grid_nlon;
+
+
   // assign remap files
-  for(int n=0 ; n<NTILES_OUT ; n++) {
-    xgrid[n].per_intile = ( Xinfo_per_input_tile *)malloc(NTILES_IN*sizeof(Xinfo_per_input_tile));
-    if(myinterp_method == myCONSERVE_ORDER1) strcpy(xgrid[n].remap_file, remap_files1[n]);
-    if(myinterp_method == myCONSERVE_ORDER2) strcpy(xgrid[n].remap_file, remap_files2[n]);
-    if(access(xgrid[n].remap_file, F_OK)==0) xgrid[n].file_exist=1;
+  for(int n=0 ; n<OUTPUT_GRID_NTILES ; n++) {
+    interp_acc[n].input_tile = ( Interp_per_input_tile *)malloc(INPUT_GRID_NTILES*sizeof(Interp_per_input_tile));
+    if(myinterp_method == myCONSERVE_ORDER1) strcpy(interp_acc[n].remap_file, remap_files1[n]);
+    if(myinterp_method == myCONSERVE_ORDER2) strcpy(interp_acc[n].remap_file, remap_files2[n]);
+    if(access(interp_acc[n].remap_file, F_OK)==0) interp_acc[n].file_exist=1;
   }
 
-  // read in remap and transfer data to device
-  read_remap_file_acc(NTILES_IN, NTILES_OUT, xgrid, opcode) ;
-  copy_xgrid_to_device_acc(NTILES_IN, NTILES_OUT, xgrid, opcode) ;
-
-  // get all answers
-  for(int n=0 ; n<NTILES_OUT ; n++) {
+  // assign answer files
+  for(int n=0 ; n<OUTPUT_GRID_NTILES ; n++) {
     if(myinterp_method == myCONSERVE_ORDER1) strcpy(answers[n].answer_file, answer_files1[n]);
     if(myinterp_method == myCONSERVE_ORDER2) strcpy(answers[n].answer_file, answer_files2[n]);
   }
+
+  // read in remap and transfer data to device
+  read_remap_file_acc(INPUT_GRID_NTILES, OUTPUT_GRID_NTILES, &output_grid, &input_grid, interp_acc, opcode);
+  copy_interp_to_device_acc(INPUT_GRID_NTILES, OUTPUT_GRID_NTILES, interp_acc, opcode) ;
+
+  // read in answers from txt file
   read_all_answers(answers, myinterp_method);
 
   // check answers on device
-  check_answers_on_device(answers, xgrid, myinterp_method);
+  check_answers_on_device(answers, interp_acc, myinterp_method);
 
   // compare answers on host
-  check_answers_on_host( answers, xgrid, myinterp_method);
+  check_answers_on_host( answers, interp_acc, myinterp_method);
 
-  return 0; //test success
+  //test success
+  return 0;
 
 }
 //------------------------------------------
@@ -104,7 +114,7 @@ int main(int argc, char *argv[]) {
 void read_ianswers( FILE *myfile, int *nxcells, int **ianswer)
 {
 
-  for( int m=0 ; m<NTILES_IN ; m++ ) {
+  for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) {
     int inxcells = nxcells[m] ;
     for( int j=0 ; j<inxcells ; j++ ) fscanf( myfile, "%d", ianswer[m]+j );
   }
@@ -115,7 +125,7 @@ void read_ianswers( FILE *myfile, int *nxcells, int **ianswer)
 void read_ranswers( FILE *myfile, int *nxcells, double **ranswer)
 {
 
-  for( int m=0 ; m<NTILES_IN ; m++ ) {
+  for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) {
     int inxcells = nxcells[m] ;
     for( int j=0 ; j<inxcells ; j++ ) fscanf( myfile, "%lf", ranswer[m]+j );
   }
@@ -126,25 +136,32 @@ void read_ranswers( FILE *myfile, int *nxcells, double **ranswer)
 void read_all_answers(Answers *answers, int myinterp_method)
 {
 
-  for(int n=0 ; n<NTILES_OUT ; n++) {
+  for(int n=0 ; n<OUTPUT_GRID_NTILES ; n++) {
 
     FILE * myfile = fopen(answers[n].answer_file, "r");
+    int **lon_index, **lat_index;
 
     printf("READING IN ANSWERS FOR n=%d\n", n);
 
-    // get answers for xgrid[n].nxcells of type size_t
+    // get answers for interp_acc[n].nxcells of type size_t
     fscanf( myfile, "%zu", &(answers[n].total_nxcells) );
 
-    // get answers for xgrid[n].per_intile[m].nxcells
-    for( int m=0 ; m<NTILES_IN ; m++ ) fscanf( myfile, "%d", answers[n].nxcells+m );
+    // get answers for interp_acc[n].input_tile[m].nxcells
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) fscanf( myfile, "%d", answers[n].nxcells+m );
+
+    // temporary arrays to read in lon and lat indices
+    lon_index = (int **)malloc(INPUT_GRID_NTILES*sizeof(int *));
+    lat_index = (int **)malloc(INPUT_GRID_NTILES*sizeof(int *));
+    for(int m=0 ; m<INPUT_GRID_NTILES ; m++) {
+      lon_index[m] = (int *)malloc(answers[n].nxcells[m]*sizeof(int));
+      lat_index[m] = (int *)malloc(answers[n].nxcells[m]*sizeof(int));
+    }
 
     // allocate arrays for answerss
-    for( int m=0 ; m<NTILES_IN ; m++ ) {
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) {
       int inxcells = answers[n].nxcells[m] ;
-      answers[n].input_parent_lon_indices[m]  = (int *)malloc( inxcells * sizeof(int) ) ;
-      answers[n].input_parent_lat_indices[m]  = (int *)malloc( inxcells * sizeof(int) ) ;
-      answers[n].output_parent_lon_indices[m] = (int *)malloc( inxcells * sizeof(int) ) ;
-      answers[n].output_parent_lat_indices[m] = (int *)malloc( inxcells * sizeof(int) ) ;
+      answers[n].input_parent_cell_index[m]  = (int *)malloc( inxcells * sizeof(int) ) ;
+      answers[n].output_parent_cell_index[m] = (int *)malloc( inxcells * sizeof(int) ) ;
       answers[n].xcell_area[m]  = (double *)malloc( inxcells * sizeof(double) );
       if( myinterp_method == myCONSERVE_ORDER2 ) {
         answers[n].dcentroid_lon[m] = (double *)malloc( inxcells * sizeof(double) );
@@ -152,11 +169,27 @@ void read_all_answers(Answers *answers, int myinterp_method)
       }
     }
 
-    //read in answers
-    read_ianswers( myfile, answers[n].nxcells, answers[n].input_parent_lon_indices) ;
-    read_ianswers( myfile, answers[n].nxcells, answers[n].input_parent_lat_indices);
-    read_ianswers( myfile, answers[n].nxcells, answers[n].output_parent_lon_indices);
-    read_ianswers( myfile, answers[n].nxcells, answers[n].output_parent_lat_indices);
+    //read in input parent grid indices
+    read_ianswers( myfile, answers[n].nxcells, lon_index) ;
+    read_ianswers( myfile, answers[n].nxcells, lat_index);
+    //compute ij index
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++) {
+      for( int i=0 ; i<answers[n].nxcells[m] ; i++ ) {
+        answers[n].input_parent_cell_index[m][i] = lat_index[m][i]*input_grid_nlon + lon_index[m][i];
+      }
+    }
+
+    //read in output parent grid indices
+    read_ianswers( myfile, answers[n].nxcells, lon_index) ;
+    read_ianswers( myfile, answers[n].nxcells, lat_index);
+    //sort ij index
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++) {
+      for( int i=0 ; i<answers[n].nxcells[m] ; i++ ) {
+        answers[n].output_parent_cell_index[m][i] = lat_index[m][i]*output_grid_nlon + lon_index[m][i];
+      }
+    }
+
+    // read in xcell_area answers
     read_ranswers( myfile, answers[n].nxcells, answers[n].xcell_area);
 
     //read dcentroid_lon dcentroid_lat if conserve_order2
@@ -165,6 +198,13 @@ void read_all_answers(Answers *answers, int myinterp_method)
       read_ranswers( myfile, answers[n].nxcells, answers[n].dcentroid_lat);
     }
 
+    for(int m=0 ; m<INPUT_GRID_NTILES; m++) {
+      free(lon_index[m]);
+      free(lat_index[m]);
+    }
+    free(lon_index); lon_index = NULL;
+    free(lat_index); lat_index = NULL;
+
     fclose( myfile );
 
   }
@@ -172,77 +212,72 @@ void read_all_answers(Answers *answers, int myinterp_method)
 }
 //------------------------------------------
 //------------------------------------------
-void check_answers_on_device( Answers *answers, Xgrid_config *xgrid, int myinterp_method )
+void check_answers_on_device( Answers *answers, Interp_config_acc *interp_acc, int myinterp_method )
 {
 
-  int *p_input_parent_lon_indices, *p_input_parent_lat_indices;
-  int *p_output_parent_lon_indices, *p_output_parent_lat_indices;
+  int *p_input_parent_cell_index, *p_output_parent_cell_index;
   double *p_xcell_area, *p_dcentroid_lon, *p_dcentroid_lat;
 
   printf("CHECKING ANSWERS ON DEVICE\n");
 
-  if( !acc_is_present(xgrid, NTILES_OUT*sizeof(Xgrid_config)) ) error("ERROR interp is not present") ;
+  if( !acc_is_present(interp_acc, OUTPUT_GRID_NTILES*sizeof(Interp_config_acc)) )
+    error("ERROR interp_acc is not present") ;
 
-  for(int n=0 ; n<NTILES_OUT ; n++) {
+  for(int n=0 ; n<OUTPUT_GRID_NTILES ; n++) {
 
     size_t nxcells = answers[n].total_nxcells;
 
     printf("checking for n=%d\n", n);
 
-#pragma acc parallel loop seq copyin(nxcells) present(xgrid[n].nxcells)
+#pragma acc parallel loop seq copyin(nxcells) present(interp_acc[n].nxcells)
     for(int i=0 ; i<1 ; i++ ){
-      if( nxcells != xgrid[n].nxcells ) {
+      if( nxcells != interp_acc[n].nxcells ) {
         printf("ERROR checking total number of nxcells for n=0", n);
         nxcells = 0;
       }
     }
     if( nxcells == 0 ) error("ERROR with the value of nxcells on device");
 
-    for( int m=0 ; m<NTILES_IN ; m++ ) {
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) {
 
       int inxcells = answers[n].nxcells[m];
 
       //copy in answers
-      p_input_parent_lon_indices  = answers[n].input_parent_lon_indices[m];
-      p_input_parent_lat_indices  = answers[n].input_parent_lat_indices[m];
-      p_output_parent_lon_indices = answers[n].output_parent_lon_indices[m];
-      p_output_parent_lat_indices = answers[n].output_parent_lat_indices[m];
+      p_input_parent_cell_index  = answers[n].input_parent_cell_index[m];
+      p_output_parent_cell_index = answers[n].output_parent_cell_index[m];
       acc_copyin(&inxcells, sizeof(int));
-      acc_copyin(p_input_parent_lon_indices, inxcells*sizeof(int));
-      acc_copyin(p_input_parent_lat_indices, inxcells*sizeof(int));
-      acc_copyin(p_output_parent_lon_indices, inxcells*sizeof(int));
-      acc_copyin(p_output_parent_lat_indices, inxcells*sizeof(int));
+      acc_copyin(p_input_parent_cell_index, inxcells*sizeof(int));
+      acc_copyin(p_output_parent_cell_index, inxcells*sizeof(int));
       p_xcell_area  = answers[n].xcell_area[m];  acc_copyin(p_xcell_area, inxcells*sizeof(double));
       if(myinterp_method == myCONSERVE_ORDER2) {
         p_dcentroid_lon = answers[n].dcentroid_lon[m]; acc_copyin(p_dcentroid_lon, inxcells*sizeof(double));
         p_dcentroid_lat = answers[n].dcentroid_lat[m]; acc_copyin(p_dcentroid_lat, inxcells*sizeof(double));
       }
 
+      // check answers
       printf("m=%d ", m);
-      printf("nxcells "); check_ianswers(1, &inxcells, &(xgrid[n].per_intile[m].nxcells),  ON_DEVICE);
-      printf("input_parent_lon_indices ");
-      check_ianswers(inxcells, p_input_parent_lon_indices, xgrid[n].per_intile[m].input_parent_lon_indices,  ON_DEVICE);
-      printf("input_parent_lat_indices ");
-      check_ianswers(inxcells, p_input_parent_lat_indices, xgrid[n].per_intile[m].input_parent_lat_indices,  ON_DEVICE);
-      printf("output_parent_lon_indices ");
-      check_ianswers(inxcells, p_output_parent_lon_indices, xgrid[n].per_intile[m].output_parent_lon_indices, ON_DEVICE);
-      printf("output_parent_lat_indices ");
-      check_ianswers(inxcells, p_output_parent_lat_indices, xgrid[n].per_intile[m].output_parent_lat_indices, ON_DEVICE);
+      printf("nxcells "); check_ianswers(1, &inxcells, &(interp_acc[n].input_tile[m].nxcells),  ON_DEVICE);
+
+      printf("input_parent_cell_index ");
+      check_ianswers(inxcells, p_input_parent_cell_index, interp_acc[n].input_tile[m].input_parent_cell_index,  ON_DEVICE);
+
+      printf("output_parent_cell_index ");
+      check_ianswers(inxcells, p_output_parent_cell_index, interp_acc[n].input_tile[m].output_parent_cell_index, ON_DEVICE);
+
       printf("xcell_area ");
-      check_ranswers(inxcells, p_xcell_area,  xgrid[n].per_intile[m].xcell_area,  ON_DEVICE);
+      check_ranswers(inxcells, p_xcell_area,  interp_acc[n].input_tile[m].xcell_area,  ON_DEVICE);
+
       if( myinterp_method == myCONSERVE_ORDER2 ){
         printf("dcentroid_lon ");
-        check_ranswers(inxcells, p_dcentroid_lon, xgrid[n].per_intile[m].dcentroid_lon, ON_DEVICE);
+        check_ranswers(inxcells, p_dcentroid_lon, interp_acc[n].input_tile[m].dcentroid_lon, ON_DEVICE);
         printf("dcentroid_lat ");
-        check_ranswers(inxcells, p_dcentroid_lat, xgrid[n].per_intile[m].dcentroid_lat, ON_DEVICE);
+        check_ranswers(inxcells, p_dcentroid_lat, interp_acc[n].input_tile[m].dcentroid_lat, ON_DEVICE);
       }
       printf("\n");
 
       acc_delete(&inxcells, sizeof(int));
-      acc_delete(p_input_parent_lon_indices, inxcells*sizeof(int));
-      acc_delete(p_input_parent_lat_indices, inxcells*sizeof(int));
-      acc_delete(p_output_parent_lon_indices, inxcells*sizeof(int));
-      acc_delete(p_output_parent_lat_indices, inxcells*sizeof(int));
+      acc_delete(p_input_parent_cell_index, inxcells*sizeof(int));
+      acc_delete(p_output_parent_cell_index, inxcells*sizeof(int));
       acc_delete(p_xcell_area, inxcells*sizeof(double));
       if(myinterp_method == myCONSERVE_ORDER2) {
         acc_delete(p_dcentroid_lon, inxcells*sizeof(double));
@@ -254,59 +289,59 @@ void check_answers_on_device( Answers *answers, Xgrid_config *xgrid, int myinter
 }
 //------------------------------------------
 //------------------------------------------
-void check_answers_on_host( Answers *answers, Xgrid_config *xgrid, int myinterp_method )
+void check_answers_on_host( Answers *answers, Interp_config_acc *interp_acc, int myinterp_method )
 {
 
   printf("CHECKING COPIED OUT DATA ON HOST\n");
 
   //cautious step.  to ensure data is actually copied out
-  reset_xgrid_on_host(xgrid, answers, myinterp_method);
+  reset_interp_acc_on_host(interp_acc, answers, myinterp_method);
 
-  for(int n=0 ; n<NTILES_OUT; n++) {
-    acc_update_host( &xgrid[n].nxcells, sizeof(size_t) );
-    for(int m=0 ; m<NTILES_IN ; m++) {
+  // copyout answers
+  for(int n=0 ; n<OUTPUT_GRID_NTILES; n++) {
+    acc_update_host( &interp_acc[n].nxcells, sizeof(size_t) );
+    for(int m=0 ; m<INPUT_GRID_NTILES ; m++) {
       int inxcells = answers[n].nxcells[m];
-      acc_update_host( &xgrid[n].per_intile[m].nxcells, sizeof(int));
-      acc_copyout( xgrid[n].per_intile[m].input_parent_lon_indices,  inxcells*sizeof(int));
-      acc_copyout( xgrid[n].per_intile[m].input_parent_lat_indices,  inxcells*sizeof(int));
-      acc_copyout( xgrid[n].per_intile[m].output_parent_lon_indices, inxcells*sizeof(int));
-      acc_copyout( xgrid[n].per_intile[m].output_parent_lat_indices, inxcells*sizeof(int));
-      acc_copyout( xgrid[n].per_intile[m].xcell_area,  inxcells*sizeof(double));
+      acc_update_host( &interp_acc[n].input_tile[m].nxcells, sizeof(int));
+      acc_copyout( interp_acc[n].input_tile[m].input_parent_cell_index,  inxcells*sizeof(int));
+      acc_copyout( interp_acc[n].input_tile[m].output_parent_cell_index, inxcells*sizeof(int));
+      acc_copyout( interp_acc[n].input_tile[m].xcell_area,  inxcells*sizeof(double));
       if(myinterp_method == myCONSERVE_ORDER2) {
-        acc_copyout( xgrid[n].per_intile[m].dcentroid_lon, inxcells*sizeof(double));
-        acc_copyout( xgrid[n].per_intile[m].dcentroid_lat, inxcells*sizeof(double));
+        acc_copyout( interp_acc[n].input_tile[m].dcentroid_lon, inxcells*sizeof(double));
+        acc_copyout( interp_acc[n].input_tile[m].dcentroid_lat, inxcells*sizeof(double));
       }
     }
   }
-  acc_delete(xgrid, NTILES_OUT*sizeof(Xgrid_config));
+  acc_delete(interp_acc, OUTPUT_GRID_NTILES*sizeof(Interp_config_acc));
 
-  for( int n=0 ; n<NTILES_OUT; n++ ) {
+  for( int n=0 ; n<OUTPUT_GRID_NTILES; n++ ) {
 
     printf("checking nxcells for n=%d\n", n);
-    if( answers[n].total_nxcells != xgrid[n].nxcells ) {
-      printf("ERROR nxcells for n=%d: %zu vs %zu\n", answers[n].total_nxcells, xgrid[n].nxcells);
+    if( answers[n].total_nxcells != interp_acc[n].nxcells ) {
+      printf("ERROR nxcells for n=%d: %zu vs %zu\n", answers[n].total_nxcells, interp_acc[n].nxcells);
       error("goodbye!");
     }
 
-    for( int m=0 ; m<NTILES_IN ; m++ ) {
+    for( int m=0 ; m<INPUT_GRID_NTILES ; m++ ) {
       printf("m=%d ", m);
-      int inxcells = xgrid[n].per_intile[m].nxcells;
-      printf("nxcells "); check_ianswers(1, answers[n].nxcells+m, &(xgrid[n].per_intile[m].nxcells), ON_HOST);
-      printf("input_parent_lon_indices ");
-      check_ianswers(inxcells, answers[n].input_parent_lon_indices[m],  xgrid[n].per_intile[m].input_parent_lon_indices,  ON_HOST);
-      printf("input_parent_lat_indices ");
-      check_ianswers(inxcells, answers[n].input_parent_lat_indices[m],  xgrid[n].per_intile[m].input_parent_lat_indices,  ON_HOST);
-      printf("output_parent_lon_indices ");
-      check_ianswers(inxcells, answers[n].output_parent_lon_indices[m], xgrid[n].per_intile[m].output_parent_lon_indices, ON_HOST);
-      printf("output_parent_lat_indices ");
-      check_ianswers(inxcells, answers[n].output_parent_lat_indices[m], xgrid[n].per_intile[m].output_parent_lat_indices, ON_HOST);
+      int inxcells = interp_acc[n].input_tile[m].nxcells;
+
+      printf("nxcells "); check_ianswers(1, answers[n].nxcells+m, &(interp_acc[n].input_tile[m].nxcells), ON_HOST);
+
+      printf("input_parent_lon_index ");
+      check_ianswers(inxcells, answers[n].input_parent_cell_index[m],  interp_acc[n].input_tile[m].input_parent_cell_index,  ON_HOST);
+
+      printf("output_parent_lon_index ");
+      check_ianswers(inxcells, answers[n].output_parent_cell_index[m], interp_acc[n].input_tile[m].output_parent_cell_index, ON_HOST);
+
       printf("xcell_area ");
-      check_ranswers(inxcells, answers[n].xcell_area[m],  xgrid[n].per_intile[m].xcell_area,  ON_HOST);
+      check_ranswers(inxcells, answers[n].xcell_area[m],  interp_acc[n].input_tile[m].xcell_area,  ON_HOST);
+
       if(myinterp_method == myCONSERVE_ORDER2) {
         printf("dcentroid_lon ");
-        check_ranswers(inxcells, answers[n].dcentroid_lon[m],  xgrid[n].per_intile[m].dcentroid_lon, ON_HOST);
+        check_ranswers(inxcells, answers[n].dcentroid_lon[m],  interp_acc[n].input_tile[m].dcentroid_lon, ON_HOST);
         printf("dcentroid_lat");
-        check_ranswers(inxcells, answers[n].dcentroid_lat[m],  xgrid[n].per_intile[m].dcentroid_lat, ON_HOST);
+        check_ranswers(inxcells, answers[n].dcentroid_lat[m],  interp_acc[n].input_tile[m].dcentroid_lat, ON_HOST);
       }
       printf("\n");
     }
@@ -315,23 +350,21 @@ void check_answers_on_host( Answers *answers, Xgrid_config *xgrid, int myinterp_
 }
 //------------------------------------------
 //------------------------------------------
-void reset_xgrid_on_host( Xgrid_config *xgrid, Answers *answers, int myinterp_method )
+void reset_interp_acc_on_host( Interp_config_acc *interp_acc, Answers *answers, int myinterp_method )
 {
 
-  for(int n=0 ; n<NTILES_OUT ; n++) {
-    xgrid[n].nxcells=0;
-    for(int m=0 ; m<NTILES_IN ; m++) {
+  for(int n=0 ; n<OUTPUT_GRID_NTILES ; n++) {
+    interp_acc[n].nxcells=0;
+    for(int m=0 ; m<INPUT_GRID_NTILES ; m++) {
       int inxcells = answers[n].nxcells[m];
-      xgrid[n].per_intile[m].nxcells = -99;
+      interp_acc[n].input_tile[m].nxcells = -99;
       for( int i=0 ; i<inxcells ; i++) {
-        xgrid[n].per_intile[m].input_parent_lon_indices[i]  = -99 ;
-        xgrid[n].per_intile[m].input_parent_lat_indices[i]  = -99 ;
-        xgrid[n].per_intile[m].output_parent_lon_indices[i] = -99 ;
-        xgrid[n].per_intile[m].output_parent_lat_indices[i] = -99 ;
-        xgrid[n].per_intile[m].xcell_area[i]  = -99.9 ;
+        interp_acc[n].input_tile[m].input_parent_cell_index[i]  = -99 ;
+        interp_acc[n].input_tile[m].output_parent_cell_index[i] = -99 ;
+        interp_acc[n].input_tile[m].xcell_area[i]  = -99.9 ;
         if(myinterp_method == myCONSERVE_ORDER2) {
-          xgrid[n].per_intile[m].dcentroid_lon[i] = -99.9;
-          xgrid[n].per_intile[m].dcentroid_lat[i] = -99.9;
+          interp_acc[n].input_tile[m].dcentroid_lon[i] = -99.9;
+          interp_acc[n].input_tile[m].dcentroid_lat[i] = -99.9;
         }
       }
     }
