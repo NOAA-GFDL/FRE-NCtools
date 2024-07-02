@@ -17,5 +17,5 @@
 #* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-SUBDIRS = test_read_remap_file test_get_cell_minmaxavg_latlons test_get_upbound_nxcells_2dx2d\
+SUBDIRS = test_read_remap_file test_get_grid_cell_struct test_get_upbound_nxcells_2dx2d\
           test_get_xgrid_order1
