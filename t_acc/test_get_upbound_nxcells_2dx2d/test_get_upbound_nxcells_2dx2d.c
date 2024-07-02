@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <openacc.h>
 #include "globals_acc.h"
+#include "conserve_interp_acc.h"
 #include "interp_utils_acc.h"
 #include "create_xgrid_utils_acc.h"
 #include "create_xgrid_acc.h"
@@ -18,37 +19,44 @@ void generate_input_is_same_as_output_grids(Grid_config *input_grid, Grid_config
 void generate_two_ouput_cells_per_input_cell(Grid_config *input_grid, Grid_config *output_grid, Answers *answers);
 void check_data_on_device(Grid_config *input_grid, Grid_config *output_grid,
                           int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
-                          Grid_cells_struct_config *input_grid_cells,
                           Grid_cells_struct_config *output_grid_cells);
-int run_tests(Grid_config *input_grid,  Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
-              Grid_cells_struct_config *output_grid_cells, int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end,
-              int *upbound_nxcells);
+int run_tests(Grid_config *input_grid,  Grid_config *output_grid,  Grid_cells_struct_config *output_grid_cells,
+              int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end, int *upbound_nxcells);
 void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output_grid,
-                  Grid_cells_struct_config *input_grid_cells, Grid_cells_struct_config *output_grid_cells,
-                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end);
-void check_answers(const Answers *answers, int *approx_nxcells_per_ij1, int *ij2_start,
-                   int *ij2_end, const int upbound_nxcells);
+                Grid_cells_struct_config *output_grid_cells, int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end);
+void check_answers(const Answers *answers, int *approx_nxcells_per_ij1,
+                   int *ij2_start, int *ij2_end, const int upbound_nxcells);
 void check_ianswers(const int n, const int *answers, const int *checkme);
 
 //TODO:  add more complicated tests
+
 int main()
 {
 
   Grid_config input_grid, output_grid;
-  Grid_cells_struct_config input_grid_cells, output_grid_cells;
+  Grid_cells_struct_config output_grid_cells;
   int upbound_nxcells;
   int *approx_nxcells_per_ij1, *ij2_start, *ij2_end;
 
   Answers answers;
 
   printf("CHECKING CASE 1:  Input grid = Output_grid\n");
+
+  // generate grids
   generate_input_is_same_as_output_grids(&input_grid, &output_grid, &answers);
-  run_tests(&input_grid, &output_grid, &input_grid_cells, &output_grid_cells, &approx_nxcells_per_ij1, &ij2_start, &ij2_end,
+
+  //run get_upbound_nxcells_2dx2d
+  run_tests(&input_grid, &output_grid, &output_grid_cells, &approx_nxcells_per_ij1, &ij2_start, &ij2_end,
             &upbound_nxcells);
+
+  // check answers
   check_answers(&answers, approx_nxcells_per_ij1, ij2_start, ij2_end, upbound_nxcells);
-  cleanup_test(&answers, &input_grid, &output_grid, &input_grid_cells, &output_grid_cells, approx_nxcells_per_ij1,
+
+  //cleanup
+  cleanup_test(&answers, &input_grid, &output_grid, &output_grid_cells, approx_nxcells_per_ij1,
                ij2_start, ij2_end);
 
+  // test is a success
   return 0;
 
 }
@@ -165,7 +173,6 @@ void generate_two_ouput_cells_per_input_cell(Grid_config *input_grid, Grid_confi
 
 void check_data_on_device( Grid_config *input_grid, Grid_config *output_grid,
                            int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
-                           Grid_cells_struct_config *input_grid_cells,
                            Grid_cells_struct_config *output_grid_cells)
 {
 
@@ -193,10 +200,6 @@ void check_data_on_device( Grid_config *input_grid, Grid_config *output_grid,
     printf("OUTPUT GRID LAT COORDINATES NOT ON DEVICE!"); exit(1);
   }
 
-  //skip input cells should be on device
-  if(!acc_is_present(input_grid_cells->skip_cells, input_ncells*sizeof(double))) {
-    printf("INPUT SKIP CELLS not on device!"); exit(1);
-  }
 
   //arrays used by upbound_nxgrid should be on device
   if(!acc_is_present(approx_nxcells_per_ij1, input_ncells*sizeof(int))) {
@@ -274,9 +277,8 @@ void check_answers(const Answers *answers, int *approx_nxcells_per_ij1, int *ij2
 
 }
 
-int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_struct_config *input_grid_cells,
-              Grid_cells_struct_config *output_grid_cells, int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end,
-              int *upbound_nxcells)
+int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_struct_config *output_grid_cells,
+              int **approx_nxcells_per_ij1, int **ij2_start, int **ij2_end, int *upbound_nxcells)
 {
 
   int nlon_input_cells  = input_grid->nxc;
@@ -284,64 +286,67 @@ int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_stru
   int nlon_output_cells = output_grid->nxc;
   int nlat_output_cells = output_grid->nyc;
   int ncells_input  = nlon_input_cells * nlat_input_cells;
-  int ncells_output = nlon_output_cells * nlat_output_cells;
   int ngridpts_input = (nlon_input_cells+1)*(nlat_input_cells+1);
   int ngridpts_output = (nlon_output_cells+1)*(nlat_output_cells+1);
 
-  int jlat_overlap_starts, jlat_overlap_ends, nlat_overlapping_cells;
+  int jlat_overlap_starts, jlat_overlap_ends;
 
   int *p_approx_nxcells_per_ij1, *p_ij2_start, *p_ij2_end;
+  double *input_grid_mask;
 
   //copy grid to device
   copy_grid_to_device_acc(ngridpts_input, input_grid->latc, input_grid->lonc);
   copy_grid_to_device_acc(ngridpts_output, output_grid->latc, output_grid->lonc);
 
   //get mask to skip input cells in creating xgrid
-  get_skip_cells_acc(ncells_input, &(input_grid_cells->skip_cells));
+  get_input_grid_mask_acc(ncells_input, &input_grid_mask);
+  if( ! acc_is_present(input_grid_mask, ncells_input*sizeof(double)) ) {
+    printf("INPUT_GRID_MASK IS NOT ON DEVICE!"); exit(1);
+  }
 
   //get output grid cell info
-  get_grid_cells_struct_acc(nlon_output_cells, nlat_output_cells, output_grid->lonc, output_grid->latc,
-                            output_grid_cells);
+  get_grid_cell_struct_acc(nlon_output_cells, nlat_output_cells, output_grid, output_grid_cells);
 
   //get bounding indices
   get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
-                           output_grid->latc, input_grid->latc, &jlat_overlap_starts, &jlat_overlap_ends,
-                           &nlat_overlapping_cells);
+                           output_grid->latc, input_grid->latc, &jlat_overlap_starts, &jlat_overlap_ends);
   if(jlat_overlap_starts != 0) printf("SMETHING IS WRONG WITH JLAT_OVERLAP_STARTS %d\n", jlat_overlap_starts);
-  if(jlat_overlap_ends != nlat_input_cells) printf("SOMETHING IS WRONG WITH JLAT_OVERLAP_ENDS %d %d\n", jlat_overlap_ends, nlat_input_cells);
-  if(nlat_overlapping_cells != nlat_input_cells) printf("SOMETHING IS WRONG WITH NLAT_OVERLAPPING_CELLS\n");
+  if(jlat_overlap_ends != nlat_input_cells-1) // this is what was in the original.
+    printf("SOMETHING IS WRONG WITH JLAT_OVERLAP_ENDS %d %d\n", jlat_overlap_ends, nlat_input_cells-1);
 
   //malloc and create arrays
   create_upbound_nxcells_arrays_on_device_acc(ncells_input, &p_approx_nxcells_per_ij1, &p_ij2_start, &p_ij2_end);
 
+  // check to ensure all data have been transferred/created to device
   check_data_on_device(input_grid, output_grid, p_approx_nxcells_per_ij1, p_ij2_start, p_ij2_end,
-                       input_grid_cells, output_grid_cells);
+                       output_grid_cells);
 
   *upbound_nxcells = get_upbound_nxcells_2dx2d_acc(input_grid->nxc, input_grid->nyc, output_grid->nxc, output_grid->nyc,
                                                    jlat_overlap_starts, jlat_overlap_ends,
                                                    input_grid->lonc, input_grid->latc, output_grid->lonc, output_grid->latc,
-                                                   input_grid_cells->skip_cells, output_grid_cells,
+                                                   input_grid_mask, output_grid_cells,
                                                    p_approx_nxcells_per_ij1, p_ij2_start, p_ij2_end);
 
   *approx_nxcells_per_ij1 = p_approx_nxcells_per_ij1;
   *ij2_start = p_ij2_start;
   *ij2_end = p_ij2_end;
 
+  free_input_grid_mask_acc(ncells_input, &input_grid_mask);
+
   return 0;
 
 }
 
 void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output_grid,
-                Grid_cells_struct_config *input_grid_cells, Grid_cells_struct_config *output_grid_cells,
-                int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end)
+                  Grid_cells_struct_config *output_grid_cells,
+                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end)
 {
 
   int ncells_output = output_grid->nxc * output_grid->nyc;
   int ncells_input  = input_grid->nxc * input_grid->nyc;
 
-  free_output_grid_cell_struct_from_all_acc(ncells_output, output_grid_cells);
-  free_upbound_xcells_array_from_all_acc(ncells_input, approx_nxcells_per_ij1, ij2_start, ij2_end);
-  free_skip_cells_on_all_acc(ncells_input, input_grid_cells->skip_cells);
+  free_grid_cell_struct_acc(ncells_output, output_grid_cells);
+  free_upbound_nxcells_arrays_acc(ncells_input, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
 
 }
 
@@ -356,5 +361,3 @@ void check_ianswers( const int n, const int *answers, const int *checkme)
   }
 
 }
-
-// void offset by half
