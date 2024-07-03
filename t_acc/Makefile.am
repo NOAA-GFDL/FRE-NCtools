@@ -18,4 +18,4 @@
 #***********************************************************************
 
 SUBDIRS = test_read_remap_file test_get_grid_cell_struct test_get_upbound_nxcells_2dx2d\
-          test_get_xgrid_order1
+          test_get_interp_order1
