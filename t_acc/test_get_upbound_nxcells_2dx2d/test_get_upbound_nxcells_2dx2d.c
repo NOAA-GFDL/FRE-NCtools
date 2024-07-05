@@ -1,3 +1,30 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+// This test tests the function get_upbound_nxcells_2dx2d that is called
+// before create_xgrid_2dx2d_order1 create_xgrid_2dx2d_order2.  This function
+// computes the upper bound value of nxcells (number of exchange grid cells)
+// and the bounding parent cell indices for each each exchange grid cell.
+// The test checks to ensure data transferred successfully between the host and device
+// and all computations have occured as expected on the device.
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <openacc.h>
