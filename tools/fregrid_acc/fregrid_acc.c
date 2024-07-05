@@ -40,7 +40,7 @@
   -----------------------------------------------------------------------
 */
 
-// TODO:  vector and monotonic interpolation have been implemented yet.
+// TODO:  vector and monotonic interpolation have not been implemented yet.
 // TODO:  great_circle first order exchange grid creation has not been implemented yet.
 
 #include <stdlib.h>
