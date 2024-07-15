@@ -25,7 +25,7 @@
 !
 !-----------------------------------------------------------------------
 
-#define __NF_ASRT__(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
+#define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
 program decompress
 
   use nfu_mod
@@ -67,8 +67,8 @@ program decompress
   ! open all input files
   allocate(input(nfiles))
   do i = 1,nfiles
-     __NF_ASRT__(nf_open(files(i),NF_NOWRITE,input(i)))
-     __NF_ASRT__(nf_inq_format(input(i),in_format))
+     CHECK_NF_ERRSTAT(nf_open(files(i),NF_NOWRITE,input(i)))
+     CHECK_NF_ERRSTAT(nf_inq_format(input(i),in_format))
   enddo
 
   if (in_format==NF_FORMAT_NETCDF4) then
@@ -86,41 +86,41 @@ program decompress
   endif
 
   ! create output file
-  __NF_ASRT__(nf__create(outfile,cmode,0,blksz,ncid))
+  CHECK_NF_ERRSTAT(nf__create(outfile,cmode,0,blksz,ncid))
 
   ! Create netcdf structure in the output NetCDF file, using last input file
   ! as a template.
 
   ! clone all dimensions except compressed ones; compressed are just skipped
-  __NF_ASRT__(nf_inq_ndims(input(nfiles),ndims))
+  CHECK_NF_ERRSTAT(nf_inq_ndims(input(nfiles),ndims))
   do dimid = 1,ndims
-     __NF_ASRT__(nfu_inq_dim(input(nfiles),dimid,dimname=dimname,dimlen=dimlen,is_unlim=has_records))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(input(nfiles),dimid,dimname=dimname,dimlen=dimlen,is_unlim=has_records))
      if(nfu_inq_att(input(nfiles),dimname,'compress')==NF_NOERR) cycle
      if(has_records)&
           dimlen=NF_UNLIMITED
      if(debug>0)&
           write(*,*)'defining dimension "'//trim(dimname)//'" with length',dimlen
-     __NF_ASRT__(nf_def_dim(ncid,dimname,dimlen,i)) ! i is just a space for id
+     CHECK_NF_ERRSTAT(nf_def_dim(ncid,dimname,dimlen,i)) ! i is just a space for id
   enddo
 
   ! clone all variable definitions, replacing compressed dimensions with sets
   ! of uncompressed ones
-  __NF_ASRT__(nf_inq_nvars(input(nfiles),nvars))
+  CHECK_NF_ERRSTAT(nf_inq_nvars(input(nfiles),nvars))
   do varid = 1,nvars
      iret = nfu_inq_compressed_var(input(nfiles),varid,varname,xtype,ndims,dimids,&
           natts=natts,is_dim=is_dim, is_compressed=is_compressed)
      if(debug>0)&
           write(*,*)'defining variable "'//trim(varname)//'"'
-     __NF_ASRT__(iret) ! just because the line is going to be too long
+     CHECK_NF_ERRSTAT(iret) ! just because the line is going to be too long
      if(is_dim.and.is_compressed) cycle
      do i = 1,ndims
-        __NF_ASRT__(nf_inq_dimname(input(nfiles),dimids(i),dimname))
-        __NF_ASRT__(nf_inq_dimid(ncid,dimname,dimids(i)))
+        CHECK_NF_ERRSTAT(nf_inq_dimname(input(nfiles),dimids(i),dimname))
+        CHECK_NF_ERRSTAT(nf_inq_dimid(ncid,dimname,dimids(i)))
      enddo
-     __NF_ASRT__(nf_def_var(ncid,varname,xtype,ndims,dimids,varid1))
+     CHECK_NF_ERRSTAT(nf_def_var(ncid,varname,xtype,ndims,dimids,varid1))
      do i=1,natts
-        __NF_ASRT__(nf_inq_attname(input(nfiles),varid,i,attname))
-        __NF_ASRT__(nf_copy_att(input(nfiles),varid,attname,ncid,varid1))
+        CHECK_NF_ERRSTAT(nf_inq_attname(input(nfiles),varid,i,attname))
+        CHECK_NF_ERRSTAT(nf_copy_att(input(nfiles),varid,attname,ncid,varid1))
      enddo
      if(add_missing_value.and.is_compressed) then
         ! check if missing_value or _FillValue attributes are present
@@ -136,39 +136,39 @@ program decompress
               missing = NF_FILL_INT
            end select
            ! and add it to the output variable
-           __NF_ASRT__(nf_put_att_double(ncid,varid1,'missing_value',xtype,1,missing))
+           CHECK_NF_ERRSTAT(nf_put_att_double(ncid,varid1,'missing_value',xtype,1,missing))
         endif
      endif
   enddo
 
   ! clone all global attributes
-  __NF_ASRT__(nf_inq_natts(input(nfiles),natts))
+  CHECK_NF_ERRSTAT(nf_inq_natts(input(nfiles),natts))
   do i = 1,natts
-     __NF_ASRT__(nf_inq_attname(input(nfiles),NF_GLOBAL,i,attname))
-     __NF_ASRT__(nf_copy_att(input(nfiles),NF_GLOBAL,attname,ncid,NF_GLOBAL))
+     CHECK_NF_ERRSTAT(nf_inq_attname(input(nfiles),NF_GLOBAL,i,attname))
+     CHECK_NF_ERRSTAT(nf_copy_att(input(nfiles),NF_GLOBAL,attname,ncid,NF_GLOBAL))
   enddo
 
   ! ---- end of definition stage
-  __NF_ASRT__(nf__enddef(ncid,HEADERPAD,4,0,4))
+  CHECK_NF_ERRSTAT(nf__enddef(ncid,HEADERPAD,4,0,4))
 
 
   ! grow unlimited dimension, if necessary
   do varid=1,nvars
-     __NF_ASRT__(nfu_inq_compressed_var(input(nfiles),varid,name=varname,dimlens=dimlens,has_records=has_records))
+     CHECK_NF_ERRSTAT(nfu_inq_compressed_var(input(nfiles),varid,name=varname,dimlens=dimlens,has_records=has_records))
      if(has_records) then
         ! just write an integer at the very end of the variable -- that extends the
         ! record dimensions as well
-        __NF_ASRT__(nf_inq_varid(ncid,varname,varid))
-        __NF_ASRT__(nf_put_var1_int(ncid,varid,dimlens,0))
+        CHECK_NF_ERRSTAT(nf_inq_varid(ncid,varname,varid))
+        CHECK_NF_ERRSTAT(nf_put_var1_int(ncid,varid,dimlens,0))
         exit ! this loop
      endif
   enddo
 
   ! gather and copy data
-  __NF_ASRT__(nf_inq_nvars(ncid,nvars))
+  CHECK_NF_ERRSTAT(nf_inq_nvars(ncid,nvars))
   do varid = 1,nvars
-!     __NF_ASRT__(nfu_inq_compressed_var(ncid,varid,name=varname,varsize=vsize))
-     __NF_ASRT__(nfu_inq_var(ncid,varid,varname,xtype,varsize=vsize))
+!     CHECK_NF_ERRSTAT(nfu_inq_compressed_var(ncid,varid,name=varname,varsize=vsize))
+     CHECK_NF_ERRSTAT(nfu_inq_var(ncid,varid,varname,xtype,varsize=vsize))
      if(debug>0) &
           write(*,*)'processing var "'//trim(varname)//'"'
      allocate(buffer(vsize),mask(vsize))
@@ -200,14 +200,16 @@ program decompress
 
      ! read the variable
      do i=1,nfiles
-        __NF_ASRT__(nfu_get_compressed_var_r8n(input(i),varname,buffer,mask,ocean=do_oceanValue,ocean_value=ocean_value))
+        CHECK_NF_ERRSTAT(nfu_get_compressed_var_r8n(input(i),varname,buffer,mask,ocean=do_oceanValue,ocean_value=ocean_value))
      enddo
      ! write the variable
-     __NF_ASRT__(nfu_put_var_r8(ncid,varname,buffer))
+     CHECK_NF_ERRSTAT(nfu_put_var_r8(ncid,varname,buffer))
      deallocate(buffer,mask)
   enddo
 
-  __NF_ASRT__(nf_close(ncid))
+  CHECK_NF_ERRSTAT(nf_sync(ncid))
+
+  CHECK_NF_ERRSTAT(nf_close(ncid))
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

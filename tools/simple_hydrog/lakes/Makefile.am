@@ -24,7 +24,7 @@ bin_PROGRAMS = cr_lake_files
 FMSROOT = $(top_builddir)/tools/simple_hydrog/libfmslite
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
-AM_FCFLAGS = -I$(FMSROOT) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_FCFLAGS = -I$(FMSROOT) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/postprocessing/land_utils 
 LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_LIBS) $(NETCDF_FCLIBS)  $(RPATH_FLAGS)
 
 cr_lake_files_SOURCES = cr_lake_files.f90
