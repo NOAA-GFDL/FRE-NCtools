@@ -32,6 +32,7 @@ program rmv_parallel_rivers
 !   River fields then are updated and iteration continues until fields (subA,
 !   travel, basin, celllength) no longer change.
 ! ===============================================================================
+use nfu_mod
 
 implicit none
 

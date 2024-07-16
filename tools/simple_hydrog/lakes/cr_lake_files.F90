@@ -23,7 +23,6 @@ program cr_lake_files
 
 use horiz_interp_mod
 use nfu_mod
-use nfu_compress_mod
 implicit none
 
 integer, parameter :: maxdims= 3

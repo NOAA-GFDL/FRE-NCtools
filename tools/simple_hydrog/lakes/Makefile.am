@@ -27,7 +27,7 @@ AM_CFLAGS = $(NETCDF_CFLAGS)
 AM_FCFLAGS = -I$(FMSROOT) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/postprocessing/land_utils 
 LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_LIBS) $(NETCDF_FCLIBS)  $(RPATH_FLAGS)
 
-cr_lake_files_SOURCES = cr_lake_files.f90
-cr_lake_files_LDADD = $(FMSROOT)/libfms.a $(LDADD)
+cr_lake_files_SOURCES = cr_lake_files.F90
+cr_lake_files_LDADD = $(FMSROOT)/libfms.a $(top_builddir)/postprocessing/land_utils/libnfu.a $(LDADD)
 
 CLEANFILES = *.mod
