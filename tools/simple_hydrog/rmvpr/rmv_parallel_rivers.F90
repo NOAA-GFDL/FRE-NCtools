@@ -1263,6 +1263,7 @@ do n= 1,ntiles
    rcode= NF_PUT_VARA_DOUBLE (ncid, varid8, start, count, drn_idx(3:idp2,3:jdp2,n))
 
 !  close netcdf file
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 

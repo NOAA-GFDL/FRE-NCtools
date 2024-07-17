@@ -934,6 +934,7 @@ do n= 1,ntiles
    rcode= NF_PUT_VARA_DOUBLE (ncid, varid9, start, count, max_slp2nxt(2:idp1,2:jdp1,n))
 
 !  close netcdf file
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 

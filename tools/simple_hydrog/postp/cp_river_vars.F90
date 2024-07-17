@@ -1133,6 +1133,7 @@ do n= 1,ntiles
    endif
 
 !  close netcdf file
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
