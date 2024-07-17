@@ -137,6 +137,8 @@ int main (int argc, char **argv)
 	 }
 
 
+   status = nc_sync(ncid);
+       if (status != NC_NOERR) handle_error(status);
 	 status = nc_close(ncid);       /* close netCDF dataset */
      	 if (status != NC_NOERR) handle_error(status);
 

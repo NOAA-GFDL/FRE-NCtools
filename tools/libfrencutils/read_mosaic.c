@@ -80,6 +80,11 @@ int field_exist(const char* file, const char *name)
   else
     existed = 0;
 
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "field_exist: in syncing file %s.", file);
+    handle_netcdf_error(msg, status);
+  }
   status = nc_close(ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "field_exist: in closing file %s.", file);
@@ -111,6 +116,11 @@ int get_dimlen(const char* file, const char *name)
   status = nc_inq_dimlen(ncid, dimid, &size);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting dimension size of %s from file %s.", name, file);
+    handle_netcdf_error(msg, status);
+  }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "in syncing file %s.", file);
     handle_netcdf_error(msg, status);
   }
   status = nc_close(ncid);
@@ -153,6 +163,11 @@ void get_string_data(const char *file, const char *name, char *data)
     sprintf(msg, "in getting data of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
   }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "in syncing file %s.", file);
+    handle_netcdf_error(msg, status);
+  }
   status = nc_close(ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
@@ -187,6 +202,11 @@ void get_string_data_level(const char *file, const char *name, char *data, const
   status = nc_get_vara_text(ncid, varid, start, nread, data);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting data of %s from file %s.", name, file);
+    handle_netcdf_error(msg, status);
+  }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "in syncing file %s.", file);
     handle_netcdf_error(msg, status);
   }
   status = nc_close(ncid);
@@ -245,6 +265,11 @@ void get_var_data(const char *file, const char *name, void *data)
     sprintf(msg, "in getting data of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
   }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "in syncing file %s.", file);
+    handle_netcdf_error(msg, status);
+  }
   status = nc_close(ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "in closing file %s.", file);
@@ -301,6 +326,11 @@ void get_var_data_region(const char *file, const char *name, const size_t *start
     sprintf(msg, "get_var_data_region: in getting data of %s from file %s.", name, file);
     handle_netcdf_error(msg, status);
   }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "get_var_data_region: in closing file %s.", file);
+    handle_netcdf_error(msg, status);
+  }
   status = nc_close(ncid);
   if(status != NC_NOERR) {
     sprintf(msg, "get_var_data_region: in closing file %s.", file);
@@ -330,6 +360,11 @@ void get_var_text_att(const char *file, const char *name, const char *attname, c
   status = nc_get_att_text(ncid, varid, attname, att);
   if(status != NC_NOERR) {
     sprintf(msg, "in getting attribute %s of %s from file %s.", attname, name, file);
+    handle_netcdf_error(msg, status);
+  }
+  status = nc_sync(ncid);
+  if(status != NC_NOERR) {
+    sprintf(msg, "in syncing file %s.", file);
     handle_netcdf_error(msg, status);
   }
   status = nc_close(ncid);

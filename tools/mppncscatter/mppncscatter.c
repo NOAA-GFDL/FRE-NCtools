@@ -42,6 +42,8 @@
 */
 #include "mppncscatter.h"
 
+#define CHECK_NC_ERRSTAT(ierr) check_error(ierr,__FILE__,__LINE__)
+
 /*-------------------------------------------------------------------*/
 void printsizetarray(size_t *a, int n) {
   int i=0;
@@ -1415,11 +1417,14 @@ int mppncscatter(mnsopts* opts)
     fflush(stdout);
   }
 
-  nc_close(nc);
+  CHECK_NC_ERRSTAT(nc_sync(nc));
+  CHECK_NC_ERRSTAT(nc_close(nc));
 
   if (!dryrun) {
-    for(i=0; i < nfiles; ++i)
-      nc_close(ncids[i]);
+    for(i=0; i < nfiles; ++i) {
+      CHECK_NC_ERRSTAT(nc_sync(ncids[i]));
+      CHECK_NC_ERRSTAT(nc_close(ncids[i]));
+    }
   }
 
   if (verbose) {
@@ -1433,4 +1438,13 @@ int mppncscatter(mnsopts* opts)
   free_scatter_dims(scatterdims, ndims);
 
   return 0;
+}
+
+void check_error(int ierr, const char* file, int line)
+{
+   if (ierr!=NC_NOERR) {
+      fprintf(stderr,"ERROR :: %s\nfile: %s, line: %d\n",
+	      nc_strerror(ierr), file, line);
+      exit(ierr);
+   }
 }
