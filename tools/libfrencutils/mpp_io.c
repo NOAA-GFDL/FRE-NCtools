@@ -1440,8 +1440,6 @@ int mpp_file_exist(const char *file)
 
   status = nc_open(file,NC_NOWRITE, &ncid);
   if(status == NC_NOERR) {
-    status = nc_sync(ncid);
-    if(status != NC_NOERR) netcdf_error("mpp_file_exist(mpp_io):in syncing file", status);
     status = nc_close(ncid);
     if(status != NC_NOERR) netcdf_error("mpp_file_exist(mpp_io):in closing file", status);
     return 1;
