@@ -166,7 +166,6 @@ ilon_edge= 1
 idp2= id + 2
 !write (6,*) 'id= ', id, ', idp1= ', idp1, ', idp2= ', idp2
 
-CHECK_NF_ERRSTAT(nf_sync(ncid))
 CHECK_NF_ERRSTAT(nf_close(ncid))
 
 allocate (lat(idp2,jdp2,ntiles), lon(idp2,jdp2,ntiles), arlat(idp2,jdp2,ntiles))
@@ -375,7 +374,6 @@ do n= 1,ntiles
 
    where (tocell(:,:,n) == mval_tocell) tocell(:,:,n)= mval_mdl
 
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
@@ -1135,7 +1133,6 @@ do n= 1,ntiles
    endif
 
 !  close netcdf file
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 

@@ -158,7 +158,6 @@ idp3= id + 3
 idp4= id + 4
 !write (6,*) 'id= ', id, ', idp1= ', idp1, ', idp2= ', idp2
 
-CHECK_NF_ERRSTAT(nf_sync(ncid))
 CHECK_NF_ERRSTAT(nf_close(ncid))
 
 allocate (lat(idp4,jdp4,ntiles), lon(idp4,jdp4,ntiles), arlat(idp4,jdp4,ntiles))
@@ -372,7 +371,6 @@ do n= 1,ntiles
 
    where (basin(:,:,n) == mval_in) basin(:,:,n)= mval_mdl
 
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
@@ -1265,7 +1263,6 @@ do n= 1,ntiles
    rcode= NF_PUT_VARA_DOUBLE (ncid, varid8, start, count, drn_idx(3:idp2,3:jdp2,n))
 
 !  close netcdf file
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 

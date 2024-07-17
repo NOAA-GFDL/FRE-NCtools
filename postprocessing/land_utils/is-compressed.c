@@ -96,7 +96,6 @@ int main(int argc, char* argv[])
           return 0;
       }
    }
-   CHECK_NC_ERRSTAT(nc_sync(ncid));
    CHECK_NC_ERRSTAT(nc_close(ncid));
 
    return -1;

@@ -1417,7 +1417,6 @@ int mppncscatter(mnsopts* opts)
     fflush(stdout);
   }
 
-  CHECK_NC_ERRSTAT(nc_sync(nc));
   CHECK_NC_ERRSTAT(nc_close(nc));
 
   if (!dryrun) {

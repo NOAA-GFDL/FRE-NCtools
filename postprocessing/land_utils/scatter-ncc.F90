@@ -305,7 +305,6 @@ program combine_res
         deallocate(buffer,mask)
      enddo
   enddo
-  CHECK_NF_ERRSTAT(nf_sync(in_ncid))
   CHECK_NF_ERRSTAT(nf_close(in_ncid))
 
   do n = 1, nfiles_out

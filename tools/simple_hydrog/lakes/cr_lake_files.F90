@@ -270,7 +270,6 @@ do n= 1,nvar_glcc
    enddo
 enddo
 
-CHECK_NF_ERRSTAT(nf_sync(ncid))
 CHECK_NF_ERRSTAT(nf_close(ncid))
 
 do j= 1,jdl
@@ -429,7 +428,6 @@ allocate (lon_idx(id))
 start= 1 ;  count(1)= id
 rcode= nf_get_vara_double (ncid, lonid, start, count, lon_idx)
 
-CHECK_NF_ERRSTAT(nf_sync(ncid))
 CHECK_NF_ERRSTAT(nf_close(ncid))
 
 
@@ -612,7 +610,6 @@ do n= 1,ntiles
 
    where (travel(:,:,n) == mval_travel) travel(:,:,n)= mval_mdl
 
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 
 enddo
@@ -937,7 +934,6 @@ do n= 1,ntiles
    rcode= NF_PUT_VARA_DOUBLE (ncid, varid9, start, count, max_slp2nxt(2:idp1,2:jdp1,n))
 
 !  close netcdf file
-   CHECK_NF_ERRSTAT(nf_sync(ncid))
    CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
