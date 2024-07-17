@@ -19,9 +19,9 @@
 #***********************************************************************
 bin_PROGRAMS = cp_river_vars
 
-AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/postprocessing/land_utils
 
-LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(RPATH_FLAGS)
+LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(RPATH_FLAGS) $(top_builddir)/postprocessing/land_utils/libnfu.a
 
-cp_river_vars_SOURCES = cp_river_vars.f90
+cp_river_vars_SOURCES = cp_river_vars.F90
 

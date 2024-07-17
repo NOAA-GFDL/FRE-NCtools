@@ -17,12 +17,15 @@
 !* License along with FRE-NCTools..  If not, see
 !* <http://www.gnu.org/licenses/>.
 !***********************************************************************
+#define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
+
 program cp_river_vars
 
 ! =========================================================================
 !   program reads lat, lon, cellarea, land_frac, and tocell fields, and
 !     computes the fields: subA, travel, basin, celllength, internal
 ! =========================================================================
+use nfu_mod
 
 implicit none
 
@@ -163,7 +166,8 @@ ilon_edge= 1
 idp2= id + 2
 !write (6,*) 'id= ', id, ', idp1= ', idp1, ', idp2= ', idp2
 
-rcode= nf_close (ncid)
+CHECK_NF_ERRSTAT(nf_sync(ncid))
+CHECK_NF_ERRSTAT(nf_close(ncid))
 
 allocate (lat(idp2,jdp2,ntiles), lon(idp2,jdp2,ntiles), arlat(idp2,jdp2,ntiles))
 allocate (latb(id,jdp1,ntiles), lonb(idp1,jd,ntiles))
@@ -371,7 +375,8 @@ do n= 1,ntiles
 
    where (tocell(:,:,n) == mval_tocell) tocell(:,:,n)= mval_mdl
 
-   rcode= nf_close (ncid)
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
+   CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
 sum= 0.
@@ -1130,7 +1135,8 @@ do n= 1,ntiles
    endif
 
 !  close netcdf file
-   rcode= NF_CLOSE (ncid)
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
+   CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
 close (10)

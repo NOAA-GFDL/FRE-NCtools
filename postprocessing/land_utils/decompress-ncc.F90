@@ -208,7 +208,6 @@ program decompress
   enddo
 
   CHECK_NF_ERRSTAT(nf_sync(ncid))
-
   CHECK_NF_ERRSTAT(nf_close(ncid))
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
