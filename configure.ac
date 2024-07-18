@@ -85,11 +85,19 @@ AS_IF([test x"$with_mpi" = x"yes"],
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
 
-#Build with OpenACC suport.  Default is 'no'
+
+# --with-openacc
 AC_ARG_ENABLE([acc],
-  [AS_HELP_STRING([--enable-acc], [Build with OpenACC support.  Defaults to 'no'])] )
-AS_IF([test ${enable_acc:no} = "yes"], [enable_acc=yes], [enable_acc=no])
-AM_CONDITIONAL([ENABLE_ACC], [test $enable_acc = "yes"])
+            [AS_HELP_STRING([--enable-acc],
+                            [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu. Flags added: -acc -O2 -g -tp native -gpu=ccnative -Minfo=accel -Mnoinline (default no)])])
+AS_IF([test ${enable_acc:-no} = yes],
+      [enable_acc=yes],
+      [enable_acc=no])
+# check compile flags
+AS_IF([test ${enable_acc} = yes],
+      [GX_OPENACC_FLAGS()])
+AM_CONDITIONAL([ENABLE_ACC], [test "$enable_acc" = "yes"])
+
 
 AC_CHECK_FUNCS(gettid, [], [])
 
@@ -123,7 +131,7 @@ AC_CHECK_PROGS(PROVE, [prove])
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
 # Check if openacc.h exists
-if test $enable_acc = yes ; then
+if test "$enable_acc" = yes ; then
    AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
    AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
 fi
