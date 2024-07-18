@@ -44,6 +44,8 @@
 
 #define CHECK_NC_ERRSTAT(ierr) check_error(ierr,__FILE__,__LINE__)
 
+void check_error(int ierr, const char* file, int line);
+
 /*-------------------------------------------------------------------*/
 void printsizetarray(size_t *a, int n) {
   int i=0;
