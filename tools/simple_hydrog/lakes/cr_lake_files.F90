@@ -17,10 +17,12 @@
 !* License along with FRE-NCTools..  If not, see
 !* <http://www.gnu.org/licenses/>.
 !***********************************************************************
+#define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
+
 program cr_lake_files
 
 use horiz_interp_mod
-
+use nfu_mod
 implicit none
 
 integer, parameter :: maxdims= 3
@@ -268,7 +270,7 @@ do n= 1,nvar_glcc
    enddo
 enddo
 
-rcode= nf_close (ncid)
+CHECK_NF_ERRSTAT(nf_close(ncid))
 
 do j= 1,jdl
    do i= 1,idl
@@ -426,7 +428,7 @@ allocate (lon_idx(id))
 start= 1 ;  count(1)= id
 rcode= nf_get_vara_double (ncid, lonid, start, count, lon_idx)
 
-rcode= nf_close (ncid)
+CHECK_NF_ERRSTAT(nf_close(ncid))
 
 
 
@@ -608,7 +610,7 @@ do n= 1,ntiles
 
    where (travel(:,:,n) == mval_travel) travel(:,:,n)= mval_mdl
 
-   rcode= nf_close (ncid)
+   CHECK_NF_ERRSTAT(nf_close(ncid))
 
 enddo
 
@@ -932,7 +934,8 @@ do n= 1,ntiles
    rcode= NF_PUT_VARA_DOUBLE (ncid, varid9, start, count, max_slp2nxt(2:idp1,2:jdp1,n))
 
 !  close netcdf file
-   rcode= NF_CLOSE (ncid)
+   CHECK_NF_ERRSTAT(nf_sync(ncid))
+   CHECK_NF_ERRSTAT(nf_close(ncid))
 enddo
 
 !close (10)
