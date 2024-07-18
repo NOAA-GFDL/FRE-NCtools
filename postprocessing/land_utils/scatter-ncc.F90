@@ -25,7 +25,7 @@
 !
 !-----------------------------------------------------------------------
 
-#define __NF_ASRT__(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
+#define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
 program combine_res
 
   use nfu_mod
@@ -74,8 +74,8 @@ program combine_res
   ! open input files and determine the creation mode of output file:
   ! if the input file is 64-bit then the output is 64-bit as well,
   ! otherwise it's 32-bit
-  __NF_ASRT__(nf_open(infile,NF_NOWRITE,in_ncid))
-  __NF_ASRT__(nf_inq_format(in_ncid,in_format))
+  CHECK_NF_ERRSTAT(nf_open(infile,NF_NOWRITE,in_ncid))
+  CHECK_NF_ERRSTAT(nf_inq_format(in_ncid,in_format))
 
   if (in_format==NF_FORMAT_NETCDF4) then
      cmode = NF_NETCDF4
@@ -98,9 +98,9 @@ program combine_res
   nlon = 0
   nlat = 0
   nz = 1
-  __NF_ASRT__(nf_inq_ndims(in_ncid,ndims))
+  CHECK_NF_ERRSTAT(nf_inq_ndims(in_ncid,ndims))
   do dimid = 1,ndims
-     __NF_ASRT__(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen))
      if( trim(dimname) == "lon" ) then
         nlon = dimlen
      else if( trim(dimname) == "lat" ) then
@@ -126,16 +126,16 @@ program combine_res
   do n = 1, nfiles_out
      ! set the outfile name
      write(outfile, '(a,i4.4)') trim(infile)//".", n-1
-     __NF_ASRT__(nf__create(outfile,cmode,0,blksz,out_ncid(n)))
+     CHECK_NF_ERRSTAT(nf__create(outfile,cmode,0,blksz,out_ncid(n)))
   enddo
 
 
   ! clone all dimensions; for compressed dimensions calculate the length
   nrec = 1
   nz_saved = nz
-  __NF_ASRT__(nf_inq_ndims(in_ncid,ndims))
+  CHECK_NF_ERRSTAT(nf_inq_ndims(in_ncid,ndims))
   do dimid = 1,ndims
-     __NF_ASRT__(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen,is_unlim=has_records))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(in_ncid,dimid,dimname=dimname,dimlen=dimlen,is_unlim=has_records))
      if(debug>0)&
           write(*,*)'defining dimension "'//trim(dimname)//'" with length',dimlen
      if(has_records)then
@@ -146,10 +146,10 @@ program combine_res
      is_compressed = .false.
      if(nfu_inq_att(in_ncid,dimname,'compress')==NF_NOERR) then
         is_compressed = .true.
-        __NF_ASRT__(nfu_inq_compressed_var(in_ncid,dimname,varsize=vsize))
+        CHECK_NF_ERRSTAT(nfu_inq_compressed_var(in_ncid,dimname,varsize=vsize))
         allocate(buffer(vsize),mask(vsize))
         mask(:) = .false.
-        __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,dimname,buffer,mask))
+        CHECK_NF_ERRSTAT(nfu_get_compressed_var_r8n(in_ncid,dimname,buffer,mask))
         !--- figure out dimension length for each file
         do l = 1, vsize
            if(mask(l)) then
@@ -168,15 +168,15 @@ program combine_res
      endif
      do n = 1, nfiles_out
         if(is_compressed) dimlen = max(dimlen_list(n),1)
-        __NF_ASRT__(nf_def_dim(out_ncid(n),dimname,dimlen,i)) ! i is just a space for id
+        CHECK_NF_ERRSTAT(nf_def_dim(out_ncid(n),dimname,dimlen,i)) ! i is just a space for id
      enddo
   enddo
 
   ! clone all variable definitions
-  __NF_ASRT__(nf_inq_nvars(in_ncid,nvars))
+  CHECK_NF_ERRSTAT(nf_inq_nvars(in_ncid,nvars))
   do i = 1,nvars
      do n = 1, nfiles_out
-        __NF_ASRT__(nfu_clone_var(in_ncid,i,out_ncid(n)))
+        CHECK_NF_ERRSTAT(nfu_clone_var(in_ncid,i,out_ncid(n)))
         ! NOTE: since cloning of variable definition relies on dimension names,
         ! each variable tile and compressed dimensions automaticaly get the right
         ! size, as defined while creating dimensions in the output file
@@ -184,17 +184,17 @@ program combine_res
   enddo
 
   ! clone all global attributes
-  __NF_ASRT__(nf_inq_natts(in_ncid,ngatts))
+  CHECK_NF_ERRSTAT(nf_inq_natts(in_ncid,ngatts))
   do i = 1,ngatts
      do n = 1, nfiles_out
-        __NF_ASRT__(nf_inq_attname(in_ncid,NF_GLOBAL,i,attname))
-        __NF_ASRT__(nf_copy_att(in_ncid,NF_GLOBAL,attname,out_ncid(n),NF_GLOBAL))
+        CHECK_NF_ERRSTAT(nf_inq_attname(in_ncid,NF_GLOBAL,i,attname))
+        CHECK_NF_ERRSTAT(nf_copy_att(in_ncid,NF_GLOBAL,attname,out_ncid(n),NF_GLOBAL))
      enddo
   enddo
 
   ! ---- end of definition stage
   do n = 1, nfiles_out
-     __NF_ASRT__(nf__enddef(out_ncid(n),HEADERPAD,4,0,4))
+     CHECK_NF_ERRSTAT(nf__enddef(out_ncid(n),HEADERPAD,4,0,4))
   enddo
 
 
@@ -207,18 +207,18 @@ program combine_res
      ! write out the data
      do varid = 1,nvars
         !-- make sure number of levels is no greater than 2.
-        __NF_ASRT__(nfu_inq_var(in_ncid,varid, ndims=ndims, dimids=dimids, dimlens=dimlens,recsize=recsize,has_records=has_records))
+        CHECK_NF_ERRSTAT(nfu_inq_var(in_ncid,varid, ndims=ndims, dimids=dimids, dimlens=dimlens,recsize=recsize,has_records=has_records))
 
         if(.not. has_records .and. tlev>1) cycle
 
         is_compressed = .false.
         if(ndims>0) then
            !--- restrict that only the first dimension could be compressed dimension.
-           __NF_ASRT__(nfu_inq_dim(in_ncid,dimids(1),dimname=dimname))
+           CHECK_NF_ERRSTAT(nfu_inq_dim(in_ncid,dimids(1),dimname=dimname))
            if(nfu_inq_att(in_ncid,dimname,'compress')==NF_NOERR) is_compressed = .true.
         endif
 
-        __NF_ASRT__(nfu_inq_compressed_var(in_ncid,varid,name=varname,varsize=vsize, first_dim_only=.true.))
+        CHECK_NF_ERRSTAT(nfu_inq_compressed_var(in_ncid,varid,name=varname,varsize=vsize, first_dim_only=.true.))
 
         if(debug>0) &
              write(*,*)'processing var "'//trim(varname)//'"'
@@ -230,7 +230,7 @@ program combine_res
            k_id = 0
            t_id = 0
            do dimid = 1, ndims
-              __NF_ASRT__(nfu_inq_dim(in_ncid,dimids(dimid),dimname=dimname,dimlen=dimlen,is_unlim=has_records))
+              CHECK_NF_ERRSTAT(nfu_inq_dim(in_ncid,dimids(dimid),dimname=dimname,dimlen=dimlen,is_unlim=has_records))
               if(has_records) then
                  t_id = dimid
               else if(trim(dimname) == "zfull") then
@@ -254,7 +254,7 @@ program combine_res
               mask(:) = .false.
               mask_2d(:,:) = .false.
               buffer_2d(:,:) = 0
-              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
+              CHECK_NF_ERRSTAT(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
               do l = 1, vsize
                  if(mask(l)) then
                     ij = mod((l-1), npts)+1
@@ -277,7 +277,7 @@ program combine_res
                     nwrite(1) = count(mask_2d(:,n))
                     if(t_id>0) start(t_id) = tlev
                     if(k_id>0) start(k_id) = k
-                    __NF_ASRT__(nfu_put_vara_r8(out_ncid(n),varname,start, nwrite, pack(buffer_2d(:,n),mask_2d(:,n))))
+                    CHECK_NF_ERRSTAT(nfu_put_vara_r8(out_ncid(n),varname,start, nwrite, pack(buffer_2d(:,n),mask_2d(:,n))))
                  endif
               enddo
            enddo
@@ -289,15 +289,15 @@ program combine_res
            if(has_records) then  ! record variable
               start(:) = 1; nread(:) = 1; nwrite(:) = 1
               start(1) = tlev
-              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
+              CHECK_NF_ERRSTAT(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask,start=start,count=nread))
                  do n = 1, nfiles_out
-                    __NF_ASRT__(nfu_put_vara_r8(out_ncid(n),varname,start, nwrite,buffer))
+                    CHECK_NF_ERRSTAT(nfu_put_vara_r8(out_ncid(n),varname,start, nwrite,buffer))
                  enddo
            else
-              __NF_ASRT__(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask))
+              CHECK_NF_ERRSTAT(nfu_get_compressed_var_r8n(in_ncid,varname,buffer,mask))
               if (count(mask)>0) then
                  do n = 1, nfiles_out
-                    __NF_ASRT__(nfu_put_var_r8(out_ncid(n),varname,pack(buffer,mask)))
+                    CHECK_NF_ERRSTAT(nfu_put_var_r8(out_ncid(n),varname,pack(buffer,mask)))
                  enddo
               endif
            endif
@@ -305,10 +305,11 @@ program combine_res
         deallocate(buffer,mask)
      enddo
   enddo
-  __NF_ASRT__(nf_close(in_ncid))
+  CHECK_NF_ERRSTAT(nf_close(in_ncid))
 
   do n = 1, nfiles_out
-     __NF_ASRT__(nf_close(out_ncid(n)))
+     CHECK_NF_ERRSTAT(nf_sync(out_ncid(n)))
+     CHECK_NF_ERRSTAT(nf_close(out_ncid(n)))
   enddo
 
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -156,7 +156,8 @@ void calc_tocell(int ntiles, river_type *river_out, unsigned int opcode );
 void calc_river_data(int ntiles, river_type* river_data, unsigned int opcode  );
 void sort_basin(int ntiles, river_type* river_data);
 
-void check_river_data( );
+void check_river_data(int ntiles, river_type *river_data);
+
 void write_river_data(const char *river_src_file, const char *output_file,
 		      river_type* river_out, const char *history, int ntiles, int great_circle_algorithm);
 double distance(double lon1, double lat1, double lon2, double lat2);

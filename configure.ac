@@ -22,7 +22,7 @@
 AC_PREREQ([2.63])
 AC_INIT(
   [FRE NC Tools],
-  [2023.01.02],
+  [2024.02],
   [oar.gfdl.help@noaa.gov],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
@@ -98,7 +98,6 @@ AS_IF([test ${enable_acc} = yes],
       [GX_OPENACC_FLAGS()])
 AM_CONDITIONAL([ENABLE_ACC], [test "$enable_acc" = "yes"])
 
-
 AC_CHECK_FUNCS(gettid, [], [])
 
 # Check if Fortran compiler has Cray pointer support
@@ -173,25 +172,22 @@ AC_DEFINE([GIT_REVISION], "git_revision",
 AC_DEFINE([GIT_HEADHASH], "git_hashval",
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
 
-
 #Code for setting rpath based ncview's configure.in code.
-echo "ac_computer_gnu: $ac_compiler_gnu"
-if test x$ac_compiler_gnu = xyes; then
-	RPATH_FLAGS=""
-	for word in $NETCDF_LDFLAGS; do
-		if test `expr $word : -L/` -eq 3; then
-			RPDIR=${word:2}
-			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
-		fi
-	done
-  for word in $NETCDF_FCLDFLAGS; do
-		if test `expr $word : -L/` -eq 3; then
-			RPDIR=${word:2}
-			RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
-		fi
-	done
-	AC_SUBST(RPATH_FLAGS)
-fi
+AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
+  for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS
+  do
+    if test `expr $word : -L/` -eq 3
+    then
+      RPDIR=${word:2}
+      regex=".*$RPDIR.*"
+      if test `expr "$RPATH_FLAGS" : $regex` -eq 0
+      then
+        # RPDIR not in RPATH_FLAGS
+        RPATH_FLAGS="$RPATHFLAGS -Wl,-rpath,$RPDIR"
+      fi
+    fi
+  done])
+AC_SUBST(RPATH_FLAGS) dnl
 
 # Output files
 AC_CONFIG_HEADERS([config.h])

@@ -216,6 +216,11 @@ void mpp_close(int fid)
   if(fid<0 || fid >=nfiles) mpp_error("mpp_io(mpp_close): invalid id number, id should be "
 				    "a nonnegative integer that less than nfiles");
 
+  status = nc_sync(files[fid].ncid);
+  if(status != NC_NOERR) {
+    sprintf( errmsg, "mpp_io(mpp_close): error in syncing files %s ", files[fid].name);
+    netcdf_error(errmsg, status);
+  }
   status = nc_close(files[fid].ncid);
   if(status != NC_NOERR) {
     sprintf( errmsg, "mpp_io(mpp_close): error in closing files %s ", files[fid].name);

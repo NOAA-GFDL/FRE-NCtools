@@ -358,7 +358,8 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
 			    int deepen_shallow, int full_cell, int flat_bottom, int adjust_topo,
 			    int fill_isolated_cells, int dont_change_landmask, int kmt_min, double min_thickness,
 			    int open_very_this_cell, double fraction_full_cell, double *depth,
-			    int *num_levels, domain2D domain, int debug, int use_great_circle_algorithm )
+			    int *num_levels, domain2D domain, int debug, int use_great_circle_algorithm,
+                int on_grid )
 {
   char xname[128], yname[128];
   int nx_src, ny_src, nxp_src, nyp_src, i, j, count, n;
@@ -497,13 +498,24 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
 	mask_src[i] = 1.0;
     }
   }
+  if(on_grid) {
+     printf("We do no topography interpolation!\n");
+     for(i=0; i<nx_src*ny_now; i++) {
+        if(depth_src[i] == missing)
+          depth[i] = 0.0;
+        else
+          depth[i] = depth_src[i];
+     }
+   }
+   else {
   
-  if(use_great_circle_algorithm)  
-    conserve_interp_great_circle(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
-		    x_out, y_out, mask_src, depth_src, depth );
-  else
-    conserve_interp(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
-		    x_out, y_out, mask_src, depth_src, depth );
+     if(use_great_circle_algorithm)  
+       conserve_interp_great_circle(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
+	   	    x_out, y_out, mask_src, depth_src, depth );
+     else
+       conserve_interp(nx_src, ny_now, nx_dst, ny_dst, x_src, y_src,
+	   	    x_out, y_out, mask_src, depth_src, depth );
+   }
   
   if (filter_topog) filter_topo(nx_dst, ny_dst, num_filter_pass, smooth_topo_allow_deepening, depth, domain);
   if(debug) show_deepest(nk, zw, depth, domain);
@@ -515,6 +527,7 @@ void create_realistic_topog(int nx_dst, int ny_dst, const double *x_dst, const d
       depth[i] = 0.0;
     }
   }
+
   if(vgrid_file) process_topo(nk, depth, num_levels, zw, tripolar_grid, cyclic_x, cyclic_y,
 			      full_cell, flat_bottom, adjust_topo, fill_isolated_cells, min_thickness,
 			      open_very_this_cell, fraction_full_cell, round_shallow, deepen_shallow, fill_shallow,

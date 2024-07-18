@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <netcdf.h>
 
-#define __NC_ASRT__(ierr) check_error(ierr,__FILE__,__LINE__)
+#define CHECK_NC_ERRSTAT(ierr) check_error(ierr,__FILE__,__LINE__)
 
 void usage(const char* name)
 {
@@ -49,8 +49,8 @@ void usage(const char* name)
 void check_error(int ierr, const char* file, int line)
 {
    if (ierr!=NC_NOERR) {
-      fprintf(stderr,"ERROR :: %s\n",
-	      nc_strerror(ierr));
+      fprintf(stderr,"ERROR :: %s\nfile: %s, line: %d\n",
+	      nc_strerror(ierr), file, line);
       exit(ierr);
    }
 }
@@ -85,18 +85,18 @@ int main(int argc, char* argv[])
 
    int optind = argc - 1;
    
-   __NC_ASRT__(nc_open(argv[optind],NC_NOWRITE,&ncid));
-   __NC_ASRT__(nc_inq_ndims(ncid,&ndims));
+   CHECK_NC_ERRSTAT(nc_open(argv[optind],NC_NOWRITE,&ncid));
+   CHECK_NC_ERRSTAT(nc_inq_ndims(ncid,&ndims));
    if (verbose) printf("Found %d dimensions\n",ndims);
    for (dimid=0; dimid<ndims; dimid++) {
-      __NC_ASRT__(nc_inq_dimname(ncid,dimid,name));
+      CHECK_NC_ERRSTAT(nc_inq_dimname(ncid,dimid,name));
       if (verbose) printf("Examining \"%s\"\n",name);
       if (nc_inq_varid(ncid,name,&varid)==NC_NOERR &&
           nc_inq_attid(ncid,varid,"compress",&attid)==NC_NOERR) {
           return 0;
       }
    }
-   __NC_ASRT__(nc_close(ncid));
+   CHECK_NC_ERRSTAT(nc_close(ncid));
 
    return -1;
 }

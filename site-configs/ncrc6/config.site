@@ -14,20 +14,25 @@
 # for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with FRE-NCTools.  If not, see
+# License along with FRE-NCTools (LICENSE.md).  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = cr_lake_files
+# Default site configuration for NCRC Gaea platforms
+#
+# configure options
+test -z "$with_mpi" && with_mpi=yes
+# Standard prefix location for FRE distribution
+test "$prefix" = NONE && prefix=/ncrc/home2/fms/local/opt/fre-nctools/${PACKAGE_VERSION}/ncrc6
 
-# Location of FMS library.
-# TODO: allow builder to override and use a different libfms.
-FMSROOT = $(top_builddir)/tools/simple_hydrog/libfmslite
+# Compilers
+test -z "$CC" && CC=cc
+test -z "$FC" && FC=ftn
 
-AM_CFLAGS = $(NETCDF_CFLAGS)
-AM_FCFLAGS = -I$(FMSROOT) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/postprocessing/land_utils 
-LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_LIBS) $(NETCDF_FCLIBS)  $(RPATH_FLAGS)
-
-cr_lake_files_SOURCES = cr_lake_files.F90
-cr_lake_files_LDADD = $(FMSROOT)/libfms.a $(top_builddir)/postprocessing/land_utils/libnfu.a $(LDADD)
-
-CLEANFILES = *.mod
+# Compile/Link flags
+test -z "$CFLAGS" && CFLAGS="-O2"
+test -z "$FCFLAGS" && FCFLAGS="-O2"
+test -z "$LIBS" && LIBS=""
+test -z "$NETCDF_LIBS" && NETCDF_LIBS=""
+test -z "$NETCDF_LDFLAGS" && NETCDF_LDFLAGS=""
+test -z "$NETCDF_FCLIBS" && NETCDF_FCLIBS=""
+test -z "$NETCDF_FCLDFLAGS" && NETCDF_FCLDFLAGS=""

@@ -172,7 +172,8 @@ foreach my $file (@ifiles) {
          $var =~ s/^\s+//; $var =~ s/\s+$//;
 
          # skip this variable if it does not exist
-         if ($dump !~ /\t\w+ $var\(.+\)/) {
+         # the second clause below is needed for dimensionless variables
+         if ($dump !~ /\t\w+ $var\(.+\)/ and $dump !~ /\t\w+ $var\s+;/) {
            print "WARNING: variable $var does not exist ... skipping.\n" if !$Opt{QUIET};
            next;
          }

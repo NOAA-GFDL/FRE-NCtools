@@ -92,7 +92,7 @@ int main (int argc, char **argv)
 	 if (global == 1)
 	 {
 
-		status = nc_open(filename, 0, &ncid);
+		status = nc_open(filename, NC_NOWRITE, &ncid);
 	 	if (status != NC_NOERR) handle_error(status);
 
 	 	status = nc_inq_att (ncid, NC_GLOBAL, gattr, &t_type, &t_len);
