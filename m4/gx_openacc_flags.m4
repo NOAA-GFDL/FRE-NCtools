@@ -2,7 +2,7 @@
 #
 # SYNOPSIS
 #
-#   GX_OPENACC_CFLAGS()
+#   GX_OPENACC_FLAGS()
 #
 # DESCRIPTION
 #
@@ -43,10 +43,10 @@
 #  although the build will still work.
 #
 AC_DEFUN([GX_OPENACC_FLAGS],[
-AC_CACHE_CHECK([whether C compiler accepts OpenACC flags], [gx_cv_openacc_cflags],[
+AC_CACHE_CHECK([whether C compiler accepts OpenACC flags], [gx_cv_openacc_flags],[
 
 AC_LANG_ASSERT(C)
-gx_cv_openacc_cflags=unknown
+gx_cv_openacc_flags=unknown
 gx_openacc_flags_CFLAGS_save=$CFLAGS
 
 dnl check for base openacc flag
@@ -58,7 +58,7 @@ for ac_flag in '-acc' \
               acc_get_device_type();
               return 0;
           })],
-     [gx_cv_openacc_cflags="$gx_openacc_flags_CFLAGS_save ${ac_flag}"]; break)
+     [gx_cv_openacc_flags="$gx_openacc_flags_CFLAGS_save ${ac_flag}"]; break)
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 
@@ -73,17 +73,17 @@ for extra_flags in '-O2 -tp native -gpu=ccnative -Minfo=accel -Mnoinline' \
               acc_get_device_type();
               return 0;
           })],
-     [gx_cv_openacc_cflags="$ac_flag $extra_flags"]; break)
+     [gx_cv_openacc_flags="$ac_flag $extra_flags"]; break)
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 
 CFLAGS="$gx_openacc_flags_CFLAGS_save"
 
-if test "x$gx_cv_openacc_cflags" = xunknown; then
+if test "x$gx_cv_openacc_flags" = xunknown; then
   m4_default([$2],
               [AC_MSG_ERROR([no])])
 else
-  OPENACC_CFLAGS="${gx_cv_openacc_cflags}"
+  OPENACC_CFLAGS="${gx_cv_openacc_flags}"
   AC_MSG_RESULT([yes])
 fi
 ],
