@@ -593,8 +593,6 @@ void do_scalar_conserve_interp_acc(Interp_config_acc *interp_acc, int varid, int
     free(out_miss); out_miss = NULL;
   } // otile
 
-  return;
-
   /* conservation check if needed */
   if(opcode & CHECK_CONSERVE) {
     double gsum_in = 0.0;
