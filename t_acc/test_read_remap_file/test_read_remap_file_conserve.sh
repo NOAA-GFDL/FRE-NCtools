@@ -19,12 +19,13 @@
 #***********************************************************************
 
 #copy python script over
-make cp_test_make_remap_file
+#make cp_test_make_remap_file
 
 echo -e "\ntest reading remap file for conserve_order1\n"
-./test_make_remap_file_conserve.py 1
+
+${test_make_remap_file_conserve} 1
 ./test_read_remap_file 1
 
 echo -e "\ntest reading remap file for conserve_order2\n"
-./test_make_remap_file_conserve.py 2
+${test_make_remap_file_conserve} 2
 ./test_read_remap_file 2

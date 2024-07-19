@@ -37,10 +37,8 @@ TESTS = test_read_remap_file_conserve.sh
 EXTRA_DIST = test_read_remap_file_conserve.sh \
              test_make_remap_file.py
 
-cp_test_make_remap_file : test_make_remap_file_conserve.py
-	cp $(top_srcdir)/t_acc/test_read_remap_file/test_make_remap_file_conserve.py \
-    $(top_builddir)/t_acc/test_read_remap_file/test_make_remap_file_conserve.py
 
+TESTS_ENVIRONMENT = test_make_remap_file_conserve="$(srcdir)/test_make_remap_file_conserve.py"
 
 TEST_EXTENSIONS = .sh
 

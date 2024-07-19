@@ -30,6 +30,6 @@ LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
         $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a
 
-test_get_upbound_nxcells_2dx2d = test_get_upbound_nxcells_2dx2d.c
+test_get_upbound_nxcells_2dx2d_SOURCES = test_get_upbound_nxcells_2dx2d.c
 
 TESTS = test_get_upbound_nxcells_2dx2d

@@ -29,6 +29,6 @@ LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
         $(top_builddir)/tools/libfrencutils/libfrencutils.a \
         $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a
 
-test_get_grid_cell_struct = test_get_grid_cell_struct.c
+test_get_grid_cell_struct_SOURCES = test_get_grid_cell_struct.c
 
 TESTS = test_get_grid_cell_struct
