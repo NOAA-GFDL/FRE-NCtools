@@ -9,16 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mpi_or_acc: ['','--with-mpi', '--enable-acc']
+        with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
       image: noaagfdl/fre-nctools-base:2.0.0-focal
       env:
-        MPI: ${{ matrix.mpi_or_acc }}
+        MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Configure
@@ -29,10 +29,10 @@ jobs:
     - name: Build tools
       run: make -C build
     - name: Run all tests
-      if: matrix.mpi_or_acc == ''
+      if: matrix.with_mpi == ''
       run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Run most tests (skip the slow ones)
-      if: matrix.mpi_or_acc == '--with-mpi'
+      if: matrix.with_mpi == '--with-mpi'
       env:
         SKIP_TESTS: 4
       run: make -C build -j check LOG_DRIVER_FLAGS=--comments
