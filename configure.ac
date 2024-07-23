@@ -88,7 +88,7 @@ AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_T
 #Build with OpenACC suport.  Default is 'no'
 AC_ARG_ENABLE([acc],
             [AS_HELP_STRING([--enable-acc],
-                            [Builds with openacc flags for nvidias nvc compiler if available. This will result in a second executable for fregrid, fregrid_gpu.(default no)])])
+                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu.(default no)])])
 AS_IF([test ${enable_acc:-no} = yes],
       [enable_acc=yes],
       [enable_acc=no])
