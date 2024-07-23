@@ -37,9 +37,7 @@
 #
 #  Will set OPENACC_CFLAGS to openacc flags for a given compiler if accepted.
 #
-#  First checks for general openacc support flag, then optimizations and targets.
-#
-#  Mainly for nvhpc, offloading with gcc has not been tested and is not currently supported,
+#  Mainly for nvhpc, offloading with gcc is not currently supported,
 #  although the build will still work.
 #
 AC_DEFUN([GX_OPENACC_FLAGS],[
@@ -59,21 +57,6 @@ for ac_flag in '-acc' \
               return 0;
           })],
      [gx_cv_openacc_flags="$gx_openacc_flags_CFLAGS_save ${ac_flag}"]; break)
-done
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-
-dnl check for optimization, target and any other compiler-specific flags to use for gpu offloading
-dnl TODO gcc flags for the offload, -foffload=nvptx-none could work if configured properly
-for extra_flags in '-O2 -tp native -gpu=ccnative -Minfo=accel -Mnoinline' \
-                   '-O2'; do
-  test "x$extra_flags" != xnone && CFLAGS="${ac_flag} ${extra_flags}"
-  AC_LINK_IFELSE([AC_LANG_SOURCE(
-          extern int acc_get_device_type();
-          int main(int argc, char** argv){
-              acc_get_device_type();
-              return 0;
-          })],
-     [gx_cv_openacc_flags="$ac_flag $extra_flags"]; break)
 done
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 
