@@ -16,8 +16,8 @@ jobs:
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
-        FC: mpifort
-        CC: mpicc
+        FC: /opt/views/view/bin/mpifort
+        CC: /opt/views/view/bin/mpicc
         CFLAGS: "-I/usr/include -I/usr/include/hdf5/serial"
         FCFLAGS: "-I/usr/include"
     steps:
