@@ -87,9 +87,15 @@ AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_T
 
 #Build with OpenACC suport.  Default is 'no'
 AC_ARG_ENABLE([acc],
-  [AS_HELP_STRING([--enable-acc], [Build with OpenACC support.  Defaults to 'no'])] )
-AS_IF([test ${enable_acc:-no} = "yes"], [enable_acc=yes], [enable_acc=no])
-AM_CONDITIONAL([ENABLE_ACC], [test $enable_acc = "yes"])
+            [AS_HELP_STRING([--enable-acc],
+                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu.(default no)])])
+AS_IF([test ${enable_acc:-no} = yes],
+      [enable_acc=yes],
+      [enable_acc=no])
+# check compile flags
+AS_IF([test ${enable_acc} = yes],
+      [GX_OPENACC_FLAGS()])
+AM_CONDITIONAL([ENABLE_ACC], [test "$enable_acc" = "yes"])
 
 AC_CHECK_FUNCS(gettid, [], [])
 
@@ -123,7 +129,7 @@ AC_CHECK_PROGS(PROVE, [prove])
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
 # Check if openacc.h exists
-if test $enable_acc = yes ; then
+if test "$enable_acc" = yes ; then
    AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
    AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
 fi
@@ -214,12 +220,18 @@ AC_CONFIG_FILES([Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
-                 t/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
+                 t/Makefile
+                 t_acc/Makefile
+                 t_acc/test_read_remap_file/Makefile
+                 t_acc/test_get_grid_cell_struct/Makefile
+                 t_acc/test_get_upbound_nxcells_2dx2d/Makefile
+                 t_acc/test_get_interp_order1/Makefile
+
 ])
 
 AC_OUTPUT
