@@ -21,7 +21,8 @@ bin_PROGRAMS = fregrid_acc
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS) \
             -I$(top_srcdir)/tools/libfrencutils_acc \
-            -I$(top_srcdir)/tools/fregrid -acc
+            -I$(top_srcdir)/tools/fregrid \
+            $(OPENACC_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_acc_SOURCES = conserve_interp_acc.c \
