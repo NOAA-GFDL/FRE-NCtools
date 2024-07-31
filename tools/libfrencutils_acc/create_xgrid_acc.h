@@ -20,77 +20,43 @@
 #ifndef CREATE_XGRID_ACC_H_
 #define CREATE_XGRID_ACC_H_
 
-#ifndef MAXXGRID
-#define MAXXGRID 1e6
-#endif
+#include "globals_acc.h"
 
-#define MV 50
-/* this value is small compare to earth area */
+int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
+                                  const int nlon_output_cells, const int nlat_output_cells,
+                                  const int jlat_overlap_starts, const int jlat_overlap_ends,
+                                  const double *input_grid_lon, const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
+                                  const double *skip_input_cells,
+                                  const Grid_cells_struct_config *output_grid_cells,
+                                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end);
 
-double poly_ctrlon_acc(const double lon[], const double lat[], int n, double clon);
+int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_input_cells,
+                                  const int nlon_output_cells, const int nlat_output_cells,
+                                  const int jlat_overlap_starts, const int jlat_overlap_ends,
+                                  const double *input_grid_lon,  const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
+                                  const int upbound_nxcells, const double *skip_input_cells,
+                                  const Grid_cells_struct_config *output_grid_cells,
+                                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
+                                  Interp_per_input_tile *interp_for_input_tile);
 
-double poly_ctrlat_acc(const double lon[], const double lat[], int n);
+int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_input_cells,
+                                  const int nlon_output_cells, const int nlat_output_cells,
+                                  const int jlat_overlap_starts, const int jlat_overlap_ends,
+                                  const double *input_grid_lon,  const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
+                                  const int upbound_nxcells, const double *skip_input_cells,
+                                  const Grid_cells_struct_config *output_grid_cells,
+                                  int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
+                                  Interp_per_input_tile *interp_for_input_tile, double *readin_input_area);
 
-double box_ctrlon_acc(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon);
-
-double box_ctrlat_acc(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
-
-int get_maxxgrid_acc(void);
-
-void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-
-void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-
-//void get_grid_area_dimensionless(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-
-void get_grid_area_no_adjust_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
-
-int clip_acc(const double lon_in[], const double lat_in[], int n_in, double ll_lon, double ll_lat,
-	 double ur_lon, double ur_lat, double lon_out[], double lat_out[]);
-
-void pimod_acc(double x[],int nn);
-
-int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
-	       const double lon2_in[], const double lat2_in[], int n2_in,
-	       double lon_out[], double lat_out[]);
-
-int create_xgrid_1dx2d_order_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-			      const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-			      int *j_out, double *xgrid_area);
-
-int create_xgrid_1dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
-
-int create_xgrid_2dx1d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out, const double *lon_in,
-			      const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-            int *j_out, double *xgrid_area);
-
-int create_xgrid_2dx1d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
-
-int create_xgrid_2dx2d_order1_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out,
-            int *j_out, double *xgrid_area);
-
-int create_xgrid_2dx2d_order2_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-            double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
-
-int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
-			    const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
-          double x_out[], double y_out[], double z_out[]);
-
-int create_xgrid_great_circle_acc(const int *nlon_in, const int *nlat_in, const int *nlon_out, const int *nlat_out,
-			      const double *lon_in, const double *lat_in, const double *lon_out, const double *lat_out,
-			      const double *mask_in, int *i_in, int *j_in, int *i_out, int *j_out,
-			      double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
+int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+                                  const int *nlon_output_cells, const int *nlat_output_cells,
+                                  const double *input_grid_lon, const double *input_grid_lat,
+                                  const double *output_grid_lon, const double *output_grid_lat,
+                                  const double *skip_input_cells,
+                                  int *i_in, int *j_in, int *i_out, int *j_out,
+                                  double *xgrid_area, double *xgrid_clon, double *xgrid_clat);
 
 #endif

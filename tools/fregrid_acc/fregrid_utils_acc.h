@@ -17,32 +17,10 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef FREGRID_UTILS_ACC_H
+#define FREGRID_UTILS_ACC_H
 
-#ifndef NCTOOLS_CONSTANT_H
-#define NCTOOLS_CONSTANT_H
-
-#define RADIUS        (6371000.)
-#define STRING        255
-
-#include <math.h>
-
-#ifndef M_PI
-#define M_PI	(3.14159265358979323846)
-#endif
-
-#ifndef M_PI_2
-#define M_PI_2  (1.57079632679489661923)
-#endif
-
-#ifndef M_SQRT2
-#define M_SQRT2  (1.41421356237309504880)
-#endif
-
-#define R2D (180/M_PI)
-#define D2R (M_PI/180)
-#define TPI (2.0*M_PI)
-#define HPI (0.5*M_PI)
-
-#define GAREA (4*M_PI*RADIUS*RADIUS)
+void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_acc *interp_acc,
+                         unsigned int *opcode, int save_weight_only);
 
 #endif
