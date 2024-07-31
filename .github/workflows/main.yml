@@ -12,7 +12,7 @@ jobs:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
-      image: ghcr.io/rem1776/fre-nctools-ci-rocky-gnu:14.1.0
+      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.1.0
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
