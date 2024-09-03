@@ -12,7 +12,7 @@ jobs:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
-      image: noaagfdl/fre-nctools-base:2.0.0-focal
+      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
@@ -25,7 +25,7 @@ jobs:
       run: |
         mkdir build && cd build
         autoreconf -i ../configure.ac
-        ../configure $MPI $QUAD_P
+        ../configure $MPI $QUAD_P || cat config.log
     - name: Build tools
       run: make -C build
     - name: Run all tests
