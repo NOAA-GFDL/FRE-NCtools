@@ -57,8 +57,8 @@ typedef struct {
   double *lon_cent;
   double *area;
   int *nvertices;
-  double **lon_vertices;
-  double **lat_vertices;
+  double *lon_vertices;
+  double *lat_vertices;
   double *recomputed_area;
   double *centroid_lon;
   double *centroid_lat;
