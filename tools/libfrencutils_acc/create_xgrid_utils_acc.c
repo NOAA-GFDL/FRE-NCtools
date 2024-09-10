@@ -660,20 +660,16 @@ void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config
   grid_cells->lon_cent  = (double *)malloc(ncells*sizeof(double));
   grid_cells->area      = (double *)malloc(ncells*sizeof(double));
   grid_cells->nvertices = (int *)malloc(ncells*sizeof(int));
-  grid_cells->lon_vertices  = (double **)malloc(ncells*sizeof(double));
-  grid_cells->lat_vertices  = (double **)malloc(ncells*sizeof(double));
-  for(int icell=0 ; icell<ncells ; icell++) {
-    grid_cells->lat_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
-    grid_cells->lon_vertices[icell] = (double *)malloc(MAX_V*sizeof(double));
-  }
+  grid_cells->lon_vertices  = (double *)malloc(MAX_V*ncells*sizeof(double));
+  grid_cells->lat_vertices  = (double *)malloc(MAX_V*ncells*sizeof(double));
 
 #pragma acc enter data create(grid_cells[:1])
 #pragma acc enter data create(grid_cells->lon_min[:ncells], grid_cells->lon_max[:ncells], \
                               grid_cells->lat_min[:ncells], grid_cells->lat_max[:ncells], \
                               grid_cells->lon_cent[:ncells], grid_cells->nvertices[:ncells],\
                               grid_cells->area[:ncells])
-#pragma acc enter data create(grid_cells->lon_vertices[:ncells][:MAX_V], \
-                              grid_cells->lat_vertices[:ncells][:MAX_V])
+#pragma acc enter data create(grid_cells->lon_vertices[:MAX_V*ncells], \
+                              grid_cells->lat_vertices[:MAX_V*ncells])
 
 #pragma acc data present(grid_cells[:1], lon[:npts], lat[:npts])
 #pragma acc parallel loop independent
@@ -697,8 +693,8 @@ void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config
     grid_cells->area[icell] = poly_area_acc(lon_vertices, lat_vertices, nvertices);
 
     for(int ivertex=0 ; ivertex<nvertices ; ivertex++) {
-      grid_cells->lon_vertices[icell][ivertex] = lon_vertices[ivertex];
-      grid_cells->lat_vertices[icell][ivertex] = lat_vertices[ivertex];
+      grid_cells->lon_vertices[MAX_V*icell+ivertex] = lon_vertices[ivertex];
+      grid_cells->lat_vertices[MAX_V*icell+ivertex] = lat_vertices[ivertex];
     }
   }
 
@@ -706,14 +702,6 @@ void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config
 
 void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid_cells)
 {
-
-  for(int icell=0 ; icell<MAX_V ; icell++) {
-#pragma acc exit data delete( grid_cells->lon_vertices[icell])
-  }
-
-  for(int icell=0 ; icell<MAX_V ; icell++) {
-#pragma acc exit data delete( grid_cells->lat_vertices[icell])
-  }
 
 #pragma acc exit data delete( grid_cells->lon_vertices,  \
                               grid_cells->lat_vertices,  \
@@ -726,10 +714,6 @@ void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid
                               grid_cells->area)
 #pragma acc exit data delete(grid_cells)
 
-  for(int icell=0 ; icell<MAX_V ; icell++) {
-    free(grid_cells->lon_vertices[icell]);
-    free(grid_cells->lat_vertices[icell]);
-  }
   free(grid_cells->lon_min);  grid_cells->lon_min = NULL;
   free(grid_cells->lon_max);  grid_cells->lon_max = NULL;
   free(grid_cells->lon_cent); grid_cells->lon_cent = NULL;
@@ -737,8 +721,8 @@ void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid
   free(grid_cells->lat_max);  grid_cells->lat_max = NULL;
   free(grid_cells->area);     grid_cells->area = NULL;
   free(grid_cells->nvertices); grid_cells->nvertices=NULL;
-  //grid_cells->lon_vertices = NULL;
-  //grid_cells->lat_vertices = NULL;
+  free(grid_cells->lon_vertices); grid_cells->lon_vertices = NULL;
+  free(grid_cells->lat_vertices); grid_cells->lat_vertices = NULL;
 }
 
 

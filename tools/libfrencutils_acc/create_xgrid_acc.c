@@ -230,8 +230,8 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
         output_cell_lon_min += rotate;
         output_cell_lon_max += rotate;
         for (int l=0; l<nvertices2; l++) {
-          output_cell_lon_vertices[l] = output_grid_cells->lon_vertices[ij2][l] + rotate;
-          output_cell_lat_vertices[l] = output_grid_cells->lat_vertices[ij2][l];
+          output_cell_lon_vertices[l] = output_grid_cells->lon_vertices[ij2*MAX_V+l] + rotate;
+          output_cell_lat_vertices[l] = output_grid_cells->lat_vertices[ij2*MAX_V+l];
         }
 
         //output_cell_lon should in the same range as input_cell_lon after lon_fix,
@@ -391,8 +391,8 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
         output_cell_area = output_grid_cells->area[ij2];
 
         for (int l=0; l<nvertices2; l++) {
-          output_cell_lon_vertices[l] = output_grid_cells->lon_vertices[ij2][l] + rotate;
-          output_cell_lat_vertices[l] = output_grid_cells->lat_vertices[ij2][l];
+          output_cell_lon_vertices[l] = output_grid_cells->lon_vertices[ij2*MAX_V+l] + rotate;
+          output_cell_lat_vertices[l] = output_grid_cells->lat_vertices[ij2*MAX_V+l];
         }
 
         //output_cell_lon should in the same range as input_cell_lon after lon_fix,
