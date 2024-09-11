@@ -18,7 +18,7 @@ jobs:
         QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Configure
@@ -37,7 +37,7 @@ jobs:
         SKIP_TESTS: 4
       run: make -C build -j check LOG_DRIVER_FLAGS=--comments
     - name: Save log file on failure
-      uses: actions/upload-artifact@v2.2.1
+      uses: actions/upload-artifact@v3
       if: failure()
       with:
         name: test-suite.log
