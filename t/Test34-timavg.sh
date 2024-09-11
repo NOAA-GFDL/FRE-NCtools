@@ -23,5 +23,5 @@
 load test_utils
 
 @test "Test timavg" {
-    python $top_srcdir/t/test_time_avg.py
+    python3 $top_srcdir/t/test_time_avg.py
 }
