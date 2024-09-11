@@ -25,7 +25,7 @@
 !
 !-----------------------------------------------------------------------
 
-#define __NF_ASRT__(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
+#define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
 program combine_res
 
   use nfu_mod
@@ -82,8 +82,8 @@ program combine_res
   ! otherwise it's 32-bit
   allocate(input(nfiles))
   do i = 1,nfiles
-     __NF_ASRT__(nf_open(files(i),NF_NOWRITE,input(i)))
-     __NF_ASRT__(nf_inq_format(input(i),in_format))
+     CHECK_NF_ERRSTAT(nf_open(files(i),NF_NOWRITE,input(i)))
+     CHECK_NF_ERRSTAT(nf_inq_format(input(i),in_format))
   enddo
 
   if (in_format==NF_FORMAT_NETCDF4) then
@@ -104,18 +104,18 @@ program combine_res
 
   ! mpp_io supports environment variables to set these. For Riga, we'll simply use the defaults`
 
-  __NF_ASRT__(nf__create(outfile,cmode,0,blksz,ncid))
+  CHECK_NF_ERRSTAT(nf__create(outfile,cmode,0,blksz,ncid))
 
   ! Create netcdf structure in the output NetCDF file, using last input file
   ! as a template.
 
   ! clone all dimensions; for compressed dimensions calculate the total length in all
   ! input files
-  __NF_ASRT__(nf_inq_ndims(input(nfiles),ndims))
+  CHECK_NF_ERRSTAT(nf_inq_ndims(input(nfiles),ndims))
   allocate(dim(ndims))
   do dimid = 1,ndims
      associate(d => dim(dimid))
-     __NF_ASRT__(nfu_inq_dim(input(nfiles),dimid,dimname=d%name))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(input(nfiles),dimid,dimname=d%name))
      call inquire_dimension(input(:), d%name, &
          len=dimlen, siz=d%buflen, compressed=d%compressed, is_unlim=has_records)
      d%len = dimlen
@@ -133,32 +133,32 @@ program combine_res
      endif
      if(verbosity>0)&
            write(*,'(x,a,i8)')'defining dimension "'//trim(d%name)//'" with length',d%len
-     __NF_ASRT__(nf_def_dim(ncid,d%name,dimlen,i)) ! i is just a dummy var for dimid, unused
+     CHECK_NF_ERRSTAT(nf_def_dim(ncid,d%name,dimlen,i)) ! i is just a dummy var for dimid, unused
      end associate
   enddo
 
   ! clone all variable definitions
-  __NF_ASRT__(nf_inq_nvars(input(nfiles),nvars))
+  CHECK_NF_ERRSTAT(nf_inq_nvars(input(nfiles),nvars))
   do i = 1,nvars
-     __NF_ASRT__(nfu_clone_var(input(nfiles),i,ncid))
+     CHECK_NF_ERRSTAT(nfu_clone_var(input(nfiles),i,ncid))
      ! NOTE: since cloning of variable definition relies on dimension names,
      ! each variable tile and compressed dimensions automaticaly get the right
      ! size, as defined while creating dimensions in the output file
   enddo
 
   ! clone all global attributes
-  __NF_ASRT__(nf_inq_natts(input(nfiles),ngatts))
+  CHECK_NF_ERRSTAT(nf_inq_natts(input(nfiles),ngatts))
   do i = 1,ngatts
-     __NF_ASRT__(nf_inq_attname(input(nfiles),NF_GLOBAL,i,attname))
-     __NF_ASRT__(nf_copy_att(input(nfiles),NF_GLOBAL,attname,ncid,NF_GLOBAL))
+     CHECK_NF_ERRSTAT(nf_inq_attname(input(nfiles),NF_GLOBAL,i,attname))
+     CHECK_NF_ERRSTAT(nf_copy_att(input(nfiles),NF_GLOBAL,attname,ncid,NF_GLOBAL))
   enddo
 
   ! ---- end of definition stage
-  __NF_ASRT__(nf__enddef(ncid,HEADERPAD,4,0,4))
+  CHECK_NF_ERRSTAT(nf__enddef(ncid,HEADERPAD,4,0,4))
 
   ! copy all uncompressed vars
   do varid = 1, nvars
-     __NF_ASRT__(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens,recsize=recsize,nrec=nrec,xtype=xtype))
+     CHECK_NF_ERRSTAT(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens,recsize=recsize,nrec=nrec,xtype=xtype))
      n = 0
      do k = 1,ndims
         if (dim(dimids(k))%compressed) n = n+1
@@ -175,15 +175,15 @@ program combine_res
            ! dimension anyway, and (3) there is no convenient interface (yet) in
            ! nfu utilities for by-record i/o for CHAR variables.
            allocate(text(recsize*nrec))
-           __NF_ASRT__(nf_get_var_text(input(nfiles),varid,text))
-           __NF_ASRT__(nfu_inq_var(ncid,varname,id=varid1))
-           __NF_ASRT__(nf_put_var_text(ncid,varid1,text))
+           CHECK_NF_ERRSTAT(nf_get_var_text(input(nfiles),varid,text))
+           CHECK_NF_ERRSTAT(nfu_inq_var(ncid,varname,id=varid1))
+           CHECK_NF_ERRSTAT(nf_put_var_text(ncid,varid1,text))
            deallocate(text)
         else
            allocate(buffer(recsize))
            do rec=1,nrec
-              __NF_ASRT__(nfu_get_rec_r8(input(nfiles),varid,rec,buffer))
-              __NF_ASRT__(nfu_put_rec_r8(ncid,varname,rec,buffer))
+              CHECK_NF_ERRSTAT(nfu_get_rec_r8(input(nfiles),varid,rec,buffer))
+              CHECK_NF_ERRSTAT(nfu_put_rec_r8(ncid,varname,rec,buffer))
            enddo
            deallocate(buffer)
         endif
@@ -217,12 +217,12 @@ program combine_res
 
      ! process all vars that depend on this compressed dimension
      do varid = 1, nvars
-        __NF_ASRT__(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens))
+        CHECK_NF_ERRSTAT(nfu_inq_var(input(nfiles),varid,name=varname,ndims=ndims,dimids=dimids,dimlens=dimlens))
         if (.not.any(dimids(1:ndims)==dimid)) cycle ! skip variables that do not depend on our compressed dim
         if(verbosity>0) write(*,'(2x,a)')'copy compressed variable "'//trim(varname)//'"'
 
         ! get the output variable ID
-        __NF_ASRT__(nfu_inq_var(ncid,varname,id=ovarid))
+        CHECK_NF_ERRSTAT(nfu_inq_var(ncid,varname,id=ovarid))
 
         ! find index of the compressed dimension
         cdim = 1
@@ -247,8 +247,8 @@ program combine_res
            k = 1
            do ifile = 1,nfiles
               cnt(cdim) = sizes(ifile)
-              __NF_ASRT__(nfu_inq_var(input(ifile),varname,id=varid1))
-              __NF_ASRT__(nf_get_vara_double(input(ifile),varid1,start,cnt,buffer(k)))
+              CHECK_NF_ERRSTAT(nfu_inq_var(input(ifile),varname,id=varid1))
+              CHECK_NF_ERRSTAT(nf_get_vara_double(input(ifile),varid1,start,cnt,buffer(k)))
               k = k+sizes(ifile)
            enddo
            ! reshuffle variable values in desired order
@@ -257,14 +257,15 @@ program combine_res
            enddo
            ! write slice to output file
            cnt(cdim) = d%len
-           __NF_ASRT__(nf_put_vara_double(ncid,ovarid,start,cnt,obuffer))
+           CHECK_NF_ERRSTAT(nf_put_vara_double(ncid,ovarid,start,cnt,obuffer))
         enddo
      enddo
      deallocate(rank, buffer, obuffer)
      end associate
   enddo
 
-  i = nf_close(ncid)
+  CHECK_NF_ERRSTAT(nf_sync(ncid))
+  CHECK_NF_ERRSTAT(nf_close(ncid))
 contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 subroutine inquire_dimension(input,name,len,compressed,siz,sizes,is_unlim)
@@ -288,7 +289,7 @@ subroutine inquire_dimension(input,name,len,compressed,siz,sizes,is_unlim)
   integer :: i
 
   nfiles = size(input)
-  __NF_ASRT__(nfu_inq_dim(input(nfiles), name, dimlen=len_, is_unlim=is_unlim))
+  CHECK_NF_ERRSTAT(nfu_inq_dim(input(nfiles), name, dimlen=len_, is_unlim=is_unlim))
   if (present(len)) len = len_
   if (present(siz)) siz = len_
   if (present(sizes)) sizes(:)=len_
@@ -301,7 +302,7 @@ subroutine inquire_dimension(input,name,len,compressed,siz,sizes,is_unlim)
 
   ! calculate total size of the compressed dimension across all files
   do i=1,nfiles
-     __NF_ASRT__(nfu_inq_dim(input(i),name,dimlen=sizes_(i)))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(input(i),name,dimlen=sizes_(i)))
   enddo
   if (present(sizes)) sizes(:) = sizes_(:)
   if (present(siz)) siz = sum(sizes_(:))
@@ -309,7 +310,7 @@ subroutine inquire_dimension(input,name,len,compressed,siz,sizes,is_unlim)
      len = 0
      allocate(buff(maxval(sizes_(:))))
      do i=1,nfiles
-        __NF_ASRT__(nfu_get_var_int(input(i),name,buff))
+        CHECK_NF_ERRSTAT(nfu_get_var_int(input(i),name,buff))
         len = len + count(buff(1:sizes_(i))>=0)
      enddo
      deallocate(buff)
@@ -328,8 +329,8 @@ subroutine reorder_compressed_index(input,name,rank)
   allocate(buff(size(rank)))
   k = 1
   do i=1,nfiles
-     __NF_ASRT__(nfu_get_var_int(input(i),name,buff(k:)))
-     __NF_ASRT__(nfu_inq_dim(input(i),name,dimlen=dimlen))
+     CHECK_NF_ERRSTAT(nfu_get_var_int(input(i),name,buff(k:)))
+     CHECK_NF_ERRSTAT(nfu_inq_dim(input(i),name,dimlen=dimlen))
      k = k+dimlen
   enddo
 

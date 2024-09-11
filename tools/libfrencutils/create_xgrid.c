@@ -807,7 +807,9 @@ nxgrid = 0;
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
             if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+	      error_handler("The xgrid size is too large for resources.\n"
+        " nxgrid is greater than MAXXGRID/nthreads; increase MAXXGRID,\n"
+        " decrease nthreads, or increase number of MPI ranks.");
 	    nn = pstart[m] + pnxgrid[m]-1;
 
 	    pxgrid_area[nn] = xarea;

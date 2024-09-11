@@ -43,5 +43,6 @@
 #define TPI (2.0*M_PI)
 #define HPI (0.5*M_PI)
 
-#endif
+#define GAREA (4*M_PI*RADIUS*RADIUS)
 
+#endif

@@ -25,7 +25,7 @@ jobs:
       run: |
         mkdir build && cd build
         autoreconf -i ../configure.ac
-        ../configure $MPI $QUAD_P
+        ../configure $MPI $QUAD_P || cat config.log
     - name: Build tools
       run: make -C build
     - name: Run all tests

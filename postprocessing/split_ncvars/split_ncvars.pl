@@ -139,8 +139,8 @@ foreach my $file (@ifiles) {
     # generate variable list (if not user supplied)
     if (!@varlist) {
         if (!$Opt{STATIC}) {
-	    print tailname($list_ncvars)." -t0123 $file\n" if $Opt{VERBOSE} > 1;
-	    @varlist = split /\n/, `$list_ncvars -t0123 $file`;
+	    print tailname($list_ncvars)." -t01234 $file\n" if $Opt{VERBOSE} > 1;
+	    @varlist = split /\n/, `$list_ncvars -t01234 $file`;
         } else {
 	    print tailname($list_ncvars)." -s0123 $file\n" if $Opt{VERBOSE} > 1;
 	    @varlist = split /\n/, `$list_ncvars -s0123 $file`;
@@ -172,7 +172,8 @@ foreach my $file (@ifiles) {
          $var =~ s/^\s+//; $var =~ s/\s+$//;
 
          # skip this variable if it does not exist
-         if ($dump !~ /\t\w+ $var\(.+\)/) {
+         # the second clause below is needed for dimensionless variables
+         if ($dump !~ /\t\w+ $var\(.+\)/ and $dump !~ /\t\w+ $var\s+;/) {
            print "WARNING: variable $var does not exist ... skipping.\n" if !$Opt{QUIET};
            next;
          }
@@ -789,7 +790,7 @@ sub variable_log {
 
   open (OUT,"> $prtfile") || die "Cannot open $prtfile for output";
 
-  foreach my $var (split /\n/, `$list_ncvars -t0123 $ncfile`) {
+  foreach my $var (split /\n/, `$list_ncvars -t01234 $ncfile`) {
     my @out;
     $var =~ s/^\s+//; $var =~ s/\s+$//;
     push @out, $var;
