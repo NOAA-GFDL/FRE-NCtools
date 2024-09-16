@@ -23,7 +23,7 @@
 load test_utils
 
 @test "Test timavg" {
-if [ -z "$skip_mpi" ]; then
+if [ -z "$skipflag" ]; then
 cat <<_EOF > instantaneous.nml
  &input
     file_names(1) =  'timavg_instantaneous_in.nc' ,

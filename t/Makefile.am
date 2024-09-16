@@ -31,7 +31,7 @@ endif
 
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
                     export skip_mpi=$(skip_MPI);                    \
-                    export skip_xarray=$(skipflag);                 \
+                    export skipflag=$(skipflag);                 \
     for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
