@@ -23,16 +23,21 @@
 load test_utils
 
 @test "Test timavg" {
-cat <<_EOF > input.nml
+if [ -z "$skip_mpi" ]; then
+cat <<_EOF > instantaneous.nml
  &input
-    file_names(1) =  '20120101.ice_shelf.nc' ,
-    file_name_out =  'new.nc' ,
-    use_end_time  =  .false. ,
-    verbose  =  .false. ,
-    add_cell_methods =  .false. ,
-    skip_tavg_errors =  .false. ,
-    suppress_warnings =  .false.,
+    file_names(1) =  'timavg_instantaneous_in.nc' ,
+    file_name_out =  'timavg_instantaneous_out.nc' ,
  &end
 _EOF
+
+cat <<_EOF > standard.nml
+ &input
+    file_names(1) =  'timavg_standard_in.nc' ,
+    file_name_out =  'timavg_standard_out.nc' ,
+ &end
+_EOF
+
     python3 $top_srcdir/t/test_time_avg.py
+fi
 }
