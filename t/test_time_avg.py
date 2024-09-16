@@ -40,15 +40,19 @@ class TestTimeAvg():
 
 
     def check_output(self):
-      out_file = xr.open_dataset("wut.nc")
+      out_file = xr.open_dataset("new.nc")
       if not (out_file.a.values == np.average(self.a, axis=0)).all():
           raise Exception("Test failed")
 
 
 test_class = TestTimeAvg()
 test_class.create_input()
-try:
-    os.system("TAVG.exe < input.nml")
-except:
+
+exit_code = os.system("TAVG.exe < input.nml")
+if exit_code != 0 :
     raise Exception("Failed to run timavg")
-test_class.check_output()
+
+try:
+    test_class.check_output()
+except:
+    raise Exception("Failed to check the timavg output")
