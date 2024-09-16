@@ -47,5 +47,8 @@ class TestTimeAvg():
 
 test_class = TestTimeAvg()
 test_class.create_input()
-os.system(os.path.dirname(os.path.realpath(__file__))+"/../postprocessing/timavg/timavg.csh -m -o wut.nc 20120101.ice_shelf.nc")
+try:
+    os.system("TAVG.exe < input.nml")
+except:
+    raise Exception("Failed to run timavg")
 test_class.check_output()

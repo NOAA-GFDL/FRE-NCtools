@@ -125,8 +125,10 @@ AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 
 AC_CHECK_PROGS(BATS, [bats])
 AC_CHECK_PROGS(PROVE, [prove])
-
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
+
+AC_CHECK_PROGS(python3, [required])
+AC_PYTHON_MODULE(xarray, required, python3)
 
 # Check if openacc.h exists
 if test "$enable_acc" = yes ; then

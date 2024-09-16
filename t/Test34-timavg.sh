@@ -23,5 +23,16 @@
 load test_utils
 
 @test "Test timavg" {
+cat <<_EOF > input.nml
+ &input
+    file_names(1) =  '20120101.ice_shelf.nc' ,
+    file_name_out =  'new.nc' ,
+    use_end_time  =  .false. ,
+    verbose  =  .false. ,
+    add_cell_methods =  .false. ,
+    skip_tavg_errors =  .false. ,
+    suppress_warnings =  .false.,
+ &end
+_EOF
     python3 $top_srcdir/t/test_time_avg.py
 }
