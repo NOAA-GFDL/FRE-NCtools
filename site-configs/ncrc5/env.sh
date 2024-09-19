@@ -54,3 +54,5 @@ setenv NC_BLKSZ 64K
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
+
+module load python

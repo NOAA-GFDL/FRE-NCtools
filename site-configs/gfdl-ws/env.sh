@@ -56,3 +56,5 @@ module load mpich/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
+
+module load python
