@@ -42,9 +42,10 @@ mpi_version=4.1.1
 module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 
-# bats and nccmp are needed for tests
+# bats, nccmp, and python are needed for tests
 module load bats
 module load nccmp
+module load python
 
 # Load the GCC compilers
 module load gcc/$gcc_version
@@ -56,5 +57,3 @@ module load mpich/$mpi_version
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
-
-module load python

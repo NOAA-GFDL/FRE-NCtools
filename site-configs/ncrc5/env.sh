@@ -32,6 +32,7 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module rm PrgEnv-pgi PrgEnv-intel PrgEnv-gnu PrgEnv-cray
+module load python
 module load PrgEnv-gnu/8.3.3
 module load gcc/12.2.0
 module load cray-hdf5/1.12.2.3
@@ -54,5 +55,3 @@ setenv NC_BLKSZ 64K
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
-
-module load python
