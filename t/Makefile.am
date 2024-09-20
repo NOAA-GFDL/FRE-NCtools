@@ -23,8 +23,15 @@ else
 skip_MPI="skip"
 endif
 
+if SKIP_XARRAY_TESTS
+skipflag="skip"
+else
+skipflag=""
+endif
+
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
                     export skip_mpi=$(skip_MPI);                    \
+                    export skipflag=$(skipflag);                 \
     for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
     done;
@@ -68,7 +75,8 @@ TESTS = Test01-check_programs_exist.sh \
         Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
 	Test32-fregrid_no_stretched.sh \
-	Test33-reference_make_hgrid.sh
+	Test33-reference_make_hgrid.sh \
+	Test34-timavg.sh
 
 EXTRA_DIST = $(TESTS) \
              Test02-input\
