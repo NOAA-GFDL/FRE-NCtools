@@ -66,14 +66,14 @@ my $odir = $Opt{odir};
 
 my $ncrcat = `which ncrcat 2>&1`;
 die "Unable to locate ncrcat, cannot continue.\n" if $ncrcat =~ /(: no)|(not found)/;
-chomp $ncrcat; $ncrcat .= " -t 2 --header_pad 16384";
+chomp $ncrcat; $ncrcat .= " -t 2 --header_pad 65536";
 
 my $ncks = `which ncks 2>&1`; 
 die "Unable to locate ncks, cannot continue.\n" if $ncks =~ /(: no)|(not found)/;
 chomp $ncks; 
 # NCO changed options between 4.5.4 and 4.5.5 and 4.6. Hopefully they stopped those schenanigans.
 my $tmp = qx{$ncks --version 2>&1};
-$ncks .= ' --header_pad 16384';
+$ncks .= ' --header_pad 65536';
 
 my $list_ncvars = `which list_ncvars.csh 2>&1`;
 die "Unable to locate list_ncvars.csh, cannot continue.\n" if $list_ncvars =~ /(: no)|(not found)/;
