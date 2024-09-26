@@ -24,25 +24,24 @@
                  programming interface "mpp_io_mod"
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
+  V2.2.7: Hans.Vahlenkamp@noaa.gov
+          Synchronize output file before closing and check for errors.
   V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
           Updates for C99 standards.
   V2.2.5: Seth Underwood <Seth.Underwood@noaa.gov>
           Fix for NetCDF files that do not have a time dimension.
   V2.2.4:  Tushar.Mohan@noaa.gov
            Round memory footprint to ceiling integral value.
-
   V2.2.3:  Tushar.Mohan@noaa.gov
            Fixed handling of -k when -x is set.
            Print memory estimate in MB when -x is used without -v.
            Fixed help message for -k and -x.
            If user sets blocking factor > # records (nrecs), set bf to nrecs
-
   V2.2.2:  Tushar.Mohan@noaa.gov
            Added a -x option to print estimate resident memory footprint and exit
            Changed default blocking factor 1, so the combine behaves as the
            combine of the past if no "-k" option is set. This is useful
            for low-memory nodes.
-
   V2.2.1:  Do not bail out when we cannot write variables to output file.
            Instead, issue a warning and set an error condition. Continue
            processing.
@@ -50,7 +49,6 @@
            only showed up in certain rare input conditions.
            Added -M to show memory usage statistics.
            Added -V to print version information.
-
   V2.2:    Added record blocking (see, the -k option) to the memory buffering
            code. This significantly improves performance, by buffering multiple
            records of decomposed variables in memory. Output I/O performance
@@ -186,8 +184,8 @@ static unsigned long maxrss = 0; /* maximum memory used so far in kilobytes */
 static int print_mem_usage = 0;
 static unsigned long mem_allocated = 0; /* memory allocated so far */
 
-static const char version[] = "2.2.6";
-static const char last_updated[] = "2020-11-20";
+static const char version[] = "2.2.7";
+static const char last_updated[] = "2024-09-25";
 
 static unsigned long estimated_maxrss = 0; /* see option: -x */
 static int mem_dry_run = 0; /* set if -x option is used */
@@ -607,7 +605,10 @@ int main(int argc, char *argv[])
               }
        }
 
-   ncclose(ncoutfile->ncfid); free(ncoutfile);
+   /* Cleanup and check for any input or output file errors */
+   if (ncsync(ncoutfile->ncfid) == (-1)) outfileerrors++;   
+   if (ncclose(ncoutfile->ncfid) == (-1)) outfileerrors++;
+   free(ncoutfile);
    if ((!infileerrors) && (!outfileerrors))
      {
       if (removein)
@@ -657,10 +658,12 @@ int main(int argc, char *argv[])
               unlink(argv[a]);
              }
         }
+      return(0);
      }
    else
-     fprintf(stderr,"Warning: output file may be incomplete!\n");
-   return(infileerrors);
+     {
+      fprintf(stderr,"Warning: output file may be incomplete!\n"); return(1);
+     }
   }
 
 
