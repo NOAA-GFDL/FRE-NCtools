@@ -64,23 +64,23 @@ my $odir = $Opt{odir};
 ##################################################################
 # external scripts
 
-my $ncrcat = `which ncrcat 2>&1`;
-die "Unable to locate ncrcat, cannot continue.\n" if $ncrcat =~ /(: no)|(not found)/;
-chomp $ncrcat;
+my $ncrcat = "@NCRCAT@";
 $ncrcat .= " -t 2 --header_pad 65536";
 
-my $ncks = `which ncks 2>&1`;
-die "Unable to locate ncks, cannot continue.\n" if $ncks =~ /(: no)|(not found)/;
-chomp $ncks;
+my $ncks = "@NCKS@";
 $ncks .= ' --header_pad 65536';
+
+my $ncwa = "@NCWA@";
+
+my $ncatted = "@NCATTED@";
+
+my $ncrename = "@NCRENAME@";
 
 my $list_ncvars = `which list_ncvars.csh 2>&1`;
 die "Unable to locate list_ncvars.csh, cannot continue.\n" if $list_ncvars =~ /(: no)|(not found)/;
 chomp $list_ncvars;
 
-my $ncdump = `which ncdump 2>&1`;
-die "Unable to locate ncdump, cannot continue.\n" if $ncdump =~ /(: no)|(not found)/;
-chomp $ncdump;
+my $ncdump = "@NCDUMP@";
 
 my $dmget_available = `which dmget 2>&1`;
 $dmget_available = 0 if $dmget_available =~ /(: no)|(not found)/;
@@ -318,7 +318,7 @@ foreach my $file (@ifiles) {
       #push @commands, "dmget ".$Opt{odir}."/$var.nc";
       print  "mv $output $odir/.split_ncvars.$$.tmp.nc\n" if $Opt{VERBOSE} > 2;
       system("mv $output $odir/.split_ncvars.$$.tmp.nc");
-      print "ncrcat $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $output\n" if $Opt{VERBOSE} > 0;
+      print "$ncrcat -h $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $output\n" if $Opt{VERBOSE} > 0;
       system ("$ncrcat -h $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename $output");
       $ncstatus += $?;
       print  "rm -f $odir/.split_ncvars.$$.tmp.nc $tmp_var_filename\n" if $Opt{VERBOSE} > 2;
@@ -336,14 +336,14 @@ foreach my $file (@ifiles) {
 
       # rename coordinate variables
       if (!$Opt{onefile}) {
-        my $vdump = `ncdump -h $tmp_var_filename`;
+        my $vdump = `$ncdump -h $tmp_var_filename`;
         my @coordinates = get_variables_from_att($vdump,$var,"coordinates");
 
         # rename "height#" (coordinate) variables to just "height"
         my @height = grep{/height\d+/} @coordinates;
         if (@height == 1) {
-          print  "ncrename -h -v $height[0],height $tmp_var_filename\n";
-          system("ncrename -h -v $height[0],height $tmp_var_filename");
+          print  "$ncrename -h -v $height[0],height $tmp_var_filename\n";
+          system("$ncrename -h -v $height[0],height $tmp_var_filename");
           for (@coordinates) {
             s/$height[0]/height/;
           }
@@ -359,8 +359,8 @@ foreach my $file (@ifiles) {
           push @plev, grep{/pl700/} @coordinates;
           if (@plev == 1) {
             if (get_variable_att($vdump,$plev[0],"units") eq "Pa") {
-              print  "ncrename -h -v $plev[0],plev $tmp_var_filename\n";
-              system("ncrename -h -v $plev[0],plev $tmp_var_filename");
+              print  "$ncrename -h -v $plev[0],plev $tmp_var_filename\n";
+              system("$ncrename -h -v $plev[0],plev $tmp_var_filename");
               for (@coordinates) {
                 s/$plev[0]/plev/;
               }
@@ -370,8 +370,8 @@ foreach my $file (@ifiles) {
             my $plev_bnds = get_variable_att($vdump,$plev[0],"bounds");
             if ($plev_bnds) {
               if ($vdump =~ /\t\w+ $plev_bnds\(.+\)/) {
-                print  "ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename\n";
-                system("ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename");
+                print  "$ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename\n";
+                system("$ncrename -h -v $plev_bnds,plev_bnds $tmp_var_filename");
                 push @ncatted_opts, "-a bounds,plev,m,c,\"plev_bnds\"";
               }
             }
@@ -382,15 +382,15 @@ foreach my $file (@ifiles) {
           # rename vertical dimensions (plev## -> plev, levhalf -> lev)
           foreach my $dim (get_vertical_dimensions($vdump,$var)) {
             if ($dim =~ /^plev\d+/) {
-              print  "ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename\n";
-              system("ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename");
+              print  "$ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename\n";
+              system("$ncrename -h -d $dim,plev -v $dim,plev $tmp_var_filename");
             } elsif ($dim eq "levhalf") {
-              print  "ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename\n";
-              system("ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename");
+              print  "$ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename\n";
+              system("$ncrename -h -d $dim,lev -v $dim,lev $tmp_var_filename");
               # also rename the formula terms
               if (get_variable_att($vdump,$dim,"formula_terms") eq "ap: ap_half b: b_half ps: ps") {
-                print  "ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename\n";
-                system("ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename");
+                print  "$ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename\n";
+                system("$ncrename -h -v ap_half,ap -v b_half,b $tmp_var_filename");
                 push @ncatted_opts, "-a formula_terms,lev,m,c,\"ap: ap b: b ps: ps\"";
               }
             }
@@ -404,8 +404,8 @@ foreach my $file (@ifiles) {
       system("mv $tmp_var_filename $destination");
 
       if (@ncatted_opts) {
-        print  "ncatted -h -O @ncatted_opts $destination\n" if $Opt{VERBOSE} > 1;
-        system("ncatted -h -O @ncatted_opts $destination");
+        print  "$ncatted -h -O @ncatted_opts $destination\n" if $Opt{VERBOSE} > 1;
+        system("$ncatted -h -O @ncatted_opts $destination");
       }
     }
 
@@ -427,8 +427,8 @@ foreach my $file (@ifiles) {
       push @ncatted_opts, "-a external_variables,global,c,c,\"".join(" ",@xlist)."\"";
     }
     if (@ncatted_opts) {
-      print  "ncatted -h -O @ncatted_opts ".$Opt{onefile}."\n" if $Opt{VERBOSE} > 1;
-      system("ncatted -h -O @ncatted_opts ".$Opt{onefile})
+      print  "$ncatted -h -O @ncatted_opts ".$Opt{onefile}."\n" if $Opt{VERBOSE} > 1;
+      system("$ncatted -h -O @ncatted_opts ".$Opt{onefile})
     }
   }
 
@@ -679,7 +679,7 @@ sub tailname {
 sub set_ncatted_opts ($$;$$) {
   my ($file,$filename,$var,$CMIPVAR) = @_;
   my @opts;
-  my $dump = `ncdump -h $file`;
+  my $dump = `$ncdump -h $file`;
   push @opts, "-a filename,global,m,c,\"$filename\"" if ($dump =~ /\t\t:filename = ".+" ;/);
 
   my $svar = "\w+"; # globally edit attributes
@@ -761,13 +761,13 @@ sub cleanup_dim_atts {
 
 sub remove_degenerate_dimension {
   my ($file,$dim) = @_;
-  my $dump =`ncdump -h $file`;
+  my $dump =`$ncdump -h $file`;
   my @cmds;
   # is this a singleton dimension?
   if ($dump =~ /\t$dim = 1 ;/) {
     # remove dim by averaging, then (un)extract the unused dimension
-    push @cmds, "ncwa -h -a $dim $file $file.ztmp";
-    push @cmds, "ncks -h -O -x -v scalar_axis $file.ztmp $file";
+    push @cmds, "$ncwa -h -a $dim $file $file.ztmp";
+    push @cmds, "$ncks -h -O -x -v scalar_axis $file.ztmp $file";
     push @cmds, "rm -f $file.ztmp";
   }
   return @cmds;
@@ -778,7 +778,7 @@ sub remove_degenerate_dimension {
 sub variable_log {
   my $ncfile = shift;
   my $prtfile = shift;
-  my $dump = `ncdump -h $ncfile`;
+  my $dump = `$ncdump -h $ncfile`;
 
   open (OUT,"> $prtfile") || die "Cannot open $prtfile for output";
 
