@@ -98,7 +98,7 @@ AS_IF([test $with_netcdf != no],
 AC_DEFUN([_AX_C_LIB_NETCDF], [
 # Was a path to NetCDF given?
 AS_IF([test $with_netcdf != yes], [_ax_c_lib_netcdf_prefix=$with_netcdf])
-test -z ${_ax_c_lib_netcdf_prefix+x} && _ax_c_lib_netcdf_bin=$_ax_c_lib_netcdf_prefix/bin
+test ! -z ${_ax_c_lib_netcdf_prefix+x} && _ax_c_lib_netcdf_bin=$_ax_c_lib_netcdf_prefix/bin
 # Check to see if NC_CONFIG is in the path, or NETCDF_PREFIX/bin.
 AC_PATH_PROGS([NC_CONFIG], [nc-config], [], [$_ax_c_lib_netcdf_bin$PATH_SEPARATOR$PATH])
 # If nc-config found, use it to get information on the NetCDF library
@@ -246,7 +246,7 @@ AS_IF([test $with_netcdf != no],
 AC_DEFUN([_AX_FC_LIB_NETCDF],[
 # Was a path to NetCDF given?
 AS_IF([test $with_netcdf != yes], [_ax_fc_lib_netcdf_prefix=$with_netcdf])
-test -z ${_ax_fc_lib_netcdf_prefix+x} && _ax_fc_lib_netcdf_bin=$_ax_fc_lib_netcdf_prefix/bin
+test ! -z ${_ax_fc_lib_netcdf_prefix+x} && _ax_fc_lib_netcdf_bin=$_ax_fc_lib_netcdf_prefix/bin
 # Check to see if NF_CONFIG is in the path, or NETCDF_PREFIX/bin.
 AC_PATH_PROGS([NF_CONFIG], [nf-config], [], [$_ax_fc_lib_netcdf_bin$PATH_SEPARATOR$PATH])
 # If nf-config found, use it to get information on the NetCDF library

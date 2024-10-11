@@ -194,16 +194,50 @@ AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
   done])
 AC_SUBST(RPATH_FLAGS) dnl
 
+# Check for additional programs
+AC_PATH_PROGS([NCDUMP], [ncdump], [], [$_ax_c_lib_netcdf_bin$PATH_SEPARATOR$PATH])
+AS_IF([test -z $NCDUMP],dnl
+  AC_MSG_ERROR([Unable to find ncdump.  Add to PATH or set the NCDUMP variable to the full path]))
+AC_ARG_VAR([NCDUMP], [Full path to ncdump])
+
+AC_PATH_PROGS([NCRCAT], [ncrcat], [])
+AS_IF([test -z $NCRCAT], dnl
+  AC_MSG_ERROR([Unable to find ncrcat.  Add to PATH or set the NCRCAT variable to the full path]))
+AC_ARG_VAR([NCRCAT], [Full path to ncrcat])
+
+AC_PATH_PROGS([NCKS], [ncks], [])
+AS_IF([test -z $NCKS], dnl
+  AC_MSG_ERROR([Unable to find ncks.  Add to PATH or set the NCKS variable to the full path]))
+AC_ARG_VAR([NCKS], [Full path to ncks])
+
+AC_PATH_PROGS([NCWA], [ncwa], [])
+AS_IF([test -z $NCWA], dnl
+  AC_MSG_ERROR([Unable to find ncwa.  Add to PATH or set the NCWA variable to the full path]))
+AC_ARG_VAR([NCWA], [Full path to ncwa])
+
+AC_PATH_PROGS([NCATTED], [ncatted], [])
+AS_IF([test -z $NCATTED], dnl
+  AC_MSG_ERROR([Unable to find ncatted.  Add to PATH or set the NCATTED variable to the full path]))
+AC_ARG_VAR([NCATTED], [Full path to ncatted])
+
+AC_PATH_PROGS([NCRENAME], [ncrename], [])
+AS_IF([test -z $NCRENAME], dnl
+  AC_MSG_ERROR([Unable to find ncrename.  Add to PATH or set the NCRENAME variable to the full path]))
+AC_ARG_VAR([NCRENAME], [Full path to ncrename])
+
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
                  postprocessing/combine_restarts/Makefile
                  postprocessing/iceberg_comb/Makefile
+                 postprocessing/iceberg_comb/iceberg_comb.sh
                  postprocessing/land_utils/Makefile
                  postprocessing/list_ncvars/Makefile
                  postprocessing/mppnccombine/Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile
+                 postprocessing/split_ncvars/varlist.csh
+                 postprocessing/split_ncvars/split_ncvars.pl
                  postprocessing/timavg/Makefile
                  tools/libfrencutils/Makefile
                  tools/libfrencutils_acc/Makefile

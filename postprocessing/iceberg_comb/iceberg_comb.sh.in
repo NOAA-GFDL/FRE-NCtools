@@ -58,30 +58,20 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-# Verify the ncdump executable is in PATH and is executable
-ncdumpPath=$( which ncdump 2>&1 )
-if [ $? -ne 0 ]; then
-    echo "ERROR: Required command 'ncdump' is not in PATH."
+# Verify the ncdump is executable
+ncdumpPath=@NCDUMP@
+if [ ! -x $ncdumpPath ]; then
+    echoerr "ERROR: Required command 'ncdump' is not executable ($ncdumpPath)."
     exit 1
-else
-    if [ ! -x $ncdumpPath ]; then
-        echoerr "ERROR: Required command 'ncdump' is not executable ($ncdumpPath)."
-        exit 1
-    fi
 fi
 
-# Verify the ncrcat executable is in PATH and is executable (`ncrcat --version` exit status of 0)
-which ncrcat > /dev/null 2>&1
+# Verify the ncrcat  is executable (`ncrcat --version` exit status of 0)
+ncrcatPath=@NCRCAT@
+# Check that ncrcat is executable
+$ncrcatPath --version > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echoerr "ERROR: NCO command 'ncrcat' is not in PATH."
+    echoerr "ERROR: NCO command 'ncrcat' is not executable."
     exit 1
-else
-    # Check that ncrcat is executable
-    ncrcat --version > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echoerr "ERROR: NCO command 'ncrcat' is not executable."
-        exit 1
-    fi
 fi
 
 # All of the input files (<iceberg_res_file> [<iceberg_res_file> ...] need to exist.
@@ -108,7 +98,7 @@ while [ $# -gt 0 ]; do
             echoerr "ERROR: in file '$curFile' does not exist."
             exit 1
         else
-            ncdumpOut=$( ncdump -h $curFile 2>&1 )
+            ncdumpOut=$( $ncdumpPath -h $curFile 2>&1 )
             status=$?
             if [ $status -ne 0 ]; then
                 echoerr "WARNING: skipping in file '$curFile' as it is NOT a NetCDF formatted file."
@@ -129,7 +119,7 @@ done
 if [ "X$icebergFiles" = "X" ]; then
     echoerr "No files to record concatenate."
 else
-    ncrcat_cmd="ncrcat $icebergFiles $outFile"
+    ncrcat_cmd="$ncrcatPath $icebergFiles $outFile"
     if [ $verbose -gt 0 ]; then
         echo $ncrcat_cmd
     fi
