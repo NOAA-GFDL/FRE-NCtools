@@ -25,6 +25,8 @@
 !
 !-----------------------------------------------------------------------
 
+#include <config.h>
+
 #define CHECK_NF_ERRSTAT(ierr) call nfu_check_err(ierr,__FILE__,__LINE__)
 program decompress
 
@@ -32,6 +34,7 @@ program decompress
   use nfu_compress_mod
   implicit none
   include 'netcdf.inc'
+  include 'version.inc'
 
   integer, parameter :: PATH_MAX = 1024 ! max len of the file name;
   integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers;
@@ -216,17 +219,19 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ! file names
 ! NOTE: updates global variables.
 subroutine parse_command_line()
-  character(PATH_MAX) :: arg, param
+  character(PATH_MAX) :: arg, param, command_name
 
   integer :: nargs     ! number of command-line arguments
   logical :: do_interpret_arguments
   integer :: i, iostat
 
+  call getarg(0,command_name)
+
   nargs = command_argument_count()
 
   if(nargs==0) then
      call usage()
-     call exit(1)
+     call exit(EXIT_FAILURE)
   endif
 
   allocate(files(nargs))  ! allocate storage for all file names
@@ -250,11 +255,15 @@ subroutine parse_command_line()
            i=i+1
 
         case('-m','--add-missing-value')
-	   add_missing_value = .TRUE.
+           add_missing_value = .TRUE.
 
         case ('-h','-?','--help')
            call usage()
-           call exit(1)
+           call exit(EXIT_SUCCESS)
+
+        case ('-V', '--version')
+           call print_version(trim(command_name))
+           call exit(EXIT_SUCCESS)
 
         case default
            call usage()
@@ -280,22 +289,22 @@ subroutine usage()
 ! by gathering" data, and combines them into a single output file
   character(len=PATH_MAX) :: name
   call getarg(0,name)
+  write(*,'(a)')'Usage:'
+  write(*,'(a)')'  '//trim(name)//' [-v verbosity-level] [-m] in.nc [...] out.nc'
   write(*,'(a)')'Converts one or several compressed-by-gathering netcdf file into'
   write(*,'(a)')'one regular netcdf. Normally used to convert lm3 restarts into a'
   write(*,'(a)')'form suitable for visualization applications.'
   write(*,'(a)')
-  write(*,'(a)')'Usage:'
-  write(*,'(a)')'  '//trim(name)//' [-v verbosity-level] [-m] in.nc [...] out.nc'
-  write(*,'(a)')
-  write(*,'(a)')'-v verbosity-level   Specifies level of debug output verbosity'
-  write(*,'(a)')'-m                   Forces adding a missing_value attribute to the variables'
-  write(*,'(a)')'                     that do not have it'
-  write(*,'(a)')'in.nc                Input file name(s)'
-  write(*,'(a)')'out.nc               Output file name'
+  write(*,'(a)')'  -v verbosity-level   Specifies level of debug output verbosity'
+  write(*,'(a)')'  -m                   Forces adding a missing_value attribute to the variables'
+  write(*,'(a)')'                       that do not have it'
+  write(*,'(a)')'  -h, --help           display this help and exit'
+  write(*,'(a)')'  -V, --version        output version information and exit'
+  write(*,'(a)')'  in.nc                Input file name(s)'
+  write(*,'(a)')'  out.nc               Output file name'
   write(*,'(a)')
   write(*,'(a)')'WARNING: output file is overwritten.'
 end subroutine
-
 
 ! ===========================================================================
 ! ---- prints error message an exits if condition is not satisfied
@@ -305,7 +314,7 @@ subroutine assert(cond,message)
 
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
-     call exit(1)
+     call exit(EXIT_FAILURE)
   endif
 end subroutine
 

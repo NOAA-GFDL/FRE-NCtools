@@ -124,14 +124,6 @@ load test_utils
   [ "$status" -eq 1 ]
 }
 
-@test "Check combine-ncc exists and is executable" {
-  run_and_check -v combine-ncc
-}
-
-@test "Check decompress-ncc exists and is executable" {
-  run_and_check -v decompress-ncc
-}
-
 @test "Check cr_lake_files exists and is executable" {
      run_and_check -v cr_lake_files
 

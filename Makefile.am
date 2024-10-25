@@ -19,9 +19,10 @@
 #***********************************************************************
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = postprocessing/combine_restarts \
+SUBDIRS = lib/libnfu \
+          src \
+          postprocessing/combine_restarts \
           postprocessing/iceberg_comb \
-          postprocessing/land_utils \
           postprocessing/list_ncvars \
           postprocessing/mppnccombine \
           postprocessing/plevel \
@@ -51,6 +52,8 @@ SUBDIRS = postprocessing/combine_restarts \
           tools/simple_hydrog/lakes \
           tools/simple_hydrog/rmvpr \
           tools/nc_null_check
+
+SUBDIRS += tests
 
 if WITH_CHECK_PROGS
 SUBDIRS += t

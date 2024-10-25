@@ -1,0 +1,67 @@
+#!/bin/sh
+
+# ensure the help option prints something and exits successfully
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v combine-ncc
+fi
+
+. "$srcdir/init.sh"
+
+# Create the compressed-by-gathering NetCDF file
+ncgen -o scatter.nc << EOF || framework_failure
+netcdf scatter {
+dimensions:
+  lat = 10 ;
+  lon = 10 ;
+  lpt = 10 ;
+variables:
+  int lpt(lpt) ;
+    lpt:compress = "lat lon" ;
+  float lst(lpt);
+  float lat(lat) ;
+  float lon(lon) ;
+data:
+  lon = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lat = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lpt = 1, 5, 22, 35, 47, 51, 63, 64, 77, 94 ;
+  lst = 100, 101, 102, 103, 104, 105, 106, 107, 108, 109 ;
+}
+EOF
+
+scatter-ncc -i 1 -j 2 scatter.nc || fail=1
+# Check that the scatter.nc.0000 and scatter.nc.0001 files exist, and ncdump
+# can process the files
+test -e scatter.nc.0000 || fail=1
+test -e scatter.nc.0001 || fail=1
+# Each file should have 'lpt = 5'.
+sc0=$(ncdump scatter.nc.0000 || framework_failure)
+sc1=$(ncdump scatter.nc.0001 || framework_failure)
+# Verify scatter.nc.0000 has the correct number of and value for lpt
+echo $sc0 | grep -q 'lpt *= *5' || fail=1
+echo $sc0 | grep -q 'lpt *= *1, *5, *22, *35, *47 *;' || fail=1
+# Verify scatter.nc.0000 has the correct number of and value for lpt
+echo $sc1 | grep -q 'lpt *= *5' || fail=1
+echo $sc1 | grep -q 'lpt *= *51, *63, *64, *77, *94 *;' || fail=1
+
+Exit $fail

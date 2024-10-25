@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# ensure the help option prints something and exits successfully
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v is-compressed
+    is-compressed --version
+fi
+
+. "$srcdir/init.sh"
+
+# Create the compressed-by-gathering NetCDF file
+ncgen -o compress.nc << EOF || framework_failure
+netcdf compress {
+dimensions:
+  lat = 10 ;
+  lon = 10 ;
+  lpt = 5 ;
+variables:
+  int lpt(lpt) ;
+    lpt:compress = "lat lon" ;
+  float lst(lpt);
+  float lat(lat) ;
+  float lon(lon) ;
+data:
+  lon = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lat = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lpt = 10, 15, 22, 56, 87 ;
+  lst = 100.0, 101.0, 102.0, 103.0, 104.0 ;
+}
+EOF
+
+is-compressed compress.nc || fail=1
+
+Exit $fail

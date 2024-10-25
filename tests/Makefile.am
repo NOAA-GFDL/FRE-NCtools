@@ -17,10 +17,31 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = cp_river_vars
+if WITH_MPI_TESTS
+skip_MPI=""
+else
+skip_MPI="skip"
+endif
 
-AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/lib/libnfu
+if SKIP_XARRAY_TESTS
+skipflag="skip"
+else
+skipflag=""
+endif
 
-LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(RPATH_FLAGS) $(top_builddir)/lib/libnfu/libnfu.a
+TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
+                    export skip_mpi=$(skip_MPI); \
+                    export skipflag=$(skipflag); \
+                    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH";
 
-cp_river_vars_SOURCES = cp_river_vars.F90
+TESTS = combine-ncc/combine \
+        decompress-ncc/decompress \
+        is-compressed/compressed \
+        is-compressed/not-compressed \
+        scatter-ncc/scatter_1x1 \
+        scatter-ncc/scatter_1x2 \
+        scatter-ncc/scatter_2x1
+
+EXTRA_DIST = \
+  init.sh \
+  $(TESTS)

@@ -21,26 +21,27 @@
 # Prelude
 AC_PREREQ([2.63])
 AC_INIT(
-  [FRE NC Tools],
+  [FRE NCTools],
   [2024.04],
-  [oar.gfdl.help@noaa.gov],
+  [https://github.com/NOAA-GFDL/FRE-NCtools/issues],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
 
 # Place the git description informatin in the configure script
 m4_define([git_revision],
-  [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
-AC_REVISION([$git_revision])
-
+  [m4_esyscmd_s([git describe --tags --always --dirty 2> /dev/null || echo "unknown version"])])
+AC_REVISION([git_revision])
 m4_define([git_hashval],
   [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
-AC_REVISION([$git_hashval])
+m4_define([git_date],
+  [m4_esyscmd_s([git show --no-patch --format=%as HEAD 2> /dev/null || date +%Y-%m-%d])])
+AC_REVISION([git_date])
 
-AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
+AC_CONFIG_SRCDIR([src/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-ustar])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-pax subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
@@ -69,6 +70,7 @@ AC_FC_SRCEXT([F90])
 AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
 AC_FC_MODULE_EXTENSION()
+AC_FC_MODULE_FLAG()
 GX_FC_DEFAULT_REAL_KIND8_FLAG()
 GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
@@ -107,6 +109,8 @@ if test ! -z "$FC_CRAY_POINTER_FLAG"; then
    FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"
 fi
 
+# Check for programs
+AC_PROG_GREP
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
@@ -126,6 +130,11 @@ AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 AC_CHECK_PROGS(BATS, [bats])
 AC_CHECK_PROGS(PROVE, [prove])
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
+
+# Although these are supplied with the NetCDF C library, we'll double
+# check that ncgen and ncdump are available
+AC_CHECK_PROGS(NCGEN, [ncgen])
+AC_CHECK_PROGS(NCDUMP, [ncdump])
 
 AC_PYTHON_MODULE(xarray, [], python3)
 if test ${HAVE_PYMOD_XARRAY} = yes; then
@@ -171,11 +180,13 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
 # Check if Test25-input link points to an existing directory
 AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
 
-# Other defs
-AC_DEFINE([GIT_REVISION], "git_revision",
-          [Holds the 'git describe' information if configure ran within a git working directory])
-AC_DEFINE([GIT_HEADHASH], "git_hashval",
-          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
+# Set macros
+AC_DEFINE([GIT_REVISION], ["git_revision"],
+          [Holds the 'git describe' information if configure ran within a git working directory])dnl
+AC_DEFINE([GIT_HEADHASH], ["git_hashval"],
+          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])dnl
+AC_DEFINE([COPYRIGHT_YEAR], ["m4_substr(git_date, 0, 4)"],
+          [Year to place in Copyright notices printed with --version information])dnl
 
 #Code for setting rpath based ncview's configure.in code.
 AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
@@ -197,9 +208,10 @@ AC_SUBST(RPATH_FLAGS) dnl
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
+                 lib/libnfu/Makefile
+                 src/Makefile
                  postprocessing/combine_restarts/Makefile
                  postprocessing/iceberg_comb/Makefile
-                 postprocessing/land_utils/Makefile
                  postprocessing/list_ncvars/Makefile
                  postprocessing/mppnccombine/Makefile
                  postprocessing/plevel/Makefile
@@ -237,7 +249,7 @@ AC_CONFIG_FILES([Makefile
                  t_acc/test_get_grid_cell_struct/Makefile
                  t_acc/test_get_upbound_nxcells_2dx2d/Makefile
                  t_acc/test_get_interp_order1/Makefile
-
+                 tests/Makefile
 ])
 
 AC_OUTPUT

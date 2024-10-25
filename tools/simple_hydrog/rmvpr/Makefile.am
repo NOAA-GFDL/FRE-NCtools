@@ -19,10 +19,8 @@
 #***********************************************************************
 bin_PROGRAMS = rmv_parallel_rivers
 
-AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/postprocessing/land_utils/
+AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS) -I$(top_builddir)/lib/libnfu
 
-LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(top_builddir)/postprocessing/land_utils/libnfu.a $(RPATH_FLAGS)
+LDADD = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(top_builddir)/lib/libnfu/libnfu.a $(RPATH_FLAGS)
 
 rmv_parallel_rivers_SOURCES = rmv_parallel_rivers.F90
-
-

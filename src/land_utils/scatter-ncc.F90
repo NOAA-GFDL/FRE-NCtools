@@ -33,6 +33,8 @@ program combine_res
   implicit none
   include 'netcdf.inc'
 
+  include 'version.inc'
+
   integer, parameter :: PATH_MAX = 1024 ! max len of the file name;
   integer, parameter :: HEADERPAD = 16384 ! Use mpp_io large headers;
   integer            ::  blksz = 65536  ! blksz must be writable for nf__create
@@ -317,17 +319,19 @@ contains ! -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ! ---- parses command line arguments, getting the input file name (single file).
 ! NOTE: updates global variables.
 subroutine parse_command_line()
-  character(PATH_MAX) :: arg, param
+  character(PATH_MAX) :: arg, param, command_name
 
   integer :: nargs     ! number of command-line arguments
   logical :: do_interpret_arguments
   integer :: i, iostat
 
+  call getarg(0,command_name)
+
   nargs = command_argument_count()
 
   if(nargs==0) then
      call usage()
-     call exit(1)
+     call exit(EXIT_FAILURE)
   endif
 
   npex_io = 0
@@ -351,21 +355,28 @@ subroutine parse_command_line()
            read(param,*,iostat=iostat) debug
            call assert(iostat==0,trim(arg)//' flag must be followed by integer verbosity level')
            i=i+1
-        case('-i')
+
+         case('-i')
            call assert(i<nargs,trim(arg)//' flag must be followed by integer verbosity level')
            call getarg(i+1,param)
            read(param,*,iostat=iostat) npex_io
            call assert(iostat==0,trim(arg)//' flag must be followed by integer verbosity level')
            i=i+1
-        case('-j')
+
+         case('-j')
            call assert(i<nargs,trim(arg)//' flag must be followed by integer verbosity level')
            call getarg(i+1,param)
            read(param,*,iostat=iostat) npey_io
            call assert(iostat==0,trim(arg)//' flag must be followed by integer verbosity level')
            i=i+1
-        case ('-h','-?','--help')
+
+         case ('-h','-?','--help')
            call usage()
-           call exit(1)
+           call exit(EXIT_SUCCESS)
+
+         case ('-V', '--version')
+            call print_version(trim(command_name))
+            call exit(EXIT_SUCCESS)
 
         case default
            call usage()
@@ -385,7 +396,6 @@ subroutine parse_command_line()
   else
      call assert(.false.,'number of files specified must be 1')
   endif
-
 end subroutine
 
 
@@ -393,22 +403,23 @@ end subroutine
 subroutine usage()
   character(len=PATH_MAX) :: name
   call getarg(0,name)
+  write(*,'(a)')'Usage:'
+  write(*,'(a)')'  '//trim(name)//' [-D debug-level] -i ndiv_x -j ndiv_y in.nc '
   write(*,'(a)')'Scatters one file into several distributed file.'
   write(*,'(a)')'Normally used to scatter bombined lm3 restart file'
   write(*,'(a)')'The output files name is in.nc.????'
   write(*,'(a)')
-  write(*,'(a)')'Usage:'
-  write(*,'(a)')'  '//trim(name)//' [-D debug-level] -i ndiv_x -j ndiv_y in.nc '
-  write(*,'(a)')
-  write(*,'(a)')'-D debug-level   Specifies level of debug output verbosity'
-  write(*,'(a)')'-i ndiv_x        Specifies number of divisions in x-direction (Same as io_layout(1))'
-  write(*,'(a)')'-j ndiv_y        Specifies number of divisions in y-direction (Same as io_layout(2))'
-  write(*,'(a)')'in.nc            Input file name'
+  write(*,'(a)')'  -D debug-level   Specifies level of debug output verbosity'
+  write(*,'(a)')'  -i ndiv_x        Specifies number of divisions in x-direction (Same'
+  write(*,'(a)')'                   as io_layout(1))'
+  write(*,'(a)')'  -j ndiv_y        Specifies number of divisions in y-direction (Same'
+  write(*,'(a)')'                   as io_layout(2))'
+  write(*,'(a)')'  -h, --help       display this help and exit'
+  write(*,'(a)')'  -V, --version    output version information and exit'
+  write(*,'(a)')'  in.nc            Input file name'
   write(*,'(a)')
   write(*,'(a)')'WARNING: output file is overwritten.'
-
 end subroutine
-
 
 ! ===========================================================================
 ! ---- prints error message an exits if condition is not satisfied
@@ -418,7 +429,7 @@ subroutine assert(cond,message)
 
   if(.not.cond) then
      write(*,*) 'ERROR :: ',trim(message)
-     call exit(1)
+     call exit(EXIT_FAILURE)
   endif
 end subroutine
 

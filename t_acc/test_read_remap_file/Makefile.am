@@ -34,8 +34,7 @@ test_read_remap_file_SOURCES = test_read_remap_file.c
 
 TESTS = test_read_remap_file_conserve.sh
 
-EXTRA_DIST = test_read_remap_file_conserve.sh \
-             test_make_remap_file.py
+EXTRA_DIST = test_read_remap_file_conserve.sh
 
 
 TESTS_ENVIRONMENT = test_make_remap_file_conserve="$(srcdir)/test_make_remap_file_conserve.py"
