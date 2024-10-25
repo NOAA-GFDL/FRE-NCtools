@@ -38,6 +38,11 @@ TESTS = combine-ncc/combine \
         decompress-ncc/decompress \
         is-compressed/compressed \
         is-compressed/not-compressed \
+        mppnccombine/combine-six-digit-extension \
+        mppnccombine/combine-xtdecomp \
+        mppnccombine/combine-xytdecomp \
+        mppnccombine/combine-ytdecomp \
+        mppnccombine/list-output-files \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
         scatter-ncc/scatter_2x1

@@ -393,7 +393,7 @@ mktempd_()
   *) fail_ "Usage: $ME DIR TEMPLATE";;
   esac
 
-  destdir_=$1
+  destdir_=$(readlink -f $1)
   template_=$2
 
   MAX_TRIES_=4
@@ -414,17 +414,17 @@ mktempd_()
 
   # First, try to use mktemp.
   d=$(readlink -f $(TMPDIR="$destdir_" mktemp -d "$template_" 2>/dev/null)) \
-    || fail=11
+    || fail=1
 
   # The resulting name must be in the specified directory.
-  case $d in "$destdir_"*);; *) fail=12;; esac
+  case $d in "$destdir_"*);; *) fail=1;; esac
 
   # It must have created the directory.
-  test -d "$d" || fail=13
+  test -d "$d" || fail=1
 
   # It must have 0700 permissions.  Handle sticky "S" bits.
-  perms=`ls -dgo "$d" 2>/dev/null|tr S -` || fail=14
-  case $perms in drwx------*) ;; *) fail=15;; esac
+  perms=`ls -dgo "$d" 2>/dev/null|tr S -` || fail=1
+  case $perms in drwx------*) ;; *) fail=1;; esac
 
   test $fail = 0 && {
     echo "$d"

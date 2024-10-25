@@ -24,6 +24,7 @@ if test "$VERBOSE" = yes
 then
     set -x
     command -v combine-ncc
+    combine-ncc -V
 fi
 
 . "$srcdir/init.sh"
