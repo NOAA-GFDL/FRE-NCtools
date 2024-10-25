@@ -1,10 +1,14 @@
 BUILT_SOURCES =
 
-bin_PROGRAMS = \
-  decompress-ncc \
+combine_programs = \
   combine-ncc \
   is-compressed \
+  mppnccombine \
   scatter-ncc
+
+bin_PROGRAMS = \
+  decompress-ncc \
+  $(combine_programs)
 
 noinst_LIBRARIES = libver.a
 
@@ -16,9 +20,12 @@ noinst_HEADERS = \
   version.h \
   version.inc
 
+c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)
+
 AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 AM_CFLAGS = $(NETCDF_CFLAGS)
-LDADD = libver.a $(top_builddir)/lib/libnfu/libnfu.a $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) $(RPATH_FLAGS)
+LDADD = libver.a $(NETCDF_LDFLAGS) $(RPATH_FLAGS)
 
 BUILT_SOURCES += version.inc
 version.inc: Makefile
@@ -50,15 +57,21 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 # ********************************************************* #
 decompress_ncc_SOURCES = land_utils/decompress-ncc.F90
 decompress_ncc_FCFLAGS = -I../lib/libnfu $(AM_FCFLAGS)
-decompress_ncc_LDADD = $(LDADD)
+decompress_ncc_LDADD = $(f_netcdf_ldadds) $(top_builddir)/lib/libnfu/libnfu.a $(LDADD)
 
 combine_ncc_SOURCES = land_utils/combine-ncc.F90
 combine_ncc_FCFLAGS = -I../lib/libnfu $(AM_FCFLAGS)
-combine_ncc_LDADD =  $(LDADD)
+combine_ncc_LDADD =  $(f_netcdf_ldadds) $(top_builddir)/lib/libnfu/libnfu.a $(LDADD)
 
 is_compressed_SOURCES = land_utils/is-compressed.c
-is_compressed_LDADD = $(LDADD)
+is_compressed_LDADD = $(c_netcdf_ldadds) $(LDADD)
 
 scatter_ncc_SOURCES = land_utils/scatter-ncc.F90
 scatter_ncc_FCFLAGS = -I../lib/libnfu $(AM_FCFLAGS)
-scatter_ncc_LDADD = $(LDADD)
+scatter_ncc_LDADD = $(f_netcdf_ldadds) $(top_builddir)/lib/libnfu/libnfu.a $(LDADD)
+
+# ********************************************************* #
+# mppnccombine                                              #
+# ********************************************************* #
+mppnccombine_SOURCES = mpp-nccombine/mppnccombine.c
+mppnccombine_LDADD = $(c_netcdf_ldadds) -lm $(LDADD)

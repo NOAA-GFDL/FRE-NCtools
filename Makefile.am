@@ -24,7 +24,6 @@ SUBDIRS = lib/libnfu \
           postprocessing/combine_restarts \
           postprocessing/iceberg_comb \
           postprocessing/list_ncvars \
-          postprocessing/mppnccombine \
           postprocessing/plevel \
           postprocessing/split_ncvars \
           postprocessing/timavg \

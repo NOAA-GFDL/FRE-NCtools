@@ -20,7 +20,7 @@
 /*
   mppnccombine - joins together netCDF data files representing a decomposed
                  domain into a unified netCDF file.  It was originally
-                 designed to be used as a postprocessor for the parallel I/O
+                 designed to be used as a post-processor for the parallel I/O
                  programming interface "mpp_io_mod"
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
@@ -108,8 +108,8 @@
        for file f: 1 .. n
            for record r: 1 .. k
                Read rec (r) from file (f)
-               for var v: 1 .. nvars
-                   If var is undecomposed write to output
+               for var v: 1 .. n_vars
+                   If var is not decomposed write to output
                    if var (v) is decomposed:
                        IF not allocated, allocate memory for var (v), record (r)
                        write variable (v) into memory buffer
@@ -117,7 +117,7 @@
            done record
        done file
        for record r: 1 .. k
-           for var: 1..nvars
+           for var: 1..n_vars
                if decomposed variable, flush variable v for rec r to output
            done
        done
@@ -134,6 +134,9 @@
 #include <unistd.h>
 #include <netcdf.h>
 #include <sys/resource.h>
+
+#include <config.h>
+#include "version.h"
 
 #ifndef MAX_BF
 #  define MAX_BF 100  /* maximum blocking factor */
@@ -184,8 +187,7 @@ static unsigned long maxrss = 0; /* maximum memory used so far in kilobytes */
 static int print_mem_usage = 0;
 static unsigned long mem_allocated = 0; /* memory allocated so far */
 
-static const char version[] = "2.2.7";
-static const char last_updated[] = "2024-09-25";
+static const char version[] = PACKAGE_VERSION;
 
 static unsigned long estimated_maxrss = 0; /* see option: -x */
 static int mem_dry_run = 0; /* set if -x option is used */
@@ -228,7 +230,7 @@ int main(int argc, char *argv[])
    unsigned char removein=0;  /* Remove the ".####" decomposed input files? */
    int nstart=0;  /* PE number of the first input netCDF file */
    int nend=(-1);  /* PE number of the last input netCDF file */
-   int force=0;  /* Allows combining of incomplete input filesets */
+   int force=0;  /* Allows combining of incomplete input file set */
    int headerpad=16384;  /* Additional padding at the end of the header */
    int format=NC_NOCLOBBER;  /* Format of new netCDF output file */
    unsigned char missing=0;  /* Initialize output variables with */
@@ -248,7 +250,7 @@ int main(int argc, char *argv[])
    int status; /* Return status */
    int nrecs=1;  /* Number of records in each decomposed file */
    int bf=DEFAULT_BF;  /* default blocking factor: bf records will be read and written at a time */
-   int nblocks=1; /* nblocks=nrecs/bf = number of iterations of outer loop */
+   int nblocks=1; /* number of iterations of outer loop (default nrecs/bf = )*/
    int peWidth = -1; /* Width of PE number in uncombined file extension */
    size_t blksz=65536; /* netCDF block size */
    int deflate=0; /* do not deflate by default */
@@ -265,9 +267,8 @@ int main(int argc, char *argv[])
       if (!strcmp(argv[a],"-v")) verbose=1;
       else if (!strcmp(argv[a],"-vv")) verbose=2;  /* Hidden debug mode */
       else if (!strcmp(argv[a],"-V")) {
-        fprintf(stderr, "mppnccombine version: %s\n", version);
-        fprintf(stderr, "Last updated: %s\n", last_updated);
-        exit(0);
+        print_version("mppnccombine");
+        exit(EXIT_SUCCESS);
       }
       else if (!strcmp(argv[a],"-M")) print_mem_usage=1;
       else if (!strcmp(argv[a],"-x")) {
@@ -432,7 +433,7 @@ int main(int argc, char *argv[])
 	       sprintf(infilename,"%s.%0*d",outfilename,peWidth,a);
                if (stat(infilename,&statbuf)!=0){
                 if (force==0) {
-                  printf("ERROR: missing at least %s from the input fileset.  Exiting.\n", infilename);
+                  printf("ERROR: missing at least %s from the input file set.  Exiting.\n", infilename);
                   unlink(outfilename);
                   return 9;
                 }else{
@@ -511,7 +512,7 @@ int main(int argc, char *argv[])
 	       sprintf(infilename,"%s.%0*d",outfilename,peWidth,a);
                if (stat(infilename,&statbuf)!=0){
                  if (force==0) {
-                   printf("ERROR: missing at least %s from the input fileset.  Exiting.\n", infilename);
+                   printf("ERROR: missing at least %s from the input file set.  Exiting.\n", infilename);
                    unlink(outfilename);
                    return 9;
                  }else{
@@ -570,7 +571,7 @@ int main(int argc, char *argv[])
              }
            if (stat(argv[a],&statbuf)!=0){
              if (force==0) {
-               printf("ERROR: missing at least %s from the input fileset.  Exiting.\n", argv[a]);
+               printf("ERROR: missing at least %s from the input file set.  Exiting.\n", argv[a]);
                unlink(outfilename);
                return 9;
              }else{
@@ -606,7 +607,7 @@ int main(int argc, char *argv[])
        }
 
    /* Cleanup and check for any input or output file errors */
-   if (ncsync(ncoutfile->ncfid) == (-1)) outfileerrors++;   
+   if (ncsync(ncoutfile->ncfid) == (-1)) outfileerrors++;
    if (ncclose(ncoutfile->ncfid) == (-1)) outfileerrors++;
    free(ncoutfile);
    if ((!infileerrors) && (!outfileerrors))
@@ -685,7 +686,7 @@ void usage()
    printf("        permissible value for k is min(total number of records, %d).\n", MAX_BF);
    printf("        Setting k to zero will set the blocking factor to this maximum\n");
    printf("        permissible value. Setting k to a value higher than this value,\n");
-   printf("        will make the system implictly set k to the highest permissible value.\n");
+   printf("        will make the system implicitly set k to the highest permissible value.\n");
    printf("        A value of 1 for k disables blocking. This is the default behavior.\n");
    printf("        Blocking often improves performance, but increases the peak memory\n");
    printf("        footprint (by the blocking factor). Beware of running out of\n");
@@ -997,7 +998,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
    long long int imaxjmaxfull, imaxjmaxkmaxfull;
    long long int offset, ioffset, joffset, koffset, loffset;
    long long int b;
-   int recdimsize; /* Using a local recdimsize to correct issue when netcdf file does not have a record dimension */
+   int recdimsize; /* Using a local value to correct issue when netcdf file does not have a record dimension */
    long long varbufsize;
 
 
@@ -1026,7 +1027,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
      /* find nblocks */
      if (((*nrecs) % (*bf)) != 0) *nblocks = (int)((*nrecs)/(*bf)) + 1;
      else *nblocks = (int)((*nrecs)/(*bf));
- 
+
      if (verbose) fprintf(stderr, "blocking factor=%d, num. blocks=%d, num. records=%d\n",*bf,*nblocks, *nrecs);
    }
    else
@@ -1246,7 +1247,7 @@ int process_vars(struct fileinfo *ncinfile, struct fileinfo *ncoutfile,
            }
          else lmax=1;
          if (verbose > 1)
-           printf("      imax=%d  jmax=%d  kmax=%d  lmax=%d\n",imax,jmax,
+           printf("      imap=%d  jmax=%d  kmax=%d  lmax=%d\n",imax,jmax,
                   kmax,lmax);
 
          imaxfull=ncinfile->dimfullsize[ncinfile->vardim[v][ncinfile->varndims[v]-1]];

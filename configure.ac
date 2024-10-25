@@ -213,7 +213,6 @@ AC_CONFIG_FILES([Makefile
                  postprocessing/combine_restarts/Makefile
                  postprocessing/iceberg_comb/Makefile
                  postprocessing/list_ncvars/Makefile
-                 postprocessing/mppnccombine/Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile
