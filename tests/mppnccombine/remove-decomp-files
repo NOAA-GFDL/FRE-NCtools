@@ -216,8 +216,8 @@ EOF
 
 # run mppnccombine to generate decomp.nc, not
 # listing other input files
-mppnccombine decomp.nc decomp.* || fail=1
-# verify that mppnccombine generated a good netcdf file
-output=$(ncdump decomp.nc) || fail=1
+mppnccombine -r decomp.nc || fail=1
+# verify that decomp.nc.* were removed
+ls decomp.nc.* && fail=1
 
 Exit $fail

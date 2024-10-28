@@ -122,52 +122,6 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0002 << EOF || framework_failure_
-netcdf compress {
-dimensions:
-  grid_xt = 5 ;
-  grid_yt = 5 ;
-  time = UNLIMITED ; // (1 currently)
-variables:
-  double grid_xt(grid_xt) ;
-    grid_xt:long_name = "T-cell longitude" ;
-    grid_xt:units = "degrees_E" ;
-    grid_xt:axis = "X" ;
-    grid_xt:domain_decomposition = 1, 10, 1, 5 ;
-  double grid_yt(grid_yt) ;
-    grid_yt:long_name = "T-cell latitude" ;
-    grid_yt:units = "degrees_N" ;
-    grid_yt:axis = "Y" ;
-    grid_yt:domain_decomposition = 1, 10, 6, 10 ;
-  double time(time) ;
-    time:long_name = "time" ;
-    time:units = "days since 0001-01-01 00:00:00" ;
-    time:axis = "T" ;
-    time:calendar_type = "NOLEAP" ;
-    time:calendar = "noleap" ;
-  float var(grid_yt, grid_xt) ;
-    var:long_name = "Decomposed variable" ;
-    var:units = "m" ;
-    var:missing_value = 1.e+20f ;
-    var:_FillValue = 1.e+20f ;
-    var:dummy_attribute = "just a dummy attribute" ;
-// global attributed:
-  :filename = "decomp.nc.0002" ;
-  :NumFilesInSet = 4 ;
-  :dummy_global_att = "a global dummy attribute" ;
-data:
-  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0 ;
-  grid_yt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
-  time = 0 ;
-  var =
-    50, 51, 52, 53, 54,
-    60, 61, 62, 63, 64,
-    70, 71, 72, 73, 74,
-    80, 81, 82, 83, 84,
-    90, 91, 92, 93, 94 ;
-}
-EOF
-
 ncgen -o decomp.nc.0003 << EOF || framework_failure_
 netcdf compress {
 dimensions:
@@ -214,10 +168,9 @@ data:
 }
 EOF
 
-# run mppnccombine to generate decomp.nc, not
-# listing other input files
-mppnccombine decomp.nc decomp.* || fail=1
-# verify that mppnccombine generated a good netcdf file
-output=$(ncdump decomp.nc) || fail=1
+# run mppnccombine to generate decomp.nc
+mppnccombine -r decomp.nc && fail=1
+# verify that decomp.nc does not exist
+test ! -e decomp.nc || fail=1
 
 Exit $fail

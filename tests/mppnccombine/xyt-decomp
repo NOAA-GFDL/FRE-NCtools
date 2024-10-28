@@ -30,7 +30,7 @@ fi
 . "$srcdir/init.sh"
 
 # Create the four decomposed NetCDF files
-ncgen -o decomp.nc.0000 << EOF || framework_failure
+ncgen -o decomp.nc.0000 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -76,7 +76,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0001 << EOF || framework_failure
+ncgen -o decomp.nc.0001 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -122,7 +122,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0002 << EOF || framework_failure
+ncgen -o decomp.nc.0002 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -168,7 +168,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0003 << EOF || framework_failure
+ncgen -o decomp.nc.0003 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;

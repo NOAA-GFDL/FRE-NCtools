@@ -29,12 +29,12 @@ fi
 
 . "$srcdir/init.sh"
 
-# Create the four decomposed NetCDF files
+# Create the two decomposed NetCDF files
 ncgen -o decomp.nc.0000 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
-  grid_yt = 5 ;
+  grid_yt = 10 ;
   time = UNLIMITED ; // (1 currently)
 variables:
   double grid_xt(grid_xt) ;
@@ -46,7 +46,7 @@ variables:
     grid_yt:long_name = "T-cell latitude" ;
     grid_yt:units = "degrees_N" ;
     grid_yt:axis = "Y" ;
-    grid_yt:domain_decomposition = 1, 10, 1, 5 ;
+    grid_yt:domain_decomposition = 1, 10, 1, 10 ;
   double time(time) ;
     time:long_name = "time" ;
     time:units = "days since 0001-01-01 00:00:00" ;
@@ -61,18 +61,23 @@ variables:
     var:dummy_attribute = "just a dummy attribute" ;
 // global attributed:
   :filename = "decomp.nc.0000" ;
-  :NumFilesInSet = 4 ;
+  :NumFilesInSet = 2 ;
   :dummy_global_att = "a global dummy attribute" ;
 data:
   grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0 ;
-  grid_yt = 0.0, 1.0, 2.0, 3.0, 4.0 ;
+  grid_yt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
   time = 0 ;
   var =
     0, 1, 2, 3, 4,
     10, 11, 12, 13, 14,
     20, 21, 22, 23, 24,
     30, 31, 32, 33, 34,
-    40, 41, 42, 43, 44 ;
+    40, 41, 42, 43, 44,
+    50, 51, 52, 53, 54,
+    60, 61, 62, 63, 64,
+    70, 71, 72, 73, 74,
+    80, 81, 82, 83, 84,
+    90, 91, 92, 93, 94 ;
 }
 EOF
 
@@ -80,7 +85,7 @@ ncgen -o decomp.nc.0001 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
-  grid_yt = 5 ;
+  grid_yt = 10 ;
   time = UNLIMITED ; // (1 currently)
 variables:
   double grid_xt(grid_xt) ;
@@ -92,7 +97,7 @@ variables:
     grid_yt:long_name = "T-cell latitude" ;
     grid_yt:units = "degrees_N" ;
     grid_yt:axis = "Y" ;
-    grid_yt:domain_decomposition = 1, 10, 1, 5 ;
+    grid_yt:domain_decomposition = 1, 10, 1, 10 ;
   double time(time) ;
     time:long_name = "time" ;
     time:units = "days since 0001-01-01 00:00:00" ;
@@ -107,105 +112,18 @@ variables:
     var:dummy_attribute = "just a dummy attribute" ;
 // global attributed:
   :filename = "decomp.nc.0001" ;
-  :NumFilesInSet = 4 ;
+  :NumFilesInSet = 2 ;
   :dummy_global_att = "a global dummy attribute" ;
 data:
   grid_xt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
-  grid_yt = 1.0, 2.0, 3.0, 4.0 ;
+  grid_yt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
   time = 0 ;
   var =
     5, 6, 7, 8, 9,
     15, 16, 17, 18, 19,
     25, 26, 27, 28, 29,
     35, 36, 37, 38, 39,
-    45, 46, 47, 48, 49 ;
-}
-EOF
-
-ncgen -o decomp.nc.0002 << EOF || framework_failure_
-netcdf compress {
-dimensions:
-  grid_xt = 5 ;
-  grid_yt = 5 ;
-  time = UNLIMITED ; // (1 currently)
-variables:
-  double grid_xt(grid_xt) ;
-    grid_xt:long_name = "T-cell longitude" ;
-    grid_xt:units = "degrees_E" ;
-    grid_xt:axis = "X" ;
-    grid_xt:domain_decomposition = 1, 10, 1, 5 ;
-  double grid_yt(grid_yt) ;
-    grid_yt:long_name = "T-cell latitude" ;
-    grid_yt:units = "degrees_N" ;
-    grid_yt:axis = "Y" ;
-    grid_yt:domain_decomposition = 1, 10, 6, 10 ;
-  double time(time) ;
-    time:long_name = "time" ;
-    time:units = "days since 0001-01-01 00:00:00" ;
-    time:axis = "T" ;
-    time:calendar_type = "NOLEAP" ;
-    time:calendar = "noleap" ;
-  float var(grid_yt, grid_xt) ;
-    var:long_name = "Decomposed variable" ;
-    var:units = "m" ;
-    var:missing_value = 1.e+20f ;
-    var:_FillValue = 1.e+20f ;
-    var:dummy_attribute = "just a dummy attribute" ;
-// global attributed:
-  :filename = "decomp.nc.0002" ;
-  :NumFilesInSet = 4 ;
-  :dummy_global_att = "a global dummy attribute" ;
-data:
-  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0 ;
-  grid_yt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
-  time = 0 ;
-  var =
-    50, 51, 52, 53, 54,
-    60, 61, 62, 63, 64,
-    70, 71, 72, 73, 74,
-    80, 81, 82, 83, 84,
-    90, 91, 92, 93, 94 ;
-}
-EOF
-
-ncgen -o decomp.nc.0003 << EOF || framework_failure_
-netcdf compress {
-dimensions:
-  grid_xt = 5 ;
-  grid_yt = 5 ;
-  time = UNLIMITED ; // (1 currently)
-variables:
-  double grid_xt(grid_xt) ;
-    grid_xt:long_name = "T-cell longitude" ;
-    grid_xt:units = "degrees_E" ;
-    grid_xt:axis = "X" ;
-    grid_xt:domain_decomposition = 1, 10, 6, 10 ;
-  double grid_yt(grid_yt) ;
-    grid_yt:long_name = "T-cell latitude" ;
-    grid_yt:units = "degrees_N" ;
-    grid_yt:axis = "Y" ;
-    grid_yt:domain_decomposition = 1, 10, 6, 10 ;
-  double time(time) ;
-    time:long_name = "time" ;
-    time:units = "days since 0001-01-01 00:00:00" ;
-    time:axis = "T" ;
-    time:calendar_type = "NOLEAP" ;
-    time:calendar = "noleap" ;
-  float var(grid_yt, grid_xt) ;
-    var:long_name = "Decomposed variable" ;
-    var:units = "m" ;
-    var:missing_value = 1.e+20f ;
-    var:_FillValue = 1.e+20f ;
-    var:dummy_attribute = "just a dummy attribute" ;
-// global attributed:
-  :filename = "decomp.nc.0003" ;
-  :NumFilesInSet = 4 ;
-  :dummy_global_att = "a global dummy attribute" ;
-data:
-  grid_xt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
-  grid_yt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
-  time = 0 ;
-  var =
+    45, 46, 47, 48, 49,
     55, 56, 57, 58, 59,
     65, 66, 67, 68, 69,
     75, 76, 77, 78, 79,
@@ -214,10 +132,11 @@ data:
 }
 EOF
 
-# run mppnccombine to generate decomp.nc, not
-# listing other input files
-mppnccombine decomp.nc decomp.* || fail=1
-# verify that mppnccombine generated a good netcdf file
-output=$(ncdump decomp.nc) || fail=1
+# run mppnccombine to generate decomp.nc
+# Here we assume mppnccombine is printing the correct number
+mppnccombine -x decomp.nc || fail=1
+
+# Verify decomp.nc does not exist
+test ! -e decomp.nc || fail=1
 
 Exit $fail

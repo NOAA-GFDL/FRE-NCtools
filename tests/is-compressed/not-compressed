@@ -30,7 +30,7 @@ fi
 . "$srcdir/init.sh"
 
 # Create the compressed-by-gathering NetCDF file
-ncgen -o compress.nc << EOF || framework_failure
+ncgen -o compress.nc << EOF || framework_failure_
 netcdf compress {
 dimensions:
   lat = 10 ;

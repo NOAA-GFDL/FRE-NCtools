@@ -30,7 +30,7 @@ fi
 . "$srcdir/init.sh"
 
 # Create the compressed-by-gathering NetCDF file
-ncgen -o compress.nc << EOF || framework_failure
+ncgen -o compress.nc << EOF || framework_failure_
 netcdf compress {
 dimensions:
   lat = 10 ;
@@ -53,7 +53,7 @@ EOF
 decompress-ncc compress.nc decompress.nc || fail=1
 # Check that variable lst has "lat, lon" as dimension
 # variables
-output=$(ncdump -h decompress.nc) || framework_failure
+output=$(ncdump -h decompress.nc) || framework_failure_
 echo $output | grep -q 'float \+lst(lat, *lon)' || fail=1
 
 Exit $fail

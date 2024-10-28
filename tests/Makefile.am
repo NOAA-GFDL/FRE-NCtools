@@ -38,11 +38,19 @@ TESTS = combine-ncc/combine \
         decompress-ncc/decompress \
         is-compressed/compressed \
         is-compressed/not-compressed \
+        mppnccombine/dry-run \
+        mppnccombine/list-output-files \
+        mppnccombine/missing-file-fail \
+        mppnccombine/missing-file-force \
+        mppnccombine/non-zero-start-number \
+        mppnccombine/output-kinds \
+        mppnccombine/print-memory-usage \
+        mppnccombine/remove-decomp-files \
         mppnccombine/six-digit-extension \
+        mppnccombine/with-end-number \
         mppnccombine/xt-decomp \
         mppnccombine/xyt-decomp \
         mppnccombine/yt-decomp \
-        mppnccombine/list-output-files \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
         scatter-ncc/scatter_2x1

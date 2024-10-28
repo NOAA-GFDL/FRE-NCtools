@@ -30,7 +30,7 @@ fi
 . "$srcdir/init.sh"
 
 # Create the four decomposed NetCDF files
-ncgen -o decomp.nc.000000 << EOF || framework_failure
+ncgen -o decomp.nc.000000 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -76,7 +76,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.000001 << EOF || framework_failure
+ncgen -o decomp.nc.000001 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -122,7 +122,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.000002 << EOF || framework_failure
+ncgen -o decomp.nc.000002 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -168,7 +168,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.000003 << EOF || framework_failure
+ncgen -o decomp.nc.000003 << EOF || framework_failure_
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -216,13 +216,13 @@ EOF
 
 # run mppnccombine to generate decomp.nc, not
 # listing other input files
-echo "combine without listing files" || framework_failure
+echo "combine without listing files" || framework_failure_
 mppnccombine decomp.nc || fail=1
 # verify that mppnccombine generated a good netcdf file
 output=$(ncdump decomp.nc) || fail=1
 
-rm decomp.nc || framework_failure
-echo "combine with listing files" || framework_failure
+rm decomp.nc || framework_failure_
+echo "combine with listing files" || framework_failure_
 mppnccombine decomp.nc decomp.nc.* || fail=1
 # verify that mppnccombine generated a good netcdf file
 output=$(ncdump decomp.nc) || fail=1
