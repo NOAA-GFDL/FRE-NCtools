@@ -1,7 +1,8 @@
 # Github actions CI file
 # Ryan Mulhall 2020
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
-# github.com/noaa-gfdl/fre-nctools-container
+# image dockerfile is maintained here: 
+# https://gitlab.gfdl.noaa.gov/fre/hpc-me
 name: FRE-NCtools CI
 on: [push, pull_request]
 jobs:
@@ -12,7 +13,7 @@ jobs:
         with_mpi: ['','--with-mpi']
         enable_quad_precision: ['', '--enable-quad-precision']
     container:
-      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0
+      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
       env:
         MPI: ${{ matrix.with_mpi }}
         QUAD_P: ${{ matrix.enable_quad_precision }}
