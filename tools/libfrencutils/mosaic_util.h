@@ -108,7 +108,6 @@ void getCoordinates(struct Node *node, double *p);
 void setCoordinate(struct Node *node, double x, double y, double z);
 void setInbound(struct Node *interList, struct Node *list);
 int isInside(struct Node *node);
-void set_reproduce_siena_true(void);
 
 void set_rotate_poly_true(void);
 int is_near_pole(const double y[], int n);

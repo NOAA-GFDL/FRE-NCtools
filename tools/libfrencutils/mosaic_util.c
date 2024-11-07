@@ -40,13 +40,8 @@
 
 const double from_pole_threshold_rad = 0.0174533;  // 1.0 deg
 
-int reproduce_siena = 0;
 int rotate_poly_flag = 0;
 double the_rotation_matrix[3][3] = { 0 };
-
-void set_reproduce_siena_true(void){
-  reproduce_siena = 1;
-}
 
 void set_rotate_poly_true(void){
   rotate_poly_flag = 1;
@@ -303,14 +298,9 @@ double poly_area_dimensionless(const double x[], const double y[], int n)
     if ( fabs(lat1-lat2) < SMALL_VALUE) // cheap area calculation along latitude
       area -= dx*sin(0.5*(lat1+lat2));
     else {
-      if(reproduce_siena) {
-   area += dx*(cos(lat1)-cos(lat2))/(lat1-lat2);
-      }
-      else {
-   dy = 0.5*(lat1-lat2);
-   dat = sin(dy)/dy;
-   area -= dx*sin(0.5*(lat1+lat2))*dat;
-      }
+      dy = 0.5*(lat1-lat2);
+      dat = sin(dy)/dy;
+      area -= dx*sin(0.5*(lat1+lat2))*dat;
     }
   }
   if(fabs(area) > HPI) {
@@ -453,14 +443,9 @@ double poly_area_main(const double x[], const double y[], int n) {
     if (fabs(lat1 - lat2) < SMALL_VALUE) /* cheap area calculation along latitude */
       area -= dx * sin(0.5 * (lat1 + lat2));
     else {
-      if (reproduce_siena) {
-        area += dx * (cos(lat1) - cos(lat2)) / (lat1 - lat2);
-      } else {
-        // This expression is a trig identity with the above reproduce_siena case
-        dy = 0.5 * (lat1 - lat2);
-        dat = sin(dy) / dy;
-        area -= dx * sin(0.5 * (lat1 + lat2)) * dat;
-      }
+      dy = 0.5 * (lat1 - lat2);
+      dat = sin(dy) / dy;
+      area -= dx * sin(0.5 * (lat1 + lat2)) * dat;
     }
   }
 
