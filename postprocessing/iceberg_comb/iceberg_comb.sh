@@ -1,68 +1,139 @@
 #!/bin/sh
 
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+EXIT_NOTIBGS=255
+
+ICEBERGS_MAJOR_VERSION=0
+ICEBERGS_MINOR_VERSION=1
+
 echoerr() {
     echo "$@" 1>&2
 }
 
 help_usage() {
     echo "usage: ${myCommand} [options] <in_file> [<in_file> ...] <out_file>"
-}
-
-help_options() {
-    echo "options:"
-    echo "    -h              Print help message"
-    echo "    -v              Be verbose in output"
-    echo "    -V              Print the version and exit"
+    echo ""
+    echo ""
+    echo "  -c              Check if file is an icebergs restart file but do"
+    echo "                  not combine.  Exit status will be 0 if the file"
+    echo "                  is an icebergs restart file, and 255 if not"
+    echo "  -h              Display this help and exit"
+    echo "  -v              Be verbose in output"
+    echo "  -V              Output version information and exit"
 }
 
 help() {
     help_usage
-    echo ""
-    help_options
-    exit 0
+    exit $EXIT_SUCCESS
+}
+
+get_NumFilesInSet() {
+    # Check for the global attribute "NumFilesInSet". If that attribute is
+    # found, the function will return the number of files in this set.  If not
+    # found, the funcation will return -1. Get the output from ncdump
+    local output=$(ncdump -h $1)
+    local rtn=-1 # Return value if NumFilesInSet not in file
+    numFilesInSet=$(echo $output | sed -n 's/.*:NumFilesInSet *= *\([0-9][0-9]*\) *;.*/\1/p')
+    if [ ! x$numFilesInSet = "x" ]
+    then
+        rtn=$numFilesInSet
+    fi
+    echo $rtn
+}
+
+checkValidFileVersion() {
+    # Check for the global attributes "file_format_{major,minor}_version", and
+    # return a decimal separated version number.
+    local output=$(ncdump -h $1)
+    local ncdump_status=$?
+    local rtn=$EXIT_NOTIBGS # Value if unable to get the version number
+    local major_version=$(echo $output | sed -n 's/.*:file_format_major_version *= *\([0-9][0-9]*\) *;.*/\1/p')
+    local minor_version=$(echo $output | sed -n 's/.*:file_format_minor_version *= *\([0-9][0-9]*\) *;.*/\1/p')
+    if [ $ncdump_status -eq 0 ]
+    then
+        if [ ( $major_version -gt $ICEBERGS_MAJOR_VERSION ) -o \
+             ( $major_version -eq $ICEBERGS_MAJOR_VERSION -a \
+               $minor_version -ge $ICEBERGS_MINOR_VERSION ) ]
+        then
+            rtn=$EXIT_SUCCESS
+        else
+            rtn=$EXIT_NOTIBGS
+        fi
+    else
+        rtn=$EXIT_NOTIBGS
+    fi
+    echo $rtn
+}
+
+checkIfIcebergs() {
+    # Get the output from ncdump
+    local output=$(ncdump -h $1)
+    local ncdump_status=$?
+    # A file is an icebergs restart file if the file contains the global
+    # attributes file_format_major_version, file_format_minor_version, and
+    # and NumFilesInSet
+    local validFileVersion=$(checkValidFileVersion $1)
+    local numFilesInSet=$(get_NumFilesInSet $1)
+    if [ $ncdump_status -ne 0 -a \
+         $validFileVersion -eq 0 -a \
+         $numFilesInSet -gt 0 ]
+    then
+        rtn=$EXIT_SUCCESS
+    else
+        rtn=$EXIT_NOTIBGS
+    fi
+    return $rtn
 }
 
 # Name of the command
 myCommand=$( basename $0 )
 # Other global variables
+check=0
 verbose=0
 version="0.0.1"
 
-while getopts :hvV OPT; do
+while getopts :chvV OPT; do
     case "$OPT" in
+        c)
+            check=1
+            ;;
         h)
             help
-            exit 0
             ;;
         v)
             (( verbose++ ))
             ;;
         V)
             echo "${myCommand}: Version ${version}"
-            exit 0
+            exit $EXIT_SUCCESS
             ;;
         \?)
             echoerr "${myCommand}: unknown option: -${OPTARG}"
             echoerr ""
             help_usage >&2
-            exit 1
+            exit $EXIT_FAILURE
             ;;
     esac
 done
 shift $((OPTIND-1))
 
-# Check that at least 2 arguments have been passed in
-if [ $# -lt 2 ]; then
+if [ $check -gt 0 -a $# -ge 1 ]
+then
+    checkIfIcebergs $1
+    exit $?
+elif [ $# -lt 2 ]; then
+    # Check that at least 2 arguments have been passed in
     echoerr "ERROR: Not enough arguments given"
     help_usage
-    exit 1
+    exit $EXIT_FAILURE
 fi
 
 # Verify the ncdump executable is in PATH and is executable
 ncdumpPath=$( which ncdump 2>&1 )
 if [ $? -ne 0 ]; then
     echo "ERROR: Required command 'ncdump' is not in PATH."
-    exit 1
+    exit $EXIT_FAILURE
 else
     if [ ! -x $ncdumpPath ]; then
         echoerr "ERROR: Required command 'ncdump' is not executable ($ncdumpPath)."
