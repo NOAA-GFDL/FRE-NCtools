@@ -112,10 +112,28 @@ checkIfIcebergs() {
         then
             rtn=$EXIT_SUCCESS
         else
-            rtn=$EXIT_NOTIBGS
+            rtn=$EXIT_NOTIBGSecho
         fi
     fi
     return $rtn
+}
+
+has_icebergs() {
+    # This function will return 0 (true) if the file has icebergs,
+    # that is the UNLIMITED dimenion is >0.  The UNLIMITED dimension
+    # line, from ncdump:
+    #    <var> = UNLIMITED ; //(<number> currently)
+    #
+    # We could, and probably should, do additional tests, but as
+    # we by the time this function is call have already determined this
+    # file is a valid icebergs file, we are skipping those.
+    $ncdump -h $1 2>&1 | grep -q "UNLIMITED *; * // ([1-9][0-9]* currently)"
+    if [ $? -ne 0 ]
+    then
+        return 1
+    else
+        return 0
+    fi
 }
 
 # Name of the command
@@ -284,9 +302,17 @@ then
     exit $EXIT_FAILURE
 fi
 
+# Need to check if any files have no icebergs (the UNLIMITED dimension
+# has a zero length).  Remove these files from the list of files to
+# combine.
+combine_files=""
+for f in $in_files
+do
+    has_icebergs $f && combine_files="$combine_files $f"
+done
 
 # Run ncrcat on the files
-ncrcat_cmd="$ncrcat $@"
+ncrcat_cmd="$ncrcat $combine_files $out_file"
 if [ $verbose -gt 0 ]
 then
     echoerr "debug1: Running '$ncrcat_cmd'"

@@ -20,6 +20,11 @@ any icebergs prior to performing the *ncrcat*.
 
 OPTIONS
 -------
+*-c*::
+Check if file is a valid icebergs file.  Will exit with zero if valid,
+or 255 if not a valid icebergs file.  Other non-zero exit status
+indicate an error occurred.
+
 *-h*::
 Print the help message
 
@@ -45,7 +50,7 @@ Seth Underwood.
 
 COPYRIGHT AND LICENSE
 ---------------------
-Copyright 2015 Geophysical Fluid Dynamics Laboratory
+Copyright 2015,2024 Geophysical Fluid Dynamics Laboratory
 
 The Flexible Modeling System (FMS) is free software; you can
 redistribute it and/or modify it and are expected to follow the terms
