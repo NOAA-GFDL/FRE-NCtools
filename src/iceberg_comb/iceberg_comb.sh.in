@@ -2,7 +2,7 @@
 
 script_name=$(basename "$0")
 
-pkg_libexec=${PKGLIBEXEC:-@pkglibexecdir@}
+pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
 
 EXIT_SUCCESS=0
 EXIT_FAILURE=1
@@ -155,7 +155,7 @@ while getopts :chvV OPT; do
             (( verbose++ ))
             ;;
         V)
-            $pkg_libexec/print_version $script_name
+            $pkg_libexec_dir/print_version $script_name
             exit $EXIT_SUCCESS
             ;;
         \?)

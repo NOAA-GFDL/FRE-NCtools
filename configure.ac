@@ -212,9 +212,9 @@ AC_SUBST(RPATH_FLAGS) dnl
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
                  lib/libnfu/Makefile
+                 man/Makefile
                  src/Makefile
                  postprocessing/combine_restarts/Makefile
-                 postprocessing/iceberg_comb/Makefile
                  postprocessing/list_ncvars/Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile

@@ -10,6 +10,8 @@ bin_PROGRAMS = \
   decompress-ncc \
   $(combine_programs)
 
+bin_SCRIPTS = iceberg_comb.sh
+
 pkglibexec_PROGRAMS = print_version
 
 noinst_LIBRARIES = libver.a
@@ -54,6 +56,13 @@ version.h: Makefile
 DISTCLEANFILES = $(BUILT_SOURCES)
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = iceberg_comb/iceberg_comb.sh.in \
+    iceberg_comb/iceberg_comb.sh.txt \
+	asciidoc.conf
+
+clean-local:
+	$(RM) $(bin_SCRIPTS) $(BUILT_SOURCES)
+
 # ********************************************************* #
 # land_util programs                                        #
 # ********************************************************* #
@@ -77,3 +86,17 @@ scatter_ncc_LDADD = $(f_netcdf_ldadds) $(top_builddir)/lib/libnfu/libnfu.a $(LDA
 # ********************************************************* #
 mppnccombine_SOURCES = mpp-nccombine/mppnccombine.c
 mppnccombine_LDADD = $(c_netcdf_ldadds) -lm $(LDADD)
+
+
+# ********************************************************* #
+# Combine Scripts                                           #
+# ********************************************************* #
+do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
+               -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
+               -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
+               -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
+               -e 's,[@]NCATTED[@],$(NCATTED),g'
+
+iceberg_comb.sh: iceberg_comb/iceberg_comb.sh.in Makefile
+	$(do_subst) < $(srcdir)/iceberg_comb/iceberg_comb.sh.in > iceberg_comb.sh
+	chmod +x iceberg_comb.sh

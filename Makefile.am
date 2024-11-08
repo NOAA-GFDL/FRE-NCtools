@@ -22,7 +22,6 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = lib/libnfu \
           src \
           postprocessing/combine_restarts \
-          postprocessing/iceberg_comb \
           postprocessing/list_ncvars \
           postprocessing/plevel \
           postprocessing/split_ncvars \
@@ -52,7 +51,8 @@ SUBDIRS = lib/libnfu \
           tools/simple_hydrog/rmvpr \
           tools/nc_null_check
 
-SUBDIRS += tests
+SUBDIRS += man \
+           tests
 
 if WITH_CHECK_PROGS
 SUBDIRS += t
