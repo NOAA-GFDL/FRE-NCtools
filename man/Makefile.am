@@ -18,8 +18,13 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 EXTRA_DIST = \
+  combine-ncc.txt \
   combine_restarts.txt \
+  decompress-ncc.txt \
   iceberg_comb.sh.txt \
+  is-compressed.txt \
+  mppnccombine.txt \
+  scatter-ncc.txt \
   asciidoc.conf
 
 # Documentation settings
@@ -30,8 +35,13 @@ man_MANS =
 
 if WITH_ASCIIDOC
 man_MANS += \
+  combine-ncc.1 \
   combine_restarts.1 \
-  iceberg_comb.sh.1
+  decompress-ncc.1 \
+  iceberg_comb.sh.1 \
+  is-compressed.1 \
+  mppnccombine.1 \
+  scatter-ncc.1
 endif
 
 .txt.1:

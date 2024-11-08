@@ -406,7 +406,7 @@ subroutine usage()
   write(*,'(a)')'Usage:'
   write(*,'(a)')'  '//trim(name)//' [-D debug-level] -i ndiv_x -j ndiv_y in.nc '
   write(*,'(a)')'Scatters one file into several distributed file.'
-  write(*,'(a)')'Normally used to scatter bombined lm3 restart file'
+  write(*,'(a)')'Normally used to scatter combined lm3 restart file'
   write(*,'(a)')'The output files name is in.nc.????'
   write(*,'(a)')
   write(*,'(a)')'  -D debug-level   Specifies level of debug output verbosity'

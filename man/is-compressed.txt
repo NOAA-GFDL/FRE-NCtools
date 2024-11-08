@@ -1,0 +1,52 @@
+is-compressed(1)
+================
+
+NAME
+----
+is-compressed - checks if any variable in a netCDF file is compressed-by-gathering
+
+SYNOPSIS
+--------
+[verse]
+is-compressed [options] FILE
+
+DESCRIPTION
+-----------
+
+Test if any variable in FILE is compressed-by-gathering.
+Exit status is 0 if compressed, 255 if not compressed.
+
+OPTIONS
+-------
+
+*-d*, *--debug*::
+add verbosity to the output
+
+*-h*, *--help*::
+display this help and exit
+
+*-V*, *--version*::
+output version information and exit
+
+BUGS
+----
+Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Sergey Malyshev
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2009-2024 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

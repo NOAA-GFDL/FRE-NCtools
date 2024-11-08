@@ -1,0 +1,63 @@
+decompress-ncc(1)
+=================
+
+NAME
+----
+decompress-ncc - converts a compressed-by-gathering netCDF file to a regular netCDF file
+
+SYNOPSIS
+--------
+[verse]
+decompress-ncc [-v verbosity-level] [-m] in.nc [...] out.nc
+
+DESCRIPTION
+-----------
+
+Converts one or several compressed-by-gathering netcdf file into
+one regular netcdf. Normally used to convert lm3 restarts into a
+form suitable for visualization applications.
+
+OPTIONS
+-------
+
+*-v verbosity-level*::
+Specifies level of debug output verbosity
+
+*-m*::
+Forces adding a missing_value attribute to the variables
+that do not have it
+
+*-h*, *--help*::
+display this help and exit
+
+*-V*, *--version*::
+output version information and exit
+
+_in.nc_::
+Input file name(s)
+
+_out.nc_::
+Output file name
+
+BUGS
+----
+Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Sergey Malyshev
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2009-2024 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
