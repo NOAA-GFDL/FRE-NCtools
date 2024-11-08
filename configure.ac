@@ -111,6 +111,7 @@ fi
 
 # Check for programs
 AC_PROG_GREP
+AC_PROG_SED
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
@@ -133,8 +134,10 @@ AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
 # Although these are supplied with the NetCDF C library, we'll double
 # check that ncgen and ncdump are available
-AC_CHECK_PROGS(NCGEN, [ncgen])
-AC_CHECK_PROGS(NCDUMP, [ncdump])
+AC_PATH_PROG(NCGEN, [ncgen])
+AC_PATH_PROG(NCDUMP, [ncdump])
+AC_PATH_PROG(NCRCAT, [ncrcat])
+AC_PATH_PROG(NCATTED, [ncatted])
 
 AC_PYTHON_MODULE(xarray, [], python3)
 if test ${HAVE_PYMOD_XARRAY} = yes; then

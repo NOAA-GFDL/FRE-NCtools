@@ -17,18 +17,30 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-dist_bin_SCRIPTS = iceberg_comb.sh
-EXTRA_DIST = iceberg_comb.sh.txt asciidoc.conf
+bin_SCRIPTS = iceberg_comb.sh
+EXTRA_DIST = iceberg_comb.sh.in \
+    iceberg_comb.sh.txt \
+    asciidoc.conf
 
 # Documentation settings
 A2X = a2x
 ASCIIDOC_CFG = $(srcdir)/asciidoc.conf
+
+do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
+               -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
+               -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
+               -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
+               -e 's,[@]NCATTED[@],$(NCATTED),g'
 
 if WITH_ASCIIDOC
 man_MANS = iceberg_comb.sh.1
 else
 man_MANS =
 endif
+
+iceberg_comb.sh: iceberg_comb.sh.in Makefile
+	$(do_subst) < $(srcdir)/iceberg_comb.sh.in > iceberg_comb.sh
+	chmod +x iceberg_comb.sh
 
 .txt.1:
 	$(A2X) -v -L\

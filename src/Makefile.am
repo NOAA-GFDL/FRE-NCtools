@@ -10,7 +10,7 @@ bin_PROGRAMS = \
   decompress-ncc \
   $(combine_programs)
 
-libexec_PROGRAMS = print_version
+pkglibexec_PROGRAMS = print_version
 
 noinst_LIBRARIES = libver.a
 

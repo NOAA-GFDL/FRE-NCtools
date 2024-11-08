@@ -2,6 +2,8 @@
 
 script_name=$(basename "$0")
 
+pkg_libexec=${PKGLIBEXEC:-@pkglibexecdir@}
+
 EXIT_SUCCESS=0
 EXIT_FAILURE=1
 EXIT_NOTIBGS=255
@@ -135,7 +137,7 @@ while getopts :chvV OPT; do
             (( verbose++ ))
             ;;
         V)
-            echo "${myCommand}: Version ${version}"
+            $pkg_libexec/print_version $script_name
             exit $EXIT_SUCCESS
             ;;
         \?)
@@ -151,7 +153,7 @@ shift $((OPTIND-1))
 # Check that required commands are still available, if not available
 # at the given path, fallback to the something in the path if
 # available.
-ncdump=$(find_command "ncdump" "${NCDUMP:-/Users/seth.underwood/opt/homebrew/bin/ncdump}")
+ncdump=$(find_command "ncdump" "${NCDUMP:-@NCDUMP@}")
 if [ -z $ncdump ]
 then
     echoerr "$script_name: Unable to find command 'ncdump'"
@@ -162,7 +164,7 @@ then
     echoerr "debug1: Using ncdump command '$ncdump'"
 fi
 
-ncrcat=$(find_command "ncrcat" "${NCRCAT:-/Users/seth.underwood/opt/homebrew/bin/ncrcat}")
+ncrcat=$(find_command "ncrcat" "${NCRCAT:-@NCRCAT@}")
 if [ -z $ncrcat ]
 then
     echoerr "$script_name: Unable to find command 'ncrcat'"
@@ -173,7 +175,7 @@ then
     echoerr "debug1: Using ncrcat command '$ncrcat'"
 fi
 
-ncatted=$(find_command "ncatted" ${NCATTED:-/Users/seth.underwood/opt/homebrew/bin/ncatted})
+ncatted=$(find_command "ncatted" ${NCATTED:-@NCATTED@})
 if [ -z $ncatted ]
 then
     echoerr "$script_name: Unable to find command 'ncatted'"
