@@ -17,8 +17,10 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-EXTRA_DIST = iceberg_comb.sh.txt \
-    asciidoc.conf
+EXTRA_DIST = \
+  combine_restarts.txt \
+  iceberg_comb.sh.txt \
+  asciidoc.conf
 
 # Documentation settings
 A2X = a2x
@@ -27,7 +29,9 @@ ASCIIDOC_CFG = $(srcdir)/asciidoc.conf
 man_MANS =
 
 if WITH_ASCIIDOC
-man_MANS += iceberg_comb.sh.1
+man_MANS += \
+  combine_restarts.1 \
+  iceberg_comb.sh.1
 endif
 
 .txt.1:

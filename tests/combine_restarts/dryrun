@@ -1,0 +1,332 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+# Run combine_restarts with the dry run option
+# Verify the output has all three calls, and that no files were created
+# Also verify the rm option does not remove files
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v combine_restarts
+    combine_restarts -V
+fi
+
+. "$srcdir/init.sh"
+
+# Create the compressed-by-gathering NetCDF file
+ncgen -o land.nc.0000 << EOF || framework_failure_
+netcdf land.nc {
+dimensions:
+  lat = 10 ;
+  lon = 10 ;
+  lpt = 5 ;
+variables:
+  int lpt(lpt) ;
+    lpt:compress = "lat lon" ;
+  float lst(lpt);
+  float lat(lat) ;
+  float lon(lon) ;
+data:
+  lon = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lat = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lpt = 1, 5, 22, 35, 47 ;
+  lst = 100.0, 101.0, 102.0, 103.0, 104.0 ;
+}
+EOF
+
+ncgen -o land.nc.0001 << EOF || framework_failure_
+netcdf land.nc {
+dimensions:
+  lat = 10 ;
+  lon = 10 ;
+  lpt = 5 ;
+variables:
+  int lpt(lpt) ;
+    lpt:compress = "lat lon" ;
+  float lst(lpt);
+  float lat(lat) ;
+  float lon(lon) ;
+data:
+  lon = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lat = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 ;
+  lpt = 51, 63, 64, 77, 94 ;
+  lst = 105.0, 106.0, 107.0, 108.0, 109.0 ;
+}
+EOF
+
+ncgen -o decomp.nc.0000 << EOF || framework_failure_
+netcdf decomp.nc {
+dimensions:
+  grid_xt = 10 ;
+  grid_yt = 2 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 1, 10 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 8, 1, 2 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0000" ;
+  :NumFilesInSet = 4 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  grid_yt = 0.0, 1.0  ;
+  time = 0 ;
+  var =
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19 ;
+}
+EOF
+
+ncgen -o decomp.nc.0001 << EOF || framework_failure_
+netcdf decomp.nc {
+dimensions:
+  grid_xt = 10 ;
+  grid_yt = 2 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 1, 10 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 8, 3, 4 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0001" ;
+  :NumFilesInSet = 4 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  grid_yt = 2.0, 3.0 ;
+  time = 0 ;
+  var =
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35, 36, 37, 38, 39 ;
+}
+EOF
+
+ncgen -o decomp.nc.0002 << EOF || framework_failure_
+netcdf decomp.nc {
+dimensions:
+  grid_xt = 10 ;
+  grid_yt = 2 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 1, 10 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 8, 5, 6 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0002" ;
+  :NumFilesInSet = 4 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  grid_yt = 4.0, 5.0 ;
+  time = 0 ;
+  var =
+    40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59 ;
+}
+EOF
+
+ncgen -o decomp.nc.0003 << EOF || framework_failure_
+netcdf decomp.nc {
+dimensions:
+  grid_xt = 10 ;
+  grid_yt = 2 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 1, 10 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 8, 7, 8 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0003" ;
+  :NumFilesInSet = 4 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  grid_yt = 6.0, 7.0 ;
+  time = 0 ;
+  var =
+    60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+    70, 71, 72, 73, 74, 75, 76, 77, 78, 79 ;
+}
+EOF
+
+ncgen -o iceberg.nc.0000 << EOF || framework_failure_
+netcdf iceberg.nc {
+dimensions:
+  i = UNLIMITED ; // (5 currently)
+variables:
+  double lon(i) ;
+    lon:long_name = "longitude" ;
+    lon:units = "degrees_E" ;
+  double lat(i) ;
+    lat:long_name = "latitude" ;
+    lat:units = "degrees_N" ;
+    int i ;
+// global attributes:
+                :NumFilesInSet = 3 ;
+                :file_format_major_version = 0 ;
+                :file_format_minor_version = 1 ;
+                :time_axis = 0 ;
+data:
+  i = 5 ;
+  lon = 1, 2, 3, 4, 5 ;
+  lat = 15, 14, 13, 12, 11 ;
+}
+EOF
+
+ncgen -o iceberg.nc.0001 << EOF || framework_failure_
+netcdf iceberg.nc {
+dimensions:
+  i = UNLIMITED ; // (2 currently)
+variables:
+  double lon(i) ;
+    lon:long_name = "longitude" ;
+    lon:units = "degrees_E" ;
+  double lat(i) ;
+    lat:long_name = "latitude" ;
+    lat:units = "degrees_N" ;
+    int i ;
+// global attributes:
+                :NumFilesInSet = 3 ;
+                :file_format_major_version = 0 ;
+                :file_format_minor_version = 1 ;
+                :time_axis = 0 ;
+data:
+  i = 5 ;
+  lon = 6, 7 ;
+  lat = 10, 9 ;
+}
+EOF
+
+ncgen -o iceberg.nc.0002 << EOF || framework_failure_
+netcdf iceberg.nc {
+dimensions:
+  i = UNLIMITED ; // (8 currently)
+variables:
+  double lon(i) ;
+    lon:long_name = "longitude" ;
+    lon:units = "degrees_E" ;
+  double lat(i) ;
+    lat:long_name = "latitude" ;
+    lat:units = "degrees_N" ;
+    int i ;
+// global attributes:
+                :NumFilesInSet = 3 ;
+                :file_format_major_version = 0 ;
+                :file_format_minor_version = 1 ;
+                :time_axis = 0 ;
+data:
+  i = 5 ;
+  lon = 8, 9, 10, 11, 12, 13, 14, 15 ;
+  lat = 8, 7, 6, 5, 4, 3, 2, 1 ;
+}
+EOF
+
+num_files=$(ls | wc -w)
+
+output=$(combine_restarts -n 2>&1) || fail_ Dry run failed
+echo "$output" | grep mppnccombine || fail_ mppnccombine not found in output "\n******\n$output\n******"
+echo "$output" | grep iceberg_comb.sh || fail_ iceberg_comb.sh not found in output "\n******\n$output\n******"
+echo "$output" | grep combine-ncc || fail_ combine-ncc not found in output "\n******\n$output\n******"
+
+ls *.nc && fail_ dry run option created netCDF files
+
+# check that the -r option does not remove any files with dryrun
+combine_restarts -n -r || fail_ dry run with -r option failed
+test $(ls *.nc.???? | wc -w) -eq $num_files || fail_ combine_restarts with -n -r deleted files "\n******\n$(ls -1)\n******"
+
+Exit $fail

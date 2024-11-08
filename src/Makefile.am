@@ -10,7 +10,9 @@ bin_PROGRAMS = \
   decompress-ncc \
   $(combine_programs)
 
-bin_SCRIPTS = iceberg_comb.sh
+bin_SCRIPTS = \
+  combine_restarts \
+  iceberg_comb.sh
 
 pkglibexec_PROGRAMS = print_version
 
@@ -56,9 +58,9 @@ version.h: Makefile
 DISTCLEANFILES = $(BUILT_SOURCES)
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = iceberg_comb/iceberg_comb.sh.in \
-    iceberg_comb/iceberg_comb.sh.txt \
-	asciidoc.conf
+EXTRA_DIST = \
+  combine_restarts/combine_restarts.in \
+  iceberg_comb/iceberg_comb.sh.in
 
 clean-local:
 	$(RM) $(bin_SCRIPTS) $(BUILT_SOURCES)
@@ -95,7 +97,13 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
                -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
                -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
-               -e 's,[@]NCATTED[@],$(NCATTED),g'
+               -e 's,[@]NCATTED[@],$(NCATTED),g' \
+               -e 's,[@]SED[@],$(SED),g' \
+               -e 's,[@]EGREP[@],$(EGREP),g'
+
+combine_restarts: combine_restarts/combine_restarts.in
+	$(do_subst) < $(srcdir)/combine_restarts/combine_restarts.in > combine_restarts
+	chmod +x combine_restarts
 
 iceberg_comb.sh: iceberg_comb/iceberg_comb.sh.in Makefile
 	$(do_subst) < $(srcdir)/iceberg_comb/iceberg_comb.sh.in > iceberg_comb.sh

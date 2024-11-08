@@ -35,6 +35,9 @@ TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
                     PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH";
 
 TESTS = combine-ncc/combine \
+        combine_restarts/combine \
+        combine_restarts/dryrun \
+        combine_restarts/extra_options \
         decompress-ncc/decompress \
         iceberg_comb/check-valid-file \
         iceberg_comb/combine \

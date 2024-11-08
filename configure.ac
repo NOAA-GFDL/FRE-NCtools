@@ -111,6 +111,7 @@ fi
 
 # Check for programs
 AC_PROG_GREP
+AC_PROG_EGREP
 AC_PROG_SED
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
@@ -214,7 +215,6 @@ AC_CONFIG_FILES([Makefile
                  lib/libnfu/Makefile
                  man/Makefile
                  src/Makefile
-                 postprocessing/combine_restarts/Makefile
                  postprocessing/list_ncvars/Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile

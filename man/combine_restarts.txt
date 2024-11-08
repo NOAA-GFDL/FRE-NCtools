@@ -15,16 +15,28 @@ DESCRIPTION
 -----------
 *combine_restarts* will use the correct combine utility (*mppnccombine*,
 *combine-ncc*, or *iceberg_comb.sh*) to combine any restart files that reside in the
-currrent working directory.  *combine_restarts* uses the same options used
+current working directory.  *combine_restarts* uses the same options used
 in the FRE workflow.
 
 OPTIONS
 -------
+*-C <combine-ncc_options>*::
+Options to pass to combine-ncc
+
+*-M <mppnccombine_options>*::
+Options to pass to mppnccombine
+
+*-n*::
+Print the commands that would be executed, but do not execute them
+
 *-h*::
 Print the help message
 
 *-v*::
 Increase verbosity.  Can be repeated.
+
+*-V*::
+Output version information and exit
 
 SEE ALSO
 --------
@@ -32,7 +44,7 @@ SEE ALSO
 
 BUGS
 ----
-Send bug reports to GFDL's Helpdesk <oar.gfdl.help@noaa.gov>
+Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
 
 AUTHORS
 -------
@@ -41,7 +53,7 @@ Seth Underwood.
 
 COPYRIGHT AND LICENSE
 ---------------------
-Copyright 2015 Geophysical Fluid Dynamics Laboratory
+Copyright 2015, 2024 Geophysical Fluid Dynamics Laboratory
 
 The Flexible Modeling System (FMS) is free software; you can
 redistribute it and/or modify it and are expected to follow the terms

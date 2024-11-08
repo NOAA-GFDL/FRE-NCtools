@@ -1,4 +1,23 @@
 #!/bin/sh
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
 
 script_name=$(basename "$0")
 
@@ -80,9 +99,9 @@ checkValidFileVersion() {
     local minor_version=$(echo $output | sed -n 's/.*:file_format_minor_version *= *\([0-9][0-9]*\) *;.*/\1/p')
     if [ $ncdump_status -eq 0 ]
     then
-        if [  $major_version -gt $ICEBERGS_MAJOR_VERSION -o \
-              $major_version -eq $ICEBERGS_MAJOR_VERSION -a \
-              $minor_version -ge $ICEBERGS_MINOR_VERSION ]
+        if [  ${major_version:--1} -gt $ICEBERGS_MAJOR_VERSION -o \
+              ${major_version:--1} -eq $ICEBERGS_MAJOR_VERSION -a \
+              ${minor_version:--1} -ge $ICEBERGS_MINOR_VERSION ]
         then
             rtn=$EXIT_SUCCESS
         else
