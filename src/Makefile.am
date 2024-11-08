@@ -8,11 +8,13 @@ combine_programs = \
 
 bin_PROGRAMS = \
   decompress-ncc \
+  list_ncvars \
   $(combine_programs)
 
 bin_SCRIPTS = \
   combine_restarts \
-  iceberg_comb.sh
+  iceberg_comb.sh \
+  list_ncvars.csh
 
 pkglibexec_PROGRAMS = print_version
 
@@ -59,11 +61,20 @@ DISTCLEANFILES = $(BUILT_SOURCES)
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = \
-  combine_restarts/combine_restarts.in \
-  iceberg_comb/iceberg_comb.sh.in
+  combine-restarts/combine_restarts.in \
+  iceberg-comb/iceberg_comb.sh.in \
+  list-ncvars/list_ncvars.csh.in
 
 clean-local:
 	$(RM) $(bin_SCRIPTS) $(BUILT_SOURCES)
+
+do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
+               -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
+               -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
+               -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
+               -e 's,[@]NCATTED[@],$(NCATTED),g' \
+               -e 's,[@]SED[@],$(SED),g' \
+               -e 's,[@]EGREP[@],$(EGREP),g'
 
 # ********************************************************* #
 # land_util programs                                        #
@@ -89,22 +100,24 @@ scatter_ncc_LDADD = $(f_netcdf_ldadds) $(top_builddir)/lib/libnfu/libnfu.a $(LDA
 mppnccombine_SOURCES = mpp-nccombine/mppnccombine.c
 mppnccombine_LDADD = $(c_netcdf_ldadds) -lm $(LDADD)
 
+# ********************************************************* #
+# list_ncvars                                               #
+# ********************************************************* #
+list_ncvars_SOURCES = list-ncvars/list_ncvars.f90
+list_ncvars_LDADD = $(f_netcdf_ldadds)
+
+list_ncvars.csh: list-ncvars/list_ncvars.csh.in Makefile
+	$(do_subst) < $(srcdir)/list-ncvars/list_ncvars.csh.in > list_ncvars.csh
+	chmod +x list_ncvars.csh
 
 # ********************************************************* #
 # Combine Scripts                                           #
 # ********************************************************* #
-do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
-               -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
-               -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
-               -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
-               -e 's,[@]NCATTED[@],$(NCATTED),g' \
-               -e 's,[@]SED[@],$(SED),g' \
-               -e 's,[@]EGREP[@],$(EGREP),g'
 
-combine_restarts: combine_restarts/combine_restarts.in
-	$(do_subst) < $(srcdir)/combine_restarts/combine_restarts.in > combine_restarts
+combine_restarts: combine-restarts/combine_restarts.in
+	$(do_subst) < $(srcdir)/combine-restarts/combine_restarts.in > combine_restarts
 	chmod +x combine_restarts
 
-iceberg_comb.sh: iceberg_comb/iceberg_comb.sh.in Makefile
-	$(do_subst) < $(srcdir)/iceberg_comb/iceberg_comb.sh.in > iceberg_comb.sh
+iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
+	$(do_subst) < $(srcdir)/iceberg-comb/iceberg_comb.sh.in > iceberg_comb.sh
 	chmod +x iceberg_comb.sh

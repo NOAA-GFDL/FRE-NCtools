@@ -19,21 +19,13 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-#
-# Copyright (C) NOAA Geophysical Fluid Dynamics Laboratory, 2000-2010
-# Designed and written by V. Balaji, Amy Langenhorst and Aleksey Yakovlev
-#
-#
-# $Id: list_ncvars.csh,v 20.0 2013/12/14 00:29:09 fms Exp $
-# ------------------------------------------------------------------------------
-# FMS/FRE Project: Script to Call the "list_ncvars" Program
-# ------------------------------------------------------------------------------
-# afy    Ver   1.00  Initial version (copied from 1.1.2.1)          June 10
-# afy    Ver   2.00  Don't source the "init.csh" script             June 10
-# afy    Ver   2.01  Use "which" to locate the "list_ncvars"        June 10
-# afy    Ver   3.00  Return to the original executable name         June 10
-# ------------------------------------------------------------------------------
-#
+
+set name = `basename $0`
+
+set pkg_libexec_dir = "@pkglibexecdir@"
+if ($?PKGLIBEXECDIR) then
+    set pgk_libexec_dir=$PKGLIBEXECDIR
+endif
 
 set static    = .false.
 set nonstatic = .false.
@@ -46,7 +38,7 @@ set var4d  = .false.
 ##################################################################
 #  ----- parse input argument list ------
 
-set argv = (`getopt st01234 $*`)
+set argv = (`getopt hstV01234 $*`)
 
 while ("$argv[1]" != "--")
     switch ($argv[1])
@@ -64,6 +56,10 @@ while ("$argv[1]" != "--")
             set var3d = .true.; breaksw
         case -4:
             set var4d = .true.; breaksw
+        case -h:
+            set help; breaksw
+        case -V:
+            $pgk_libexec_dir/print_version $name; exit; breaksw
     endsw
     shift argv
 end
@@ -80,7 +76,6 @@ if ($var0d == ".false." && $var1d == ".false." && \
 #----- help message -----
 
 if ($?help) then
-set name = `basename $0`
 cat << EOF
 
 Usage:  $name -s | -t [-0123] files...
@@ -92,6 +87,8 @@ Usage:  $name -s | -t [-0123] files...
         -2   list names of 2-d fields
         -3   list names of 3-d fields
         -4   list names of 4-d fields
+        -h   Display this help and exit
+        -V   Output version information and exit
         files... list of netcdf files
 
    Options -0,1,2,3,4 exclude the time dimension.
@@ -103,7 +100,7 @@ Usage:  $name -s | -t [-0123] files...
    Variables that are character data types are skipped.
 
 Example:  $name -st -0123 myfile.nc
-          
+
           This will list all variables (static and non-static) that
           have a rank of 0, 1, 2, or 3.
 
@@ -112,8 +109,6 @@ exit 1
 endif
 
 ##################################################################
-
-alias list_ncvars `which list_ncvars.exe`
 
 # unique namelist name
 set nml_name = nml.$$.`date '+%j%H%M%S%N'`
@@ -142,4 +137,3 @@ end
 
 # clean up
 rm -f $nml_name
-

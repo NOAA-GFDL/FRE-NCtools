@@ -215,7 +215,6 @@ AC_CONFIG_FILES([Makefile
                  lib/libnfu/Makefile
                  man/Makefile
                  src/Makefile
-                 postprocessing/list_ncvars/Makefile
                  postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile

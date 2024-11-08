@@ -28,6 +28,11 @@ display this help and exit
 *-V*, *--version*::
 output version information and exit
 
+SEE ALSO
+--------
+*compress-ncc*(1), *decompress-ncc*(1), *scatter-ncc*(1),
+https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.html
+
 BUGS
 ----
 Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>

@@ -39,6 +39,11 @@ Input file name(s)
 _out.nc_::
 Output file name
 
+SEE ALSO
+--------
+*combine-ncc*(1), *is-compressed*(1), *scatter-ncc*(1),
+https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.html
+
 BUGS
 ----
 Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
