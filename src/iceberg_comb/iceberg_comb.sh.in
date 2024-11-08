@@ -112,7 +112,7 @@ checkIfIcebergs() {
         then
             rtn=$EXIT_SUCCESS
         else
-            rtn=$EXIT_NOTIBGSecho
+            rtn=$EXIT_NOTIBGS
         fi
     fi
     return $rtn

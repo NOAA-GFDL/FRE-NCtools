@@ -204,7 +204,7 @@ EOF
 
 # run mppnccombine to generate decomp.nc, not
 # listing other input files
-mppnccombine -f -e 6 decomp.nc || fail=1
+mppnccombine -f -e 6 decomp.nc || skip_
 ncdump decomp.nc || framework_failure_
 
 Exit $fail

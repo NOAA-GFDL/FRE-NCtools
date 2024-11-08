@@ -36,6 +36,12 @@ TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
 
 TESTS = combine-ncc/combine \
         decompress-ncc/decompress \
+        iceberg_comb/check-valid-file \
+        iceberg_comb/combine \
+        iceberg_comb/combine-no-icebergs \
+        iceberg_comb/missing-file \
+        iceberg_comb/outfile-exists \
+        iceberg_comb/setnum-mismatch \
         is-compressed/compressed \
         is-compressed/not-compressed \
         mppnccombine/dry-run \
