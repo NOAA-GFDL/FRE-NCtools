@@ -23,6 +23,8 @@ EXTRA_DIST = \
   decompress-ncc.txt \
   iceberg_comb.sh.txt \
   is-compressed.txt \
+  list_ncvars.txt \
+  list_ncvars.csh.txt \
   mppnccombine.txt \
   scatter-ncc.txt \
   asciidoc.conf
@@ -40,6 +42,8 @@ man_MANS += \
   decompress-ncc.1 \
   iceberg_comb.sh.1 \
   is-compressed.1 \
+  list_ncvars.1 \
+  list_ncvars.csh.1 \
   mppnccombine.1 \
   scatter-ncc.1
 endif

@@ -32,6 +32,7 @@ endif
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
                     export skip_mpi=$(skip_MPI); \
                     export skipflag=$(skipflag); \
+                    export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
                     PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH";
 
 TESTS = combine-ncc/combine \
@@ -47,6 +48,8 @@ TESTS = combine-ncc/combine \
         iceberg_comb/setnum-mismatch \
         is-compressed/compressed \
         is-compressed/not-compressed \
+        list_ncvars/list_ncvars_csh \
+        list_ncvars/list_ncvars_ftn \
         mppnccombine/dry-run \
         mppnccombine/list-output-files \
         mppnccombine/missing-file-fail \

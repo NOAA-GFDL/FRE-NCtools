@@ -1,0 +1,123 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+# Test the Fortran list_ncvars, using a namelist file
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v list_ncvars.csh
+    list_ncvars.csh -V
+fi
+
+. "$srcdir/init.sh"
+
+ncgen -o file1.nc << EOF || framework_failure_
+netcdf file1.nc {
+dimensions:
+  x = 2 ;
+  y = 2 ;
+  z = 2 ;
+  i = 2 ;
+  t = UNLIMITED ; // (2 currently)
+variables:
+  double x(x) ;
+  double y(y) ;
+  double z(z) ;
+  double i(i) ;
+  double t(t) ;
+  float var_s_0 ;
+  float var_s_1(x) ;
+  float var_s_2(x, y) ;
+  float var_s_3(x, y, z) ;
+  float var_s_4(x, y, z, i) ;
+data:
+  x = 0, 1 ;
+  y = 0, 1 ;
+  z = 0, 1 ;
+  i = 0, 1 ;
+  t = 1, 2 ;
+  var_s_0 = 0 ;
+  var_s_1 = 0, 1 ;
+  var_s_2 = 0, 1, 2, 3 ;
+  var_s_3 = 0, 1, 2, 3, 4, 5, 6, 7;
+  var_s_4 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ;
+}
+EOF
+
+ncgen -o file2.nc << EOF || framework_failure_
+netcdf file2.nc {
+dimensions:
+  x = 2 ;
+  y = 2 ;
+  z = 2 ;
+  i = 2 ;
+  t = UNLIMITED ; // (2 currently)
+variables:
+  double x(x) ;
+  double y(y) ;
+  double z(z) ;
+  double i(i) ;
+  double t(t) ;
+  float var_t_0(t) ;
+  float var_t_1(t, x) ;
+  float var_t_2(t, x, y) ;
+  float var_t_3(t, x, y, z) ;
+  float var_t_4(t, x, y, z, i) ;
+data:
+  x = 0, 1 ;
+  y = 0, 1 ;
+  z = 0, 1 ;
+  i = 0, 1 ;
+  t = 1, 2 ;
+  var_t_0 = 0, 1 ;
+  var_t_1 = 0, 1, 2, 3 ;
+  var_t_2 = 0, 1, 2, 3, 4, 5, 6, 7 ;
+  var_t_3 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ;
+  var_t_4 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ;
+}
+EOF
+
+vars=$(list_ncvars.csh -s -0 file1.nc file2.nc) || \
+    fail_ list_ncvars.csh failed printing 1 static vars "\n****\n$vars\n****"
+nvars=$(echo $vars | wc -w) || framework_failure_
+test $nvars -eq 1 || \
+    fail_ list_ncvars should have printed 1 vars, but printed $nvars "\n*****\n$vars\n*****"
+
+vars=$(list_ncvars.csh -t -4 file1.nc file2.nc) || \
+    fail_ list_ncvars.csh failed printing 1 non-static vars "\n***n$vars\n****"
+nvars=$(echo $vars | wc -w) || framework_failure_
+test $nvars -eq 1 || \
+    fail_ list_ncvars should have printed 1 vars, but printed $nvars "\n*****$vars\n*****"
+
+vars=$(list_ncvars.csh -t -4 file1.nc) || \
+    fail_ list_ncvars.csh failed printing 0 non-static vars "\n***n$vars\n****"
+nvars=$(echo $vars | wc -w) || framework_failure_
+test $nvars -eq 0 || \
+    fail_ list_ncvars should have printed 0 vars, but printed $nvars "\n*****$vars\n*****"
+
+vars=$(list_ncvars.csh -s -14 file1.nc) || \
+    fail_ list_ncvars.csh failed printing 2 static vars "\n***n$vars\n****"
+nvars=$(echo $vars | wc -w) || framework_failure_
+test $nvars -eq 2 || \
+    fail_ list_ncvars should have printed 2 vars, but printed $nvars "\n*****$vars\n*****"
+
+Exit $fail

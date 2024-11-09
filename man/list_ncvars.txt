@@ -1,0 +1,99 @@
+list_ncvars(1)
+==============
+
+NAME
+----
+list_ncvars -  list variables from a netCDF file
+
+SYNOPSIS
+--------
+[verse]
+list_ncvars < <INPUT_NML>
+
+
+DESCRIPTION
+-----------
+list the variables from a set of netCDF files, based on the options
+provided.  Dimension variables are not printed.  The record dimension
+is not counted towards the dimension rank for non-static varibles.
+
+Variables that end with "_T1", "_T2", and "_DT", and variables that
+contain only character arrays are skipped.
+
+OPTIONS
+-------
+_INPUT_NML_::
+A Fortran namelist passed in from stdin with the name "input", with the variables:
+
+[cols="1,1"]
+|===
+| filename
+| CHARACTER(len=NF90_MAX_NAME)
+
+| list_static
+| LOGICAL
+
+| list_nonstatic
+| LOGICAL
+
+| var0d
+| LOGICAL
+
+| var1d
+| LOGICAL
+
+| var2d
+| LOGICAL
+
+| var3d
+| LOGICAL
+
+| var4d
+| LOGICAL
+|===
+
+EXAMPLE
+-------
+Print all static, 1-d variables in netCDF file "file.nc"
+
+[verse]
+list_ncvars <<EOF
+ &input
+   filename = 'file.nc',
+   list_static = .true.,
+   list_nonstatic = .false.,
+   var0d = .false.,
+   var1d = .true.,
+   var2d = .false.,
+   var3d = .false.,
+   var4d = .false.,
+ &end
+EOF
+
+
+SEE ALSO
+--------
+*list_ncvars.csh*(1)
+
+BUGS
+----
+Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Aleksey Yakovelv
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2009, 2017, 2024 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

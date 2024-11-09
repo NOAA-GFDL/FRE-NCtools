@@ -1,0 +1,81 @@
+list_ncvars.csh(1)
+==================
+
+NAME
+----
+list_ncvars.csh - list variables from netCDF files
+
+SYNOPSIS
+--------
+[verse]
+list_ncvars.csh -s | -t [-0123] files...
+
+DESCRIPTION
+-----------
+list the variables from a set of netCDF files, based on the options
+provided.  Dimension variables are not printed.  The record dimension
+is not counted towards the dimension rank for non-static varibles.
+
+Variables that end with "_T1", "_T2", and "_DT", and variables that
+contain only character arrays are skipped.
+
+OPTIONS
+-------
+Usage:  $name -s | -t [-0123] files...
+
+*-s*::
+list names of static fields (no time dimension)
+
+*-t*::
+list names of non-static fields (with time dimension)
+
+*-0*::
+list names of scalar fields
+
+*-1*::
+list names of 1-d fields
+
+*-2*::
+list names of 2-d fields
+
+*-3*::
+list names of 3-d fields
+
+*-4*::
+list names of 4-d fields
+
+*-h*::
+Display this help and exit
+
+*-V*::
+Output version information and exit
+
+_files_::
+list of netcdf files
+
+SEE ALSO
+--------
+*list_ncvars*(1)
+
+BUGS
+----
+Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+
+AUTHORS
+-------
+Aleksey Yakovelv
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright 2009, 2017, 2024 Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
