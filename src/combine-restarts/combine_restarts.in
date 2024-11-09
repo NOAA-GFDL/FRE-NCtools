@@ -76,7 +76,7 @@ while getopts :hC:M:nrvV OPT; do
         remove_files=1
         ;;
     v)
-        (( verbose++ ))
+        verbose=$((verbose + 1))
         ;;
     V)
         $pkg_libexec_dir/print_version $script_name
@@ -109,15 +109,7 @@ done
 
 # Grep patterens needed
 patternGrepTail='\.[0-9]{4}$'
-patternGrepAscii='\<out\>|\<results\>'
 patternGrepRestartsOrNC='\<res\>|\<nc\>'
-patternGrepRegion='^rregion'
-patternGrepNC='\<nc\>'
-patternGrepIcebergs='icebergs.res*.nc'
-
-# matching patterns for find
-patternFindRestarts='.*\<res\>.*'
-patternFindNC='.*\<nc\>.*'
 
 restartFiles=$( ls -1 | @EGREP@ "$patternGrepRestartsOrNC.*$patternGrepTail" | @SED@ -r "s/$patternGrepTail//g" | sort -u )
 
@@ -175,7 +167,7 @@ do
             else
                 eval $iceberg_comb_cmd
             fi
-            if [[ $? -ne 0 ]]
+            if [ $? -ne 0 ]
             then
                 echoerr "${script_name}: error while combining icebergs file '${f}'"
                 exit $EXIT_FAILURE
@@ -207,7 +199,7 @@ do
             else
                 eval $mppnccombine_cmd
             fi
-            if [[ $? -ne 0 ]]; then
+            if [ $? -ne 0 ]; then
                 echoerr "${script_name}: error while combining file '${f}'"
                 exit $EXIT_FAILURE
             else
