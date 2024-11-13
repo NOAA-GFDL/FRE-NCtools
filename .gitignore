@@ -63,6 +63,7 @@ t/Test26/
 
 # Other build generated files
 config.h
+*.mod
 postprocessing/land_utils/combine-ncc
 postprocessing/land_utils/decompress-ncc
 postprocessing/land_utils/is-compressed

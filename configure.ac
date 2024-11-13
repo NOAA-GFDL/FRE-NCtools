@@ -71,6 +71,7 @@ AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
 AC_FC_MODULE_EXTENSION()
 AC_FC_MODULE_FLAG()
+AC_FC_MODULE_OUTPUT_FLAG()
 GX_FC_DEFAULT_REAL_KIND8_FLAG()
 GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
@@ -215,7 +216,6 @@ AC_CONFIG_FILES([Makefile
                  lib/libnfu/Makefile
                  man/Makefile
                  src/Makefile
-                 postprocessing/plevel/Makefile
                  postprocessing/split_ncvars/Makefile
                  postprocessing/timavg/Makefile
                  tools/libfrencutils/Makefile

@@ -9,6 +9,7 @@ combine_programs = \
 bin_PROGRAMS = \
   decompress-ncc \
   list_ncvars \
+  PLEV.exe \
   $(combine_programs)
 
 bin_SCRIPTS = \
@@ -31,7 +32,7 @@ noinst_HEADERS = \
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)
 
-AM_FCFLAGS = $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_FCFLAGS = $(FC_MODOUT)$(MODDIR)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 AM_CFLAGS = $(NETCDF_CFLAGS)
 LDADD = libver.a $(NETCDF_LDFLAGS) $(RPATH_FLAGS)
 
@@ -65,9 +66,11 @@ EXTRA_DIST = \
   iceberg-comb/iceberg_comb.sh.in \
   list-ncvars/list_ncvars.csh.in
 
+CLEANFILES = *.$(FC_MODEXT)
 clean-local:
 	$(RM) $(bin_SCRIPTS) $(BUILT_SOURCES)
 
+# Perform several substitutions
 do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
                -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
@@ -75,6 +78,11 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]NCATTED[@],$(NCATTED),g' \
                -e 's,[@]SED[@],$(SED),g' \
                -e 's,[@]EGREP[@],$(EGREP),g'
+
+# Items to handle Fortran module files
+SUFFIXES = _mod.$(FC_MODEXT)
+.F90_mod.$(FC_MODEXT):
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
 # ********************************************************* #
 # land_util programs                                        #
@@ -121,3 +129,30 @@ combine_restarts: combine-restarts/combine_restarts.in
 iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
 	$(do_subst) < $(srcdir)/iceberg-comb/iceberg_comb.sh.in > iceberg_comb.sh
 	chmod +x iceberg_comb.sh
+
+# ********************************************************* #
+# plevel                                                    #
+# ********************************************************* #
+dist_bin_SCRIPTS = plevel/plevel.sh
+PLEV_exe_SOURCES = plevel/plev_constants_mod.$(FC_MODEXT) \
+                   plevel/moisture_convert_mod.$(FC_MODEXT) \
+                   plevel/pressure_interp_mod.$(FC_MODEXT) \
+                   plevel/pinterp_utilities_mod.$(FC_MODEXT) \
+                   plevel/run_pressure_interp_mod.$(FC_MODEXT) \
+                   plevel/plev_constants.F90 \
+                   plevel/moisture_convert.F90 \
+                   plevel/pressure_interp.F90 \
+                   plevel/pinterp_utilities.F90 \
+                   plevel/run_pressure_interp.F90
+PLEV_exe_LDADD = $(f_netcdf_ldadds)
+BUILT_SOURCES += plevel/plev_constants_mod.$(FC_MODEXT) \
+                 plevel/moisture_convert_mod.$(FC_MODEXT) \
+                 plevel/pressure_interp_mod.$(FC_MODEXT) \
+                 plevel/pinterp_utilities_mod.$(FC_MODEXT)
+plevel/moisture_convert_mod.$(FC_MODEXT): plevel/plev_constants_mod.$(FC_MODEXT)
+plevel/pressure_interp_mod.$(FC_MODEXT):  plevel/plev_constants_mod.$(FC_MODEXT) plevel/moisture_convert_mod.$(FC_MODEXT)
+plevel/plev_constants.o: plevel/plev_constants_mod.$(FC_MODEXT)
+plevel/moisture_convert.o: plevel/moisture_convert_mod.$(FC_MODEXT)
+plevel/pressure_interp.o: plevel/pressure_interp_mod.$(FC_MODEXT)
+plevel/pinterp_utilities.o: plevel/pinterp_utilities_mod.$(FC_MODEXT)
+plevel/run_pressure_interp.o: plevel/plev_constants_mod.$(FC_MODEXT) plevel/pressure_interp_mod.$(FC_MODEXT) plevel/pinterp_utilities_mod.$(FC_MODEXT)

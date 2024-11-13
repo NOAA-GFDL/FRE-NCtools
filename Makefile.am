@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib/libnfu \
           src \
-          postprocessing/plevel \
           postprocessing/split_ncvars \
           postprocessing/timavg \
           tools/libfrencutils \
