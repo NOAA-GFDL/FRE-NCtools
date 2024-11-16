@@ -134,16 +134,15 @@ iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
 # plevel                                                    #
 # ********************************************************* #
 dist_bin_SCRIPTS = plevel/plevel.sh
-PLEV_exe_SOURCES = plevel/plev_constants_mod.$(FC_MODEXT) \
-                   plevel/moisture_convert_mod.$(FC_MODEXT) \
-                   plevel/pressure_interp_mod.$(FC_MODEXT) \
-                   plevel/pinterp_utilities_mod.$(FC_MODEXT) \
-                   plevel/run_pressure_interp_mod.$(FC_MODEXT) \
-                   plevel/plev_constants.F90 \
+PLEV_exe_SOURCES = plevel/plev_constants.F90 \
                    plevel/moisture_convert.F90 \
                    plevel/pressure_interp.F90 \
                    plevel/pinterp_utilities.F90 \
-                   plevel/run_pressure_interp.F90
+                   plevel/run_pressure_interp.F90 \
+                   plevel/plev_constants_mod.$(FC_MODEXT) \
+                   plevel/moisture_convert_mod.$(FC_MODEXT) \
+                   plevel/pressure_interp_mod.$(FC_MODEXT) \
+                   plevel/pinterp_utilities_mod.$(FC_MODEXT) \
 PLEV_exe_LDADD = $(f_netcdf_ldadds)
 BUILT_SOURCES += plevel/plev_constants_mod.$(FC_MODEXT) \
                  plevel/moisture_convert_mod.$(FC_MODEXT) \

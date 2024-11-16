@@ -9,7 +9,7 @@
 #define PHALF 34
 #define TIME 1
 #define PS_MIN 75223
-#define PS_MAX 103255
+#define PS_MAX 101325
 #define TEMP_MIN 250
 #define TEMP_MAX 330
 
@@ -167,4 +167,3 @@ int main() {
     printf("NetCDF file created successfully!\n");
     return 0;
 }
-
