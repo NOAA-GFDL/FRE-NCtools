@@ -26,6 +26,7 @@ EXTRA_DIST = \
   list_ncvars.txt \
   list_ncvars.csh.txt \
   mppnccombine.txt \
+  plevel.sh.txt \
   scatter-ncc.txt \
   asciidoc.conf
 
@@ -44,6 +45,7 @@ man_MANS += \
   is-compressed.1 \
   list_ncvars.1 \
   list_ncvars.csh.1 \
+  plevel.sh.1 \
   mppnccombine.1 \
   scatter-ncc.1
 endif
