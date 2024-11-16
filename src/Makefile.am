@@ -82,6 +82,7 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
 # Items to handle Fortran module files
 SUFFIXES = _mod.$(FC_MODEXT)
 .F90_mod.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
 # ********************************************************* #
@@ -142,7 +143,7 @@ PLEV_exe_SOURCES = plevel/plev_constants.F90 \
                    plevel/plev_constants_mod.$(FC_MODEXT) \
                    plevel/moisture_convert_mod.$(FC_MODEXT) \
                    plevel/pressure_interp_mod.$(FC_MODEXT) \
-                   plevel/pinterp_utilities_mod.$(FC_MODEXT) \
+                   plevel/pinterp_utilities_mod.$(FC_MODEXT)
 PLEV_exe_LDADD = $(f_netcdf_ldadds)
 BUILT_SOURCES += plevel/plev_constants_mod.$(FC_MODEXT) \
                  plevel/moisture_convert_mod.$(FC_MODEXT) \
