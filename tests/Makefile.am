@@ -29,7 +29,15 @@ else
 skipflag=""
 endif
 
+AM_CFLAGS = $(NETCDF_CFLAGS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+
+check_PROGRAMS = create_plevel_test_ncfile
+create_plevel_test_ncfile_SOURCES=plevel/create_plevel_test_ncfile.c
+
+
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
+                    builddir=$(abs_builddir); export builddir; \
                     export skip_mpi=$(skip_MPI); \
                     export skipflag=$(skipflag); \
                     export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
@@ -63,6 +71,7 @@ TESTS = combine-ncc/combine \
         mppnccombine/xt-decomp \
         mppnccombine/xyt-decomp \
         mppnccombine/yt-decomp \
+        plevel/plevel \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
         scatter-ncc/scatter_2x1

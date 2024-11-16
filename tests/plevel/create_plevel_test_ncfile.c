@@ -22,7 +22,9 @@ void check_err(int stat, int line) {
 
 int main() {
     int ncid, time_dim, xt_dim, yt_dim, pfull_dim, phalf_dim;
-    int times_id, xt_id, yt_id, phalf_id, pfull_id, pk_id, bk_id, ps_id, temp_id;
+    int times_id, xt_id, yt_id, phalf_id, pfull_id, pk_id, bk_id;
+    int ps_id, temp_id, dummy_id;
+
     int stat;
 
     size_t start_ps[3] = {0, 0, 0};
@@ -61,10 +63,11 @@ int main() {
     check_err(stat, __LINE__);
     stat = nc_def_var(ncid, "bk", NC_FLOAT, 1, &phalf_dim, &bk_id);
     check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "ps", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &ps_id);
+    stat = nc_def_var(ncid, "ps", NC_FLOAT, 3, (int[]){time_dim, xt_dim, yt_dim}, &ps_id);
     check_err(stat, __LINE__);
     stat = nc_def_var(ncid, "temp", NC_FLOAT, 4, (int[]){time_dim, pfull_dim, xt_dim, yt_dim}, &temp_id);
     check_err(stat, __LINE__);
+    stat = nc_def_var(ncid, "dummy", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &dummy_id);
 
     // Assign global attributes
     stat = nc_put_att_text(ncid, NC_GLOBAL, "description", 40, "Sample netCDF file for testing run_timepressure_interp");
@@ -84,7 +87,8 @@ int main() {
     // Allocate memory for sample data and write to file
     double times_data[TIME] = {0};
     float xt_data[NX], yt_data[NY], temp_data[PFULL][NX][NY];
-    float ps_data[NY][NX];
+    float ps_data[NX][NY];
+    float dummy_data[NX][NY];
 
     for (int i = 0; i < NX; i++) xt_data[i] = i;
     for (int i = 0; i < NY; i++) yt_data[i] = i;
@@ -130,9 +134,13 @@ int main() {
             for (int k = 0; k < NY; k++)
                 temp_data[i][j][k] = (rand() % (TEMP_MAX - TEMP_MIN)) + TEMP_MIN;
 
-    for (int i = 0; i < NY; i++)
-        for (int j = 0; j < NX; j++)
+    for (int i = 0; i < NX; i++)
+        for (int j = 0; j < NY; j++)
             ps_data[i][j] = (rand() % (PS_MAX-PS_MIN)) + PS_MIN;
+
+    for (int i = 0; i < NX; i++)
+        for (int j = 0; j < NY; j++)
+            dummy_data[i][j] = i * NX + j;
 
     // Writing data
     stat = nc_put_var_double(ncid, times_id, &times_data[0]);
@@ -156,8 +164,13 @@ int main() {
     check_err(stat, __LINE__);
     stat = nc_put_vara_float(ncid, ps_id,
                              (size_t[3]){0, 0, 0},
-                             (size_t[4]){1, NY, NX},
+                             (size_t[3]){1, NX, NY},
                              &ps_data[0][0]);
+    check_err(stat, __LINE__);
+    stat = nc_put_vara_float(ncid, dummy_id,
+                             (size_t[3]){0, 0, 0},
+                             (size_t[3]){1, NX, NY},
+                             &dummy_data[0][0]);
     check_err(stat, __LINE__);
 
     // Close the file
