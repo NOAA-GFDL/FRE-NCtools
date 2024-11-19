@@ -32,7 +32,10 @@ fi
 # Generate the test_input.nc file
 $builddir/create_plevel_test_ncfile || framework_failure_
 
-# Run plevel.sh with default options
-plevel.sh -i test_input.nc temp || fail_ plevel.sh failed
-test -e plevel.nc || fail_ plevel.nc file does not exist after running plevel.sh
-ncdump -v temp plevel.nc || fail_ temp variable not found in plevel.sh
+# Run plevel.sh writing all time levels
+plevel.sh -i test_input.nc -a -t ,, || fail_ plevel.sh failed
+ncdump -v time plevel.nc | grep 'time = UNLIMITED ; // (10 currently)' || fail_ expected 10 time levels
+
+# run plevel.sh output only time levels 1 and 3
+plevel.sh -i test_input.nc -a -t 2,5,2
+ncdump -v time plevel.nc | grep ' time = 1, 3 ;' || fail_ expected two time levels

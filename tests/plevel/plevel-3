@@ -32,7 +32,8 @@ fi
 # Generate the test_input.nc file
 $builddir/create_plevel_test_ncfile || framework_failure_
 
-# Run plevel.sh with default options
-plevel.sh -i test_input.nc temp || fail_ plevel.sh failed
+# Run plevel.sh
+plevel.sh -i test_input.nc -3 || fail_ plevel.sh failed
 test -e plevel.nc || fail_ plevel.nc file does not exist after running plevel.sh
-ncdump -v temp plevel.nc || fail_ temp variable not found in plevel.sh
+ncdump -v temp plevel.nc || fail_ temp variable not found in plevel.nc
+ncdump -v dummy plevel.nc && fail_ dummy variable found in plevel.nc, but should not be || :

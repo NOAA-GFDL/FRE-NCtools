@@ -32,7 +32,10 @@ fi
 # Generate the test_input.nc file
 $builddir/create_plevel_test_ncfile || framework_failure_
 
-# Run plevel.sh with default options
-plevel.sh -i test_input.nc temp || fail_ plevel.sh failed
-test -e plevel.nc || fail_ plevel.nc file does not exist after running plevel.sh
-ncdump -v temp plevel.nc || fail_ temp variable not found in plevel.sh
+# Run plevel.sh.  hght requires zsurf, temp, and sphum variables the
+# -0 option will set these zsurg and sphum to 0, allowing hght to be
+# output.
+plevel.sh -i test_input.nc -0 hght || fail_ plevel.sh failed
+test -e plevel.nc || fail_ plevel.nc file does not exist after running plevel.nc
+ncdump -h plevel.nc
+ncdump -v hght plevel.nc || fail_ temp or dummy variable not found in plevel.sh

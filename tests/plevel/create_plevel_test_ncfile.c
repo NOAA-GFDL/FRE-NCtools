@@ -1,13 +1,14 @@
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define FILE_NAME "test_input.nc"
 #define NX 10
 #define NY 10
 #define PFULL 33
 #define PHALF 34
-#define TIME 1
+#define TIME 10
 #define PS_MIN 75223
 #define PS_MAX 101325
 #define TEMP_MIN 250
@@ -20,12 +21,28 @@ void check_err(int stat, int line) {
     }
 }
 
-int main() {
+int main(int argc, char **argv) {
     int ncid, time_dim, xt_dim, yt_dim, pfull_dim, phalf_dim;
     int times_id, xt_id, yt_id, phalf_id, pfull_id, pk_id, bk_id;
     int ps_id, temp_id, dummy_id;
 
+    int nc_format = NC_CLOBBER;
+
     int stat;
+    int c;
+
+    while (( c = getopt (argc, argv, "abc:")) != -1)
+    {
+        switch (c)
+        {
+            case '4':
+                nc_format = NC_CLOBBER | NC_NETCDF4;
+                break;
+            case '6':
+                nc_format = NC_CLOBBER | NC_64BIT_OFFSET;
+                break;
+        }
+    }
 
     size_t start_ps[3] = {0, 0, 0};
     size_t start_temp[4] = {0, 0, 0, 0};
@@ -85,7 +102,7 @@ int main() {
     check_err(stat, __LINE__);
 
     // Allocate memory for sample data and write to file
-    double times_data[TIME] = {0};
+    double times_data = 0;
     float xt_data[NX], yt_data[NY], temp_data[PFULL][NX][NY];
     float ps_data[NX][NY];
     float dummy_data[NX][NY];
@@ -128,23 +145,7 @@ int main() {
         1497.781, 1156.253, 867.792, 625.5933, 426.2132, 264.7661,
         145.0665, 60.0, 15.0, 0.0};
 
-    // Generate random data as in the Python example
-    for (int i = 0; i < PFULL; i++)
-        for (int j = 0; j < NX; j++)
-            for (int k = 0; k < NY; k++)
-                temp_data[i][j][k] = (rand() % (TEMP_MAX - TEMP_MIN)) + TEMP_MIN;
-
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++)
-            ps_data[i][j] = (rand() % (PS_MAX-PS_MIN)) + PS_MIN;
-
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++)
-            dummy_data[i][j] = i * NX + j;
-
-    // Writing data
-    stat = nc_put_var_double(ncid, times_id, &times_data[0]);
-    check_err(stat, __LINE__);
+    // Writing static data
     stat = nc_put_var_float(ncid, xt_id, &xt_data[0]);
     check_err(stat, __LINE__);
     stat = nc_put_var_float(ncid, yt_id, &yt_data[0]);
@@ -157,21 +158,47 @@ int main() {
     check_err(stat, __LINE__);
     stat = nc_put_var_float(ncid, bk_id, &bk_data[0]);
     check_err(stat, __LINE__);
-    stat = nc_put_vara_float(ncid, temp_id,
-                             (size_t[4]){0, 0, 0, 0},
-                             (size_t[4]){1, PFULL, NX, NY},
-                             &temp_data[0][0][0]);
-    check_err(stat, __LINE__);
-    stat = nc_put_vara_float(ncid, ps_id,
-                             (size_t[3]){0, 0, 0},
+
+    // Write time-variable data
+    for (int rec=0; rec < TIME; rec++)
+    {
+        // Generate random data as in the Python example
+        for (int i = 0; i < PFULL; i++)
+            for (int j = 0; j < NX; j++)
+                for (int k = 0; k < NY; k++)
+                    temp_data[i][j][k] = (rand() % (TEMP_MAX - TEMP_MIN)) + TEMP_MIN;
+
+        for (int i = 0; i < NX; i++)
+            for (int j = 0; j < NY; j++)
+                ps_data[i][j] = (rand() % (PS_MAX-PS_MIN)) + PS_MIN;
+
+        for (int i = 0; i < NX; i++)
+            for (int j = 0; j < NY; j++)
+                dummy_data[i][j] = i * NX + j;
+
+        times_data = (double)rec;
+
+        stat = nc_put_vara_double(ncid, times_id,
+                                  (size_t[1]){rec},
+                                  (size_t[1]){1},
+                                  &times_data);
+        check_err(stat, __LINE__);
+        stat = nc_put_vara_float(ncid, temp_id,
+                                 (size_t[4]){rec, 0, 0, 0},
+                                 (size_t[4]){1, PFULL, NX, NY},
+                                 &temp_data[0][0][0]);
+        check_err(stat, __LINE__);
+        stat = nc_put_vara_float(ncid, ps_id,
+                             (size_t[3]){rec, 0, 0},
                              (size_t[3]){1, NX, NY},
                              &ps_data[0][0]);
-    check_err(stat, __LINE__);
-    stat = nc_put_vara_float(ncid, dummy_id,
-                             (size_t[3]){0, 0, 0},
-                             (size_t[3]){1, NX, NY},
-                             &dummy_data[0][0]);
-    check_err(stat, __LINE__);
+        check_err(stat, __LINE__);
+        stat = nc_put_vara_float(ncid, dummy_id,
+                                 (size_t[3]){rec, 0, 0},
+                                 (size_t[3]){1, NX, NY},
+                                 &dummy_data[0][0]);
+        check_err(stat, __LINE__);
+    }
 
     // Close the file
     stat = nc_close(ncid);

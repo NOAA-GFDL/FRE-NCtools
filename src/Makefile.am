@@ -9,15 +9,17 @@ combine_programs = \
 bin_PROGRAMS = \
   decompress-ncc \
   list_ncvars \
-  PLEV.exe \
   $(combine_programs)
 
 bin_SCRIPTS = \
   combine_restarts \
   iceberg_comb.sh \
-  list_ncvars.csh
+  list_ncvars.csh \
+  plevel.sh
 
-pkglibexec_PROGRAMS = print_version
+pkglibexec_PROGRAMS = \
+  print_version \
+  PLEV.exe
 
 noinst_LIBRARIES = libver.a
 
@@ -134,7 +136,10 @@ iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
 # ********************************************************* #
 # plevel                                                    #
 # ********************************************************* #
-dist_bin_SCRIPTS = plevel/plevel.sh
+plevel.sh: plevel/plevel.sh.in Makefile
+	$(do_subst) < $(srcdir)/plevel/plevel.sh.in > plevel.sh
+	chmod +x plevel.sh
+
 PLEV_exe_SOURCES = plevel/plev_constants.F90 \
                    plevel/moisture_convert.F90 \
                    plevel/pressure_interp.F90 \

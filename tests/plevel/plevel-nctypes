@@ -32,7 +32,19 @@ fi
 # Generate the test_input.nc file
 $builddir/create_plevel_test_ncfile || framework_failure_
 
-# Run plevel.sh with default options
-plevel.sh -i test_input.nc temp || fail_ plevel.sh failed
-test -e plevel.nc || fail_ plevel.nc file does not exist after running plevel.sh
-ncdump -v temp plevel.nc || fail_ temp variable not found in plevel.sh
+# Output classic netCDF
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NC classic failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"
+
+# Output 64-bit offset
+$builddir/create_plevel_test_ncfile -6 || framework_failure_
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NC 64-bit offset failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"
+
+# Output NetCDF 4
+$builddir/create_plevel_test_ncfile -4 || framework_failure_
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NetCDF4 failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"

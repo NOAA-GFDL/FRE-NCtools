@@ -32,6 +32,11 @@
 # afy    Ver   1.01  Use 'which' to locate executables              June 10
 # ------------------------------------------------------------------------------
 
+script_name=`basename $0`
+pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
+
+plevel_interp=$pkg_libexec_dir/PLEV.exe
+
 fields=
 more_output=1
 ofile=plevel.nc
@@ -47,6 +52,57 @@ tlist=
 plevs="100000 92500 85000 70000 60000 50000 40000 30000 25000 \
         20000 15000 10000  7000  5000  3000  2000  1000"
 
+echoerr()
+{
+    echo "$@" 1>&2
+}
+
+usage()
+{
+    cat << EOF
+Usage:  $script_name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [-z #] [-s] [fields.....]
+Interpolates data from model levels to pressure levels.  The input
+model grid is a hybrid sigma-pressure coordinate and the output
+pressure levels may be specified.  The minimum required input fields
+are "bk", "pk", and "ps".
+
+    -a          Output all fields converting 3d fields to pressure
+                levels.
+    -3          Output and convert all 3d fields to pressure levels.
+    -0          When fields sphum or zsurf do not exist use zero,
+                otherwise fail.
+    -m          Default missing value is used for all fields (the
+                _FillValue).
+    -x          Do not set data extrapolated beneath the surface to
+                missing values.
+    -i file     Input netcdf file, the file must contain the required
+                variables (pk, bk, ps, ...).
+    -o ofile    The output file name. (Default: plevel.nc)
+    -p plevs    A list of output pressure levels in pascals (with no
+                decimal point).  The default is the 17 NCEP
+                reananalysis levels (bottom to top).  The list must be
+                in quotes and values must be separated by a space.
+    -d value    The verbosity level, use an integer number where
+                value >= 0.  (Default: value=1)
+    -t #,#,#    The starting, ending, and increment index for time axis
+                processing where # is a positive number.  (The default
+                is to process all time indices.)
+    -z #        If using NetCDF4, use deflation of level #.  Defaults
+                to input file settings.
+    -s 1|0      If using NetCDF4, use shuffle if 1 and don't use if 0.
+                Defaults to input file settings.
+
+    fields      A list of (additional) output fields. If this list is
+                not supplied,  then the "-a" or "-3" option must be
+                specified.  Possible list entries included any fields
+                in the input files, and additional fields: slp, hght.
+                Additional input fields may be required for these
+                output fields.
+
+Example: $script_name -a -i atmos.nc slp hght
+
+EOF
+}
 #-----------------------------------------------------------------------
 
 while getopts 03amxi:o:d:p:t:z:s: arg
@@ -73,93 +129,48 @@ fields=$@
 #-----------------------------------------------------------------------
 
 if [ "${ifiles:-NULL}" = "NULL" ]; then
-name=`basename $0`
-cat << EOF
-
-Interpolates data from model levels to pressure levels.
-The input model grid is a hybrid sigma-pressure coordinate
-and the output pressure levels may be specified.
-The minimum required input fields are "bk", "pk", and "ps".
-
-Usage:  $name [-a] [-3] [-0] [-f] [-d #] -i file [-o ofile] [-m] [-z #] [-s] [fields.....]
-
-        -a        = Output all fields converting 3d fields to pressure levels.
-        -3        = Output and convert all 3d fields to pressure levels.
-        -0        = When fields sphum or zsurf do not exist use zero, otherwise fail.
-        -m        = Default missing value is used for all fields (the _FillValue).
-        -x        = DO NOT set data extrapolated beneath the surface to missing values.
-        -i file   = Input netcdf file, the file must contain the required variables 
-                    (pk,bk,ps,...).
-                    If the -i files option is omitted a usage message is printed.
-        -o ofile  = The output file name. (Default: plevel.nc)
-        -p plevs  = A list of output pressure levels in pascals (with no decimal point).
-                    The default is the 17 NCEP reananalysis levels (bottom to top).
-                    The list must be in quotes and values must be separated by a space.
-        -d value    The verbosity level, use an integer number where value >= 0.
-                    (Default: value=1)
-        -t #,#,#    The starting, ending, and increment index for time axis processing
-                    where # is a positive number.
-                    (The default is to process all time indices.)
-        -z #        If using NetCDF4, use deflation of level #.
-                    Defaults to input file settings.
-        -s 1|0      If using NetCDF4, use shuffle if 1 and don't use if 0.
-                    Defaults to input file settings.
-
-        fields    = A list of (additional) output fields. If this list is not supplied,
-                    then the "-a" or "-3" option must be specified.  Possible list entries
-                    included any fields in the input files, and additional fields: slp, hght.
-                    Additional input fields may be required for these output fields.
-
-Example:  $name -a -i atmos.nc slp hght
-
-EOF
-exit 1
+    echoerr "$script_name: no input files specified.  Must specify \"-i <infiles>\""
+    exit 1
 fi
 
-# location of executable
-executable=`which PLEV.exe`
-
-if [ ! -x "$executable" ]; then
-   echo "ERROR: executable does not exist"
-   echo "       executable=$executable"
+# Verify PLEV.exe is available
+if [ ! -x "$plevel_interp" ]; then
+   echoerr "$script_name: unable to find required libexec program \"$plevel_interp\""
    exit 1
 fi
 
 #  make sure input files are present
-
-list=
+missing_ifiles=
 for file in $ifiles;
 do
    if [ ! -e $file ]; then
-       list="$list $file"
+       missing_ifiles="$missing_ifiles $file"
    fi
 done
-if [ ${#list} -gt 0 ]; then
-    echo ERROR: the following input files do not exist
-    for file in $list;
+if [ ${#missing_ifiles} -gt 0 ]; then
+    echoerr "$script_name: missing input files:"
+    for file in $missing_ifiles;
     do
-      echo $file
+      echoerr "    $file"
     done
     exit 1
 fi
 
 # process time loop limits (create array of length 3)
-
 tlist=`echo ${tlist} | sed -e "s/,,,/,,0,/"`
 tlist=`echo ${tlist} | sed -e "s/^,/0,/"`
 tlist=`echo ${tlist} | sed -e "s/,,/,0,/"`
 tloop=`echo ${tlist} | sed -e "s/,/ /g"`
 
-#-----------------------------------------------------------------------
-#   ---- namelist for pressure interp program ----
-    
-    namelist="plev.input.nml"
+#
+# Generate namelist for pressure interp program
+namelist="plev.input.nml"
 
-    echo " &input" > $namelist
+echo " &input" >> $namelist
 
 # input file names
-    echo "     in_file_name =  '$file' ," >> $namelist
-    echo "     out_file_name =   '$ofile' ,"  >> $namelist
+echo "     in_file_name =  '$file' ," >> $namelist
+echo "     out_file_name =   '$ofile' ,"  >> $namelist
 
 # input field names
 i=0
@@ -201,18 +212,21 @@ i=0
 for index in $tloop;
 do
     let "i=$i+1"
-    if [ $index -gt 0 ]; then 
+    if [ $index -gt 0 ]; then
        case $i in
           1) echo "    time_beg = $index" >> $namelist;;
           2) echo "    time_end = $index" >> $namelist;;
           3) echo "    time_inc = $index" >> $namelist;;
-       esac    
+       esac
     fi
 done
 
-   echo " /" >> $namelist
+echo " /" >> $namelist
 
-$executable
-
-#rm -f $namelist
-
+eval $plevel_interp
+if [ $? -eq 0 ]
+then
+    rm -f $namelist
+else
+    echoerr "$script_name: error running \"$plevel_interp\""
+fi

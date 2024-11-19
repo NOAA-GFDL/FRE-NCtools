@@ -72,6 +72,12 @@ TESTS = combine-ncc/combine \
         mppnccombine/xyt-decomp \
         mppnccombine/yt-decomp \
         plevel/plevel \
+        plevel/plevel-0 \
+        plevel/plevel-3 \
+        plevel/plevel-a \
+        plevel/plevel-o \
+        plevel/plevel-nctypes \
+        plevel/plevel-t \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
         scatter-ncc/scatter_2x1
