@@ -91,6 +91,8 @@ are "bk", "pk", and "ps".
                 to input file settings.
     -s 1|0      If using NetCDF4, use shuffle if 1 and don't use if 0.
                 Defaults to input file settings.
+    -h          Display this help and exit.
+    -V          Output version information and exit
 
     fields      A list of (additional) output fields. If this list is
                 not supplied,  then the "-a" or "-3" option must be
@@ -105,22 +107,27 @@ EOF
 }
 #-----------------------------------------------------------------------
 
-while getopts 03amxi:o:d:p:t:z:s: arg
+while getopts 03amxi:o:d:p:t:z:s:hV arg
 do
     case $arg in
-       0) allow_zero=.true.;;
-       3) do_all_3d_fields=.true.;;
-       a) do_all_fields=.true.;;
-       m) default_missval=.true.;;
-       x) mask_extrap=.false.;;
-       i) ifiles=$OPTARG;;
-       o) ofile=$OPTARG;;
-       d) more_output=$OPTARG;;
-       p) plevs=$OPTARG;;
-       t) tlist=$OPTARG;;
-       z) deflation=$OPTARG;;
-       s) shuffle=$OPTARG;;
-       *) exit 1;;
+        0) allow_zero=.true.;;
+        3) do_all_3d_fields=.true.;;
+        a) do_all_fields=.true.;;
+        m) default_missval=.true.;;
+        x) mask_extrap=.false.;;
+        i) ifiles=$OPTARG;;
+        o) ofile=$OPTARG;;
+        d) more_output=$OPTARG;;
+        p) plevs=$OPTARG;;
+        t) tlist=$OPTARG;;
+        z) deflation=$OPTARG;;
+        s) shuffle=$OPTARG;;
+        h) usage; exit 0;;
+        V)
+            $pkg_libexec_dir/print_version $script_name
+            exit 0
+            ;;
+        *) exit 1;;
     esac
 done
 shift `expr $OPTIND - 1`

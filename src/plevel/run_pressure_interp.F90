@@ -23,7 +23,9 @@
 !  This program aggregates vertical data by pressure levels
 !
 !-----------------------------------------------------------------------
- 
+
+#include "config.h"
+
 program run_pressure_interp
 
 use netcdf
@@ -142,7 +144,7 @@ integer :: new_var_deflation, new_var_shuffle
 !#######################################################################
 
 namelist /names/ temp_name, sphum_name, hght_name, slp_name, &
-                 ps_name, zsurf_name, bk_name, pk_name 
+                 ps_name, zsurf_name, bk_name, pk_name
 
 namelist /input/ in_file_name, out_file_name,  field_names,  pout, &
                  do_all_fields,  do_all_3d_fields,                 &
@@ -258,7 +260,7 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
             if (pout(i) < 1.e-6) exit
             nlev_out = i
          enddo
- 
+
 !     ---- count the number of field names ----
          num_field_names = 0
       do ivar = 1, MAX_FIELD_NAMES
@@ -269,7 +271,7 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
       call set_verbose_level (verbose)
 
   ! create version string (may replace with CVS $Id: run_pressure_interp.F90,v 20.0 2013/12/14 00:29:42 fms Exp $)
-    version = 'pressure level interpolator, version 3.0'
+    version = 'pressure level interpolator, '//PACKAGE_STRING
     if (precision(ps) == precision(time)) then
         version = trim(version)//', precision=double'
     else
@@ -280,7 +282,7 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
 !----------------------- loop through files ----------------------------
 !-----------------------------------------------------------------------
 !   --- if any file name has no length then terminate the program ---
-      
+
      if (  in_file_name(1:1) == ' ' .or.   &
           out_file_name(1:1) == ' ' )  call error_handler  &
            ('must specifiy atmospheric and output file names')
@@ -443,12 +445,12 @@ real, parameter :: rgog = RDGAS*tlapse/GRAV
         else if (trim(attname) == 'history') then
            !istat = NF90_INQUIRE_ATTRIBUTE (ncid_in, NF90_GLOBAL, trim(attname), len=nc)
            !istat = NF90_GET_ATT (ncid_in, NF90_GLOBAL, 'history', history)
-        else    
+        else
             ! copy all others
             istat = NF90_COPY_ATT (ncid_in, NF90_GLOBAL, attname, ncid_out, NF90_GLOBAL)
             if (istat /= NF90_NOERR) call error_handler ('copying global attributes', &
                                                           ncode=istat)
-        endif   
+        endif
      enddo
      ! add comment attribute
      istat = NF90_PUT_ATT (ncid_out, NF90_GLOBAL, 'comment', trim(version))
@@ -555,7 +557,7 @@ if (do_hght) then
    call define_new_variable ( ncid_out, 'hght', NF90_REAL4, dimids_mass, varid_hght_out, &
                               units='m', long_name='height', missing_value=mval_hght,    &
                               time_avg_info=time_avg_info, cell_methods=cell_methods)
-   
+
 endif
 
 !  ---- sea level pressure ----
@@ -659,7 +661,7 @@ endif
           istat = NF90_DEF_VAR_DEFLATE (ncid_out, varid_pout, new_var_shuffle, 1, new_var_deflation)
           if (istat /= NF90_NOERR) call error_handler (ncode=istat)
       endif
-          
+
 !-----------------------------------------------------------------------
 ! ---- write header info for output file ----
 
@@ -908,7 +910,7 @@ contains
        Interp(1) = pres_interp_init ( pfull, pout, kbot,   &
                                       use_extrap=.not.mask_extrap   )
    endif
-   
+
   !---- interpolation setup for standard full pressure levels -----
    if (do_phalf) then
        Interp(2) = pres_interp_init ( phalf, pout, kbot )
@@ -1159,7 +1161,7 @@ contains
                   do_hght = .false.
               endif
           endif
-      
+
       endif
 
 
@@ -1173,7 +1175,7 @@ contains
 
       if ( ierr  /= 0 ) call error_handler ('run_pressure_interp')
       if ( iwarn /= 0 ) print *, 'WARNING: run_pressure_interp'
-             
+
 !-----------------------------------------------------------------------
    ! check time averaging flag for consistency
      do i = 5, 6
@@ -1190,7 +1192,7 @@ contains
                          trim(avg_name)//trim(avg_subnames(2))//','// &
                          trim(avg_name)//trim(avg_subnames(3))
       endif
-      
+
  end subroutine check_fields
 
 !#######################################################################
@@ -1238,7 +1240,7 @@ contains
         select case (ndim)
           case (4)
             if (static) cycle   ! not possible
-            threed = .true. 
+            threed = .true.
           case (3)
            !if (.not.static .and. do_all_3d_fields) cycle
             if (static) threed = .true.
@@ -1268,7 +1270,7 @@ contains
 
 !#######################################################################
 
- function field_name_present ( name, field_names, num_field_names ) 
+ function field_name_present ( name, field_names, num_field_names )
  character(len=*), intent(in) :: name, field_names(:)
  integer,          intent(in) :: num_field_names
  logical :: field_name_present
@@ -1336,7 +1338,7 @@ contains
  ! get time axis id
    istat = NF90_INQUIRE (ncid_in, unlimiteddimid=rdim)
    if (istat /= NF90_NOERR) call error_handler (ncode=istat)
- ! get variable id 
+ ! get variable id
    istat = NF90_INQ_VARID (ncid_in, trim(name), Field%varid_in)
 
  ! proceed if this variable exists
@@ -1529,7 +1531,7 @@ contains
    Axis%name_in   = name_in
    Axis%name_out  = name_in
    if (present(name_out)) Axis%name_out  = name_out
-   Axis%varid_in  = varid_in 
+   Axis%varid_in  = varid_in
    Axis%varid_out = varid_out
    Axis%dimlen    = dimlen_out
    Axis%start     = (/decomp(3)/)
@@ -1752,7 +1754,7 @@ contains
  integer :: k, nlev
 
  nlev = size(pf,3)
- 
+
  ! compute p*logp at half levels
    where (ph(:,:,1) > 0.)
       lph(:,:,1) = ph(:,:,1) * log(ph(:,:,1))
