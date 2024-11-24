@@ -66,10 +66,11 @@ If using NetCDF4, use shuffle if 1 and don't use if 0. Defaults to
 input file settings.
 
 _fields_::
-A list of (additional) output fields. If this list is not supplied,
-then the "-a" or "-3" option must be specified.  Possible list entries
-included any fields in the input files, and additional fields: slp,
-hght. Additional input fields may be required for these output fields.
+A list of (additional, up to 40) output fields. If this list is not
+supplied, then the "-a" or "-3" option must be specified.  Possible
+list entries included any fields in the input files, and additional
+fields: slp, hght. Requesting slp or hght may require additional input
+fields to be available in the input file.
 
 BUGS
 ----

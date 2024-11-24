@@ -19,20 +19,25 @@ bin_SCRIPTS = \
 
 pkglibexec_PROGRAMS = \
   print_version \
-  PLEV.exe
+  plevel-interp
 
-noinst_LIBRARIES = libver.a
+noinst_LIBRARIES = \
+  libver.a \
+  libnctf.a
 
 libver_a_SOURCES = \
   version.h \
   version.c
+
+libnctf_a_SOURCES = \
+  nct_nc_utils.F90
 
 noinst_HEADERS = \
   version.h \
   version.inc
 
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
-f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)
+f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
 
 AM_FCFLAGS = $(FC_MODOUT)$(MODDIR)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 AM_CFLAGS = $(NETCDF_CFLAGS)
@@ -140,16 +145,16 @@ plevel.sh: plevel/plevel.sh.in Makefile
 	$(do_subst) < $(srcdir)/plevel/plevel.sh.in > plevel.sh
 	chmod +x plevel.sh
 
-PLEV_exe_SOURCES = plevel/plev_constants.F90 \
-                   plevel/moisture_convert.F90 \
-                   plevel/pressure_interp.F90 \
-                   plevel/pinterp_utilities.F90 \
-                   plevel/run_pressure_interp.F90 \
-                   plevel/plev_constants_mod.$(FC_MODEXT) \
-                   plevel/moisture_convert_mod.$(FC_MODEXT) \
-                   plevel/pressure_interp_mod.$(FC_MODEXT) \
-                   plevel/pinterp_utilities_mod.$(FC_MODEXT)
-PLEV_exe_LDADD = $(f_netcdf_ldadds)
+plevel_interp_SOURCES = plevel/plev_constants.F90 \
+                        plevel/moisture_convert.F90 \
+                        plevel/pressure_interp.F90 \
+                        plevel/pinterp_utilities.F90 \
+                        plevel/run_pressure_interp.F90 \
+                        plevel/plev_constants_mod.$(FC_MODEXT) \
+                        plevel/moisture_convert_mod.$(FC_MODEXT) \
+                        plevel/pressure_interp_mod.$(FC_MODEXT) \
+                        plevel/pinterp_utilities_mod.$(FC_MODEXT)
+plevel_interp_LDADD = $(f_netcdf_ldadds)
 BUILT_SOURCES += plevel/plev_constants_mod.$(FC_MODEXT) \
                  plevel/moisture_convert_mod.$(FC_MODEXT) \
                  plevel/pressure_interp_mod.$(FC_MODEXT) \

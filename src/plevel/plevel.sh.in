@@ -33,9 +33,10 @@
 # ------------------------------------------------------------------------------
 
 script_name=`basename $0`
+script_opts="$@"
 pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
 
-plevel_interp=$pkg_libexec_dir/PLEV.exe
+plevel_interp=$pkg_libexec_dir/plevel-interp
 
 fields=
 more_output=1
@@ -204,6 +205,7 @@ cat >> $namelist << EOF
     mask_extrap = $mask_extrap,
     use_default_missing_value = $default_missval,
     verbose = $more_output,
+    command_line = "$script_name $script_opts",
 EOF
 
 # NetCDF4 compression parameters

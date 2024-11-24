@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     stat = nc_def_var(ncid, "dummy", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &dummy_id);
 
     // Assign global attributes
-    stat = nc_put_att_text(ncid, NC_GLOBAL, "description", 40, "Sample netCDF file for testing run_timepressure_interp");
+    stat = nc_put_att_text(ncid, NC_GLOBAL, "description", 55, "Sample netCDF file for testing run_timepressure_interp");
 
     // Assign attributes to variables (for brevity, a few key attributes shown)
     stat = nc_put_att_text(ncid, times_id, "units", 30, "days since 0001-01-01 00:00:00");

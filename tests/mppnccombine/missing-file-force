@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# ensure the help option prints something and exits successfully
-
 # Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
 
 # This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).

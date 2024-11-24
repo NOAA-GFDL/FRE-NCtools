@@ -29,12 +29,17 @@ else
 skipflag=""
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS)
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src
+AM_FCFLAGS = -I$(top_builddir)/src
+LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
-check_PROGRAMS = create_plevel_test_ncfile
+check_PROGRAMS = \
+  create_plevel_test_ncfile \
+  c_test_version \
+  f_test_version
 create_plevel_test_ncfile_SOURCES=plevel/create_plevel_test_ncfile.c
-
+c_test_version_SOURCES=libtests/c_test_version.c
+f_test_version_SOURCES=libtests/f_test_version.f90
 
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
                     builddir=$(abs_builddir); export builddir; \
@@ -56,6 +61,7 @@ TESTS = combine-ncc/combine \
         iceberg_comb/setnum-mismatch \
         is-compressed/compressed \
         is-compressed/not-compressed \
+        libtests/print_version \
         list_ncvars/list_ncvars_csh \
         list_ncvars/list_ncvars_ftn \
         mppnccombine/dry-run \
