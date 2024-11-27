@@ -1,0 +1,170 @@
+#!/bin/sh
+#**********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#**********************************************************************
+# Script to Call Time-Averaging Executables
+#
+# This script takes multiple netcdf files that all contain the same
+# dimensions and variables but may have a different number of time
+# records and writes a new netcdf file that has a time record
+# averaged from each input file.
+#----------------------------------------------------------------------
+
+script_name=`basename $0`
+script_opts="$@"
+pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
+
+timeavg=$pkg_libexec_dir/time_average
+
+ofile="timavg.nc"
+ifiles=""
+etime=".true."
+do_verbose=".false."
+do_bounds=".false."
+do_errors=".false."
+no_warning=".false."
+weight="0.0"
+deflation="-1"
+shuffle="-1"
+
+echoerr()
+{
+    echo "$@" 1>&2
+}
+
+usage()
+{
+    cat << EOF
+Usage: $script_name [-a] [-b] [-d] [-m] -o ofile file [file ...]
+Time averaging script
+
+    -a          skips "average information does not agree" errors.
+    -b          adds time axis bounds and cell methods (CF convention)
+    -d          turns on command echo (for debugging).
+    -m          average time (instead of end time) for t-axis values
+    -W          suppress warning messages (use with caution).
+    -w wght     minimum fraction of missing data needed for valid data.
+                Defaults to 0.0.
+    -o ofile    name of the output file.  Defaults to "timavg.nc".
+    -z level    If using NetCDF4, use deflation level.  Defaults to
+                input file settings (-1).
+    -s 1|0      If using NetCDF4, use shuffle if 1 and don't use if 0.
+                Defaults to input file settings (-1).
+    -h          Display this help and exit.
+    -V          Output version information and exit.
+
+
+    file        list netcdf files, each file will be a time record in
+                the output file (the files should be in chronological
+                order)
+EOF
+}
+
+# parse command line options
+while getopts :abdhmo:VWw:z:s: opt
+do
+    case $opt in
+        a) do_errors=".true." ;;
+        b) do_bounds=".true." ;;
+        d)
+            do_verbose=".true."
+            debug=yes
+            ;;
+        h) usage; exit 0 ;;
+        m) etime=".false." ;;
+        o) ofile=$OPTARG ;;
+        V)
+            $pkg_libexec_dir/print_version $script_name
+            exit 0
+            ;;
+        W) no_warning=".true." ;;
+        w) weight=$OPTARG ;;
+        z) deflation=$OPTARG ;;
+        s) shuffle=$OPTARG ;;
+        \?)
+            echoerr "$script_name: illegal option -- $OPTARG"
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+if [ ${debug:-no} == "yes" ];
+then
+    set -x
+fi
+# Check that the user provided at least one input file
+if [ ${#@} -eq 0 ]; then
+    echoerr "$script_name: no input files specified.  Must specify at least one file."
+    exit 1
+fi
+ifiles=$@
+
+# verify the user supplied files exist
+files_missing=0
+for file in $ifiles
+do
+    if [ ! -r "$file" ]; then
+        echoerr "$script_name: unable to read input file \"$file\""
+        files_missing=1
+    fi
+done
+if [ $files_missing -eq 1 ]; then
+    exit 1
+fi
+
+# verify the time averaging executable is available
+if [ ! -x "$timeavg" ]; then
+    echoerr "$script_name: unable to find required libexec program \"$timeavg\""
+    exit 1
+fi
+
+# place the namelist values in a temporary file
+timavg_nml=$(mktemp timavg.nml.XXXXXXXXXX)
+cat > ${timavg_nml} << EOF
+&timavg_nml
+    file_name_out = "$ofile",
+    file_names = $(echo $ifiles | tr -s ' ' ','),
+    use_end_time = $etime,
+    verbose = $do_verbose,
+    add_cell_methods = $do_bounds,
+    skip_tavg_errors = $do_errors,
+    suppress_warnings = $no_warning,
+    frac_valid_data = $weight,
+    user_deflation = $deflation,
+    user_shuffle = $shuffle,
+    command_line = "$script_name $script_opts",
+/
+EOF
+
+# run the time averaging executable
+$timeavg < ${timavg_nml}
+exit_status=$?
+if [ $exit_status -ne 0 ]; then
+    echoerr "$script_name: time averaging executable failed with status $exit_status"
+    echoerr "  command: $timeavg < ${timavg_nml}"
+    echoerr "  ${timavg_nml}:"
+    while read line
+    do
+        echoerr "    $line"
+    done < ${timavg_nml}
+fi
+# clean up
+rm -f ${timavg_nml}
+exit $exit_status

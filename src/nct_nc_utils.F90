@@ -26,10 +26,15 @@
 !! @author Seth Underwood
 module nct_nc_utils
 
-   use iso_fortran_env, only: error_unit
+   use iso_fortran_env, only: error_unit, real32, real64
    use netcdf
 
    implicit none
+
+   interface rtoa
+      module procedure r32toa
+      module procedure r64toa
+   end interface rtoa
 
 contains
 
@@ -156,14 +161,24 @@ contains
    end function itoa
 
 
-   !> @brief Convert a real to a string
-   function rtoa(r)
-      real, intent(in) :: r !< Real to convert to a string
-      character(len=:), allocatable :: rtoa
+   !> @brief Convert a real32 to a string
+   function r32toa(r)
+      real(kind=real32), intent(in) :: r !< Real to convert to a string
+      character(len=:), allocatable :: r32toa
       character(len=256) :: rtoa_tmp
       write (rtoa_tmp, '(F0.0)') r
-      rtoa = trim(adjustl(rtoa_tmp))
-   end function rtoa
+      r32toa = trim(adjustl(rtoa_tmp))
+   end function r32toa
+
+
+   !> @brief Convert a real64 to a string
+   function r64toa(r)
+      real(kind=real64), intent(in) :: r !< Real to convert to a string
+      character(len=:), allocatable :: r64toa
+      character(len=256) :: rtoa_tmp
+      write (rtoa_tmp, '(F0.0)') r
+      r64toa = trim(adjustl(rtoa_tmp))
+   end function r64toa
 
 
    !> @brief Convert a logical to a string

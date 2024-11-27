@@ -217,7 +217,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  postprocessing/split_ncvars/Makefile
-                 postprocessing/timavg/Makefile
                  tools/libfrencutils/Makefile
                  tools/libfrencutils_acc/Makefile
                  tools/check_mask/Makefile

@@ -15,26 +15,35 @@ bin_SCRIPTS = \
   combine_restarts \
   iceberg_comb.sh \
   list_ncvars.csh \
-  plevel.sh
+  plevel.sh \
+  timavg
+dist_bin_SCRIPTS = \
+  timeavg/timavg.csh
 
 pkglibexec_PROGRAMS = \
   print_version \
-  plevel-interp
+  plevel-interp \
+  time_average
 
 noinst_LIBRARIES = \
   libver.a \
   libnctf.a
 
 libver_a_SOURCES = \
-  version.h \
   version.c
+nodist_libver_a_SOURCES = \
+  version.h
 
 libnctf_a_SOURCES = \
   nct_nc_utils.F90
+nodist_libnctf_a_SOURCES = \
+  nct_nc_utils.$(FC_MODEXT)
+BUILT_SOURCES += nct_nc_utils.$(FC_MODEXT)
 
-noinst_HEADERS = \
-  version.h \
-  version.inc
+# noinst_HEADERS = \
+#   version.h \
+#   version.inc \
+#   nct_nc_utils.$(FC_MODEXT)
 
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
@@ -71,7 +80,9 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
   combine-restarts/combine_restarts.in \
   iceberg-comb/iceberg_comb.sh.in \
-  list-ncvars/list_ncvars.csh.in
+  list-ncvars/list_ncvars.csh.in \
+  plevel/plevel.sh.in \
+  timeavg/timavg.sh.in
 
 CLEANFILES = *.$(FC_MODEXT)
 clean-local:
@@ -87,8 +98,13 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]EGREP[@],$(EGREP),g'
 
 # Items to handle Fortran module files
-SUFFIXES = _mod.$(FC_MODEXT)
+SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
+
 .F90_mod.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+
+.F90.$(FC_MODEXT):
 	@$(MKDIR_P) $(@D)
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
@@ -149,11 +165,13 @@ plevel_interp_SOURCES = plevel/plev_constants.F90 \
                         plevel/moisture_convert.F90 \
                         plevel/pressure_interp.F90 \
                         plevel/pinterp_utilities.F90 \
-                        plevel/run_pressure_interp.F90 \
+                        plevel/run_pressure_interp.F90
+nodist_plevel_interp_SOURCES = \
                         plevel/plev_constants_mod.$(FC_MODEXT) \
                         plevel/moisture_convert_mod.$(FC_MODEXT) \
                         plevel/pressure_interp_mod.$(FC_MODEXT) \
                         plevel/pinterp_utilities_mod.$(FC_MODEXT)
+
 plevel_interp_LDADD = $(f_netcdf_ldadds)
 BUILT_SOURCES += plevel/plev_constants_mod.$(FC_MODEXT) \
                  plevel/moisture_convert_mod.$(FC_MODEXT) \
@@ -165,4 +183,14 @@ plevel/plev_constants.o: plevel/plev_constants_mod.$(FC_MODEXT)
 plevel/moisture_convert.o: plevel/moisture_convert_mod.$(FC_MODEXT)
 plevel/pressure_interp.o: plevel/pressure_interp_mod.$(FC_MODEXT)
 plevel/pinterp_utilities.o: plevel/pinterp_utilities_mod.$(FC_MODEXT)
-plevel/run_pressure_interp.o: plevel/plev_constants_mod.$(FC_MODEXT) plevel/pressure_interp_mod.$(FC_MODEXT) plevel/pinterp_utilities_mod.$(FC_MODEXT)
+plevel/run_pressure_interp.o: plevel/plev_constants_mod.$(FC_MODEXT) plevel/pressure_interp_mod.$(FC_MODEXT) plevel/pinterp_utilities_mod.$(FC_MODEXT) nct_nc_utils.$(FC_MODEXT)
+
+# ********************************************************* #
+# time_average                                              #
+# ********************************************************* #
+time_average_SOURCES = timeavg/time_average.f90
+time_average_LDADD = $(f_netcdf_ldadds)
+timeavg/time_average.o: nct_nc_utils.$(FC_MODEXT)
+timavg: timeavg/timavg.sh.in Makefile
+	$(do_subst) < $(srcdir)/timeavg/timavg.sh.in > timavg
+	chmod +x timavg
