@@ -97,7 +97,7 @@ a different blocking factor, simply multiply the estimate by k.
 
 BUGS
 ----
-Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+Open bug reports at {package_bugreport}.
 
 AUTHORS
 -------
@@ -105,7 +105,7 @@ Hans Vahlenkamp
 
 COPYRIGHT AND LICENSE
 ---------------------
-Copyright 2008-2024 Geophysical Fluid Dynamics Laboratory
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
 
 The Flexible Modeling System (FMS) is free software; you can
 redistribute it and/or modify it and are expected to follow the terms

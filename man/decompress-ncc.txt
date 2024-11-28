@@ -46,7 +46,7 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.h
 
 BUGS
 ----
-Send bug reports to GFDL's help desk <oar.gfdl.help@noaa.gov>
+Open bug reports at {package_bugreport}.
 
 AUTHORS
 -------
@@ -54,7 +54,7 @@ Sergey Malyshev
 
 COPYRIGHT AND LICENSE
 ---------------------
-Copyright 2009-2024 Geophysical Fluid Dynamics Laboratory
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
 
 The Flexible Modeling System (FMS) is free software; you can
 redistribute it and/or modify it and are expected to follow the terms

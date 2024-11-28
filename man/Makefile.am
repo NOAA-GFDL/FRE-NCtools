@@ -26,8 +26,12 @@ EXTRA_DIST = \
   list_ncvars.txt \
   list_ncvars.csh.txt \
   mppnccombine.txt \
+  plevel_interp.txt \
   plevel.sh.txt \
   scatter-ncc.txt \
+  timavg.txt \
+  timavg.csh.1 \
+  time_average.txt \
   asciidoc.conf
 
 # Documentation settings
@@ -45,9 +49,14 @@ man_MANS += \
   is-compressed.1 \
   list_ncvars.1 \
   list_ncvars.csh.1 \
+  plevel_interp.1 \
   plevel.sh.1 \
   mppnccombine.1 \
-  scatter-ncc.1
+  scatter-ncc.1 \
+  timavg.1 \
+  timavg.csh.1 \
+  time_average.1
+
 endif
 
 .txt.1:
@@ -56,6 +65,8 @@ endif
           -d manpage \
           -f manpage \
           -afre_version=$(PACKAGE_VERSION) \
+          -apackage_bugreport=$(PACKAGE_BUGREPORT) \
+          -acopyright_year=$(COPYRIGHT_YEAR) \
           --asciidoc-opts="-f $(ASCIIDOC_CFG)" \
           $<
 

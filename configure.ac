@@ -33,9 +33,12 @@ m4_define([git_revision],
 AC_REVISION([git_revision])
 m4_define([git_hashval],
   [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
+AC_REVISION([git_hashval])
 m4_define([git_date],
   [m4_esyscmd_s([git show --no-patch --format=%as HEAD 2> /dev/null || date +%Y-%m-%d])])
 AC_REVISION([git_date])
+m4_define([copyright_year],
+  [m4_substr(git_date, 0, 4)])
 
 AC_CONFIG_SRCDIR([src/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
@@ -201,14 +204,20 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
 AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
 
 # Set macros
+AS_VAR_SET([GIT_REVISION], ["git_revision"])dnl
 AC_DEFINE([GIT_REVISION], ["git_revision"],
           [Holds the 'git describe' information if configure ran within a git working directory])dnl
+AC_SUBST(GIT_REVISION)dnl
+AS_VAR_SET([GIT_HEADHASH], ["git_hashval"])dnl
 AC_DEFINE([GIT_HEADHASH], ["git_hashval"],
           [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])dnl
-AC_DEFINE([COPYRIGHT_YEAR], ["m4_substr(git_date, 0, 4)"],
+AC_SUBST(GIT_HEADHASH)dnl
+AS_VAR_SET([COPYRIGHT_YEAR], ["copyright_year"])dnl
+AC_DEFINE([COPYRIGHT_YEAR], ["copyright_year"],
           [Year to place in Copyright notices printed with --version information])dnl
+AC_SUBST(COPYRIGHT_YEAR)dnl
 
-#Code for setting rpath based ncview's configure.in code.
+# Code for setting rpath based ncview's configure.in code.
 AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
   for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS
   do

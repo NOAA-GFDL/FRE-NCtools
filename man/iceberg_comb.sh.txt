@@ -40,17 +40,15 @@ SEE ALSO
 
 BUGS
 ----
-Send bug reports to GFDL's Helpdesk <oar.gfdl.help@noaa.gov>
+Open bug reports at {package_bugreport}.
 
 AUTHORS
 -------
-Designed and written by
-Niki Zadeh and
-Seth Underwood.
+Niki Zadeh and Seth Underwood
 
 COPYRIGHT AND LICENSE
 ---------------------
-Copyright 2015,2024 Geophysical Fluid Dynamics Laboratory
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
 
 The Flexible Modeling System (FMS) is free software; you can
 redistribute it and/or modify it and are expected to follow the terms
