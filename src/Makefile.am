@@ -17,6 +17,7 @@ bin_SCRIPTS = \
   list_ncvars.csh \
   plevel.sh \
   timavg
+
 dist_bin_SCRIPTS = \
   timeavg/timavg.csh
 
