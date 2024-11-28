@@ -152,11 +152,11 @@ AS_IF([test -z "$NCRCAT"],
   [AC_MSG_ERROR([Cannot find ncrcat.  Please ensure ncrcat is in PATH or set the environment variable NCRCAT to the full path to ncgen.])])
 
 AC_ARG_VAR([NCATTED], [Path to ncatted])
-AC_PATH_PROG(NCATTED, [ncatteda])
+AC_PATH_PROG(NCATTED, [ncatted])
 AS_IF([test -z "$NCATTED"],
   [AC_MSG_ERROR([Cannot find ncatted.  Please ensure ncatted is in PATH or set the environment variable NCATTED to the full path to ncgen.])])
 
-AC_PYTHON_MODULE(xarray, [], python3)
+AX_PYTHON_MODULE([xarray],[],[python3])
 if test ${HAVE_PYMOD_XARRAY} = yes; then
   AM_CONDITIONAL([SKIP_XARRAY_TESTS], false )
 else
