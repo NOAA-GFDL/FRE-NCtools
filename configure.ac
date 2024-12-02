@@ -142,22 +142,27 @@ AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 AC_ARG_VAR([NCGEN], [Path to ncgen])
 AC_PATH_PROG(NCGEN, [ncgen])
 AS_IF([test -z "$NCGEN"],
-  [AC_MSG_ERROR([Cannot find ncgen.  Please ensure ncgen is in PATH or set the environment variable NCGEN to the full path to ncgen.])])
+  [AC_MSG_ERROR([Cannot find ncgen.  Please ensure ncgen is in PATH or set the environment variable NCGEN to the full path.])])
 
 AC_ARG_VAR([NCDUMP], [Path to ncdump])
 AC_PATH_PROG(NCDUMP, [ncdump])
 AS_IF([test -z "$NCDUMP"],
-  [AC_MSG_ERROR([Cannot find ncdump.  Please ensure ncdump is in PATH or set the environment variable NCDUMP to the full path to ncgen.])])
+  [AC_MSG_ERROR([Cannot find ncdump.  Please ensure ncdump is in PATH or set the environment variable NCDUMP to the full path.])])
 
 AC_ARG_VAR([NCRCAT], [Path to ncrcat])
 AC_PATH_PROG(NCRCAT, [ncrcat])
 AS_IF([test -z "$NCRCAT"],
-  [AC_MSG_ERROR([Cannot find ncrcat.  Please ensure ncrcat is in PATH or set the environment variable NCRCAT to the full path to ncgen.])])
+  [AC_MSG_ERROR([Cannot find ncrcat.  Please ensure ncrcat is in PATH or set the environment variable NCRCAT to the full path.])])
 
 AC_ARG_VAR([NCATTED], [Path to ncatted])
 AC_PATH_PROG(NCATTED, [ncatted])
 AS_IF([test -z "$NCATTED"],
-  [AC_MSG_ERROR([Cannot find ncatted.  Please ensure ncatted is in PATH or set the environment variable NCATTED to the full path to ncgen.])])
+  [AC_MSG_ERROR([Cannot find ncatted.  Please ensure ncatted is in PATH or set the environment variable NCATTED to the full path.])])
+
+AC_ARG_VAR([NCKS], [Path to ncks])
+AC_PATH_PROG(NCKS, [ncks])
+AS_IF([test -z "$NCKS"],
+  [AC_MSG_ERROR([Cannot find ncks.  Please ensure ncks is in PATH or set the environment variable NCKS to the full path.])])
 
 AX_PYTHON_MODULE([xarray],[],[python3])
 if test ${HAVE_PYMOD_XARRAY} = yes; then

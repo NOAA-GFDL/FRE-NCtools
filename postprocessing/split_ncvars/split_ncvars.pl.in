@@ -36,11 +36,11 @@ use File::Basename;
 
 # Get the location of the PKGLIBEXECDIR, set by automake, or use the
 # user-defined location using the PKGLIBEXECDIR environment variable.
-#my $pkg_libexec_dir = defined($ENV{PKGLIBEXECDIR}) ? $ENV{PKGLIBEXECDIR} : '@pkglibexecdir@';
 my $pkg_libexec_dir
-    = defined( $ENV{PKGLIBEXECDIR} )
+    = defined($ENV{PKGLIBEXECDIR})
     ? $ENV{PKGLIBEXECDIR}
-    : '/Users/seth.underwood/Development/NOAA-GFDL/FRE-NCtools/test.and.source.cleanup/build/src/';
+    : '@pkglibexecdir@';
+
 my $script_name = substr( $0, rindex( $0, "/" ) + 1 );
 
 my $cwd              = getcwd;
@@ -48,7 +48,8 @@ my $ncstatus         = 0;
 my $TEST             = 0;
 my $tmp_var_filename = ".split_ncvars.$$.var.nc";
 my $VERSION          = '20190813';
-my %Opt              = (
+
+my %Opt = (
     HELP    => 0,
     VERBOSE => 0,
     QUIET   => 0,
@@ -101,16 +102,27 @@ my $odir   = $Opt{odir};
 ##################################################################
 # NetCDF scripts used.  @CMD@ is expanded with automake during
 # the build.
-my $ncrcat = defined( $ENV{NCRCAT} ) ? $ENV{NCRCAT} : '@NCRCAT@';
+my $ncrcat
+    = defined( $ENV{NCRCAT} )
+    ? $ENV{NCRCAT}
+    : '@NCRCAT@';
 $ncrcat .= " -t 2 --header_pad 65536";
 
-my $ncks = defined( $ENV{NCKS} ) ? $ENV{NCKS} : '@NCKS@';
+my $ncks
+    = defined( $ENV{NCKS} )
+    ? $ENV{NCKS}
+    : '@NCKS@';
 $ncks .= ' --header_pad 65536';
 
 my $list_ncvars
-    = defined( $ENV{LIST_NCVARS} ) ? $ENV{LIST_NCVARS} : "$pkg_libexec_dir/list_ncvars.csh";
+    = defined( $ENV{LIST_NCVARS} )
+    ? $ENV{LIST_NCVARS}
+    : "$pkg_libexec_dir/list_ncvars.csh";
 
-my $ncdump = defined( $ENV{NCDUMP} ) ? $ENV{NCDUMP} : '@NCDUMP';
+my $ncdump
+    = defined( $ENV{NCDUMP} )
+    ? $ENV{NCDUMP}
+    : '@NCDUMP@';
 
 # Optional programs, if available
 my $dmget = "dmget";
@@ -180,11 +192,11 @@ foreach my $file (@ifiles) {
     # get time axis name
     my $timename = get_time_dimension($dump) if !$Opt{STATIC};
 
- #Balaji: add all variables that appear in a coordinate attribute
- #    set coords = ( `ncdump -h $file |grep :coordinates |cut -f2 -d\" |sed "s/ /\n/g" |sort -u` \
- #                   `ncdump -h $file |grep "float geol[oa][nt]" | awk '{print $2}' |cut -f1 -d\(` )
- #    set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
- #     exec echo coords = $coords
+    #Balaji: add all variables that appear in a coordinate attribute
+    # set coords = ( `ncdump -h $file |grep :coordinates |cut -f2 -d\" |sed "s/ /\n/g" |sort -u` \
+    #                `ncdump -h $file |grep "float geol[oa][nt]" | awk '{print $2}' |cut -f1 -d\(` )
+    # set coords = `echo $coords |sed "s/ /\n/g" |sort -u`
+    # exec echo coords = $coords
     my @coords;
     foreach my $coord (qw/geolat geolon GEOLAT GEOLON/) {
         push @coords, $coord if ( $dump =~ /\t\w+ $coord\(.+\)/ );
@@ -214,7 +226,7 @@ foreach my $file (@ifiles) {
         # add variable to list of variables to extract
         push @vlist, $var;
 
-# Add the cell_measures to the list of variables to include in the external_variables global attribute
+        # Add the cell_measures to the list of variables to include in the external_variables global attribute
         my @cell_measures_variables = get_cell_measures( $dump, $var );
         if (@cell_measures_variables) {
             push @xlist, @cell_measures_variables;
@@ -508,6 +520,7 @@ foreach my $file (@ifiles) {
 
 exit 1 if $ncstatus;
 
+
 ##################################################################
 ##################################################################
 ##################################################################
@@ -536,6 +549,7 @@ Split NetCDF Variables
                         files must be in chronological order.\n\n";
 } ## end sub usage
 
+
 #------------------------------------------------
 sub get_time_dimension {
     my $dump = shift;
@@ -547,6 +561,7 @@ sub get_time_dimension {
     }
     return $timeName;
 }
+
 
 #-------------------------------------------
 sub get_variable_dimensions {
@@ -567,6 +582,7 @@ sub get_variable_dimensions {
     return \@coords;
 }
 
+
 #-------------------------------------------
 # return variable dimensions with the attribute
 #   axis or cartesian_axis ="Z"
@@ -584,6 +600,7 @@ sub get_vertical_dimensions {
     return @vdims;
 }
 
+
 #-------------------------------------------
 sub get_variable_att {
     my $dump = shift;
@@ -596,6 +613,7 @@ sub get_variable_att {
     return $value;
 }
 
+
 #-------------------------------------------
 sub get_time_avg_info {
     my $dump = shift;
@@ -603,6 +621,7 @@ sub get_time_avg_info {
     my @info = split /,/, get_variable_att( $dump, $var, "time_avg_info" );
     return @info;
 }
+
 
 #-------------------------------------------
 sub get_variables_from_att {
@@ -615,6 +634,7 @@ sub get_variables_from_att {
     }
     return @attvars;
 }
+
 
 #-------------------------------------------
 sub get_cell_measures {
@@ -629,6 +649,7 @@ sub get_cell_measures {
     }
     return @cell_measures;
 }
+
 
 #-------------------------------------------
 sub get_variable_bounds {
@@ -649,6 +670,7 @@ sub get_variable_bounds {
     return @bounds;
 }
 
+
 #-------------------------------------------
 sub get_dimension_bounds ($$;$) {
     my ( $dump, $dim, $CMIPVAR ) = @_;
@@ -663,6 +685,7 @@ sub get_dimension_bounds ($$;$) {
     push @bounds, $bnds if ( $dump =~ /\t\w+ $bnds\(.+\)/ );
     return @bounds;
 }
+
 
 #-------------------------------------------
 # find the formula_terms for this variable
@@ -714,6 +737,7 @@ sub get_formula_terms {
     return ( \@fterms, \@xterms );
 } ## end sub get_formula_terms
 
+
 #-------------------------------------------
 sub is_static {
     my ( $dump, $var ) = @_;
@@ -728,12 +752,14 @@ sub is_static {
     return $static;
 }
 
+
 #-------------------------------------------
 sub tailname {
     my $tail = shift;
     while ( $tail =~ s/^.*\/// ) { }
     return $tail;
 }
+
 
 #-------------------------------------------
 # cleanup attributes in the output file
@@ -775,6 +801,7 @@ sub set_ncatted_opts ($$;$$) {
     my @unique = grep { !$seen{$_}++ } @opts;
     return @unique;
 } ## end sub set_ncatted_opts ($$;$$)
+
 
 #-------------------------------------------
 sub cleanup_dim_atts {
@@ -822,6 +849,7 @@ sub cleanup_dim_atts {
     return @opts;
 } ## end sub cleanup_dim_atts
 
+
 #-------------------------------------------
 sub remove_degenerate_dimension {
     my ( $file, $dim ) = @_;
@@ -838,6 +866,7 @@ sub remove_degenerate_dimension {
     }
     return @cmds;
 }
+
 
 #-------------------------------------------
 sub variable_log {

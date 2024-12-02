@@ -1,0 +1,29 @@
+# Perltidy RC file as used in legacy FRE
+--maximum-line-length=100
+--opening-brace-always-on-right
+# -pbp
+--continuation-indentation=4
+--vertical-tightness=2	              # never break a line after an opening token
+--closing-token-indentation=0         # do not extra indentation to match opening token
+--paren-tightness=1
+--brace-tightness=1
+--square-bracket-tightness=1
+--block-brace-tightness=1
+--nospace-for-semicolon
+--nooutdent-long-quotes
+-nst
+-nse
+-wbb="% + - * / x != == >= <= =~ !~ < > | & = **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+#---
+--closing-side-comments
+--closing-side-comment-interval=20
+
+
+# --line-up-parentheses
+#     --vertical-tightness=2	      # never break a line after an opening token
+#     --vertical-tightness-closing=2    # never break before a closing token
+# --stack-opening-tokens
+# --stack-closing-tokens
+# --whitespace-cycle=15                 # if indentation gets beyond (15 * 4), reset.
+# --cuddled-else                     # } else {  style
+

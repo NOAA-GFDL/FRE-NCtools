@@ -17,4 +17,19 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-dist_bin_SCRIPTS = split_ncvars.pl varlist.csh
+# Perform several substitutions
+do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
+               -e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
+               -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
+               -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
+               -e 's,[@]NCATTED[@],$(NCATTED),g' \
+               -e 's,[@]NCKS[@],$(NCKS),g' \
+               -e 's,[@]SED[@],$(SED),g' \
+               -e 's,[@]EGREP[@],$(EGREP),g'
+
+
+bin_SCRIPTS = split_ncvars.pl
+
+split_ncvars.pl: split_ncvars.pl.in Makefile
+	$(do_subst) < $(srcdir)/split_ncvars.pl.in > split_ncvars.pl
+	chmod +x split_ncvars.pl
