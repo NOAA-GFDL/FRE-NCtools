@@ -16,7 +16,8 @@ bin_SCRIPTS = \
   iceberg_comb.sh \
   list_ncvars.csh \
   plevel.sh \
-  timavg
+  timavg \
+  split_ncvars.pl
 
 dist_bin_SCRIPTS = \
   timeavg/timavg.csh
@@ -95,6 +96,7 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]NCDUMP[@],$(NCDUMP),g' \
                -e 's,[@]NCRCAT[@],$(NCRCAT),g' \
                -e 's,[@]NCATTED[@],$(NCATTED),g' \
+               -e 's,[@]NCKS[@],$(NCKS),g' \
                -e 's,[@]SED[@],$(SED),g' \
                -e 's,[@]EGREP[@],$(EGREP),g'
 
@@ -194,3 +196,10 @@ timeavg/time_average.o: nct_nc_utils.$(FC_MODEXT)
 timavg: timeavg/timavg.sh.in Makefile
 	$(do_subst) < $(srcdir)/timeavg/timavg.sh.in > timavg
 	chmod +x timavg
+
+# ********************************************************* #
+# split_ncvars.pl                                           #
+# ********************************************************* #
+split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
+	$(do_subst) < $(srcdir)/split_ncvars/split_ncvars.pl.in > split_ncvars.pl
+	chmod +x split_ncvars.pl
