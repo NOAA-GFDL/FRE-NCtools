@@ -35,9 +35,11 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 check_PROGRAMS = \
   create_plevel_test_ncfile \
+  create_timeavg_test_ncfiles \
   c_test_version \
   f_test_version
 create_plevel_test_ncfile_SOURCES=plevel/create_plevel_test_ncfile.c
+create_timeavg_test_ncfiles_SOURCES=timeavg/create_timeavg_test_ncfiles.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
 
@@ -86,7 +88,9 @@ TESTS = combine-ncc/combine \
         plevel/plevel-t \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
-        scatter-ncc/scatter_2x1
+        scatter-ncc/scatter_2x1 \
+        timeavg/timavg \
+        timeavg/timavg-m
 
 EXTRA_DIST = \
   init.sh \

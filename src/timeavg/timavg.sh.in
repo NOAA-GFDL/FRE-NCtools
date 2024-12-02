@@ -138,9 +138,9 @@ fi
 # place the namelist values in a temporary file
 timavg_nml=$(mktemp timavg.nml.XXXXXXXXXX)
 cat > ${timavg_nml} << EOF
-&timavg_nml
+&input
     file_name_out = "$ofile",
-    file_names = $(echo $ifiles | tr -s ' ' ','),
+    file_names = $(echo $ifiles | sed -e 's/\([[:graph:]]*\)/"\1"/g' | tr -s ' ' ','),
     use_end_time = $etime,
     verbose = $do_verbose,
     add_cell_methods = $do_bounds,

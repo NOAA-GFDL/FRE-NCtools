@@ -6,6 +6,7 @@ build.fre-nctools*
 build
 *.exe
 *.1
+.DS_Store
 
 # http://www.gnu.org/software/automake
 

@@ -1,0 +1,82 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v plevel.sh
+    plevel.sh -V
+fi
+
+. "$srcdir/init.sh"
+
+# Generate the test_input.nc file
+$builddir/create_timeavg_test_ncfiles || framework_failure_
+
+# Run timeavg.sh with default options
+timavg -o timavg.nc test_input_1.nc || fail_ timeavg.sh failed
+time_average << EOF || fail_ time_avergage failed
+&input
+    file_name_out = "time_avg.nc",
+    file_names = "test_input_1.nc",
+    use_end_time = .true.,
+    verbose = .false.,
+    add_cell_methods = .false.,
+    skip_tavg_errors = .false.,
+    suppress_warnings = .false.,
+    frac_valid_data = 0.0,
+    user_deflation = -1,
+    user_shuffle = -1,
+    command_line = "",
+/
+EOF
+# Get the MD5 sum for the two variables:
+_fail=0
+var1_1_md5sum=$(ncks -C -D 1 --md5 -v var1 timavg.nc 2>&1 | grep 'MD5(var1)' | awk -F = '{print $2}') || framework_failure_
+var1_2_md5sum=$(ncks -C -D 1 --md5 -v var1 time_avg.nc 2>&1 | grep 'MD5(var1)' | awk -F = '{print $2}') || framework_failure_
+var2_1_md5sum=$(ncks -C -D 1 --md5 -v var2 timavg.nc 2>&1 | grep 'MD5(var2)' | awk -F = '{print $2}') || framework_failure_
+var2_2_md5sum=$(ncks -C -D 1 --md5 -v var2 time_avg.nc 2>&1 | grep 'MD5(var2)' | awk -F = '{print $2}') || framework_failure_
+# compare the md5sums
+if [ "$var1_1_md5sum" != "$var1_2_md5sum" ]; then
+    echo "var1 md5sums do not match"
+    _fail=1
+fi
+if [ "$var2_1_md5sum" != "$var2_2_md5sum" ]; then
+    echo "var2 md5sums do not match"
+    _fail=1
+fi
+if [ $_fail -eq 1 ]; then
+    ncdump timavg.nc
+    ncdump time_avg.nc
+    fail_ "md5sums do not match"
+
+fi
+
+# Test multiple input files
+expected_md5sum="9f02a36b14653e5ba30fbf2f596f5747"
+timavg -o timavg.nc test_input_*.nc || fail_ timeavg.sh multifile failed
+var1_md5sum=$(ncks -C -D 1 --md5 -v var1 timavg.nc 2>&1 | grep 'MD5(var1)' | awk -F = '{print $2}') || framework_failure_
+if [ $var1_md5sum != $expected_md5sum ]; then
+    ncdump timavg.nc
+    echo "var1 md5sums do not match" 1>&2
+    echo "expected: $expected_md5sum" 1>&2
+    echo "     got: $var1_md5sum" 1>&2
+    fail_
+fi

@@ -146,7 +146,6 @@ list_ncvars.csh: list-ncvars/list_ncvars.csh.in Makefile
 # ********************************************************* #
 # Combine Scripts                                           #
 # ********************************************************* #
-
 combine_restarts: combine-restarts/combine_restarts.in
 	$(do_subst) < $(srcdir)/combine-restarts/combine_restarts.in > combine_restarts
 	chmod +x combine_restarts
