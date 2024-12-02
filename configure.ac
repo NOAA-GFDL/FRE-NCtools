@@ -44,6 +44,8 @@ AC_CONFIG_SRCDIR([src/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
+# Remove -Werror from automake options until ubuntu brings in a newer
+# version of automake.
 AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-pax subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
