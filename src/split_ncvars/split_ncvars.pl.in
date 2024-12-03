@@ -34,8 +34,12 @@ use File::Path;
 use File::Spec;
 use File::Basename;
 
-# Get the location of the PKGLIBEXECDIR, set by automake, or use the
+# Get the location of the PKGLIBEXECDIR and PREFIX, set by automake, or use the
 # user-defined location using the PKGLIBEXECDIR environment variable.
+my $prefix
+    = defined($ENV{PREFIX})
+    ? $ENV{PREFIX}
+    : '@prefix@';
 my $pkg_libexec_dir
     = defined($ENV{PKGLIBEXECDIR})
     ? $ENV{PKGLIBEXECDIR}
@@ -114,10 +118,15 @@ my $ncks
     : '@NCKS@';
 $ncks .= ' --header_pad 65536';
 
+my $ncatted
+    = defined( $ENV{NCATTED} )
+    ? $ENV{NCATTED}
+    : '@NCATTED@';
+
 my $list_ncvars
     = defined( $ENV{LIST_NCVARS} )
     ? $ENV{LIST_NCVARS}
-    : "$pkg_libexec_dir/list_ncvars.csh";
+    : "$/list_ncvars.csh";
 
 my $ncdump
     = defined( $ENV{NCDUMP} )
@@ -476,8 +485,8 @@ foreach my $file (@ifiles) {
             system("mv $tmp_var_filename $destination");
 
             if (@ncatted_opts) {
-                print "ncatted -h -O @ncatted_opts $destination\n" if $Opt{VERBOSE} > 1;
-                system("ncatted -h -O @ncatted_opts $destination");
+                print "$ncatted -h -O @ncatted_opts $destination\n" if $Opt{VERBOSE} > 1;
+                system("$ncatted -h -O @ncatted_opts $destination");
             }
         } ## end else [ if ( -e $output ) ]
 
@@ -500,8 +509,8 @@ foreach my $file (@ifiles) {
             push @ncatted_opts, "-a external_variables,global,c,c,\"" . join( " ", @xlist ) . "\"";
         }
         if (@ncatted_opts) {
-            print "ncatted -h -O @ncatted_opts " . $Opt{onefile} . "\n" if $Opt{VERBOSE} > 1;
-            system( "ncatted -h -O @ncatted_opts " . $Opt{onefile} );
+            print "$ncatted -h -O @ncatted_opts " . $Opt{onefile} . "\n" if $Opt{VERBOSE} > 1;
+            system( "$ncatted -h -O @ncatted_opts " . $Opt{onefile} );
         }
     }
 

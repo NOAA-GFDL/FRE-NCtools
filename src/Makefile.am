@@ -42,11 +42,6 @@ nodist_libnctf_a_SOURCES = \
   nct_nc_utils.$(FC_MODEXT)
 BUILT_SOURCES += nct_nc_utils.$(FC_MODEXT)
 
-# noinst_HEADERS = \
-#   version.h \
-#   version.inc \
-#   nct_nc_utils.$(FC_MODEXT)
-
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
 
@@ -84,6 +79,7 @@ EXTRA_DIST = \
   iceberg-comb/iceberg_comb.sh.in \
   list-ncvars/list_ncvars.csh.in \
   plevel/plevel.sh.in \
+  split_ncvars/split_ncvars.pl.in \
   timeavg/timavg.sh.in
 
 CLEANFILES = *.$(FC_MODEXT)
