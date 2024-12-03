@@ -60,7 +60,6 @@ char *usage[] = {
   "              --ocean_topog ocean_topog.nc [--land_mosaic land_mosaic.nc] [--wave_mosaic]",
   "              [--sea_level #]  [--interp_order #] [--mosaic_name mosaic_name]           ",
   "              [--area_ratio_thresh #] [--check ] [--verbose] [--print_memory]            ",
-  "              [--reproduce_siena]                                                        ",
   " ",
   "make_coupler_mosaic generates three exchange grids for the FMS coupler. The output ",
   "file includes exchange grid files for fluxes between atmosphere and surface (sea ice ",
@@ -128,8 +127,6 @@ char *usage[] = {
   " ",
   "--print_memory                 debug memory usage when it is set                       ",
   " ",
-  "--reproduce_siena              Set to reproduce siena shared codes results              ",
-  "    ",
   "--rotate_poly                  Set to calculate polar polygon areas by caculating the area of a copy ",
   "                               of the polygon, with the copy being rotated far away from the pole. ",
   " ",
@@ -407,7 +404,6 @@ int main (int argc, char *argv[])
   int    tile_nest, is_nest, ie_nest, js_nest, je_nest;
   int    tile_parent, is_parent, ie_parent, js_parent, je_parent;
   int    print_memory=0;
-  int    reproduce_siena=0;
   int    rotate_poly=0;
 
   static struct option long_options[] = {
@@ -423,7 +419,6 @@ int main (int argc, char *argv[])
     {"check",                no_argument,       NULL, 'n'},
     {"verbose",              no_argument,       NULL, 'v'},
     {"print_memory",         no_argument,       NULL, 'p'},
-    {"reproduce_siena",      no_argument,       NULL, 'q'},
     {"rotate_poly",          no_argument,       NULL, 'u'},
     {NULL, 0, NULL, 0}
   };
@@ -472,9 +467,6 @@ int main (int argc, char *argv[])
     case 'p':
       print_memory = 1;
       break;
-    case 'q':
-      reproduce_siena = 1;
-      break;
     case 'u':
       rotate_poly = 1;
       break;
@@ -499,8 +491,6 @@ int main (int argc, char *argv[])
 
   /*if lmosaic is not specifiied, assign amosaic value to it */
   if(!lmosaic) lmosaic = amosaic;
-
-  if(reproduce_siena) set_reproduce_siena_true();
 
   if(rotate_poly) set_rotate_poly_true();
 
