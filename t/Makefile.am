@@ -28,13 +28,16 @@ skipflag="skip"
 else
 skipflag=""
 endif
+TEST_EXTENSIONS = .sh
 
-TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir;\
-                    export skip_mpi=$(skip_MPI);                    \
-                    export skipflag=$(skipflag);                 \
-    for d in $$( find $(abs_top_builddir)/postprocessing $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
+TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
+                    skip_mpi=$(skip_MPI); export skip_mpi; \
+                    skipflag=$(skipflag); export skipflag; \
+    for d in $$( find $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
-    done;
+    done; \
+                    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
+
 
 if HAVE_TEST25_INPUT
 # Data for test 25 is only available on some systems as the directory
@@ -42,11 +45,10 @@ if HAVE_TEST25_INPUT
 test25_data = Test25-input
 endif
 
-LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
-             $(top_srcdir)/tap-driver.sh
+SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                $(top_srcdir)/tap-driver.sh
 
 TESTS = Test01-check_programs_exist.sh \
-        Test02-mppnccombine.sh \
         Test03-grid_coupled_model.sh \
         Test04-grid_coupled_nest.sh \
         Test05-remap_c48_regular.sh \
@@ -62,7 +64,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
         Test20-fregrid.sh \
-        Test21-reference_mppnccombine.sh \
         Test24-reference_fregrid.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
@@ -70,13 +71,10 @@ TESTS = Test01-check_programs_exist.sh \
         Test28-make_hgrid.sh \
         Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
-	Test32-fregrid_no_stretched.sh \
-	Test33-reference_make_hgrid.sh \
-	Test34-timavg.sh
+        Test32-fregrid_no_stretched.sh \
+        Test33-reference_make_hgrid.sh
 
 EXTRA_DIST = $(TESTS) \
-             Test02-input\
-             Test02-reference \
              Test03-input \
              Test06-input \
              Test07-input \
@@ -85,16 +83,12 @@ EXTRA_DIST = $(TESTS) \
              Test12-input \
              Test15-input \
              Test16-input \
-             Test17-input \
-             Test18-input \
              Test20-input \
-	     Test17-reference \
-             Test18-reference \
              Test20-reference \
              $(test25_data) \
              Test31-input \
-	     Test32-input \
-	     Test33-reference
+             Test32-input \
+             Test33-reference
 
 clean-local:
 	$(RM) *.nc Test*/*
