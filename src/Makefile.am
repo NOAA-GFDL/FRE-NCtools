@@ -8,21 +8,20 @@ combine_programs = \
 
 bin_PROGRAMS = \
   decompress-ncc \
-  list_ncvars \
   $(combine_programs)
 
 bin_SCRIPTS = \
   combine_restarts \
   iceberg_comb.sh \
   list_ncvars.csh \
+  list_ncvars.sh \
   plevel.sh \
   timavg \
+  timavg.csh \
   split_ncvars.pl
 
-dist_bin_SCRIPTS = \
-  timeavg/timavg.csh
-
 pkglibexec_PROGRAMS = \
+  list_ncvars \
   print_version \
   plevel-interp \
   time_average
@@ -137,6 +136,10 @@ mppnccombine_LDADD = $(c_netcdf_ldadds) -lm $(LDADD)
 list_ncvars_SOURCES = list-ncvars/list_ncvars.f90
 list_ncvars_LDADD = $(f_netcdf_ldadds)
 
+list_ncvars.sh: list-ncvars/list_ncvars.sh.in Makefile
+	$(do_subst) < $(srcdir)/list-ncvars/list_ncvars.sh.in > list_ncvars.sh
+	chmod +x list_ncvars.sh
+
 list_ncvars.csh: list-ncvars/list_ncvars.csh.in Makefile
 	$(do_subst) < $(srcdir)/list-ncvars/list_ncvars.csh.in > list_ncvars.csh
 	chmod +x list_ncvars.csh
@@ -192,6 +195,10 @@ timeavg/time_average.o: nct_nc_utils.$(FC_MODEXT)
 timavg: timeavg/timavg.sh.in Makefile
 	$(do_subst) < $(srcdir)/timeavg/timavg.sh.in > timavg
 	chmod +x timavg
+timavg.csh: timeavg/timavg.csh.in Makefile
+	$(do_subst) < $(srcdir)/timeavg/timavg.csh.in > timavg.csh
+	chmod +x timavg.csh
+
 
 # ********************************************************* #
 # split_ncvars.pl                                           #

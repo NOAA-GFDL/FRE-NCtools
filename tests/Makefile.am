@@ -66,6 +66,7 @@ TESTS = combine-ncc/combine \
         libtests/print_version \
         list_ncvars/list_ncvars_csh \
         list_ncvars/list_ncvars_ftn \
+        list_ncvars/list_ncvars_sh \
         mppnccombine/dry-run \
         mppnccombine/list-output-files \
         mppnccombine/missing-file-fail \

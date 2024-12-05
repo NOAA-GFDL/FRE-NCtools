@@ -23,8 +23,8 @@
 if test "$VERBOSE" = yes
 then
     set -x
-    command -v list_ncvars.csh
-    list_ncvars.csh -V
+    command -v list_ncvars.sh
+    list_ncvars.sh -V
 fi
 
 . "$srcdir/init.sh"
@@ -96,26 +96,26 @@ data:
 }
 EOF
 
-vars=$(list_ncvars.csh -s -0 file1.nc file2.nc) || \
-    fail_ list_ncvars.csh failed printing 1 static vars "\n****\n$vars\n****"
+vars=$(list_ncvars.sh -s -0 file1.nc file2.nc) || \
+   fail_ "list_ncvars.sh failed printing 1 static vars \n****\n$vars\n****"
 nvars=$(echo $vars | wc -w) || framework_failure_
 test $nvars -eq 1 || \
     fail_ list_ncvars should have printed 1 vars, but printed $nvars "\n*****\n$vars\n*****"
 
-vars=$(list_ncvars.csh -t -4 file1.nc file2.nc) || \
-    fail_ list_ncvars.csh failed printing 1 non-static vars "\n***n$vars\n****"
+vars=$(list_ncvars.sh -t -4 file1.nc file2.nc) || \
+    fail_ list_ncvars.sh failed printing 1 non-static vars "\n***n$vars\n****"
 nvars=$(echo $vars | wc -w) || framework_failure_
 test $nvars -eq 1 || \
     fail_ list_ncvars should have printed 1 vars, but printed $nvars "\n*****$vars\n*****"
 
-vars=$(list_ncvars.csh -t -4 file1.nc) || \
-    fail_ list_ncvars.csh failed printing 0 non-static vars "\n***n$vars\n****"
+vars=$(list_ncvars.sh -t -4 file1.nc) || \
+    fail_ list_ncvars.sh failed printing 0 non-static vars "\n***n$vars\n****"
 nvars=$(echo $vars | wc -w) || framework_failure_
 test $nvars -eq 0 || \
     fail_ list_ncvars should have printed 0 vars, but printed $nvars "\n*****$vars\n*****"
 
-vars=$(list_ncvars.csh -s -14 file1.nc) || \
-    fail_ list_ncvars.csh failed printing 2 static vars "\n***n$vars\n****"
+vars=$(list_ncvars.sh -s -14 file1.nc) || \
+    fail_ list_ncvars.sh failed printing 2 static vars "\n***n$vars\n****"
 nvars=$(echo $vars | wc -w) || framework_failure_
 test $nvars -eq 2 || \
     fail_ list_ncvars should have printed 2 vars, but printed $nvars "\n*****$vars\n*****"

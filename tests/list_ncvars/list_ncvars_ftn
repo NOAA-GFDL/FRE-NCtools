@@ -72,7 +72,7 @@ data:
 }
 EOF
 
-vars=$(list_ncvars << EOF || fail_ list_ncvars failed with no output
+vars=$(list_ncvars << EOF || fail_ "list_ncvars failed with no output"
  &input
    filename = 'file.nc',
    list_static = .false.,
@@ -84,10 +84,10 @@ vars=$(list_ncvars << EOF || fail_ list_ncvars failed with no output
    var4d = .false.,
  &end
 EOF)
-nvars=$(echo $vars | wc -w) || framework_failure_
-test $nvars -eq 0 || fail_ list_ncvars should have printed 0 vars, but printed $nvars "\n*****\n$vars\n*****"
+nvars=$(echo $vars | wc -w) || framework_failure_ "failed to get number of 0 variables"
+test $nvars -eq 0 || fail_ "list_ncvars should have printed 0 vars, but printed $nvars \n*****\n$vars\n*****"
 
-vars=$(list_ncvars << EOF || fail_ list_ncvars failed printing 1 static variable
+vars=$(list_ncvars << EOF || fail_ "list_ncvars failed printing 1 static variable"
  &input
    filename = 'file.nc',
    list_static = .true.,
@@ -99,10 +99,10 @@ vars=$(list_ncvars << EOF || fail_ list_ncvars failed printing 1 static variable
    var4d = .false.,
  &end
 EOF)
-nvars=$(echo $vars | wc -w) || framework_failure_
-test $nvars -eq 1 || fail_ list_ncvars should have printed 1 static vars, but printed $nvars "\n*****\n$vars\n*****"
+nvars=$(echo $vars | wc -w) || framework_failure_ "failed to get number of 1 static variables"
+test $nvars -eq 1 || fail_ "list_ncvars should have printed 1 static vars, but printed $nvars \n*****\n$vars\n*****"
 
-vars=$(list_ncvars << EOF || fail_ list_ncvars failed printing 1 non-static variable
+vars=$(list_ncvars << EOF || fail_ "list_ncvars failed printing 1 non-static variable"
  &input
    filename = 'file.nc',
    list_static = .false.,
@@ -114,10 +114,10 @@ vars=$(list_ncvars << EOF || fail_ list_ncvars failed printing 1 non-static vari
    var4d = .false.,
  &end
 EOF)
-nvars=$(echo $vars | wc -w) || framework_failure_
-test $nvars -eq 1 || fail_ list_ncvars should have printed 1 non-static vars, but printed $nvars "\n*****\n$vars\n*****"
+nvars=$(echo $vars | wc -w) || framework_failure_ "failed to get number of 1 non-static variables"
+test $nvars -eq 1 || fail_ "list_ncvars should have printed 1 non-static vars, but printed $nvars \n*****\n$vars\n*****"
 
-vars=$(list_ncvars << EOF || fail_ list_ncvars failed with no output
+vars=$(list_ncvars << EOF || fail_ "list_ncvars failed with no output"
  &input
    filename = 'file.nc',
    list_static = .true.,
@@ -129,7 +129,5 @@ vars=$(list_ncvars << EOF || fail_ list_ncvars failed with no output
    var4d = .true.,
  &end
 EOF)
-nvars=$(echo $vars | wc -w) || framework_failure_
-test $nvars -eq 10 || fail_ list_ncvars should have printed 10 vars, but printed $nvars "\n*****\n$vars\n*****"
-
-Exit $fail
+nvars=$(echo $vars | wc -w) || framework_failure_ "failed to get number of 10 variables"
+test $nvars -eq 10 || fail_ "list_ncvars should have printed 10 vars, but printed $nvars \n*****\n$vars\n*****"
