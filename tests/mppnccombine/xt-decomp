@@ -145,5 +145,3 @@ echo $output | grep -q "grid_[xy]t:domain_decomposition *=" && fail_ "attribute 
 # verify the dummy attributes (global and variable) are in the final file
 echo $output | grep -q ":dummy_global_att *=" || fail_ "did not copy over all global attributes"
 echo $output | grep -q "var:dummy_attribute *=" || fail_ "did not copy over all variable attributes"
-
-Exit $fail
