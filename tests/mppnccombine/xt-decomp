@@ -28,7 +28,7 @@ fi
 . "$srcdir/init.sh"
 
 # Create the four decomposed NetCDF files
-ncgen -o decomp.nc.0000 << EOF || framework_failure_
+ncgen -o decomp.nc.0000 << EOF || framework_failure_ "failed to create decomp.nc.0000"
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -79,7 +79,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0001 << EOF || framework_failure_
+ncgen -o decomp.nc.0001 << EOF || framework_failure_ "failed to create decomp.nc.0001"
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -130,18 +130,63 @@ data:
 }
 EOF
 
+ncgen -o decomp_ref.nc << EOF || framework_failure_ "Failed to create reference file"
+netcdf decomp_ref {
+dimensions:
+	grid_xt = 10 ;
+	grid_yt = 10 ;
+	time = UNLIMITED ; // (1 currently)
+variables:
+	double grid_xt(grid_xt) ;
+		grid_xt:long_name = "T-cell longitude" ;
+		grid_xt:units = "degrees_E" ;
+		grid_xt:axis = "X" ;
+	double grid_yt(grid_yt) ;
+		grid_yt:long_name = "T-cell latitude" ;
+		grid_yt:units = "degrees_N" ;
+		grid_yt:axis = "Y" ;
+	double time(time) ;
+		time:long_name = "time" ;
+		time:units = "days since 0001-01-01 00:00:00" ;
+		time:axis = "T" ;
+		time:calendar_type = "NOLEAP" ;
+		time:calendar = "noleap" ;
+	float var(grid_yt, grid_xt) ;
+		var:long_name = "Decomposed variable" ;
+		var:units = "m" ;
+		var:missing_value = 1.e+20f ;
+		var:_FillValue = 1.e+20f ;
+		var:dummy_attribute = "just a dummy attribute" ;
+
+// global attributes:
+		:filename = "decomp.nc" ;
+		:dummy_global_att = "a global dummy attribute" ;
+data:
+
+ grid_xt = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ;
+
+ grid_yt = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ;
+
+ time = 0 ;
+
+ var =
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+  20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+  40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+  50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+  60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+  70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+  90, 91, 92, 93, 94, 95, 96, 97, 98, 99 ;
+}
+EOF
+
 # run mppnccombine to generate decomp.nc, not
 # listing other input files
 mppnccombine -vv decomp.nc || fail_ "mppnccombine failed"
 # verify that mppnccombine generated a good netcdf file
 output=$(ncdump decomp.nc) || framework_failure_ "unable dump decomp.nc"
-# verify that the var variable has the correct number of elements
-# and are in the correct order
-echo $output | grep -q "var *= *$(seq -s ', *' 0 98) *99 *;" || ( ncdump decomp.nc && fail_ "variable var values are not in the correct order" )
-# verify the global variable NumFilesInSet is gone
-echo $output | grep -q ":NumFilesInSet *= *\d *" && fail_ "attribute NumFilesInSet was left in decomp.nc"
-# verify that the domain_decomposition for grid_[xy]t is gond
-echo $output | grep -q "grid_[xy]t:domain_decomposition *=" && fail_ "attribute domain_decomposition attributes left in decomp.nc"
-# verify the dummy attributes (global and variable) are in the final file
-echo $output | grep -q ":dummy_global_att *=" || fail_ "did not copy over all global attributes"
-echo $output | grep -q "var:dummy_attribute *=" || fail_ "did not copy over all variable attributes"
+# verify that the output matches the reference
+$top_srcdir/tests/nc_cmp -dm decomp_ref.nc decomp.nc || fail_ "mppcombine output does not match the reference\n$output"
