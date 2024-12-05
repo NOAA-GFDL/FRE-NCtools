@@ -1,0 +1,177 @@
+#!/usr/bin/env perl
+
+# This is a simple netCDF compare tool to check if two netCDF files are
+# identical.  This will only check if the two files have the same:
+#   - dimensions
+#   - variables (and attributes)
+#   - data
+# It does not check the global attributes.
+
+# This tool uses ncdump to capture the ASCII output, and then compares
+# the three sections contain the same string.
+use Getopt::Long;
+
+# Compare two strings.  If they are different, print the message
+# and the two strings to STDERR.  Return "false" (0) if they are
+# different, and "true" (1) if they are the same.
+sub cmp_strings($$$) {
+    my ($f1, $f2, $msg) = @_;
+    if ( $f1 ne $f2 ) {
+        print STDERR "$msg\n";
+        print STDERR "file 1: \"$f1\"\n";
+        print STDERR "file 2: \"$f2\"\n";
+        return 0;
+    }
+    return 1;
+}
+
+# Return a hash of the variable with the values in an array
+sub get_vars($) {
+    my ($instring) = @_;
+    my @matches = $instring =~ /\s*([a-zA-Z0-9_-]* =.*?\s;)/gs;
+    my %vars;
+    for my $m (@matches) {
+        $m =~ s/[;\s]//g;
+        my @m_split = split('=', $m);
+        @{$vars{$m_split[0]}} = split(',', $m_split[1]);
+    }
+    return %vars;
+}
+
+# Return a hash of the three sections (dimensions, variables, data)
+sub get_ncfile_sections($) {
+    my ($file) = @_;
+    my $ncdump = qx{ncdump $file};
+    my @sections = $ncdump =~ /dimensions:\n(.*)\nvariables:\n(.*)\n\/\/ global attributes:.*data:\n(.*)\n}/s;
+    return ( dimensions => $sections[0],
+             variables => $sections[1],
+             data => $sections[2] );
+}
+
+# Check if $a and $b are within the tolerance value
+# Inputs are:
+#    is_in_tolerance(a, b, abs_diff_tol, per_diff_tol)
+#    a : value from file 1
+#    b : value from file 2
+#    abs_diff_tol : Absolute difference tolerance (-t)
+#    per_diff_tol : Percent difference tolerance (-T)
+sub is_in_tolerance($$$$) {
+    my ($a, $b, $abs_tol, $per_tol) = @_;
+    my $diff = 0; # Difference calculation
+    if ( $per_tol > 0 ) {
+        $diff = abs(($b - $a)/$b);
+    } else {
+        $diff = abs($b - $a);
+    }
+    # Now check if within the tolerance
+    return $diff <= $abs_tol || $diff <= $per_tol;
+}
+
+# Important values
+my $tolerance_abs = 0.0;
+my $tolerance_pdf = 0.0;
+my $check_data = 0;
+my $check_metadata = 0;
+my $check_variables = '';
+
+# Get options
+Getopt::Long::Configure ("bundling");
+GetOptions ("data|d" => \$check_data,
+            "metadata|m" => \$check_metadata,
+            "tolerance|t=f" => \$tolerance_abs,
+            "Tolerance|T=f" => \$tolerance_pdf,
+            "variable|v=s" => \$check_variables)
+or die("Error in command line arguments\n");
+
+# We need two files
+if ( @ARGV != 2 ) {
+    print STDERR "Need two files to compare";
+}
+
+# Verify both files exist
+print STDERR "File \"$ARGV[0]\" does not exist\n" if ! -e $ARGV[0];
+print STDERR "File \"$ARGV[1]\" does not exist\n" if ! -e $ARGV[1];
+exit 1 if ! -e $ARGV[0] or ! -e $ARGV[1];
+
+# Check that either -d or -m were given
+if ( $check_data == 0 && $check_metadata == 0 ) {
+    die("Must supply at least -d or -m.\n");
+}
+
+# Can only supply -t or -T, not both
+if ( abs($tolerance_abs) > 0 && abs($tolerance_pdf) > 0 ) {
+    die("Can only supply -t or -T, not both.");
+}
+
+# Capture the dimensions, variables, and data sections
+# ignoring the global attributes
+my %f1 = get_ncfile_sections($ARGV[0]);
+my %f2 = get_ncfile_sections($ARGV[1]);
+
+# First pass, check if strings match for the three sections
+exit 1 if not cmp_strings($f1{'dimensions'}, $f2{'dimensions'}, "Dimensions differ");
+
+# Check if variable metadata is identical
+if ( $check_metadata ) {
+    exit 1 if not cmp_strings($f1{'variables'}, $f2{'variables'}, "Variables or metadata differ");
+}
+
+# Now for the data.
+# Verify the data is not outside an expected tolerance
+if ( $check_data ) {
+    # Separate the variables in the data section
+    my %v1 = get_vars($f1{'data'});
+    my %v2 = get_vars($f2{'data'});
+
+    # Get the keys
+    @k1 = keys %v1;
+    @k2 = keys %v2;
+
+    # Ignore the number of variable check if the user supplied
+    # the variables to check
+    if ( not $check_variables ) {
+        # Check that each file has the same number of variables
+        if ( @k1 != @k2 ) {
+            print STDERR "Number of variables differ\n";
+            print STDERR "  $ARGV[0]: ", @k1, "variables \n";
+            print STDERR "  $ARGV[1]: ", @k2, "variables \n";
+            exit 1;
+        }
+    }
+
+    # If user passed in a set of variables to check, use those variables
+    # instead of all variables
+    my @vars = @k1;
+    if ( $check_variables ) {
+        @vars = split(',', $check_variables);
+    }
+
+    # Check that each file has the same variables
+    foreach my $v (@vars) {
+        if ( ! grep(/^$v$/, @k2) ) {
+            print STDERR "Variable \"$k\" not found in $ARGV[1]\n";
+            exit 1;
+        }
+    }
+
+    # Check that each variable has the same number of elements
+    foreach my $v (@vars) {
+        if ( @{$v1{$v}} != @{$v2{$v}} ) {
+            print STDERR "Variable \"$k\" has a different number of elements between the two files:\n";
+            print STDERR "  $ARGV[0]: ", @{$v1{$v}}, "\n";
+            print STDERR "  $ARGV[1]: ", @{$v2{$v}}, "\n";
+            exit 1;
+        }
+    }
+
+    # Check each element in the variables are within the tolerance
+    for my $v (@vars) {
+        for ( my $i = 0; $i < @{$v1{$v}}; $i++ ) {
+            #if ( ${$v2{$v}}[$i] < ${$v1{$v}}[$i] - $tolerance || ${$v1{$v}}[$i] + $tolerance < ${$v2{$v}}[$i] ) {
+            if ( not is_in_tolerance(${$v1{$v}}[$i], ${$v2{$v}}[$i], $tolerance_abs, $tolerance_pdf) ) {
+                print STDERR "Diff: $v\[$i\]: ", ${$v1{$v}}[$i], "<>", ${$v2{$v}}[$i], "\n";
+                exit 1;
+            }
+        }
+    }
+}

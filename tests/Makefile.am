@@ -45,10 +45,10 @@ f_test_version_SOURCES=libtests/f_test_version.f90
 
 TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
                     builddir=$(abs_builddir); export builddir; \
-                    export skip_mpi=$(skip_MPI); \
-                    export skipflag=$(skipflag); \
+                    skip_mpi=$(skip_MPI); export skip_mpi; \
+                    skipflag=$(skipflag); export skipflag; \
                     export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
-                    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH";
+                    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
 
 TESTS = combine-ncc/combine \
         combine_restarts/combine \

@@ -40,7 +40,7 @@ fv3_grids_filelist=""
 for i in 1 2 3 4 5 6
 do
     fv3_file=$fv3_grid_name".tile"$i".nc"
-   run_and_check [ -e $top_srcdir/t/Test33-reference/$fv3_file ]
+    run_and_check [ -e $top_srcdir/t/Test33-reference/$fv3_file ]
 done
 
 cp $top_srcdir/t/Test33-reference/*.nc .
@@ -58,9 +58,9 @@ echo ""
 ## TODO:  Note argument of --great_circle_algorithm option, which should not
 ## be necessary and code may be corrected in future.
 make_hgrid --grid_type from_file \
-	   --great_circle_algorithm \
-	   --my_grid $fv3_grids_filelist \
-	   --grid_name $nct_ff_grid_name
+           --great_circle_algorithm \
+           --my_grid $fv3_grids_filelist \
+           --grid_name $nct_ff_grid_name
 
 #II) "Analytically" create a equal distance gnomonic cubic grid using
 #     the do_cube_transform option
@@ -85,8 +85,8 @@ for i in 1 2 3 4 5 6
 do
     fv3_file=$nct_ff_grid_name".tile"$i".nc"
     nct_file=$nct_grid_name".tile"$i".nc"
-    run_and_check nccmp -d --variable=x,y,dx,dy --Tolerance=1.0e-9 $fv3_file $nct_file
-    run_and_check nccmp -d --variable=area --Tolerance=1.0e-6 $fv3_file $nct_file
+    run_and_check $top_srcdir/tests/nc_cmp -d --variable=x,y,dx,dy --Tolerance=1.0e-9 $fv3_file $nct_file
+    run_and_check $top_srcdir/tests/nc_cmp -d --variable=area --Tolerance=1.0e-6 $fv3_file $nct_file
     # TODO: angle_dx and angle_dy may be done in future.
 done
 

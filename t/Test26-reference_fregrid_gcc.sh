@@ -59,13 +59,11 @@ load test_utils
    run_and_check [ -e ocean_temp_salt.res.latlon.nc ]
    run_and_check [ -e $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc ]
 
-   run_and_check nccmp -V
-
    # checks values with float tolerance to bypass any result differences from compilers
-   run_and_check nccmp -d -t 0.000001  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
+   run_and_check $top_srcdir/tests/nc_cmp -d -t 0.000001  ocean_temp_salt.res.latlon.nc  $top_srcdir/t/Test20-reference/ocean_temp_salt.res.latlon.nc
 
    run_and_check [ -e latlon_mosaic.nc ]
    run_and_check [ -e $top_srcdir/t/Test20-reference/latlon_mosaic.nc ]
 
-   run_and_check nccmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
+   run_and_check $top_srcdir/tests/nc_cmp -d  latlon_mosaic.nc  $top_srcdir/t/Test20-reference/latlon_mosaic.nc
 }

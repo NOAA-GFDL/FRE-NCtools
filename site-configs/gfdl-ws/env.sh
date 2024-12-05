@@ -42,9 +42,8 @@ mpi_version=4.2.1
 module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 
-# bats, nccmp, and python are needed for tests
+# bats, and python are needed for tests
 module load bats
-module load nccmp
 module load python
 
 # Load the GCC compilers

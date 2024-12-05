@@ -64,7 +64,7 @@ load test_utils
 		--output_file out_parallel.nc  \
 		--remap_file remap_file.nc
 
-    run_and_check nccmp -md out.nc out_parallel.nc
+    run_and_check $top_srcdir/tests/nc_cmp -md out.nc out_parallel.nc
   fi
 
 # remap other fields
