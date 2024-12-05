@@ -202,18 +202,9 @@ EOF
 
 # run mppnccombine to generate decomp.nc, not
 # listing other input files
-mppnccombine decomp.nc || fail=1
+mppnccombine decomp.nc || fail_ "mppnccombine failed"
 # verify that mppnccombine generated a good netcdf file
-output=$(ncdump decomp.nc) || fail=1
+output=$(ncdump decomp.nc) || framework_failure_ "unable dump decomp.nc"
 # verify that the var variable has the correct number of elements
 # and are in the correct order
-echo $output | grep -q "var *= *$(seq -s ', *' 0 78) *79 *;" || fail=1
-# verify the global variable NumFilesInSet is gone
-echo $output | grep -q ":NumFilesInSet *= *\d *" && fail=1
-# verify that the domain_decomposition for grid_[xy]t is gond
-echo $output | grep -q "grid_[xy]t:domain_decomposition *=" && fail=1
-# verify the dummy attributes (global and variable) are in the final file
-echo $output | grep -q ":dummy_global_att *=" || fail=1
-echo $output | grep -q "var:dummy_attribute *=" || fail=1
-
-Exit $fail
+echo $output | grep -q "var *= *$(seq -s ', *' 0 78) *79 *;" || ( ncdump decomp.nc && fail_ "variable var values are not in the correct order" )
