@@ -24,6 +24,10 @@
                  programming interface "mpp_io_mod"
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
+  V2.2.8: Hans.Vahlenkamp@noaa.gov
+          If no netCDF format is specified (no -64 or -n4 options) for the
+          output file then use the netCDF format of the first input file;
+          use netCDF3 64-bit offset format or netCDF4 classic format.
   V2.2.7: Hans.Vahlenkamp@noaa.gov
           Synchronize output file before closing and check for errors.
   V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
@@ -184,8 +188,8 @@ static unsigned long maxrss = 0; /* maximum memory used so far in kilobytes */
 static int print_mem_usage = 0;
 static unsigned long mem_allocated = 0; /* memory allocated so far */
 
-static const char version[] = "2.2.7";
-static const char last_updated[] = "2024-09-25";
+static const char version[] = "2.2.8";
+static const char last_updated[] = "2024-12-05";
 
 static unsigned long estimated_maxrss = 0; /* see option: -x */
 static int mem_dry_run = 0; /* set if -x option is used */
@@ -366,37 +370,38 @@ int main(int argc, char *argv[])
    /* Disable fatal returns from netCDF library functions */
    ncopts=0;
 
-   if (!mem_dry_run) {
-	   /* Create a new netCDF output file */
-	   if ((ncoutfile=(struct fileinfo *)malloc(sizeof(struct fileinfo)))==NULL)
-	     {
-	      fprintf(stderr,"Error: cannot allocate enough memory!\n"); return(1);
-	     }
-	   if (!appendnc)
-	     {
-	      if (stat(outfilename,&statbuf)==0)
-		{
-		 fprintf(stderr,"Error: output file seems to exist already!\n");
-		 free(ncoutfile); return(1);
-		}
-	      status = nc__create(outfilename, format, 0, &blksz, &ncoutfile->ncfid);
-	      if (status==(-1))
-		{
-		 fprintf(stderr,"Error: cannot create the output netCDF file!\n");
-		 free(ncoutfile); return(1);
-		}
-	      ncsetfill(ncoutfile->ncfid,NC_NOFILL);
-	     }
-	   /* Open an existing netCDF file for appending */
-	   else
-	     {
-	      if ((ncoutfile->ncfid=ncopen(outfilename,NC_WRITE))==(-1))
-		{
-		 fprintf(stderr,"Error: cannot open the output netCDF file for appending!\n");
-		 free(ncoutfile); return(1);
-		}
-	     }
-   }
+   if (!mem_dry_run)
+     {
+      /* Create a new netCDF output file */
+      if ((ncoutfile=(struct fileinfo *)malloc(sizeof(struct fileinfo)))==NULL)
+        {
+         fprintf(stderr,"Error: cannot allocate enough memory!\n"); return(1);
+        }
+      if (!appendnc)
+        {
+         if (stat(outfilename,&statbuf)==0)
+           {
+            fprintf(stderr,"Error: output file seems to exist already!\n");
+            free(ncoutfile); return(1);
+           }
+         status = nc__create(outfilename, format, 0, &blksz, &ncoutfile->ncfid);
+         if (status==(-1))
+           {
+            fprintf(stderr,"Error: cannot create the output netCDF file!\n");
+            free(ncoutfile); return(1);
+           }
+         ncsetfill(ncoutfile->ncfid,NC_NOFILL);
+        }
+      /* Open an existing netCDF file for appending */
+      else
+        {
+         if ((ncoutfile->ncfid=ncopen(outfilename,NC_WRITE))==(-1))
+           {
+            fprintf(stderr,"Error: cannot open the output netCDF file for appending!\n");
+            free(ncoutfile); return(1);
+           }
+        }
+     }
 
    /* No input files are specified on the command-line */
    if (inputarg==(-1))
@@ -740,6 +745,7 @@ int process_file(char *ncname, unsigned char appendnc,
   {
    struct fileinfo *ncinfile;  /* Information about an input netCDF file */
    int nfiles2;  /* Number of files in the decomposed domain */
+   int ncinformat, ncoutformat;  /* Format of input and output netCDF files */
    int d, v, n;  /* Loop variables */
    int dimid;  /* ID of a dimension */
    int decomp[4];  /* "domain_decomposition = #0, #1, #2, #3" attribute */
@@ -749,6 +755,7 @@ int process_file(char *ncname, unsigned char appendnc,
                    /*  #3 ending position of decomposed dimension   */
    char attname[MAX_NC_NAME];  /* Name of a global or variable attribute */
    unsigned char ncinfileerror=0;  /* Were there any file errors? */
+   size_t blksz=65536;  /* netCDF block size */
 
    if (print_mem_usage) check_mem_usage();
 
@@ -878,6 +885,48 @@ int process_file(char *ncname, unsigned char appendnc,
      {
       if (verbose) printf("    Creating output \"%s\"\n",outncname);
 
+      /* Determine the format of the input netCDF file */
+      if (nc_inq_format(ncinfile->ncfid,&ncinformat)==(-1))
+        {
+         fprintf(stderr,"Error: cannot read the input file format!\n");
+         ncclose(ncinfile->ncfid); free(ncinfile); return(1);
+        }
+
+      /* Determine the format of the output netCDF file */
+      if (nc_inq_format(ncoutfile->ncfid,&ncoutformat)==(-1))
+        {
+         fprintf(stderr,"Error: cannot read the output file format!\n");
+         ncclose(ncinfile->ncfid); free(ncinfile); return(1);
+        }
+
+      if (verbose) printf("    ncinformat=%d, ncoutformat=%d\n",ncinformat,ncoutformat);
+
+      /* If the format option (-64 or -n4) for the output netCDF file is not specified then */
+      /* recreate the output netCDF file based upon the format of the input netCDF file     */
+      if (ncoutformat==NC_FORMAT_CLASSIC)
+        {
+         if (ncinformat==NC_FORMAT_CLASSIC || ncinformat==NC_FORMAT_64BIT_OFFSET)
+           {
+            ncoutformat=(NC_CLOBBER | NC_64BIT_OFFSET);
+            if (verbose) printf("    ncoutformat reset to NC_64BIT_OFFSET \n");
+           }
+         else
+           {
+            if (ncinformat==NC_FORMAT_NETCDF4 || ncinformat==NC_FORMAT_NETCDF4_CLASSIC)
+              {
+               ncoutformat=(NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
+               if (verbose) printf("    ncoutformat reset to NC_NETCDF4 with NC_CLASSIC_MODEL\n");
+              }
+           }
+         ncclose(ncoutfile->ncfid);
+         if (nc__create(outncname,ncoutformat,0,&blksz,&ncoutfile->ncfid)==(-1))
+           {
+            fprintf(stderr,"Error: cannot create the output netCDF file!\n");
+            free(ncoutfile); return(1);
+           }
+         ncsetfill(ncoutfile->ncfid,NC_NOFILL);
+        }
+
       /* Define the dimensions */
       for (d=0; d < ncinfile->ndims; d++)
         {
@@ -947,7 +996,6 @@ int process_file(char *ncname, unsigned char appendnc,
 		}
 	    }
 	}
-
 
       /* Definitions done */
       nc__enddef(ncoutfile->ncfid,headerpad,4,0,4);
