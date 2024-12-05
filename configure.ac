@@ -27,12 +27,12 @@ AC_INIT(
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
 
-# Place the git description informatin in the configure script
+# Place the git description information in the configure script
 m4_define([git_revision],
   [m4_esyscmd_s([git describe --tags --always --dirty 2> /dev/null || echo "unknown version"])])
 AC_REVISION([git_revision])
 m4_define([git_hashval],
-  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
+  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown git hash"])])
 AC_REVISION([git_hashval])
 m4_define([git_date],
   [m4_esyscmd_s([git show --no-patch --format=%as HEAD 2> /dev/null || date +%Y-%m-%d])])
@@ -44,7 +44,7 @@ AC_CONFIG_SRCDIR([src/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-# Remove -Werror from automake options until ubuntu brings in a newer
+# Remove -Werror from automake options until OS vendors brings in a newer
 # version of automake.
 AM_INIT_AUTOMAKE([foreign -Wall -Woverride tar-pax subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
@@ -93,10 +93,10 @@ AS_IF([test x"$with_mpi" = x"yes"],
 AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
 AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
 
-#Build with OpenACC suport.  Default is 'no'
+# Build with OpenACC support.  Default is 'no'
 AC_ARG_ENABLE([acc],
             [AS_HELP_STRING([--enable-acc],
-                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu.(default no)])])
+                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu. (default no)])])
 AS_IF([test ${enable_acc:-no} = yes],
       [enable_acc=yes],
       [enable_acc=no])
@@ -175,9 +175,12 @@ fi
 
 # Check if openacc.h exists
 if test "$enable_acc" = yes ; then
-   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
-   AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
+  AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
+  AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
 fi
+
+# Check for getrusage.
+AC_CHECK_FUNCS([getrusage])
 
 # Check for library
 AX_LIB_NETCDF()

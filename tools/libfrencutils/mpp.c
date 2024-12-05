@@ -21,18 +21,24 @@
 /**
  * \author Zhi Liang
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+
 #ifdef use_libMPI
 #include <mpi.h>
 #endif
+
 #include "mpp.h"
 
 //These four fields are defined in the file of mpp_domain.c.
-static int npes, root_pe, pe; 
+static int npes, root_pe, pe;
 
 /****************************************************
          global variables
@@ -227,7 +233,6 @@ void mpp_sum_int(int count, int *data)
   free(sum);
 #endif
 
-
 }; /* mpp_sum_int */
 
 /*******************************************************************************
@@ -245,7 +250,6 @@ void mpp_sum_double(int count, double *data)
   for(i=0; i<count; i++)data[i] = sum[i];
   free(sum);
 #endif
-
 
 }; /* mpp_sum_double */
 
@@ -298,44 +302,21 @@ double get_mem_usage(void)
 {
   double mem;
 
-#if defined(__sgi) || defined(__aix) || defined(__SX)
-#define RUSAGE_SELF      0         /* calling process */
-#define RUSAGE_CHILDREN  -1        /* terminated child processes */
- struct rusage my_rusage;
- int iret;
+#if defined(HAVE_GETRUSAGE)
+  struct rusage my_rusage;
+  int iret;
 
- my_rusage.ru_maxrss = 0;
- iret = getrusage(RUSAGE_SELF,&my_rusage);
- mem = my_rusage.ru_maxrss;
- mem /= 1000;
-
+  my_rusage.ru_maxrss = 0;
+  iret = getrusage(RUSAGE_SELF,&my_rusage);
+  mem = my_rusage.ru_maxrss;
+  mem /= 1000;
 #else
- char filename[]="/proc/self/status";
- char mesg[256];
- FILE *fp;
- char line[80], units[32];
-
- fp = fopen(filename, "r");
- if(!fp) {
-   strcpy(mesg, "tool_util.c: Can not open ascii file ");
-   strcat(mesg,filename);
-   mpp_error(mesg);
- }
-
- mem = 0;
- while(fgets(line, 80, fp) != NULL)  /* get a line, up to 80 chars from fp.  done if NULL */
-   {
-     if( strncmp(line, "VmHWM:", 6) == 0) {
-       sscanf(line+6, "%lf %s", &mem, units);
-       if( strcmp(units, "kB") == 0) mem = mem/1024;
-       break;
-     }
-   }
- fclose(fp);
+  // Without getrusage, we cannot report the used memory.
+  // return -1 to let the calling routine know.
+  mem = -1;
 #endif
 
- return mem;
-
+  return mem;
 }
 
 void print_time(const char* text, double t)
@@ -360,16 +341,18 @@ void print_mem_usage(const char* text)
 {
   double m, mmin, mmax, mavg;
 
-
-    m = get_mem_usage();
-    mmin = m;
-    mmax = m;
-    mavg = m;
-    mpp_min_double(1, &mmin);
-    mpp_max_double(1, &mmax);
-    mpp_sum_double(1, &mavg);
-    mavg /= mpp_npes();
-    if( mpp_pe() == mpp_root_pe() ) {
-      printf("Memuse(MB) at %s, min=%g, max=%g, avg=%g\n", text, mmin, mmax, mavg);
-    }
+  m = get_mem_usage();
+  mmin = m;
+  mmax = m;
+  mavg = m;
+  mpp_min_double(1, &mmin);
+  mpp_max_double(1, &mmax);
+  mpp_sum_double(1, &mavg);
+  mavg /= mpp_npes();
+  if( mpp_pe() == mpp_root_pe() ) {
+    if (mmin < 0) { mmin = -1; }
+    if (mmax < 0) { mmax = -1; }
+    if (mmin < 0 && mmax < 0) { mavg = -1; }
+    printf("Memuse(MB) at %s, min=%g, max=%g, avg=%g\n", text, mmin, mmax, mavg);
+  }
 }
