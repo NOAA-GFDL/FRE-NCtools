@@ -67,16 +67,37 @@ sub is_in_tolerance($$$$) {
     return $diff <= $abs_tol || $diff <= $per_tol;
 }
 
+# Remove excluded variables from the list
+sub remove_excluded_vars(@@) {
+    my (@vars, @exclude) = @_;
+    if ( !@exclude ) {
+        # Exclude is empty, just return @vars
+        return @vars;
+    } else {
+        my @diff;
+        my %count;
+        foreach my $element (@vars, @exclude) {
+            $count{$element}++;
+        }
+        foreach my $element (keys %count) {
+            push @diff, $element if $count{$element} > 1;
+        }
+        return @diff;
+    }
+}
+
 # Important values
 my $tolerance_abs = 0.0;
 my $tolerance_pdf = 0.0;
 my $check_data = 0;
 my $check_metadata = 0;
 my $check_variables = '';
+my @exclude_vars;
 
 # Get options
 Getopt::Long::Configure ("bundling");
 GetOptions ("data|d" => \$check_data,
+            "exclude|x=s" => \@exclude_vars,
             "metadata|m" => \$check_metadata,
             "tolerance|t=f" => \$tolerance_abs,
             "Tolerance|T=f" => \$tolerance_pdf,
@@ -141,9 +162,11 @@ if ( $check_data ) {
 
     # If user passed in a set of variables to check, use those variables
     # instead of all variables
-    my @vars = @k1;
+    my @vars;
     if ( $check_variables ) {
         @vars = split(',', $check_variables);
+    } else {
+        @vars = remove_excluded_vars(@k1, @exclude_vars);
     }
 
     # Check that each file has the same variables
