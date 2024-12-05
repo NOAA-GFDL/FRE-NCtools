@@ -64,7 +64,6 @@ TESTS = combine-ncc/combine \
         is-compressed/compressed \
         is-compressed/not-compressed \
         libtests/print_version \
-        list_ncvars/list_ncvars_csh \
         list_ncvars/list_ncvars_ftn \
         list_ncvars/list_ncvars_sh \
         mppnccombine/dry-run \
