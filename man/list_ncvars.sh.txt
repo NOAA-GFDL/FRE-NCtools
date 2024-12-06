@@ -1,14 +1,14 @@
-list_ncvars.csh(1)
-==================
+list_ncvars.sh(1)
+=================
 
 NAME
 ----
-list_ncvars.csh - list variables from netCDF files
+list_ncvars.sh - list variables from netCDF files
 
 SYNOPSIS
 --------
 [verse]
-list_ncvars.csh -s | -t [-0123] files...
+list_ncvars.sh -s | -t [-0123] files...
 
 DESCRIPTION
 -----------
@@ -21,7 +21,6 @@ contain only character arrays are skipped.
 
 OPTIONS
 -------
-Usage:  $name -s | -t [-0123] files...
 
 *-s*::
 list names of static fields (no time dimension)

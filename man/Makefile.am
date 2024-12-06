@@ -24,11 +24,13 @@ EXTRA_DIST = \
   iceberg_comb.sh.txt \
   is-compressed.txt \
   list_ncvars.txt \
-  list_ncvars.csh.txt \
+  list_ncvars.sh.txt \
+  list_ncvars.csh.1 \
   mppnccombine.txt \
   plevel_interp.txt \
   plevel.sh.txt \
   scatter-ncc.txt \
+  split_ncvars.pl.txt \
   timavg.txt \
   timavg.csh.1 \
   time_average.txt \
@@ -49,10 +51,12 @@ man_MANS += \
   is-compressed.1 \
   list_ncvars.1 \
   list_ncvars.csh.1 \
+  list_ncvars.sh.1 \
   plevel_interp.1 \
   plevel.sh.1 \
   mppnccombine.1 \
   scatter-ncc.1 \
+  split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
   time_average.1

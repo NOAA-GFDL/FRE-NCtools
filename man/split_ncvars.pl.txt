@@ -1,0 +1,78 @@
+split_ncvars.pl(1)
+==================
+
+NAME
+----
+split_ncvars.pl - Extract variables from a netCDF file into their own file
+
+SYNOPSIS
+--------
+[verse]
+split_ncvars.pl [-d] [-l] [-i _idir_] [-o _odir_] [-f _file_] [-v _vars_] _file_ [_file_ ...]
+
+DESCRIPTION
+-----------
+Split NetCDF variables contained in a single netCDF file, or a time series of
+files, into their own file.
+
+OPTIONS
+-------
+
+*-l*, *--log*::
+Include readme log in output directory.
+
+*-V*, *--verbose*::
+Increases the verbosity of the messages.  Can be listed multiple times.
+
+*-c*, *--cmip*::
+CMIP option.  time average info variable not written.
+
+*-p*, *--ps*::
+Includes the ps variable in output files that will be zInterpolated.
+
+*-i*, *--idir* _idir_::
+Input (archive) directory path.
+
+*-o*, *--odir* _odir_::
+Output directory path.
+
+*-f*, *--onefile* _file_::
+One file output option.  File is the name of the output file.  This option must
+be used with -v option.
+
+*-v*, *--vars* _vars_::
+Comma separated list of variables.
+
+*-h*, *--help*::
+Display this help and exit.
+
+
+*--version*::
+Output version information and exit.
+
+_files_::
+List of netCDF files in directory idir.  The files must be in chronological
+order.\n\n";
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Bruce Wyman
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
