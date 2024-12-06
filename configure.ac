@@ -166,6 +166,13 @@ AC_PATH_PROG(NCKS, [ncks])
 AS_IF([test -z "$NCKS"],
   [AC_MSG_ERROR([Cannot find ncks.  Please ensure ncks is in PATH or set the environment variable NCKS to the full path.])])
 
+AC_ARG_VAR([PERL], [Path to perl])
+AC_PATH_PROG(PERL, [perl])
+AX_PROG_PERL_MODULES([List::MoreUtils], dnl
+  eval AS_TR_CPP(HAVE_PLMOD_LIST_MOREUTILS)=yes,
+  AC_MSG_WARN([Perl module List::MoreUtils not found.  Some applications will not be installed.]))
+AM_CONDITIONAL([HAVE_PLMOD_LIST_MOREUTILS], [test x$HAVE_PLMOD_LIST_MOREUTILS = xyes])
+
 AX_PYTHON_MODULE([xarray],[],[python3])
 if test ${HAVE_PYMOD_XARRAY} = yes; then
   AM_CONDITIONAL([SKIP_XARRAY_TESTS], false )

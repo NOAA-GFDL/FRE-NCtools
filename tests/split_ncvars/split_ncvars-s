@@ -26,6 +26,8 @@ fi
 
 . ${srcdir=.}/init.sh; path_prepend_ ../src
 
+test $have_plmod_list_moreutils = no && skip_ "perl module List::MoreUtils not available"
+
 # Use the test netCDF files from plevel
 ${builddir=.}/create_plevel_test_ncfile || framework_failure_ "failed to create plevel test files"
 

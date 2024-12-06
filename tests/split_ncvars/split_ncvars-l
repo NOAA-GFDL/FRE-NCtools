@@ -26,6 +26,8 @@ fi
 
 . ${srcdir=.}/init.sh; path_prepend_ ../src
 
+test $have_plmod_list_moreutils = no && skip_ "perl module List::MoreUtils not available"
+
 # Use the test netCDF files from timeavg
 ${builddir=.}/create_timeavg_test_ncfiles || framework_failure_ "failed to create test files"
 

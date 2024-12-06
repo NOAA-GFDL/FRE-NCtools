@@ -29,6 +29,12 @@ else
 skipflag=""
 endif
 
+if HAVE_PLMOD_LIST_MOREUTILS
+have_plmod_list_moreutils="yes"
+else
+have_plmod_list_moreutils="no"
+endif
+
 AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
@@ -43,12 +49,14 @@ create_timeavg_test_ncfiles_SOURCES=timeavg/create_timeavg_test_ncfiles.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
 
-TESTS_ENVIRONMENT = top_srcdir=$(abs_top_srcdir); export top_srcdir; \
-                    builddir=$(abs_builddir); export builddir; \
-                    skip_mpi=$(skip_MPI); export skip_mpi; \
-                    skipflag=$(skipflag); export skipflag; \
-                    export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
-                    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
+TESTS_ENVIRONMENT = \
+    top_srcdir=$(abs_top_srcdir); export top_srcdir; \
+    builddir=$(abs_builddir); export builddir; \
+    skip_mpi=$(skip_MPI); export skip_mpi; \
+    skipflag=$(skipflag); export skipflag; \
+    have_plmod_list_moreutils=$(have_plmod_list_moreutils); export have_plmod_list_moreutils; \
+    export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
+    PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
 
 TESTS = combine-ncc/combine \
         combine_restarts/combine \

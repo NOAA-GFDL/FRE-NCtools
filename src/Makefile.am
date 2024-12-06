@@ -17,8 +17,11 @@ bin_SCRIPTS = \
   list_ncvars.sh \
   plevel.sh \
   timavg \
-  timavg.csh \
-  split_ncvars.pl
+  timavg.csh
+
+if HAVE_PLMOD_LIST_MOREUTILS
+  bin_SCRIPTS += split_ncvars.pl
+endif
 
 pkglibexec_PROGRAMS = \
   list_ncvars \
@@ -77,8 +80,10 @@ EXTRA_DIST = \
   combine-restarts/combine_restarts.in \
   iceberg-comb/iceberg_comb.sh.in \
   list-ncvars/list_ncvars.csh.in \
+  list-ncvars/list_ncvars.csh.in \
   plevel/plevel.sh.in \
   split_ncvars/split_ncvars.pl.in \
+  timavg/timavg.csh.in \
   timeavg/timavg.sh.in
 
 CLEANFILES = *.$(FC_MODEXT)
