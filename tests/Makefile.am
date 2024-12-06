@@ -89,6 +89,13 @@ TESTS = combine-ncc/combine \
         scatter-ncc/scatter_1x1 \
         scatter-ncc/scatter_1x2 \
         scatter-ncc/scatter_2x1 \
+        split_ncvars/split_ncvars \
+        split_ncvars/split_ncvars-i \
+        split_ncvars/split_ncvars-l \
+        split_ncvars/split_ncvars-o \
+        split_ncvars/split_ncvars-p \
+        split_ncvars/split_ncvars-s \
+        split_ncvars/split_ncvars-v \
         timeavg/timavg \
         timeavg/timavg-m
 

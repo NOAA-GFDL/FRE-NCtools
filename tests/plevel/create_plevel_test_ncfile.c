@@ -50,56 +50,73 @@ int main(int argc, char **argv) {
     size_t count_temp[4] = {1, PFULL, NX, NY};
 
     // Create the file
-    stat = nc_create(FILE_NAME, NC_CLOBBER, &ncid);
-    check_err(stat, __LINE__);
+    check_err(nc_create(FILE_NAME, NC_CLOBBER, &ncid), __LINE__);
 
     // Define dimensions
-    stat = nc_def_dim(ncid, "time", NC_UNLIMITED, &time_dim);
-    check_err(stat, __LINE__);
-    stat = nc_def_dim(ncid, "grid_xt", NX, &xt_dim);
-    check_err(stat, __LINE__);
-    stat = nc_def_dim(ncid, "grid_yt", NY, &yt_dim);
-    check_err(stat, __LINE__);
-    stat = nc_def_dim(ncid, "pfull", PFULL, &pfull_dim);
-    check_err(stat, __LINE__);
-    stat = nc_def_dim(ncid, "phalf", PHALF, &phalf_dim);
-    check_err(stat, __LINE__);
+    check_err(nc_def_dim(ncid, "time", NC_UNLIMITED, &time_dim), __LINE__);
+    check_err(nc_def_dim(ncid, "grid_xt", NX, &xt_dim), __LINE__);
+    check_err(nc_def_dim(ncid, "grid_yt", NY, &yt_dim), __LINE__);
+    check_err(nc_def_dim(ncid, "pfull", PFULL, &pfull_dim), __LINE__);
+    check_err(nc_def_dim(ncid, "phalf", PHALF, &phalf_dim), __LINE__);
+
 
     // Define variables
-    stat = nc_def_var(ncid, "time", NC_DOUBLE, 1, &time_dim, &times_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "grid_xt", NC_FLOAT, 1, &xt_dim, &xt_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "grid_yt", NC_FLOAT, 1, &yt_dim, &yt_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "phalf", NC_FLOAT, 1, &phalf_dim, &phalf_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "pfull", NC_FLOAT, 1, &pfull_dim, &pfull_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "pk", NC_FLOAT, 1, &phalf_dim, &pk_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "bk", NC_FLOAT, 1, &phalf_dim, &bk_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "ps", NC_FLOAT, 3, (int[]){time_dim, xt_dim, yt_dim}, &ps_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "temp", NC_FLOAT, 4, (int[]){time_dim, pfull_dim, xt_dim, yt_dim}, &temp_id);
-    check_err(stat, __LINE__);
-    stat = nc_def_var(ncid, "dummy", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &dummy_id);
+    check_err(nc_def_var(ncid, "time", NC_DOUBLE, 1, &time_dim, &times_id), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "units", 31, "days since 0001-01-01 00:00:00"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "long_name", 5, "Time"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "calendar", 7, "noleap"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "calendar_type", 7, "noleap"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "cartesian_axis", 2, "T"), __LINE__);
+
+    check_err(nc_def_var(ncid, "grid_xt", NC_FLOAT, 1, &xt_dim, &xt_id), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "units", 13, "degrees east"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "long_name", 16, "T-cell latitude"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "cartesian_axis", 2, "X"), __LINE__);
+
+    check_err(nc_def_var(ncid, "grid_yt", NC_FLOAT, 1, &yt_dim, &yt_id), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "units", 14, "degrees north"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "long_name", 17, "T-cell longitude"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "cartesian_axis", 2, "Y"), __LINE__);
+
+    check_err(nc_def_var(ncid, "phalf", NC_FLOAT, 1, &phalf_dim, &phalf_id), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "units", 2, "mb"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "long_name", 18, "ref half pressure level"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "cartesian_axis", 2, "Z"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "positive", 4, "down"), __LINE__);
+
+    check_err(nc_def_var(ncid, "pfull", NC_FLOAT, 1, &pfull_dim, &pfull_id), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "units", 2, "mb"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "long_name", 17, "ref full pressure level"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "cartesian_axis", 2, "Z"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "positive", 4, "down"), __LINE__);
+
+    check_err(nc_def_var(ncid, "pk", NC_FLOAT, 1, &phalf_dim, &pk_id), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "units", 7, "pascal"), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "long_name", 39, "pressure part of the hybrid coordinate"), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "cell_methods", 12, "time: point"), __LINE__);
+
+    check_err(nc_def_var(ncid, "bk", NC_FLOAT, 1, &phalf_dim, &bk_id), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "units", 5, "none"), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "long_name", 32, "vertical coordinate sigma value"), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "cell_methods", 12, "time: point"), __LINE__);
+
+    check_err(nc_def_var(ncid, "ps", NC_FLOAT, 3, (int[]){time_dim, xt_dim, yt_dim}, &ps_id), __LINE__);
+    check_err(nc_put_att_text(ncid, ps_id, "units", 3, "Pa"), __LINE__);
+    check_err(nc_put_att_text(ncid, ps_id, "long_name", 17, "surface pressure"), __LINE__);
+    check_err(nc_put_att_text(ncid, ps_id, "cell_methods", 10, "time: mean"), __LINE__);
+
+    check_err(nc_def_var(ncid, "temp", NC_FLOAT, 4, (int[]){time_dim, pfull_dim, xt_dim, yt_dim}, &temp_id), __LINE__);
+    check_err(nc_put_att_text(ncid, temp_id, "units", 1, "K"), __LINE__);
+    check_err(nc_put_att_text(ncid, temp_id, "long_name", 8, "Temperature"), __LINE__);
+    check_err(nc_put_att_text(ncid, temp_id, "cell_methods", 12, "time: point"), __LINE__);
+
+    check_err(nc_def_var(ncid, "dummy", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &dummy_id), __LINE__);
 
     // Assign global attributes
-    stat = nc_put_att_text(ncid, NC_GLOBAL, "description", 55, "Sample netCDF file for testing run_timepressure_interp");
-
-    // Assign attributes to variables (for brevity, a few key attributes shown)
-    stat = nc_put_att_text(ncid, times_id, "units", 30, "days since 0001-01-01 00:00:00");
-    check_err(stat, __LINE__);
-    stat = nc_put_att_text(ncid, xt_id, "units", 13, "degrees east");
-    check_err(stat, __LINE__);
-    stat = nc_put_att_text(ncid, yt_id, "units", 14, "degrees north");
-    check_err(stat, __LINE__);
+    check_err(nc_put_att_text(ncid, NC_GLOBAL, "description", 55, "Sample netCDF file for testing run_timepressure_interp"), __LINE__);
 
     // End define mode
-    stat = nc_enddef(ncid);
-    check_err(stat, __LINE__);
+    check_err(nc_enddef(ncid), __LINE__);
 
     // Allocate memory for sample data and write to file
     double times_data = 0;
