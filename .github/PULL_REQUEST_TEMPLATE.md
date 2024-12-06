@@ -1,3 +1,10 @@
+---
+name: Pull Request
+about: Create a pull request to help us improve
+title: ''
+labels: ''
+---
+
 **Description**
 Include a summary of the change and which issue is fixed. Please also include
 relevant motivation and context. List any dependencies that are required for
@@ -19,4 +26,3 @@ enough information so someone can reproduce your tests.
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] New check tests, if applicable, are included
 - [ ] `make distcheck` passes
-
