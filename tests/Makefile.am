@@ -76,6 +76,7 @@ TESTS = combine-ncc/combine \
         list_ncvars/list_ncvars_sh \
         mppnccombine/dry-run \
         mppnccombine/list-output-files \
+        mppnccombine/input-output-kinds \
         mppnccombine/missing-file-fail \
         mppnccombine/missing-file-force \
         mppnccombine/non-zero-start-number \

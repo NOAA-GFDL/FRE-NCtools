@@ -25,10 +25,12 @@ then
     mppnccombine -V
 fi
 
-. "$srcdir/init.sh"
+. "${srcdir=.}/init.sh"
+
+skip_ not implemented yet
 
 # Create the two decomposed NetCDF files
-ncgen -o decomp.nc.0000 << EOF || framework_failure_
+ncgen -3 -o decomp_classic.nc.0000 << EOF || framework_failure_ failed to create decomp_classic.nc.0000
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -79,7 +81,7 @@ data:
 }
 EOF
 
-ncgen -o decomp.nc.0001 << EOF || framework_failure_
+ncgen -3 -o decomp_classic.nc.0001 << EOF || framework_failure_ failed to create decomp_classic.nc.0001
 netcdf compress {
 dimensions:
   grid_xt = 5 ;
@@ -130,26 +132,30 @@ data:
 }
 EOF
 
-# run mppnccombine to generate decomp.nc
-# Produce 64-bit offset
-mppnccombine -64 decomp.nc || fail_ mppnccombine failed with -64
+# input of classic should be "64-bit offset"
+mppnccombine decomp_classic.nc || framework_failure_ failed to combine decomp_classic.nc
+test x"$(ncdump -k decomp_classic.nc)" = x"64-bit offset" || fail_ decomp_classic.nc is not 64-bit offset
 
-# Verify decomp.nc doesexists
-test -e decomp.nc || framework_failure_
-output=$(ncdump -k decomp.nc 2>&1) || framework_failure_
-echo $output || framework_failure_
-test "$output" = "64-bit offset" || fail_ mppnccombine filed to produce 64-bit offset file
+# input of netCDF-4 should be "netCDF-4"
+ncgen -4 -o decomp_netcdf4.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" || framework_failure_ failed to create decomp_netcdf4.nc.0000
+ncgen -4 -o decomp_netcdf4.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" || framework_failure_ failed to create decomp_netcdf4.nc.0001
+mppnccombine decomp_netcdf4.nc || framework_failure_ failed to combine decomp_netcdf4.nc
+test x"$(ncdump -k decomp_netcdf4.nc)" = x"$(ncdump -k decomp_netcdf4.nc.0000)" || fail__ decomp_netcdf4.nc is not $(decomp_netcdf4.nc.0000)
 
-rm decomp.nc || framework_failure_
+# input of cdf5 should be "cdf5"
+ncgen -5 -o decomp_cdf5.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" || framework_failure_ failed to create decomp_cdf5.nc.0000
+ncgen -5 -o decomp_cdf5.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" || framework_failure_ failed to create decomp_cdf5.nc.0001
+mppnccombine decomp_cdf5.nc || framework_failure_ failed to combine decomp_cdf5.nc
+test x"$(ncdump -k decomp_cdf5.nc)" = x"$(ncdump -k decomp_cdf5.nc.0000)" || fail_ decomp_cdf5.nc is not $(decomp_cdf5.nc.0000)
 
-# run mppnccombine
-# produce classic
-mppnccombine -n4 decomp.nc || fail_ mppnccombine failed with -n4
+# input of 64-bit offset should be "64-bit offset"
+ncgen -6 -o decomp_64offset.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" || framework_failure_ failed to create decomp_64offest.nc.0000
+ncgen -6 -o decomp_64offset.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" || framework_failure_ failed to create decomp_64offest.nc.0001
+mppnccombine decomp_64offset.nc || framework_failure_ failed to combine decompose_64offset.nc
+test x"$(ncdump -k decompose_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)" || fail_ decompose_64offset.nc is not $(ncdump -k decomp_64offset.nc.0000)
 
-# Verify decomp.nc doesexists
-test -e decomp.nc || framework_failure_
-output=$(ncdump -k decomp.nc 2>&1) || framework_failure_
-echo $output || framework_failure_
-test "$output" = "netCDF-4 classic model" || fail_ failed to produce netCDF-4 classic model
-
-rm decomp.nc || framework_failure_
+# input of netCDF-4 classic should be "netCDF-4 classic model"
+ncgen -7 -o decomp_netcdf4_classic.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" || framework_failure_ failed to create decomp_netcdf4_classic.nc.0000
+ncgen -7 -o decomp_netcdf4_classic.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" || framework_failure_ failed to create decomp_netcdf4_classic.nc.0001
+mppnccombine decomp_netcdf4_classic.nc || framework_failure_ failed to combine decomp_netcdf4_classic.nc
+test x"$(ncdump -k decomp_netcdf4_classic.nc)" = x"$(ncdump -k decomp_netcdf4_classic.nc.0000)" || fail_ decomp_netcdf4_classic.nc is not $(ncdump -k decomp_netcdf4_classic.nc.0000)
