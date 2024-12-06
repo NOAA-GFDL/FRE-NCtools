@@ -56,8 +56,8 @@ if WITH_CHECK_PROGS
 SUBDIRS += t
 endif
 
-if ENABLE_ACC
-SUBDIRS += tools/libfrencutils_acc
-SUBDIRS += tools/fregrid_acc
-SUBDIRS += t_acc
+if ENABLE_GPU
+SUBDIRS += tools/libfrencutils_gpu
+SUBDIRS += tools/fregrid_gpu
+SUBDIRS += t_gpu
 endif

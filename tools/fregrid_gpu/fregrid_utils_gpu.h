@@ -17,30 +17,10 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
+#ifndef FREGRID_UTILS_GPU_H
+#define FREGRID_UTILS_GPU_H
 
-#define AREA_RATIO_THRESH (1.e-6)
-#define MASK_THRESH       (0.5)
-#define MAX_V 8
+void set_remap_file_gpu( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_gpu *interp_gpu,
+                         unsigned int *opcode, int save_weight_only);
 
-#define AREA_RATIO (1.e-3)
-#define MAXVAL     (1.e20)
-#define TOLERANCE  (1.e-10)
-
-#define MAXXGRID 1e6
-
-#define MV 50
-
-#define TOLERENCE (1.e-6)
-#define EPSLN8 (1.e-8)
-#define EPSLN10 (1.e-10)
-#define EPSLN15 (1.e-15)
-#define EPSLN30 (1.e-30)
-#define SMALL_VALUE ( 1.e-10 )
-
-#ifndef RANGE_CHECK_CRITERIA
-#define RANGE_CHECK_CRITERIA 0.05
-#endif
-
-#ifndef MAXNODELIST
-#define MAXNODELIST 100
 #endif
