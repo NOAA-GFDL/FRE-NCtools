@@ -98,7 +98,8 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]NCATTED[@],$(NCATTED),g' \
                -e 's,[@]NCKS[@],$(NCKS),g' \
                -e 's,[@]SED[@],$(SED),g' \
-               -e 's,[@]EGREP[@],$(EGREP),g'
+               -e 's,[@]EGREP[@],$(EGREP),g' \
+               -e 's,^\#!/usr/bin/env perl$$,\#!$(PERL),'
 
 # Items to handle Fortran module files
 SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
