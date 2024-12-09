@@ -59,8 +59,7 @@ make_solo_mosaic \
 	--periodx 360 || framework_failure_ failed to create ocean solo mosaic
 
 # create ocean topography data
-#$builddir/create_occam_topog || framework_failure_ failed to create OCCAM_p5degree.nc
-ncgen -o OCCAM_p5degree.nc $top_srcdir/t/Test03-input/OCCAM_p5degree.ncl || framework_failure_ failed to create OCCAM_p5degree.nc
+$builddir/create_occam_topog || framework_failure_ failed to create OCCAM_p5degree.nc
 make_topog \
 	--mosaic ocean_mosaic.nc \
 	--topog_type realistic \
