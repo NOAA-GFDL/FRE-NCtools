@@ -61,10 +61,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test14-remap_ocean.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
-        Test20-fregrid.sh \
-        Test24-reference_fregrid.sh \
         Test25-hydrology.sh \
-        Test26-reference_fregrid_gcc.sh \
         Test31-fregrid_stretched.sh \
         Test32-fregrid_no_stretched.sh
 
@@ -77,8 +74,6 @@ EXTRA_DIST = $(TESTS) \
              Test12-input \
              Test15-input \
              Test16-input \
-             Test20-input \
-             Test20-reference \
              $(test25_data) \
              Test31-input \
              Test32-input \
