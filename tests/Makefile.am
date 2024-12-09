@@ -134,6 +134,7 @@ TESTS = \
 
 EXTRA_DIST = \
   init.sh \
+  init.cfg \
   nc_cmp \
   make_hgrid/create_fv3_grid_spec_files \
   make_hgrid/grid_spec.tile1.ncl \
