@@ -1,0 +1,147 @@
+make_coupler_mosaic(1)
+======================
+
+NAME
+----
+
+make_coupler_mosaic - Generate exchange grids for FMS coupler
+
+SYNOPSIS
+--------
+[verse]
+make_coupler_mosaic --atmos_mosaic _file_name_ --ocean_mosaic _file_name_ --ocean_topog _file_name_ [options]
+
+DESCRIPTION
+-----------
+
+make_coupler_mosaic generates three exchange grids for the FMS coupler. The
+output file includes exchange grid files for fluxes between atmosphere and
+surface (sea ice and land), exchange grid files for runoff between land and sea
+ice. There might be more than one exchange grid files between two model solo
+mosaic because there might be multiple tiles in a solo mosaic. The exchange grid
+information is between model grid, not between supergrid. We assume the
+refinement ratio between model grid and supergrid is 2. Currently we only output
+the exchange grid on T-cell. Besides generating the exchange grid files,
+make_coupler_mosaic also generates the coupler mosaic file (the file name will
+be mosaic_name.nc) which contains the atmos, land and ocean mosaic path, ocean
+mosaic topog path and exchange grid file path. make_coupler_mosaic expects
+NetCDF format input.
+
+OPTIONS
+-------
+
+Required
+~~~~~~~~
+
+*--atmos_mosaic* _file_name_::
+
+Specify the atmosphere mosaic information. This file contains list of tile files
+which specify the grid information for each tile. Each grid is required to be
+logically rectangular grid. The file name can not be 'mosaic.nc'
+
+*--ocean_mosaic* _file_name_::
+
+Specify the ocean mosaic information. This file contains list of tile files
+which specify the grid information for each tile. The file name can not be
+'mosaic.nc'
+
+*--ocean_topog* _file_name_::
+
+Specify the topography information for ocean mosaic. The field name of the
+topography is depth_tile# or depth when ntiles = 1, The topography data is
+positive down.
+
+Optional
+~~~~~~~~
+
+*--land_mosaic* _file_name_::
+
+Specify the land mosaic information. This file contains list of tile files which
+specify the grid information for each tile. Each grid is required to be
+logically rectangular grid. When land_mosaic is not specified, atmosphere mosaic
+will be used to specify land mosaic. The file name can not be 'mosaic.nc'.
+
+*--wave_mosaic* _file_name_::
+
+Specify the wave mosaic information. This file contains list of tile files which
+specify the grid information for each tile. Each grid is required to be
+logically rectangular grid. When wave_mosaic is specified, exchange grid
+information between wave mosaic and ocean mosaic will be generated. Otherwise
+none of both will be created.
+
+*--interp_order* _order_::
+
+Specify the order of conservative interplation. Its value can be 1 ( linear
+order ) or 2 ( second order ) with default value 2.
+
+*--sea_level* _level_::
+
+Specify the sea level ( in meters ) and its value will be used to determine
+land/sea mask. When topography of a grid cell is less than sea level, this grid
+cell will be land, otherwise it will be ocean. Default value is 0
+
+*--mosaic_name* _mosaic_name_::
+
+Coupler mosaic name. The output coupler mosaic file will be _mosaic_name_.nc.
+default value is _mosaic_.
+
+*--area_ratio_thresh* _threshold_::
+
+Criteria to decide if an overlap between any two model is an exchange grid or
+not. When overlap area/model grid area is greater than area_ratio_thresh, that
+overlap is saved as exchange grid. The default value is 1.e-6
+
+*--check*
+
+Check the tiling error.
+
+*--print_memory*
+
+Debug memory usage.
+
+*--rotate_poly*
+
+Set to calculate polar polygon areas by caculating the area of a copy of the
+polygon, with the copy being rotated far away from the pole.
+
+*--verbose*
+
+Print out messages during running.
+
+EXAMPLES
+--------
+
+A sample call to make_coupler_mosaic that makes exchange grids for atmosphere,
+land and ocean mosaic (atmosphere and land are coincident) is:
+
+----
+$ make_coupler_mosaic --atmos_mosaic atmos_mosaic.nc \
+    --ocean_mosaic ocean_mosaic.nc --ocean_topog ocean_topog.nc
+----
+
+SEE ALSO
+--------
+*make_solo_mosaic*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

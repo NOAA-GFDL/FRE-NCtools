@@ -26,6 +26,13 @@ EXTRA_DIST = \
   list_ncvars.txt \
   list_ncvars.sh.txt \
   list_ncvars.csh.1 \
+  make_hgrid.txt \
+  make_vgrid.txt \
+  make_topog.txt \
+  make_topog_parallel.1 \
+  make_coupler_mosaic.txt \
+  make_coupler_mosaic_parallel.1 \
+  make_solo_mosaic.txt \
   mppnccombine.txt \
   plevel_interp.txt \
   plevel.sh.txt \
@@ -54,13 +61,22 @@ man_MANS += \
   list_ncvars.sh.1 \
   plevel_interp.1 \
   plevel.sh.1 \
+  make_hgrid.1 \
+  make_vgrid.1 \
+  make_topog.1 \
+  make_coupler_mosaic.1 \
+  make_solo_mosaic.1 \
   mppnccombine.1 \
   scatter-ncc.1 \
   split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
   time_average.1
-
+if WITH_MPI
+man_MANS += \
+  make_coupler_mosaic_parallel.1 \
+  make_topog_parallel.1
+endif
 endif
 
 .txt.1:

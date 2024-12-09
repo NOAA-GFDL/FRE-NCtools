@@ -49,8 +49,6 @@ SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                 $(top_srcdir)/tap-driver.sh
 
 TESTS = Test01-check_programs_exist.sh \
-        Test03-grid_coupled_model.sh \
-        Test04-grid_coupled_nest.sh \
         Test05-remap_c48_regular.sh \
         Test06-regrid_extrap.sh \
         Test07-runoff_regrid.sh \
@@ -67,12 +65,8 @@ TESTS = Test01-check_programs_exist.sh \
         Test24-reference_fregrid.sh \
         Test25-hydrology.sh \
         Test26-reference_fregrid_gcc.sh \
-        Test27-multiple_nests.sh \
-        Test28-make_hgrid.sh \
-        Test29-make_vgrid.sh \
         Test31-fregrid_stretched.sh \
-        Test32-fregrid_no_stretched.sh \
-        Test33-reference_make_hgrid.sh
+        Test32-fregrid_no_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
              Test03-input \

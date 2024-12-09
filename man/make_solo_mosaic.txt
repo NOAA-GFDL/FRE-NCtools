@@ -1,0 +1,101 @@
+make_solo_mosaic(1)
+===================
+
+NAME
+----
+
+make_solo_mosaic - Generate mosaic information
+
+SYNOPSIS
+--------
+[verse]
+make_solo_mosaic --num_tiles ntiles --dir directory [options]
+
+DESCRIPTION
+-----------
+
+make_solo_mosaic generates Mosaic information between tiles. The mosaic
+information includes: list of tile files, list of contact region specified by
+index, contact type.
+
+OPTIONS
+-------
+
+Required
+~~~~~~~~
+
+*--num_tiles* _ntiles_::
+Number of tiles in the mosaic.
+
+*--dir* _directory_::
+The directory that contains all the tile grid file.
+
+Optional
+~~~~~~~~
+
+*--mosaic_name* _name_::
+Mosaic name. The output file will be mosaic_name.nc. default is 'mosaic'.
+
+*--tile_file* _tile_file_::
+Grid file name of all tiles in the mosaic. The file name should be relative file
+name (exclude the absolute file path). The absolute file path will be
+dir/tile_file. If this option is not specified, the tile_file will be
+'horizontal_grid.tile#.nc'
+
+*--periodx* _number_::
+Specify the period in x-direction of mosaic. Default value is 0 (not periodic).
+
+*--periody* _number_::
+Specify the period in y-direction of mosaic. Default value is 0 (not periodic).
+
+EXAMPLES
+--------
+
+. Create solo mosaic for tripolar grid (grid file name is ocean_grid.nc).
++
+----
+$ make_solo_mosaic --num_tiles 1 --dir ./ --mosaic_name ocean_mosaic \
+    --tile_file ocean_hgrid.nc --periodx 360
+----
+
+. Create solo mosaic for torus.
++
+----
+$ make_solo_mosaic --num_tiles 1 --dir ./ \
+    --mosaic_name ocean_mosaic --tile_file ocean_hgrid.nc \
+    --periodx 360 --periody 360
+----
+
+. Create solo mosaic for C48 grid.
++
+----
+$ make_solo_mosaic --num_tiles 6 --dir ./ --mosaic C48_mosaic \
+    --tile_file C48_grid.tile1.nc,C48_grid.tile2.nc,C48_grid.tile3.nc,C48_grid.tile4.nc,C48_grid.tile5.nc,C48_grid.tile6.nc
+----
+
+SEE ALSO
+--------
+*make_coupler_mosaic*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

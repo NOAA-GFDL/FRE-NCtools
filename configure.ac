@@ -86,23 +86,22 @@ AC_SEARCH_LIBS([ceil],[m])
 # Default MPI build is off
 build_mpi=no
 LX_FIND_MPI()
-AS_IF([test x"$with_mpi" = x"yes"],
-   [if test x"$have_C_mpi" = x"yes"; then
-      build_mpi="yes"
-    fi])
-AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
-AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
+AS_IF([test x"$with_mpi" = x"yes" && test x"$have_C_mpi" = x"no"], [
+  AC_MSG_ERROR([MPI build requested but no MPI compiler found.])
+])
+AM_CONDITIONAL([WITH_MPI], [test x"$with_mpi" = x"yes"])
+AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$with_mpi" = x"yes" && test -z "$SKIP_MPI_TEST"])
 
 # Build with OpenACC support.  Default is 'no'
 AC_ARG_ENABLE([acc],
-            [AS_HELP_STRING([--enable-acc],
-                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu. (default no)])])
+  [AS_HELP_STRING([--enable-acc],
+    [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu. (default no)])])
 AS_IF([test ${enable_acc:-no} = yes],
-      [enable_acc=yes],
-      [enable_acc=no])
+  [enable_acc=yes],
+  [enable_acc=no])
 # check compile flags
 AS_IF([test ${enable_acc} = yes],
-      [GX_OPENACC_FLAGS()])
+  [GX_OPENACC_FLAGS()])
 AM_CONDITIONAL([ENABLE_ACC], [test "$enable_acc" = "yes"])
 
 AC_CHECK_FUNCS(gettid, [], [])
@@ -179,6 +178,14 @@ if test ${HAVE_PYMOD_XARRAY} = yes; then
 else
   AM_CONDITIONAL([SKIP_XARRAY_TESTS], true )
 fi
+
+# Look for mpirun, mpiexec, srun application
+AC_ARG_VAR([MPIRUN], [Path to mpirun])
+AS_IF([test x"$with_mpi" = x"yes"], [
+  AC_CHECK_PROGS(MPIRUN, [srun aprun mpirun mpiexec])
+  AS_IF([test -z "$MPIRUN"],
+    [AC_MSG_WARN([Cannot find a suitable MPI launch application.  MPI tests will be skipped.])])
+])
 
 # Check if openacc.h exists
 if test "$enable_acc" = yes ; then

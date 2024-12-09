@@ -58,3 +58,9 @@ SUBDIRS += tools/libfrencutils_acc
 SUBDIRS += tools/fregrid_acc
 SUBDIRS += t_acc
 endif
+
+# Shortcut targets to make it easier to run (very) expensive tests.
+check-expensive:
+	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
+check-very-expensive:
+	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes

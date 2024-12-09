@@ -1,0 +1,391 @@
+make_hgrid(1)
+=============
+
+NAME
+----
+make_hgrid - generate horizontal grids for an FMS model
+
+SYNOPSIS
+--------
+[verse]
+make_hgrid --grid_name _output_file_ --grid_type _grid_type_ [options]
+
+DESCRIPTION
+-----------
+
+make_hgrid can generate different types of horizontal grid. The output data is
+on a supergrid (model grid size x refinement(=2)).  For _cubic_grid_, six grid
+files which contain the grid information for each tile will be generate,
+otherwise one file will be generated you can specify the grid type through
+*--grid_type*. The value of grid_type can be _from_file_, _spectral_grid_,
+_spherical_grid_, _conformal_cubic_grid_, _gnomonic_ed_ or
+_simple_cartesian_grid_, with default value _spherical_grid_. *--nlon* and
+*--nlat* must be specified to indicate supergrid size (for _cubic_grid_,
+*--nlat* is not needed because nlat has the same value as nlon.  Besides
+*--nlon* and *--nlat*, other optional and requirement arguments for each type
+are:
+
+_from_file_::
+*--my_grid_file* must be specified. The grid specified in my_grid_file should be
+super grid vertex.
+
+_spectral_grid_::
+no other optional or required arguments.
+
+_regular_lonlat_grid_::
+*--nxbnds*, *--nybnds*, *--xbnds*, *--ybnds*, must be specified to define the
+grid bounds.
+
+_tripolar_grid_::
+*--nxbnds*, *--nybnds*, *--xbnds*, *--ybnds*, must be specified to define the
+grid bounds. *--lat_join* is optional with default value 65.
+
+_conformal_cubic_grid_::
+*--nratio* is optional argument.
+
+_gnomonic_ed_::
+Equal distance gnomonic cubic grid.
+
+_simple_cartesian_grid_::
+*--xbnds*, *--ybnds* must be specified to define the grid bounds location and
+grid size. number of bounds must be 2 in both and x and y-direction.
+*--simple_dx* and *--simple_dy* must be specified to specify uniform cell
+length.
+
+_f_plane_grid_::
+For setting geometric fractors according to f-plane. *--f_plane_latitude* need
+to be specified.
+
+_beta_plane_grid_::
+For setting geometric fractors according to beta plane. *--f_plane_latitude*
+need to be specified
+
+Two algorithms are provided for creating 'tripolar_grid' and
+'regular_lonlat_grid'. Monotonic cubic interpolation and legacy algorithm using
+cosine function to configure grid cell location.  The monotonic cubic
+interpolation is developed by Russell Fiedler and the detail of the alrogithm is
+explained in
+https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/moler/interp.pdf.
+More details of the algorithm is available in
+
+* F. N. Fritsch and R. E. Carlson, Monotone Piecewise Cubic Interpolation, _SIAM
+Journal on Numerical Analysis_, 17 (1980), pp. 238-246.
+
+* D. Kahaner, C. Moler, and S. Nash, _Numerical Methods and Software_, Prentice
+Hall, Englewood Cliffs, NJ, 1989.
+
+*--nlon* and *--nlat* need to be specified to use the monotonic cubic algorithm.
+The legacy algorithm was developed by Ron Pacanowski. This algorithm uses a
+cosine function to do the interpolation.
+
+*--dlon* and *--dlat* need to be specified to use the legacy algorithm.
+Monotonic cubic interpolation is a higher order interpolation and will produce
+smoother grid distance. It is strongly suggested to use the monotonic cubic
+interpolation by specifying argument *--nlon* and *--nlat*.
+
+
+OPTIONS
+-------
+
+*--grid_type* _grid_type_::
+Specify type of topography.
+
+*--my_grid_file* _file_::
+when this flag is present, the program will read grid information from
+'my_grid_file'. The file format can be ascii file or netcdf file. Multiple file
+entry are allowed but the number should be less than MAXBOUNDS.
+
+*--nxbnds* _nxbnds_::
+Specify number of zonal regions for varying resolution.
+
+*--nybnds* _nybnds_::
+Specify number of meridinal regions for varying resolution.
+
+*--xbnds* _x(1),...,x(nxbnds)_::
+Specify boundaries for defining zonal regions of varying resolution. When
+--tripolar is present, x also defines the longitude of the two new poles. nxbnds
+must be 2 and lon_start = x(1), lon_end = x(nxbnds) are longitude of the two new
+poles.
+
+*--ybnds* _y(1),...,y(nybnds)_::
+Specify boundaries for defining meridional regions of varying resolution.
+
+*--nlon* _nlon(1),...,nlon(nxbnds-1)_::
+Number of model grid points(supergrid) for each zonal regions of varying
+resolution.
+
+*--nlat* _nlat(1),...,nlat(nybnds-1)_::
+Number of model grid points(supergid) for each meridinal regions of varying
+resolution.
+
+*--dlon* _dlon(1),...,dlon(nxbnds)_::
+Nominal resolution of zonal regions.
+
+*--dlat* _dlat(1),...,dlat(nybnds)_::
+Nominal resolution of meridional regions
+
+*--lat_join* _lat_join_::
+Specify latitude for joining spherical and rotated bipolar grid. Default value
+is 65 degree.
+
+*--nratio* _nratio_::
+Speicify the refinement ratio when calculating cell length and area of
+supergrid.
+
+*--simple_dx* _dimple_dx_::
+Specify the uniform cell length in x-direction for simple cartesian grid.
+
+*--simple_dy* _dimple_dy_::
+Specify the uniform cell length in y-direction for simple cartesian grid.
+
+*--grid_name* _grid_name_::
+Specify the grid name. The output grid file name will be _grid_name.nc_ if there
+is one tile and _grid_name.tile#.nc_ if there is more than one tile. The default
+value will be _horizontal_grid_.
+
+*--center* _center_::
+Specify the center location of grid. The valid entries are _none_, _t_cell_ and
+_c_cell_. The grid refinement is assumed to be 2 in x and y-direction when
+_center_ is not _none_. _c_cell_ should be used for the grid used in MOM ocean
+models.  Default is _none_.
+
+*--shift_fac* _shift_fac_::
+Shift west by 180/shift_fac. Default value is 18.
+
+*--do_schmidt*::
+Set to do Schmidt transformation to create stretched grid. When set the
+following options must be set: *--stretch_factor*, *--target_lon* and
+*--target_lat*.
+
+*--do_cube_transform*::
+Reorient the rotated cubed sphere so that tile 6 has north facing upward, which
+would make analysis and explaining nest placement much easier. When set the
+following must be set: *--stretch_factor*, *--latget_lon*, and *--target_lat*.
+
+*--stretch_factor* _factor_::
+Stretching factor for the grid.
+
+*--target_lon* _target_::
+Center longitude of the highest resolution tile.
+
+*--target_lat* _target_::
+Center latitude of the highest resolution tile.
+
+*--nest_grids* _num_nests_::
+Create _num_nests_ nested grids as well as the global grid. This option could
+only be set when the grid type is _gnomonic_ed_.
+
+*--parent_tile* _parent_tile(1),...,parent_tile(nests-1)_::
+Specify the comma-separated list of the parent tile number(s) of nest grid(s).
+
+*--refine_ratio* _refine_ratio(1),...,refine_ratio(nests-1)_::
+Specify the comma-separated list of refinement ratio(s) for nest grid(s).
+
+*--halo* _halo_size_::
+The halo size is used in the atmosphere cubic sphere model. Its purpose is to
+make sure the nest, including the halo region, is fully contained within a
+single parent (coarse) tile. The option may be obsolete and removed in future
+development. It only needs to be specified when *--nest_grids* is set.
+
+*--istart_nest* _istart_nest(1),...,istart_nest(nests-1)_::
+Specify the comma-separated list of starting i-direction index(es) of nest
+grid(s) in parent tile supergrid (Fortran index).
+
+*--iend_nest* _iend_nest(1),...,iend_nest(nests-1)_::
+Specify the comma-separated list of ending i-direction index(es) of nest grids
+in parent tile supergrid (Fortran index).
+
+*--jstart_nest* _jstart_nest(1),...,jstart_nest(nests-1)_::
+Specify the comma-separated list of starting j-direction index(es) of nest grids
+in parent tile supergrid (Fortran index).
+
+*--jend_nest* _jend_nest(1),...,jend_nest(nests-1)_::
+Specify the comma-separated list of ending j-direction index(es) of nest grids
+in parent tile supergrid (Fortran index).
+
+*--great_circle_algorithm*::
+When specified, great_circle_algorithm will be used to compute grid cell area.
+
+--out_halo _extra_halo_size::
+Extra halo size data to be written out. This is only works for grid type
+_gnomonic_ed_.
+
+*--non_length_angle*::
+When specified, will not output length(dx,dy) and angle (angle_dx, angle_dy)
+
+*--rotate_poly*::
+Set to calculate polar polygon areas by caculating the area of a copy of the
+polygon, with the copy being rotated far away from the pole.
+
+*--verbose*::
+Will print out running time message when this option is set. Otherwise the run
+will be silent when there is no error.
+
+EXAMPLES
+--------
+
+. generating regular lon-lat grid (supergrid size 60x20)
++
+----
+$ make_hgrid --grid_type regular_lonlat_grid --nxbnd 2 --nybnd 2 \
+   --xbnd 0,30 --ybnd 50,60  --nlon 60 --nlat 20
+----
+
+. generating tripolar grid with various grid resolution and C-cell centered
+using monotonic bi-cub spline interpolation.
++
+----
+$ make_hgrid --grid_type tripolar_grid --nxbnd 2 --nybnd 7 \
+   --xbnd -280,80 --ybnd -82,-30,-10,0,10,30,90 --nlon 720 \
+   --nlat 104,48,40,40,48,120 --grid_name om3_grid --center c_cell
+----
+
+. generating tripolar grid with various grid resolution and C-cell
+centered using legacy algorithm (create GFDL CM2/ocean-like grid)
++
+----
+$ make_hgrid --grid_type tripolar_grid --nxbnd 2 --nybnd 7 \
+   --xbnd -280,80 --ybnd -82,-30,-10,0,10,30,90 --dlon 1.0,1.0 \
+   --dlat 1.0,1.0,0.6666667,0.3333333,0.6666667,1.0,1.0 \
+   --grid_name om3_grid --center c_cell
+----
+
+. generating simple cartesian grid(supergrid size 20x20)
++
+----
+$ make_hgrid --grid_type simple_cartesian_grid --xbnd 0,30 \
+   --ybnd 50,60 --nlon 20 --nlat 20  --simple_dx 1000 \
+   --simple_dy 1000
+----
+
+. generating conformal cubic grid. (supergrid size 60x60 for each tile)
++
+----
+$ make_hgrid --grid_type conformal_cubic_grid --nlon 60 --nratio 2
+----
+
+. generating gnomonic cubic grid with equal_dist_face_edge(C48 grid)
++
+----
+$ make_hgrid --grid_type gnomonic_ed --nlon 96
+----
+
+. generating gnomonic cubic stretched grid.
++
+----
+$ make_hgrid --grid_type gnomonic_ed --nlon 180 --do_schmidt \
+   --stretch_factor 3 --target_lat 40. --target_lon 20.
+----
+
+. generating gnomonic cubic stretched grid with two nests on tile 6.
++
+----
+$ make_hgrid --grid_type gnomonic_ed --nlon 192 --do_schmidt \
+   --stretch_factor 3 --target_lat 10. --target_lon 20. \
+   --nest_grids 2 --parent_tile 6,6 --refine_ratio 2,2 \
+   --istart_nest 11,51 --jstart_nest 11,51 \
+   --iend_nest 42,82 --jend_nest 42,82 --halo 3
+----
+
+. generating spectral grid. (supergrid size 128x64)
++
+----
+$ make_hgrid --grid_type spectral_grid --nlon 128 --nlat 64
+----
+
+. Through user-defined grids
++
+----
+$ make_hgrid --grid_type from_file --my_grid_file my_grid_file \
+   --nlon 4 --nlat 4
+----
++
+*Contents of sample my_grid_file*. The first line of my_grid_file will be text (
+will be ignored) followed by nlon+1 lines of real value of x-direction supergrid
+bound location. Then another line of text ( will be ignored), followed by nlat+1
+lines of real value of y-direction supergrid bound location.  For example:
++
+----
+x-grid
+0.0
+5.0
+10.0
+15.0
+20.0
+y-grid
+-10
+10
+20
+30
+40
+----
+
+. generating f_plane_grids
++
+----
+$ make_hgrid --grid_type f_plane_grid --f_plane_latitude 55 \
+   --nxbnd 2 --nybnd 2 --xbnd 0,30 --ybnd 50,60  --nlon 60 --nlat 20
+----
+
+A note on generating cyclic regular lon-lat grids when center = 'c_cell':- It is
+possible to have an improperly centered boundary unless care is taken to ensure
+local symmetry at the join.
+
+A correctly formed grid is only guaranteed if the first three values of the
+--xbnd argument mirror the last 3 and the first two 'nlon' arguments mirror the
+last 2.  For example for a global grid make_hgrid should be invoked as
+
+----
+$ make_hgrid --grid_type regular_lonlat_grid ... \
+   --xbnd 0,X1,X2,...,360-X2,360-X1,360 \
+   --nlon N1,N2,...,N2,N1 --center c_cell
+----
+
+As an example
+
+----
+$ make_hgrid --grid_type regular_lonlat_grid --nxbnd 7 --nybnd 2 \
+   --xbnd 0,15,30,300,330,345,360 --ybnd 50,60 \
+   --nlon 4,2,6,4,2,4 --nlat 2 --center c_cell
+----
+
+results in a valid cyclic grid whereas (note the second last value of nlon)
+
+----
+$ make_hgrid --grid_type regular_lonlat_grid --nxbnd 7 --nybnd 2 \
+   --xbnd 0,15,30,300,330,345,360 --ybnd 50,60 \
+   --nlon 4,2,6,4,4,4 --nlat 2 --center c_cell
+----
+
+is not properly centered across 0,360
+
+An informational message is issued if the leftmost and rightmost  resolutions
+differ  by more than 1 part in 10E6
+
+
+SEE ALSO
+--------
+*make_vgrid*(1), *make_topo*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

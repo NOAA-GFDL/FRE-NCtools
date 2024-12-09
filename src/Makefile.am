@@ -80,10 +80,10 @@ EXTRA_DIST = \
   combine-restarts/combine_restarts.in \
   iceberg-comb/iceberg_comb.sh.in \
   list-ncvars/list_ncvars.csh.in \
-  list-ncvars/list_ncvars.csh.in \
+  list-ncvars/list_ncvars.sh.in \
   plevel/plevel.sh.in \
   split_ncvars/split_ncvars.pl.in \
-  timavg/timavg.csh.in \
+  timeavg/timavg.csh.in \
   timeavg/timavg.sh.in
 
 CLEANFILES = *.$(FC_MODEXT)
@@ -99,7 +99,7 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
                -e 's,[@]NCKS[@],$(NCKS),g' \
                -e 's,[@]SED[@],$(SED),g' \
                -e 's,[@]EGREP[@],$(EGREP),g' \
-               -e 's,^\#!/usr/bin/env perl$$,\#!$(PERL),'
+               -e '1 s,/usr/bin/env perl$$,$(PERL),'
 
 # Items to handle Fortran module files
 SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)

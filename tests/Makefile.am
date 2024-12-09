@@ -17,11 +17,6 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-if WITH_MPI_TESTS
-skip_MPI=""
-else
-skip_MPI="skip"
-endif
 
 if SKIP_XARRAY_TESTS
 skipflag="skip"
@@ -42,72 +37,115 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 check_PROGRAMS = \
   create_plevel_test_ncfile \
   create_timeavg_test_ncfiles \
+  create_occam_topog \
   c_test_version \
   f_test_version
-create_plevel_test_ncfile_SOURCES=plevel/create_plevel_test_ncfile.c
-create_timeavg_test_ncfiles_SOURCES=timeavg/create_timeavg_test_ncfiles.c
+
+create_plevel_test_ncfile_SOURCES=create_plevel_test_ncfile.c
+create_timeavg_test_ncfiles_SOURCES=create_timeavg_test_ncfiles.c
+create_occam_topog_SOURCES=create_occam_topog.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
 
 TESTS_ENVIRONMENT = \
     top_srcdir=$(abs_top_srcdir); export top_srcdir; \
     builddir=$(abs_builddir); export builddir; \
-    skip_mpi=$(skip_MPI); export skip_mpi; \
+    MPIRUN=$(MPIRUN); export MPIRUN; \
     skipflag=$(skipflag); export skipflag; \
     have_plmod_list_moreutils=$(have_plmod_list_moreutils); export have_plmod_list_moreutils; \
-    export PKGLIBEXECDIR="$(abs_top_builddir)/src" \
+    PKGLIBEXECDIR="$(abs_top_builddir)/src"; export PKGLIBEXECDIR; \
+    for d in $$( find $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
+      PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \
+    done; \
     PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
 
-TESTS = combine-ncc/combine \
-        combine_restarts/combine \
-        combine_restarts/dryrun \
-        combine_restarts/extra_options \
-        decompress-ncc/decompress \
-        iceberg_comb/check-valid-file \
-        iceberg_comb/combine \
-        iceberg_comb/combine-no-icebergs \
-        iceberg_comb/missing-file \
-        iceberg_comb/outfile-exists \
-        iceberg_comb/setnum-mismatch \
-        is-compressed/compressed \
-        is-compressed/not-compressed \
-        libtests/print_version \
-        list_ncvars/list_ncvars_ftn \
-        list_ncvars/list_ncvars_sh \
-        mppnccombine/dry-run \
-        mppnccombine/list-output-files \
-        mppnccombine/input-output-kinds \
-        mppnccombine/missing-file-fail \
-        mppnccombine/missing-file-force \
-        mppnccombine/non-zero-start-number \
-        mppnccombine/output-kinds \
-        mppnccombine/print-memory-usage \
-        mppnccombine/remove-decomp-files \
-        mppnccombine/six-digit-extension \
-        mppnccombine/with-end-number \
-        mppnccombine/xt-decomp \
-        mppnccombine/xyt-decomp \
-        mppnccombine/yt-decomp \
-        plevel/plevel \
-        plevel/plevel-0 \
-        plevel/plevel-3 \
-        plevel/plevel-a \
-        plevel/plevel-o \
-        plevel/plevel-nctypes \
-        plevel/plevel-t \
-        scatter-ncc/scatter_1x1 \
-        scatter-ncc/scatter_1x2 \
-        scatter-ncc/scatter_2x1 \
-        split_ncvars/split_ncvars \
-        split_ncvars/split_ncvars-i \
-        split_ncvars/split_ncvars-l \
-        split_ncvars/split_ncvars-o \
-        split_ncvars/split_ncvars-p \
-        split_ncvars/split_ncvars-s \
-        split_ncvars/split_ncvars-v \
-        timeavg/timavg \
-        timeavg/timavg-m
+tools_tests = \
+    make_hgrid/c48-hgrid \
+    make_hgrid/c48-nest \
+    make_hgrid/c48-nest-telescoping \
+    make_hgrid/from-file \
+    make_hgrid/ocean-hgrid \
+    make_vgrid/ocean-vgrid \
+    make_solo_mosaic/ocean-mosaic \
+    make_solo_mosaic/c48-mosaic \
+    make_topog/ocean-topog \
+    make_topog/ocean-topog-mpi \
+    make_coupler_mosaic/coupled-model \
+    make_coupler_mosaic/coupled-model-mpi \
+    make_coupler_mosaic/coupled-model-nest
+
+combine_tests = \
+    combine-ncc/combine \
+    combine_restarts/combine \
+    combine_restarts/dryrun \
+    combine_restarts/extra_options \
+    iceberg_comb/check-valid-file \
+    iceberg_comb/combine \
+    iceberg_comb/combine-no-icebergs \
+    iceberg_comb/missing-file \
+    iceberg_comb/outfile-exists \
+    iceberg_comb/setnum-mismatch \
+    is-compressed/compressed \
+    is-compressed/not-compressed \
+    mppnccombine/dry-run \
+    mppnccombine/list-output-files \
+    mppnccombine/input-output-kinds \
+    mppnccombine/missing-file-fail \
+    mppnccombine/missing-file-force \
+    mppnccombine/non-zero-start-number \
+    mppnccombine/output-kinds \
+    mppnccombine/print-memory-usage \
+    mppnccombine/remove-decomp-files \
+    mppnccombine/six-digit-extension \
+    mppnccombine/with-end-number \
+    mppnccombine/xt-decomp \
+    mppnccombine/xyt-decomp \
+    mppnccombine/yt-decomp
+
+land_util_tests = \
+    decompress-ncc/decompress \
+    scatter-ncc/scatter_1x1 \
+    scatter-ncc/scatter_1x2 \
+    scatter-ncc/scatter_2x1
+
+TESTS = \
+    libtests/print_version \
+    list_ncvars/list_ncvars_ftn \
+    list_ncvars/list_ncvars_sh \
+    plevel/plevel \
+    plevel/plevel-0 \
+    plevel/plevel-3 \
+    plevel/plevel-a \
+    plevel/plevel-o \
+    plevel/plevel-nctypes \
+    plevel/plevel-t \
+    split_ncvars/split_ncvars \
+    split_ncvars/split_ncvars-i \
+    split_ncvars/split_ncvars-l \
+    split_ncvars/split_ncvars-o \
+    split_ncvars/split_ncvars-p \
+    split_ncvars/split_ncvars-s \
+    split_ncvars/split_ncvars-v \
+    timeavg/timavg \
+    timeavg/timavg-m \
+    $(combine_tests) \
+    $(land_util_tests) \
+    $(tools_tests)
 
 EXTRA_DIST = \
   init.sh \
+  nc_cmp \
+  make_hgrid/create_fv3_grid_spec_files \
+  make_hgrid/grid_spec.tile1.ncl \
+  make_hgrid/grid_spec.tile2.ncl \
+  make_hgrid/grid_spec.tile3.ncl \
+  make_hgrid/grid_spec.tile4.ncl \
+  make_hgrid/grid_spec.tile5.ncl \
+  make_hgrid/grid_spec.tile6.ncl \
   $(TESTS)
+
+# Shortcut targets to make it easier to run (very) expensive tests.
+check-expensive:
+	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
+check-very-expensive:
+	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes

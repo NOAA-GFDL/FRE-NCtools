@@ -1,0 +1,314 @@
+make_topog(1)
+=============
+
+NAME
+----
+
+make_topog - generate topography file for use in FMS models
+
+SYNOPSIS
+--------
+[verse]
+make_topog --mosaic _mosaic_file_ [options]
+
+DESCRIPTION
+-----------
+
+make_topog can generate topography for any mosaic. The output file
+will contains the topography for each tile in the mosaic. The field name in
+the output topography file will be _depth_tile#_ and it is positive down.
+The topography data will be defined on model grid, the model grid size will be
+supergrid grid size divided by refinement (x_refine, y_refine, default is 2).
+*--mosaic* is a required option and all other options are optional, but
+some options are required depending on the choice of topog_type.
+Below specify the option (required or non-required) needed for every kind
+of topography type. When topog_type (*--topog_type*) is
+
+_realistic_::
+
+Remap the topography onto the current grid from some source data file.
+*--topog_file* and *--topog_field* must be specified. *--min_depth*,
+*--scale_factor*, *--num_filter_pass*, *--flat_bottom*, *--fill_first_row*,
+*--filter_topog*, *--round_shallow*, *--fill_shallow*, *--deepen_shallow*,
+*--smooth_topo_allow_deepening*, *--vgrid_file*, *--full_cell*,
+*--dont_fill_isolated_cells*, *--on_grid*, *--dont_change_landmask*,
+*--kmt_min*, *--dont_adjust_topo*, *--fraction_full_cell*,
+*--dont_open_very_this_cell*, *--min_thickness*  are optional arguments.
+
+_rectangular_basin_::
+
+Constructing a rectangular basin with a flat bottom. *--bottome_depth* are
+optional arguments. Set bottom_depth to 0 to get all land topography.
+
+_gaussian_::
+
+Construct gaussian bump on a sloping bottom. *--bottom_depth*, *--min_depth*,
+*--gauss_amp*, *--gauss_scale*, *--slope_x*, *--slope_y* are optional arguments.
+
+_bowl_::
+
+*--bottom_depth*, *--min_depth*, *--bowl_south*, *--bowl_north*, *--bowl_west*,
+*--bowl_east* are optional arguments.
+
+_idealized_::
+
+Generates an idealized not very realistic topography. *--bottom_depth*,
+*--min_depth* are optional arguments.
+
+_box_channel_::
+
+Generate a box_channel topography. The interiol of the grid box is a flot
+bottom. The boundary of the grid box is land except points
+[jwest_south:jwest_north] and [ieast_south:ieast_north]. *--jwest_south*,
+*--jwest_north*, *--ieast_south* and *--ieast_north* need to be specified.
+*--bottom_depth* are optional arguments.
+
+_dome_::
+
+Similar (not identical) to DOME configuration of Legg et.al., Ocean Modelling
+(2006) (https://doi.org/10.1016/j.ocemod.2004.11.006).  *--dome_slope*,
+*--dome_bottom*, *--dome_embayment_west*, *--dome_embayment_east*,
+*--dome_embayment_south* and *--dome_embayment_depth* are optional arguments.
+
+OPTIONS
+-------
+
+*--mosaic* _mosaic_file_::
+Specify the mosaic file where topography data located.
+
+*--topog_type* _topog_type_::
+Specify type of topography. Its value can be _realistic_, _rectangular_basin_,
+_gaussian_, _bowl_ or _idealized_. The default value is _realistic_.
+
+*--x_refine* _refinement_::
+Specify the refinement ratio of model grid vs supergrid ins x-direction. default
+value 2.
+
+*--y_refine* _refinement_::
+Specify the refinement ratio of model grid vs supergrid ins y-direction. default
+value 2.
+
+*--topog_file* _topog_file_::
+Specify name of topograhy file (e.g. scripps, navy_topo, ...)
+
+*--topog_field* _topog_field_::
+Specify name of topography field name in topog_file.
+
+*--bottom_depth* _depth_::
+Specify maximum depth (or bottom depth) of ocean. default value is 5000 meter.
+
+*--min_depth* _depth_::
+Specify minimum depth of ocean. default value is 10 meter.
+
+*--scale_factor* _factor_::
+Specify scaling factor for topography data (e.g. -1 to flip sign or 0.01 to
+convert from centimeters). default value is 1.
+
+*--num_filter_pass* _number_::
+Specify number of passes of spatial filter default value is 1.
+
+*--gauss_amp* _height_::
+Specify height of gaussian bump as percentage of ocean depth. default value is
+0.5.
+
+*--gauss_scale* _width_::
+Specify width of gaussian bump as percentag e of basin width. Default value is
+0.25.
+
+*--slope_x* _slope_::
+Specify rise of the ocean floor to the east for the gaussian bump. Default value
+is 0.
+
+*--slope_y* _slope_::
+Specify rise of the ocean floor to the north for the gaussian bump. Default
+value is 0.
+
+*--bowl_south* _boundry_::
+Specify southern boundary of Winton bowl. Default value is 60.
+
+*--bowl_north* _boundry_::
+Specify northern boundary of Winton bowl. Default value is 70.
+
+*--bowl_west* _boundry_::
+Specify western boundary of Winton bowl. Default value is 0.
+
+*--bowl_east* _boundry_::
+Specify eastern boundary of Winton bowl. Default value is 20.
+
+*--fill_first_row*::
+Make first row of ocean model all land points for ice model.
+
+*--filter_topog*::
+Apply filter to topography.
+
+*--round_shallow*::
+Make cells land if depth is less than 1/2 mimumim depth, otherwise make ocean.
+
+*--fill_shallow*::
+Make cells less than minimum depth land.
+
+*--deepen_shallow*::
+Make cells less than minimum depth equal to minimum depth.
+
+*--smooth_topo_allow_deepening*::
+Allow filter to deepen cells.
+
+*--output* _output_file_::
+The created netcdf file that contains mosaic topography. Default value is
+'topog.nc'
+
+*--jwest_south* _index_::
+Specify the starting j-index on the west boundary of the box channel.
+
+*--jwest_north* _index_::
+Specify the ending j-index on the west boundary of the box channel.
+
+*--jeast_south* _index_::
+Specify the starting j-index on the east boundary of the box channel.
+
+*--jeast_north* _index_::
+Specify the ending j-index on the east boundary of the box channel.
+
+*--dome_slope* _slope_::
+Slope for the dome configuration.  Default = 0.01
+
+*--dome_bottom* _depth_::
+Bottom of the dome configuration.  Default=3600.0
+
+*--dome_embayment_west* _edge_::
+Western edge of dome embayment. Default=19.0
+
+*--dome_embayment_east* _edge_::
+Eastern edge of dome embayment. Default=21.0
+
+*--dome_embayment_south* _edge_::
+Southern edge of dome embayment. Default=69.0
+
+*--dome_embayment_depth* _depth_::
+Depth of the embayment. Default=600.0
+
+*--vgrid_file* _vgrid_file_::
+Specify the vertical grid file. When vgrid_file is specified, number of levels
+will be written out and topography could be ajusted when set
+*--dont_adjust_topo* (remove_isolated_cells, restrict_partial_cells and
+enforce_min_depth) is not set.
+
+*--flat_bottom*::
+Generate flat bottom over ocean points when specified.
+
+*--full_cell*::
+Do not generate partial bottom cells when specified.
+
+*--dont_fill_isolated_cells*::
+Do not allow non-advective tracer cells (strongly recommended) when it is not
+set.
+
+*--dont_change_landmask*::
+Do not change land/sea mask when filling isolated cells when specified.
+
+*--kmt_min* _number_::
+Minimum number of vertical levels. default = 2.
+
+*--dont_adjust_topo*::
+Topography will not be adjusted when it is set. When it is not set, adjust
+topography (enforce_min_depth, remove_isolated_cells, restrict_partial_cells).
+Strongly recommend not setting this option
+
+*--fraction_full_cell* _fraction_::
+Fraction of the associated full cell that a corresponding partial cell thickness
+is no smaller than. That is, we maintain partial_cell_min_dht(i,j,k) =
+fraction_full_cell*full_cell_dzt(k). If fraction_full_cell=0.0, then
+partial_cell_min_dht = min(zw(1), 50.0). default is 0.2.
+
+*--dont_open_very_this_cell*::
+When it is not set, check which change is larger, opening or closing the cell,
+and to do that with smaller effect in depth_t.
+
+*--min_thickness* _thickness_::
+Minimum vertical thickness allowed. with default value 0.1. Increase or decrease
+this number as needed.
+
+*--rotate_poly*::
+Set to calculate polar polygon areas by caculating the area of a copy of the
+polygon, with the copy being rotated far away from the pole.
+
+*--on_grid*::
+Assume that the topography is already on the model grid. This prevents
+interpolation which especially on fine grain resolution smears out the
+topography.
+
+*--help*::
+Print out this message and then exit.
+
+*--verbose*::
+Will print out running time message when this option is set. Otherwise the run
+will be silent when there is no error.
+
+EXAMPLES
+--------
+
+. Generate 'realistic' topography
++
+----
+$ make_topog --mosaic mosaic.nc --topog_type realistic \
+    --topog_file /archive/fms/mom4/input_data/OCCAM_p5degree.nc \
+    --topog_field TOPO --scale_factor -1
+----
+
+. Generate 'rectangular_basin' topography (with uniform topography 200 meters).
++
+----
+$ make_topog --mosaic mosaic.nc --topog_type  rectangular_basin \
+    --bottome_depth 200
+----
+
+. Generate 'box_channel' topography (with flat bottom topography 5000 meters).
++
+----
+$ make_topog --mosaic mosaic.nc --topog_type  box_channel \
+    --jwest_south 20 --jwest_north 40 --jeast_south 30 \
+    --jeast_north 60 --bottom_depth 5000
+----
+
+. Generate 'bowl' topography
++
+----
+$ make_topog --mosaic ocean_mosaic.nc --topog_type bowl \
+    --bottom_depth 5500
+----
+
+. Generate 'dome' topography
++
+----
+$ make_topog --mosaic ocean_mosaic.nc --topog_type dome \
+    --dome_slope 0.01 --dome_embayment_south 69 \
+    --dome_embayment_west 19.25 --dome_embayment_east 21.25 \
+    --dome_bottom 5500
+----
+
+SEE ALSO
+--------
+*make_hgrid*(1), *make_vgrid*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.

@@ -1,0 +1,141 @@
+make_vgrid(1)
+=============
+
+NAME
+----
+
+make_vgrid - make virtical grids for an FMS model
+
+SYNOPSIS
+--------
+[verse]
+make_vgrid --nbnds _nbnds_ --bnds _z(1),...,z(nbnds)_ [options]
+
+DESCRIPTION
+-----------
+
+make_vgrid is used to make a vertical grid for an FMS model.  It uses a
+piecewise monotonic shape preserving cubic-spline algorithm to calculate the
+grid cell location.  The output netCDF file contains information on the
+supergrid with grid size equal to the model grid size multiplied by a refinement
+factor of two.
+
+Two algorithms are provided for creating vertical grid: Monotonic cubic
+interpolation and the legacy algorithm that uses a cosine function to configure
+grid cell location. The monotonic cubic interpolation is developed by Russell
+Fiedler and the detail of the alrogithm is explained in
+https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/moler/interp.pdf.
+More details of the algorithm is available in
+
+* F. N. Fritsch and R. E. Carlson, Monotone Piecewise Cubic Interpolation, _SIAM Journal on Numerical Analysis_, 17 (1980), pp. 238-246.
+
+* D. Kahaner, C. Moler, and S. Nash, _Numerical Methods and Software_, Prentice Hall, Englewood Cliffs, NJ, 1989.
+
+*--nz* needs to be specified to use the monotonic cubic algorithm.  The legacy
+algorithm is developed by Ron Pacanowski, and this older algorithm uses a cosine
+function to do the interpolation. *--dbnds* needs to be specified to use the
+legacy algorithm. Since monotonic cubic interpolation is a higher order
+interpolation, it will produce smoother grid distance. It is strongly suggested
+to use the monotonic cubic interpolation by specifying argument *--nz*.
+
+OPTIONS
+-------
+
+Required Flags
+~~~~~~~~~~~~~~
+
+*--nbnds* _nbnds_::
+Specify number of vertical regions for varying resolution.
+
+*--bnds* _z(1),...,z(nbnds)_::
+Specify boundaries for defining vertical regions of varying resolution.
+
+Optional Flags
+~~~~~~~~~~~~~~
+
+*--nz* _nz(1),...,nz(nbnds-1)_::
+Number of supergrid points (double number of model grid points) for each
+vertical regions of varying resolution.
+
+*--dbnds* _dbnds(1),...,dbnds(nbnds)_::
+Nominal resolution of depth regions.
+
+*--stretch* _stretch_::
+stretching factor for last region. Default is 1 (no stretching)
+
+*--grid_name* _gridname_::
+Specify the grid name. The output grid file name will be grid_name.nc. The
+default value is vertical_grid.
+
+*--center* _center_::
+Specify the center location of grid. The valid entry will be 'none', 't_cell' or
+'c_cell' with default value 'none'. The grid refinement is assumed to be 2 in x
+and y-direction when center is not 'none'. 'c_cell' should be used for the grid
+used in MOM.
+
+
+EXAMPLES
+--------
+
+Example 1: Use monotoic cublic spline interpolation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+$ make_vgrid --nbnds 3 --bnds 10,200,1000 --nz 10,20
+----
+
+will make a grid file with 60 supergrid cells, 30 model grid cells
+with refinement is 2.
+
+In order to generate regions of constant resolution the user should specify 3
+consecutive regions of constant resolution (only 2 for the first and last
+regions are required.)
+
+----
+$ make_vgrid --nbnds 4 --bnds 0,180,200,5000 --nz 18,2,30 --center c_cell
+----
+
+will have constant resolution in the top 200m.
+
+----
+$ make_vgrid --nbnds 6 --bnds 0,100,120,200,220,5000 --nz 20,2,8,2,30  --center c_cell
+----
+
+will have constant resolution from 120m-200m.
+
+
+Example 2: Use legacy algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+make_vgrid --nbnds 3 --bnds 0.,220.,5500. --dbnds 10.,10.,367.14286 --center c_cell
+----
+
+Will make a vertical grid similar to GFDL/CM2/ocn w/ 100 supergrid cells.
+
+SEE ALSO
+--------
+*make_hgrid*(1), *make_topo*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+The Flexible Modeling System (FMS) is free software; you can
+redistribute it and/or modify it and are expected to follow the terms
+of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any
+later version.
+
+FMS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
