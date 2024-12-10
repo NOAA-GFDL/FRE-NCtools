@@ -18,6 +18,7 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 EXTRA_DIST = \
+  check_mask.txt \
   combine-ncc.txt \
   combine_restarts.txt \
   decompress-ncc.txt \
@@ -51,6 +52,7 @@ man_MANS =
 
 if WITH_ASCIIDOC
 man_MANS += \
+  check_mask.1 \
   combine-ncc.1 \
   combine_restarts.1 \
   decompress-ncc.1 \
