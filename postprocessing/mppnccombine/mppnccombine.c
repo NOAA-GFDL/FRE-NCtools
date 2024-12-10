@@ -25,9 +25,9 @@
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
   V2.2.8: Hans.Vahlenkamp@noaa.gov
-          If no netCDF format is specified (no -64 or -n4 options) for the
-          output file then use the netCDF format of the first input file;
-          use netCDF3 64-bit offset format or netCDF4 classic format.
+          If the netCDF format for the output file is not chosen with the -64
+          or -n4 options then automatically use the netCDF format of the first
+          input file; netCDF3 64-bit offset or netCDF4 classic model.
   V2.2.7: Hans.Vahlenkamp@noaa.gov
           Synchronize output file before closing and check for errors.
   V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
@@ -701,8 +701,11 @@ void usage()
    printf("  -e #  Ending number #### of a specified range of input filename extensions.\n");
    printf("        Files within the range do not have to be consecutively numbered.\n");
    printf("  -h #  Add a specified number of bytes of padding at the end of the header.\n");
-   printf("  -64   Create netCDF output files with the 64-bit offset format.\n");
-   printf("  -n4   Create netCDF output files in NETCDF4_CLASSIC mode (no v4 enhanced features).\n");
+   printf("  -64   Create netCDF output files with the netCDF3 64-bit offset format.\n");
+   printf("  -n4   Create netCDF output files with the netCDF4 classic model format.\n");
+   printf("        If the netCDF format for the output file is not chosen with the -64\n");
+   printf("        or -n4 options then automatically use the netCDF format of the first\n");
+   printf("        input file; netCDF3 64-bit offset or netCDF4 classic model.\n");
    printf("  -d #  When in NETCDF4 mode, use deflation of level #.\n");
    printf("  -s    When in NETCDF4 mode, use shuffle.\n");
    printf("  -m    Initialize output variables with a \"missing_value\" from the variables\n");
