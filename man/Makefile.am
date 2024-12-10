@@ -22,6 +22,7 @@ EXTRA_DIST = \
   combine-ncc.txt \
   combine_restarts.txt \
   decompress-ncc.txt \
+  fregrid.txt \
   iceberg_comb.sh.txt \
   is-compressed.txt \
   list_ncvars.txt \
@@ -56,6 +57,7 @@ man_MANS += \
   combine-ncc.1 \
   combine_restarts.1 \
   decompress-ncc.1 \
+  fregrid.1 \
   iceberg_comb.sh.1 \
   is-compressed.1 \
   list_ncvars.1 \

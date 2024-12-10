@@ -2,12 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 
-#define FILE_NAME "OCCAM_p5degree.nc"
+#define FILE_NAME "5degree_topog.nc"
 #define NX 719
 #define NY 359
 #define NX_MIN 0
 #define NY_MIN -90
+#define X_min -10.0
+#define X_max 10.0
+#define Y_min -5.0
+#define Y_max 5.0
 #define TOPO_MIN -5800
 #define TOPO_MAX 3450
 
@@ -63,10 +68,16 @@ int main(int argc, char **argv) {
     check_err(nc_put_var_float(ncid, yt_id, &yt_data[0]), __LINE__);
 
     float topo_data[NY][NX];
+    float xval, yval;
     for (int i = 0; i < NY; i++)
+    {
+        xval = (X_min + (double)(X_max - X_min) * i / (NX));
         for (int j = 0; j < NX; j++)
-            topo_data[i][j] = (rand() % (TOPO_MAX - TOPO_MIN)) + TOPO_MIN;
-
+        {
+            yval = (Y_min + (double)(Y_max - Y_min) * j / (NY));
+            topo_data[i][j] = (float)(TOPO_MAX - TOPO_MIN)/2.0 * sin(xval + yval) + (float)(TOPO_MAX + TOPO_MIN);
+        }
+    }
     check_err(nc_put_var_float(ncid, topo_id, &topo_data[0][0]), __LINE__);
 
     // Close the file

@@ -35,17 +35,17 @@ AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 check_PROGRAMS = \
+  create_5degree_topog \
+  create_mask_topog \
   create_plevel_test_ncfile \
   create_salt_temp_file \
   create_timeavg_test_ncfiles \
-  create_occam_topog \
   c_test_version \
   f_test_version
 
 create_plevel_test_ncfile_SOURCES=create_plevel_test_ncfile.c
 create_salt_temp_file_SOURCES=create_salt_temp_file.c
 create_timeavg_test_ncfiles_SOURCES=create_timeavg_test_ncfiles.c
-create_occam_topog_SOURCES=create_occam_topog.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
 

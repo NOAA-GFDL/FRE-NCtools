@@ -26,7 +26,8 @@ fi
 . "${srcdir=.}/init.sh"
 
 # Check if we should skip the MPI tests
-command -v make_topog_parallel && test -z "$SKIP_MPI_TESTS" || skip_ "make_topog_parellel not available"
+command -v make_topog_parallel && test -z "$SKIP_MPI_TESTS" \
+    || skip_ "make_topog_parellel not available"
 
 # Create ocean hgrid
 make_hgrid \
@@ -57,12 +58,13 @@ make_solo_mosaic \
     --periodx 360 || framework_failure_ failed to create ocean solo mosaic
 
 # create ocean topography data
-$builddir/create_occam_topog || framework_failure_ failed to create OCCAM_p5degree.nc
+$builddir/create_5degree_topog \
+    || framework_failure_ failed to create input file 5degree_topog.nc
 get_ncpu_
 $MPIRUN -n $ncpu make_topog_parallel \
     --mosaic ocean_mosaic.nc \
     --topog_type realistic \
-    --topog_file OCCAM_p5degree.nc \
+    --topog_file 5degree_topog.nc \
     --topog_field TOPO \
     --scale_factor -1 \
     --vgrid ocean_vgrid.nc \
@@ -73,7 +75,7 @@ test -f topog_parallel.nc || fail_ topog_parallel.nc not created
 make_topog \
     --mosaic ocean_mosaic.nc \
     --topog_type realistic \
-    --topog_file OCCAM_p5degree.nc \
+    --topog_file 5degree_topog.nc \
     --topog_field TOPO \
     --scale_factor -1 \
     --vgrid ocean_vgrid.nc \

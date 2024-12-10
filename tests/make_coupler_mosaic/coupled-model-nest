@@ -61,12 +61,12 @@ make_solo_mosaic  \
     || framework_failure_ failed to create ocean solo mosaic
 
 #create ocean topography data
-$builddir/create_occam_topog  \
-    || framework_failure_ failed to create OCCAM_p5degree.nc
+$builddir/create_5degree_topog \
+    || framework_failure_ failed to create input file 5degree_topog.nc
 make_topog  \
     --mosaic ocean_mosaic.nc  \
     --topog_type realistic  \
-    --topog_file OCCAM_p5degree.nc \
+    --topog_file 5degree_topog.nc \
     --topog_field TOPO  \
     --scale_factor -1  \
     --vgrid ocean_vgrid.nc  \
@@ -98,7 +98,7 @@ make_solo_mosaic  \
     --num_tiles 7  \
     --dir ./  \
     --mosaic atmos_mosaic  \
-    --tile_file  \ atmos_grid.tile1.nc,atmos_grid.tile2.nc,atmos_grid.tile3.nc,atmos_grid.tile4.nc,atmos_grid.tile5.nc,atmos_grid.tile6.nc,atmos_grid.tile7.nc \
+    --tile_file  atmos_grid.tile1.nc,atmos_grid.tile2.nc,atmos_grid.tile3.nc,atmos_grid.tile4.nc,atmos_grid.tile5.nc,atmos_grid.tile6.nc,atmos_grid.tile7.nc \
     || framework_failure_ failed to create C48 solo mosaic
 
 #Create C144 grid for land
@@ -114,7 +114,8 @@ make_hgrid  \
     --great_circle_algorithm  \
     --nest_grid  \
     --refine_ratio 3  \
-    --parent_tile 0
+    --parent_tile 0 \
+    || framework_failure_ failed to create land_grid
 
 # create C144 solo mosaic for land
 make_solo_mosaic  \
@@ -146,48 +147,48 @@ test -f grid_spec.nc || fail_ grid_spec.nc not created
 ncgen -o grid_spec_ref.nc <<EOF
 netcdf grid_spec {
 dimensions:
-        string = 255 ;
-        nfile_aXo = 7 ;
-        nfile_aXl = 5 ;
-        nfile_lXo = 6 ;
+	string = 255 ;
+	nfile_aXo = 7 ;
+	nfile_aXl = 14 ;
+	nfile_lXo = 6 ;
 variables:
-        char atm_mosaic_dir(string) ;
-                atm_mosaic_dir:standard_name = "directory_storing_atmosphere_mosaic" ;
-        char atm_mosaic_file(string) ;
-                atm_mosaic_file:standard_name = "atmosphere_mosaic_file_name" ;
-        char atm_mosaic(string) ;
-                atm_mosaic:standard_name = "atmosphere_mosaic_name" ;
-        char lnd_mosaic_dir(string) ;
-                lnd_mosaic_dir:standard_name = "directory_storing_land_mosaic" ;
-        char lnd_mosaic_file(string) ;
-                lnd_mosaic_file:standard_name = "land_mosaic_file_name" ;
-        char lnd_mosaic(string) ;
-                lnd_mosaic:standard_name = "land_mosaic_name" ;
-        char ocn_mosaic_dir(string) ;
-                ocn_mosaic_dir:standard_name = "directory_storing_ocean_mosaic" ;
-        char ocn_mosaic_file(string) ;
-                ocn_mosaic_file:standard_name = "ocean_mosaic_file_name" ;
-        char ocn_mosaic(string) ;
-                ocn_mosaic:standard_name = "ocean_mosaic_name" ;
-        char ocn_topog_dir(string) ;
-                ocn_topog_dir:standard_name = "directory_storing_ocean_topog" ;
-        char ocn_topog_file(string) ;
-                ocn_topog_file:standard_name = "ocean_topog_file_name" ;
-        char aXo_file(nfile_aXo, string) ;
-                aXo_file:standard_name = "atmXocn_exchange_grid_file" ;
-        char aXl_file(nfile_aXl, string) ;
-                aXl_file:standard_name = "atmXlnd_exchange_grid_file" ;
-        char lXo_file(nfile_lXo, string) ;
-                lXo_file:standard_name = "lndXocn_exchange_grid_file" ;
+	char atm_mosaic_dir(string) ;
+		atm_mosaic_dir:standard_name = "directory_storing_atmosphere_mosaic" ;
+	char atm_mosaic_file(string) ;
+		atm_mosaic_file:standard_name = "atmosphere_mosaic_file_name" ;
+	char atm_mosaic(string) ;
+		atm_mosaic:standard_name = "atmosphere_mosaic_name" ;
+	char lnd_mosaic_dir(string) ;
+		lnd_mosaic_dir:standard_name = "directory_storing_land_mosaic" ;
+	char lnd_mosaic_file(string) ;
+		lnd_mosaic_file:standard_name = "land_mosaic_file_name" ;
+	char lnd_mosaic(string) ;
+		lnd_mosaic:standard_name = "land_mosaic_name" ;
+	char ocn_mosaic_dir(string) ;
+		ocn_mosaic_dir:standard_name = "directory_storing_ocean_mosaic" ;
+	char ocn_mosaic_file(string) ;
+		ocn_mosaic_file:standard_name = "ocean_mosaic_file_name" ;
+	char ocn_mosaic(string) ;
+		ocn_mosaic:standard_name = "ocean_mosaic_name" ;
+	char ocn_topog_dir(string) ;
+		ocn_topog_dir:standard_name = "directory_storing_ocean_topog" ;
+	char ocn_topog_file(string) ;
+		ocn_topog_file:standard_name = "ocean_topog_file_name" ;
+	char aXo_file(nfile_aXo, string) ;
+		aXo_file:standard_name = "atmXocn_exchange_grid_file" ;
+	char aXl_file(nfile_aXl, string) ;
+		aXl_file:standard_name = "atmXlnd_exchange_grid_file" ;
+	char lXo_file(nfile_lXo, string) ;
+		lXo_file:standard_name = "lndXocn_exchange_grid_file" ;
+
 // global attributes:
-                :grid_version = "0.2" ;
-                :code_release_version = "2024.04" ;
-                :great_circle_algorithm = "TRUE" ;
-                :git_hash = "ddb7a2d699be3b3715c73c877715ddc506874f72" ;
-                :creationtime = "Sun Dec  8 19:36:58 2024" ;
-                :hostname = "zuko.local" ;
-                :history = "make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc --ocean_topog topog.nc --interp_order 1 --mosaic_name gr
-id_spec --check" ;
+		:grid_version = "0.2" ;
+		:code_release_version = "2024.04" ;
+		:great_circle_algorithm = "TRUE" ;
+		:git_hash = "f68145bf0aaf91a39c65bc5e74422e5b482c8a90" ;
+		:creationtime = "Tue Dec 10 17:32:49 2024" ;
+		:hostname = "mlt-4743592.gfdl.noaa.gov" ;
+		:history = "make_coupler_mosaic_parallel --atmos_mosaic atmos_mosaic.nc --land_mosaic land_mosaic.nc --ocean_mosaic ocean_mosaic.nc --ocean_topog topog.nc --interp_order 1 --mosaic_name grid_spec --check" ;
 data:
 
  atm_mosaic_dir = "./" ;
@@ -223,10 +224,19 @@ data:
 
  aXl_file =
   "atmos_mosaic_tile1Xland_mosaic_tile1.nc",
+  "atmos_mosaic_tile1Xland_mosaic_tile6.nc",
   "atmos_mosaic_tile2Xland_mosaic_tile2.nc",
+  "atmos_mosaic_tile3Xland_mosaic_tile1.nc",
+  "atmos_mosaic_tile3Xland_mosaic_tile2.nc",
   "atmos_mosaic_tile3Xland_mosaic_tile3.nc",
+  "atmos_mosaic_tile3Xland_mosaic_tile4.nc",
+  "atmos_mosaic_tile3Xland_mosaic_tile5.nc",
   "atmos_mosaic_tile4Xland_mosaic_tile4.nc",
-  "atmos_mosaic_tile5Xland_mosaic_tile5.nc" ;
+  "atmos_mosaic_tile4Xland_mosaic_tile6.nc",
+  "atmos_mosaic_tile5Xland_mosaic_tile5.nc",
+  "atmos_mosaic_tile5Xland_mosaic_tile6.nc",
+  "atmos_mosaic_tile6Xland_mosaic_tile6.nc",
+  "atmos_mosaic_tile7Xland_mosaic_tile4.nc" ;
 
  lXo_file =
   "land_mosaic_tile1Xocean_mosaic_tile1.nc",
@@ -239,4 +249,4 @@ data:
 EOF
 
 $top_srcdir/tests/nc_cmp -dm grid_spec.nc grid_spec_ref.nc \
-    || fail_ grid_spec.nc and grid_spec_parallel.nc are different
+    || fail_ grid_spec.nc and grid_spec_ref.nc are different
