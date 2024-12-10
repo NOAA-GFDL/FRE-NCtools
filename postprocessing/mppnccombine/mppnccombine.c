@@ -27,7 +27,8 @@
   V2.2.8: Hans.Vahlenkamp@noaa.gov
           If the netCDF format for the output file is not chosen with the -64
           or -n4 options then automatically use the netCDF format of the first
-          input file; netCDF3 64-bit offset or netCDF4 classic model.
+          input file; except if the first input file is netCDF classic then use
+          netCDF 64-bit offset instead for the output file.
   V2.2.7: Hans.Vahlenkamp@noaa.gov
           Synchronize output file before closing and check for errors.
   V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
@@ -701,11 +702,12 @@ void usage()
    printf("  -e #  Ending number #### of a specified range of input filename extensions.\n");
    printf("        Files within the range do not have to be consecutively numbered.\n");
    printf("  -h #  Add a specified number of bytes of padding at the end of the header.\n");
-   printf("  -64   Create netCDF output files with the netCDF3 64-bit offset format.\n");
-   printf("  -n4   Create netCDF output files with the netCDF4 classic model format.\n");
+   printf("  -64   Create netCDF output file with the 64-bit offset format.\n");
+   printf("  -n4   Create netCDF output file with the netCDF4 classic model format.\n");
    printf("        If the netCDF format for the output file is not chosen with the -64\n");
    printf("        or -n4 options then automatically use the netCDF format of the first\n");
-   printf("        input file; netCDF3 64-bit offset or netCDF4 classic model.\n");
+   printf("        input file; except if the first input file is netCDF classic then use\n");
+   printf("        netCDF 64-bit offset instead for the output file.\n");
    printf("  -d #  When in NETCDF4 mode, use deflation of level #.\n");
    printf("  -s    When in NETCDF4 mode, use shuffle.\n");
    printf("  -m    Initialize output variables with a \"missing_value\" from the variables\n");
@@ -913,13 +915,20 @@ int process_file(char *ncname, unsigned char appendnc,
             ncoutformat=(NC_CLOBBER | NC_64BIT_OFFSET);
             if (verbose) printf("    ncoutformat reset to NC_64BIT_OFFSET \n");
            }
-         else
+         else if (ncinformat==NC_FORMAT_NETCDF4)
            {
-            if (ncinformat==NC_FORMAT_NETCDF4 || ncinformat==NC_FORMAT_NETCDF4_CLASSIC)
-              {
-               ncoutformat=(NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
-               if (verbose) printf("    ncoutformat reset to NC_NETCDF4 with NC_CLASSIC_MODEL\n");
-              }
+            ncoutformat=(NC_CLOBBER | NC_NETCDF4);
+            if (verbose) printf("    ncoutformat reset to NC_NETCDF4\n");
+           }
+         else if (ncinformat==NC_FORMAT_NETCDF4_CLASSIC)
+           {
+            ncoutformat=(NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
+            if (verbose) printf("    ncoutformat reset to NC_NETCDF4 with NC_CLASSIC_MODEL\n");
+           }
+         else if (ncinformat==NC_FORMAT_64BIT_DATA)
+           {
+            ncoutformat=(NC_CLOBBER | NC_64BIT_DATA);
+            if (verbose) printf("    ncoutformat reset to NC_64BIT_DATA\n");
            }
          ncclose(ncoutfile->ncfid);
          if (nc__create(outncname,ncoutformat,0,&blksz,&ncoutfile->ncfid)==(-1))
