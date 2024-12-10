@@ -134,7 +134,8 @@ EOF
 
 # input of classic should be "64-bit offset"
 mppnccombine decomp_classic.nc || framework_failure_ failed to combine decomp_classic.nc
-test x"$(ncdump -k decomp_classic.nc)" = x"64-bit offset" || fail_ decomp_classic.nc is not 64-bit offset
+test x"$(ncdump -k decomp_classic.nc)" = x"64-bit offset" \
+    || fail_ decomp_classic.nc is not 64-bit offset.  Got: $(ncdump -k decomp_classic.nc)
 
 # input of netCDF-4 should be "netCDF-4"
 # Not implemented yet
@@ -160,9 +161,10 @@ ncgen -6 -o decomp_64offset.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
     || framework_failure_ failed to create decomp_64offest.nc.0000
 ncgen -6 -o decomp_64offset.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" \
     || framework_failure_ failed to create decomp_64offest.nc.0001
-mppnccombine decomp_64offset.nc || framework_failure_ failed to combine decompose_64offset.nc
-test x"$(ncdump -k decompose_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)" \
-    || fail_ decompose_64offset.nc is not $(ncdump -k decomp_64offset.nc.0000)
+mppnccombine decomp_64offset.nc || framework_failure_ failed to combine decomp_64offset.nc
+test x"$(ncdump -k decomp_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)" \
+    || fail_ decomp_64offset.nc is not $(ncdump -k decomp_64offset.nc.0000).  \
+    Got: $(ncdump -k decomp_64offset.nc)
 
 # input of netCDF-4 classic should be "netCDF-4 classic model"
 ncgen -7 -o decomp_netcdf4_classic.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
@@ -171,4 +173,5 @@ ncgen -7 -o decomp_netcdf4_classic.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)
     || framework_failure_ failed to create decomp_netcdf4_classic.nc.0001
 mppnccombine decomp_netcdf4_classic.nc || framework_failure_ failed to combine decomp_netcdf4_classic.nc
 test x"$(ncdump -k decomp_netcdf4_classic.nc)" = x"$(ncdump -k decomp_netcdf4_classic.nc.0000)" \
-    || fail_ decomp_netcdf4_classic.nc is not $(ncdump -k decomp_netcdf4_classic.nc.0000)
+    || fail_ decomp_netcdf4_classic.nc is not $(ncdump -k decomp_netcdf4_classic.nc.0000). \
+    Got: $(ncdump -k decomp_netcdf4_classic.nc)
