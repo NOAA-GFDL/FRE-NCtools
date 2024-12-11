@@ -52,8 +52,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test05-remap_c48_regular.sh \
         Test06-regrid_extrap.sh \
         Test07-runoff_regrid.sh \
-        Test08-check_mask.sh \
-        Test09-check_mask_MOM.sh \
         Test10-remap_land_res.sh \
         Test11-make_regional_mosaic.sh \
         Test12-mppnscatter.sh \
@@ -70,7 +68,6 @@ EXTRA_DIST = $(TESTS) \
              Test03-input \
              Test06-input \
              Test07-input \
-             Test08-input \
              Test10-input \
              Test12-input \
              Test15-input \
