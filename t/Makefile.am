@@ -66,6 +66,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test32-fregrid_no_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
+             test_utils.bash \
              Test03-input \
              Test06-input \
              Test07-input \

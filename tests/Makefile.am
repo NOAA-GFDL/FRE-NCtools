@@ -37,6 +37,7 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 check_PROGRAMS = \
   create_5degree_topog \
   create_mask_topog \
+  create_ocean_mask_grid \
   create_plevel_test_ncfile \
   create_salt_temp_file \
   create_timeavg_test_ncfiles \
@@ -62,6 +63,8 @@ TESTS_ENVIRONMENT = \
     PATH="$(abs_top_builddir)/src"'$(PATH_SEPARATOR)'"$$PATH"; export PATH;
 
 tools_tests = \
+    check_mask/ocean-mosaic-mask \
+    check_mask/ocean-grid-mask \
     make_hgrid/c48-hgrid \
     make_hgrid/c48-nest \
     make_hgrid/c48-nest-telescoping \
