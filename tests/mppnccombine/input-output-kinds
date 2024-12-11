@@ -27,8 +27,6 @@ fi
 
 . "${srcdir=.}/init.sh"
 
-skip_ not implemented yet
-
 # Create the two decomposed NetCDF files
 ncgen -3 -o decomp_classic.nc.0000 << EOF || framework_failure_ failed to create decomp_classic.nc.0000
 netcdf compress {
