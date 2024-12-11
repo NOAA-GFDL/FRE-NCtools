@@ -24,6 +24,11 @@
                  programming interface "mpp_io_mod"
                  (http://www.gfdl.noaa.gov/~vb/mpp_io.html) by V. Balaji.
 
+  V2.2.8: Hans.Vahlenkamp@noaa.gov
+          If the netCDF format for the output file is not chosen with the -64
+          or -n4 options then automatically use the netCDF format of the first
+          input file; except if the first input file is netCDF classic then use
+          netCDF 64-bit offset instead for the output file.
   V2.2.7: Hans.Vahlenkamp@noaa.gov
           Synchronize output file before closing and check for errors.
   V2.2.6: Seth Underwood <Seth.Underwood@noaa.gov>
@@ -39,8 +44,10 @@
            If user sets blocking factor > # records (nrecs), set bf to nrecs
   V2.2.2:  Tushar.Mohan@noaa.gov
            Added a -x option to print estimate resident memory footprint and
-  exit Changed default blocking factor 1, so the combine behaves as the combine
-  of the past if no "-k" option is set. This is useful for low-memory nodes.
+           exit.
+           Changed default blocking factor 1, so the combine behaves as the
+           combine of the past if no "-k" option is set. This is useful
+           for low-memory nodes.
   V2.2.1:  Do not bail out when we cannot write variables to output file.
            Instead, issue a warning and set an error condition. Continue
            processing.
@@ -101,20 +108,27 @@
 */
 
 /* Algorithm:
-   there are k records in a block
+    there are k records in a block
 
-   for block b: 1 .. N
-       for file f: 1 .. n
-           for record r: 1 .. k
-               Read rec (r) from file (f)
-               for var v: 1 .. n_vars
-                   If var is not decomposed write to output
-                   if var (v) is decomposed:
-                       IF not allocated, allocate memory for var (v), record
-   (r) write variable (v) into memory buffer done var done record done file for
-   record r: 1 .. k for var: 1..n_vars if decomposed variable, flush variable v
-   for rec r to output done done free memory for all variables for all records
-   in block done block
+    for block b: 1 .. N
+      for file f: 1 .. n
+        for record r: 1 .. k
+          read rec (r) from file (f)
+          for var v: 1 .. n_vars
+            if var is not decomposed write to output
+            if var (v) is decomposed:
+              if not allocated, allocate memory for var (v), record (r)
+              write variable (v) into memory buffer
+          done var
+        done record
+      done file
+      for record r: 1 .. k
+        for var: 1..n_vars
+          if decomposed variable, flush variable v for rec r to output
+        done
+      done
+      free memory for all variables for all records in block
+    done block
  */
 
 #include <math.h>
@@ -135,6 +149,11 @@
 #endif
 #ifndef DEFAULT_BF /* default blocking factor, if none set */
 #define DEFAULT_BF 1
+#endif
+
+/* Block size for NetCDF file open/reads */
+#ifndef NC_BLKSZ
+#define NC_BLKSZ 65536
 #endif
 
 /* Information structure for a file */
@@ -261,10 +280,10 @@ main (int argc, char *argv[])
                           written at a time */
   int nblocks
       = 1; /* number of iterations of outer loop (default nrecs/bf = )*/
-  int peWidth = -1;     /* Width of PE number in uncombined file extension */
-  size_t blksz = 65536; /* netCDF block size */
-  int deflate = 0;      /* do not deflate by default */
-  int deflation = -1;   /* do not deflate by default */
+  int peWidth = -1; /* Width of PE number in uncombined file extension */
+  size_t blksz = NC_BLKSZ; /* netCDF block size */
+  int deflate = 0;         /* do not deflate by default */
+  int deflation = -1;      /* do not deflate by default */
   int shuffle = 0;
 
   /* Check the command-line arguments */
@@ -897,10 +916,11 @@ process_file (char *ncname, unsigned char appendnc, struct fileinfo *ncoutfile,
               int block, int f, int headerpad, unsigned char verbose,
               unsigned char missing, int deflate, int deflation, int shuffle)
 {
-  struct fileinfo *ncinfile; /* Information about an input netCDF file */
-  int nfiles2;               /* Number of files in the decomposed domain */
-  int d, v, n;               /* Loop variables */
-  int dimid;                 /* ID of a dimension */
+  struct fileinfo *ncinfile;   /* Information about an input netCDF file */
+  int nfiles2;                 /* Number of files in the decomposed domain */
+  int ncinformat, ncoutformat; /* Format of input and output netCDF files */
+  int d, v, n;                 /* Loop variables */
+  int dimid;                   /* ID of a dimension */
   int decomp[4]; /* "domain_decomposition = #0, #1, #2, #3" attribute */
                  /*  #0 starting position of original dimension   */
                  /*  #1 ending position of original dimension     */
@@ -908,6 +928,7 @@ process_file (char *ncname, unsigned char appendnc, struct fileinfo *ncoutfile,
                  /*  #3 ending position of decomposed dimension   */
   char attname[MAX_NC_NAME];       /* Name of a global or variable attribute */
   unsigned char ncinfileerror = 0; /* Were there any file errors? */
+  size_t blksz = NC_BLKSZ;         /* netCDF block size */
 
   if (print_mem_usage)
     check_mem_usage ();
@@ -1059,6 +1080,72 @@ process_file (char *ncname, unsigned char appendnc, struct fileinfo *ncoutfile,
     {
       if (verbose)
         printf ("    Creating output \"%s\"\n", outncname);
+
+      /* Determine the format of the input netCDF file */
+      if (nc_inq_format (ncinfile->ncfid, &ncinformat) == (-1))
+        {
+          fprintf (stderr, "Error: cannot read the input file format!\n");
+          ncclose (ncinfile->ncfid);
+          free (ncinfile);
+          return (1);
+        }
+
+      /* Determine the format of the output netCDF file */
+      if (nc_inq_format (ncoutfile->ncfid, &ncoutformat) == (-1))
+        {
+          fprintf (stderr, "Error: cannot read the output file format!\n");
+          ncclose (ncinfile->ncfid);
+          free (ncinfile);
+          return (1);
+        }
+
+      if (verbose)
+        printf ("    ncinformat=%d, ncoutformat=%d\n", ncinformat,
+                ncoutformat);
+
+      /* If the format option (-64 or -n4) for the output netCDF file
+       * is not specified then recreate the output netCDF file based
+       * upon the format of the input netCDF file. */
+      if (ncoutformat == NC_FORMAT_CLASSIC)
+        {
+          if (ncinformat == NC_FORMAT_CLASSIC
+              || ncinformat == NC_FORMAT_64BIT_OFFSET)
+            {
+              ncoutformat = (NC_CLOBBER | NC_64BIT_OFFSET);
+              if (verbose)
+                printf ("    ncoutformat reset to NC_64BIT_OFFSET \n");
+            }
+          else if (ncinformat == NC_FORMAT_NETCDF4)
+            {
+              ncoutformat = (NC_CLOBBER | NC_NETCDF4);
+              if (verbose)
+                printf ("    ncoutformat reset to NC_NETCDF4\n");
+            }
+          else if (ncinformat == NC_FORMAT_NETCDF4_CLASSIC)
+            {
+              ncoutformat = (NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
+              if (verbose)
+                printf ("    ncoutformat reset to NC_NETCDF4 with "
+                        "NC_CLASSIC_MODEL\n");
+            }
+          else if (ncinformat == NC_FORMAT_64BIT_DATA)
+            {
+              ncoutformat = (NC_CLOBBER | NC_64BIT_DATA);
+              if (verbose)
+                printf ("    ncoutformat reset to NC_64BIT_DATA\n");
+            }
+          /* close the file to recreate it */
+          ncclose (ncoutfile->ncfid);
+          if (nc__create (outncname, ncoutformat, 0, &blksz, &ncoutfile->ncfid)
+              == (-1))
+            {
+              fprintf (stderr,
+                       "Error: cannot create the output netCDF file!\n");
+              free (ncoutfile);
+              return (1);
+            }
+          ncsetfill (ncoutfile->ncfid, NC_NOFILL);
+        }
 
       /* Define the dimensions */
       for (d = 0; d < ncinfile->ndims; d++)
