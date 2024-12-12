@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+#expensive_
+
+make_hgrid \
+    --grid_type gnomonic_ed \
+    --do_schmidt \
+    --stretch_factor 2.5 \
+    --target_lon 262.4 \
+    --target_lat 32.0 \
+    --nlon 512 \
+    --grid_name C256_grid \
+    || framework_failure_ failed to create C256 grid files
+
+make_solo_mosaic \
+    --num_tiles 6 \
+    --dir ./ \
+    --mosaic_name C256_mosaic \
+    --tile_file C256_grid.tile1.nc,C256_grid.tile2.nc,C256_grid.tile3.nc,C256_grid.tile4.nc,C256_grid.tile5.nc,C256_grid.tile6.nc \
+    || framework_failure_ failed to create C256 mosaic files
+
+fregrid \
+    --input_mosaic C256_mosaic.nc \
+    --nlon 640 \
+    --nlat 400 \
+    --latBegin 15.0 \
+    --latEnd 65.0 \
+    --lonBegin 230.0 \
+    --lonEnd 310.0 \
+    --remap_file fregrid_remap_file_640_by_400.nc \
+    --check_conserve \
+    || fail_ failed to create remap file
+test -f fregrid_remap_file_640_by_400.nc \
+    || fail_ remap file not created

@@ -80,7 +80,8 @@ tools_tests = \
     make_coupler_mosaic/coupled-model-nest \
     fregrid/latlon \
     fregrid/remap-file \
-    fregrid/remap-file-mpi
+    fregrid/remap-file-mpi \
+    fregrid/remap-file-stretchgrid
 
 combine_tests = \
     combine-ncc/combine \
