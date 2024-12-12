@@ -17,10 +17,10 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef FREGRID_UTILS_ACC_H
-#define FREGRID_UTILS_ACC_H
+#ifndef FREGRID_UTILS_GPU_H
+#define FREGRID_UTILS_GPU_H
 
-void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_acc *interp_acc,
+void set_remap_file_gpu( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_gpu *interp_gpu,
                          unsigned int *opcode, int save_weight_only);
 
 #endif

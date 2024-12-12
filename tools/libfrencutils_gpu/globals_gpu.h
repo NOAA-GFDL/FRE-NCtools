@@ -17,8 +17,8 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef GLOBALS_ACC_H_
-#define GLOBALS_ACC_H_
+#ifndef GLOBALS_GPU_H_
+#define GLOBALS_GPU_H_
 #include "globals.h"
 #include "parameters.h"
 
@@ -47,7 +47,7 @@ typedef struct {
   int    *index;
   char   remap_file[STRING];
   int    file_exist;
-} Interp_config_acc;
+} Interp_config_gpu;
 
 typedef struct {
   double *lon_min;

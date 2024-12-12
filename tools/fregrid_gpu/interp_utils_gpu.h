@@ -17,23 +17,23 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef FREGRID_UTILS_ACC_H_
-#define FREGRID_UTILS_ACC_H_
+#ifndef FREGRID_UTILS_GPU_H_
+#define FREGRID_UTILS_GPU_H_
 
-#include "globals_acc.h"
+#include "globals_gpu.h"
 
-void copy_grid_to_device_acc( const int npoints, const double *lat, const double *lon );
+void copy_grid_to_device_gpu( const int npoints, const double *lat, const double *lon );
 
-void delete_grid_from_device_acc( const int npoints, const double *lat, const double *lon );
+void delete_grid_from_device_gpu( const int npoints, const double *lat, const double *lon );
 
-void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config_acc *interp_acc,
+void copy_interp_to_device_gpu( const int ntiles_in, const int ntiles_out, const Interp_config_gpu *interp_gpu,
                                 const unsigned int opcode );
 
-void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
+void get_input_grid_mask_gpu(const int mask_size, double **input_grid_mask);
 
-void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask);
+void free_input_grid_mask_gpu(const int mask_size, double **input_grid_mask);
 
-void create_interp_per_intile_arrays_on_device_acc(const int nxcells, const unsigned int opcode,
+void create_interp_per_intile_arrays_on_device_gpu(const int nxcells, const unsigned int opcode,
                                                    Interp_per_input_tile *interp_per_itile);
 
 #endif

@@ -49,15 +49,15 @@
 #include <getopt.h>
 #include <math.h>
 #include <time.h>
-#include "globals_acc.h"
+#include "globals_gpu.h"
 #include "read_mosaic.h"
 #include "mpp_io.h"
 #include "mpp.h"
 #include "mosaic_util.h"
-#include "conserve_interp_acc.h"
+#include "conserve_interp_gpu.h"
 #include "bilinear_interp.h"
 #include "fregrid_util.h"
-#include "fregrid_utils_acc.h"
+#include "fregrid_utils_gpu.h"
 
 char *usage[] = {
                  "",
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
   File_config   *file2_in   = NULL;   /* store input file information */
   File_config   *file2_out  = NULL;   /* store output file information */
   Bound_config  *bound_T    = NULL;   /* store halo update information for T-cell*/
-  Interp_config_acc *interp_acc = NULL; /* store remapping information */
+  Interp_config_gpu *interp_gpu = NULL; /* store remapping information */
   int save_weight_only      = 0;
 
   double time_get_in_grid=0, time_get_out_grid=0, time_get_input=0;
@@ -685,11 +685,11 @@ int main(int argc, char* argv[])
   grid_out  = (Grid_config *)malloc(ntiles_out*sizeof(Grid_config));
   bound_T   = (Bound_config *)malloc(ntiles_in *sizeof(Bound_config));
   //If statement will be removed once bilinear is on the GPU
-  if( opcode & BILINEAR ) interp_acc  = (Interp_config_acc *)malloc(ntiles_out*sizeof(Interp_config_acc));
+  if( opcode & BILINEAR ) interp_gpu  = (Interp_config_gpu *)malloc(ntiles_out*sizeof(Interp_config_gpu));
   else {
-    interp_acc = (Interp_config_acc *)malloc(ntiles_out*sizeof(Interp_config_acc));
+    interp_gpu = (Interp_config_gpu *)malloc(ntiles_out*sizeof(Interp_config_gpu));
     for(int i=0 ; i<ntiles_out ; i++) {
-      interp_acc[i].input_tile = (Interp_per_input_tile *)malloc(ntiles_in*sizeof(Interp_per_input_tile));
+      interp_gpu[i].input_tile = (Interp_per_input_tile *)malloc(ntiles_in*sizeof(Interp_per_input_tile));
     }
   }
 
@@ -754,7 +754,7 @@ int main(int argc, char* argv[])
   }
 
   if(opcode & BILINEAR && remap_file) mpp_error("does not work yet with bilinear");
-  if(remap_file) set_remap_file_acc(ntiles_out, mosaic_out, remap_file, interp_acc, &opcode, save_weight_only);
+  if(remap_file) set_remap_file_gpu(ntiles_out, mosaic_out, remap_file, interp_gpu, &opcode, save_weight_only);
 
   if(!save_weight_only) {
     file_in   = (File_config *)malloc(ntiles_in *sizeof(File_config));
@@ -914,7 +914,7 @@ int main(int argc, char* argv[])
 
     //setup_bilinear_interp(ntiles_in, grid_in, ntiles_out, grid_out, interp, opcode, dlon_in, dlat_in, lonbegin_in, latbegin_in );
   }
-  else setup_conserve_interp_acc(ntiles_in, grid_in, ntiles_out, grid_out, interp_acc, opcode);
+  else setup_conserve_interp_gpu(ntiles_in, grid_in, ntiles_out, grid_out, interp_gpu, opcode);
 
   if(debug) {
     time_end = clock();
@@ -929,7 +929,7 @@ int main(int argc, char* argv[])
   if(save_weight_only) {
     if(mpp_pe() == mpp_root_pe() ) {
       printf("NOTE: Successfully running fregrid and the following files which store weight information are generated.\n");
-      for(n=0; n<ntiles_out; n++) printf("****%s\n", interp_acc[n].remap_file);
+      for(n=0; n<ntiles_out; n++) printf("****%s\n", interp_gpu[n].remap_file);
     }
     mpp_end();
     return 0;
@@ -972,7 +972,7 @@ int main(int argc, char* argv[])
             //do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
           }
           else
-            do_scalar_conserve_interp_acc(interp_acc, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in,
+            do_scalar_conserve_interp_gpu(interp_gpu, l, ntiles_in, grid_in, ntiles_out, grid_out, scalar_in,
                                           scalar_out, opcode);
           if(vertical_interp) do_vertical_interp(&vgrid_in, &vgrid_out, grid_out, scalar_out, l);
           write_field_data(ntiles_out, scalar_out, grid_out, l, -1, level_n, m);
@@ -1001,7 +1001,7 @@ int main(int argc, char* argv[])
               //do_scalar_bilinear_interp(interp, l, ntiles_in, grid_in, grid_out, scalar_in, scalar_out, finer_step, fill_missing);
             }
             else
-              do_scalar_conserve_interp_acc(interp_acc, l, ntiles_in, grid_in, ntiles_out, grid_out,
+              do_scalar_conserve_interp_gpu(interp_gpu, l, ntiles_in, grid_in, ntiles_out, grid_out,
                                             scalar_in, scalar_out, opcode);
             if(debug) {
               time_end = clock();

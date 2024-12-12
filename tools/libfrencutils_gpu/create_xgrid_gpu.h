@@ -17,12 +17,12 @@
  * License along with FRE-NCTools.  If not, see
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
-#ifndef CREATE_XGRID_ACC_H_
-#define CREATE_XGRID_ACC_H_
+#ifndef CREATE_XGRID_GPU_H_
+#define CREATE_XGRID_GPU_H_
 
-#include "globals_acc.h"
+#include "globals_gpu.h"
 
-int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int get_upbound_nxcells_2dx2d_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon, const double *input_grid_lat,
@@ -31,7 +31,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
                                   const Grid_cells_struct_config *output_grid_cells,
                                   int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end);
 
-int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int create_xgrid_2dx2d_order1_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon,  const double *input_grid_lat,
@@ -41,7 +41,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
                                   int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
                                   Interp_per_input_tile *interp_for_input_tile);
 
-int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int create_xgrid_2dx2d_order2_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon,  const double *input_grid_lat,
@@ -51,7 +51,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
                                   int *approx_nxcells_per_ij1, int *ij2_start, int *ij2_end,
                                   Interp_per_input_tile *interp_for_input_tile, double *readin_input_area);
 
-int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+int create_xgrid_great_circle_gpu(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,

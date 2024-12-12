@@ -18,7 +18,7 @@
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
-// This test tests the function test_get_grid_cell_struct used in fregrid_acc.
+// This test tests the function test_get_grid_cell_struct used in fregrid_gpu.
 // Properties of each grid cell in a smple made-up grid with no poles are computed
 // on the device.  This test ensures that the data transfer between the host and device
 // and computations have executed on the device as expected.
@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "create_xgrid_utils_acc.h"
-#include "interp_utils_acc.h"
+#include "create_xgrid_utils_gpu.h"
+#include "interp_utils_gpu.h"
 #include "parameters.h"
-#include "globals_acc.h"
+#include "globals_gpu.h"
 
 #define NLON 36 // 36 cells in lon direction (36+1 grid points in the lon direction for each lat point)
 #define NLAT 4  // 4 cells in lat direction ( 4+1 grid points in the lat direction for each lon point)
@@ -79,10 +79,10 @@ int main(){
   }
 
   // copy grid to device
-  copy_grid_to_device_acc((NLON+1)*(NLAT+1), grid.latc, grid.lonc);
+  copy_grid_to_device_gpu((NLON+1)*(NLAT+1), grid.latc, grid.lonc);
 
   // get grid_cells
-  get_grid_cell_struct_acc( NLON, NLAT, &grid, &grid_cells);
+  get_grid_cell_struct_gpu( NLON, NLAT, &grid, &grid_cells);
 
   // get answers
   get_answers(grid.lonc, grid.latc, &answers);

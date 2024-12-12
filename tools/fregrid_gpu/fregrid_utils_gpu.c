@@ -24,12 +24,12 @@
 #include "fregrid_util.h"
 #include "mpp.h"
 #include "mpp_io.h"
-#include "globals_acc.h"
+#include "globals_gpu.h"
 
 /*******************************************************************************
 void set_remap_file( )
 *******************************************************************************/
-void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_acc *interp_acc,
+void set_remap_file_gpu( int ntiles, const char *mosaic_file, const char *remap_file, Interp_config_gpu *interp_gpu,
                          unsigned int *opcode, int save_weight_only)
 {
   int    i, len, m, fid, vid;
@@ -61,20 +61,20 @@ void set_remap_file_acc( int ntiles, const char *mosaic_file, const char *remap_
   }
 
   for(m=0; m<ntiles; m++) {
-    interp_acc[m].file_exist = 0;
+    interp_gpu[m].file_exist = 0;
     if(ntiles > 1) {
       start[0] = m;
       mpp_get_var_value_block(fid, vid, start, nread, tilename);
       if(strlen(str1) + strlen(tilename) > STRING -5) mpp_error("set_output_remap_file(fregrid_util): length of str1 + "
                                                                 "length of tilename should be no greater than STRING-5");
-      sprintf(interp_acc[m].remap_file, "%s.%s.nc", str1, tilename);
+      sprintf(interp_gpu[m].remap_file, "%s.%s.nc", str1, tilename);
     }
     else
-      sprintf(interp_acc[m].remap_file, "%s.nc", str1);
-    /* check interp_acc file to be read (=1) or write ( = 2) */
-    if(!save_weight_only && mpp_file_exist(interp_acc[m].remap_file)) {
+      sprintf(interp_gpu[m].remap_file, "%s.nc", str1);
+    /* check interp_gpu file to be read (=1) or write ( = 2) */
+    if(!save_weight_only && mpp_file_exist(interp_gpu[m].remap_file)) {
       (*opcode) |= READ;
-      interp_acc[m].file_exist = 1;
+      interp_gpu[m].file_exist = 1;
     }
 
   }
