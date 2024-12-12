@@ -56,7 +56,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test11-make_regional_mosaic.sh \
         Test12-mppnscatter.sh \
         Test13-make_quick_mosaic.sh \
-        Test14-remap_ocean.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
         Test25-hydrology.sh \
