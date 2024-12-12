@@ -21,17 +21,17 @@
 #include <stdio.h>
 #include <math.h>
 #include <openacc.h>
-#include "general_utils_acc.h"
-#include "create_xgrid_acc.h"
-#include "create_xgrid_utils_acc.h"
-#include "globals_acc.h"
+#include "general_utils_gpu.h"
+#include "create_xgrid_gpu.h"
+#include "create_xgrid_utils_gpu.h"
+#include "globals_gpu.h"
 
 /*******************************************************************************
-void get_upbound_nxcells_2dx2d_acc
+void get_upbound_nxcells_2dx2d_gpu
 This function computes the upperbound to nxgrid.  This upper bound will be used
 to malloc arrays used in create_xgrid
 *******************************************************************************/
-int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int get_upbound_nxcells_2dx2d_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon, const double *input_grid_lat,
@@ -70,15 +70,15 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
       int ij2_min=output_grid_ncells, ij2_max=0;
       double input_cell_lon_vertices[MV], input_cell_lat_vertices[MV];
 
-      get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
+      get_cell_vertices_gpu(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
                             input_cell_lon_vertices, input_cell_lat_vertices);
 
-      double input_cell_lat_min = minval_double_acc(4, input_cell_lat_vertices);
-      double input_cell_lat_max = maxval_double_acc(4, input_cell_lat_vertices);
-      int nvertices = fix_lon_acc(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
-      double input_cell_lon_min = minval_double_acc(nvertices, input_cell_lon_vertices);
-      double input_cell_lon_max = maxval_double_acc(nvertices, input_cell_lon_vertices);
-      double input_cell_lon_cent = avgval_double_acc(nvertices, input_cell_lon_vertices);
+      double input_cell_lat_min = minval_double_gpu(4, input_cell_lat_vertices);
+      double input_cell_lat_max = maxval_double_gpu(4, input_cell_lat_vertices);
+      int nvertices = fix_lon_gpu(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
+      double input_cell_lon_min = minval_double_gpu(nvertices, input_cell_lon_vertices);
+      double input_cell_lon_max = maxval_double_gpu(nvertices, input_cell_lon_vertices);
+      double input_cell_lon_cent = avgval_double_gpu(nvertices, input_cell_lon_vertices);
 
       approx_xcells_per_ij1[ij1]=0;
 
@@ -132,7 +132,7 @@ int get_upbound_nxcells_2dx2d_acc(const int nlon_input_cells,  const int nlat_in
   conservative interpolation. nlon_input_cells,ninput_grid_lat,nlon_output_cells,nlat_output_cells are the size of the grid cell
   and input_grid_lon,input_grid_lat, output_grid_lon,output_grid_lat are geographic grid location of grid cell bounds.
 *******************************************************************************/
-int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int create_xgrid_2dx2d_order1_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon,  const double *input_grid_lat,
@@ -189,15 +189,15 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
       double input_cell_lon_vertices[MV], input_cell_lat_vertices[MV];
       int approx_nxcells_b4_ij1=0, ixcell=0;
 
-      get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
+      get_cell_vertices_gpu(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
                             input_cell_lon_vertices, input_cell_lat_vertices);
-      double input_cell_lat_min = minval_double_acc(4, input_cell_lat_vertices);
-      double input_cell_lat_max = maxval_double_acc(4, input_cell_lat_vertices);
-      int nvertices1 = fix_lon_acc(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
-      double input_cell_lon_min = minval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_lon_max = maxval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_lon_cent = avgval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_area = poly_area_acc(input_cell_lon_vertices, input_cell_lat_vertices, nvertices1);
+      double input_cell_lat_min = minval_double_gpu(4, input_cell_lat_vertices);
+      double input_cell_lat_max = maxval_double_gpu(4, input_cell_lat_vertices);
+      int nvertices1 = fix_lon_gpu(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
+      double input_cell_lon_min = minval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_lon_max = maxval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_lon_cent = avgval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_area = poly_area_gpu(input_cell_lon_vertices, input_cell_lat_vertices, nvertices1);
 
 #pragma acc loop seq
       for(int i=1; i<=ij1 ; i++) approx_nxcells_b4_ij1 += approx_nxcells_per_ij1[i-1];
@@ -239,10 +239,10 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
         if(output_cell_lon_min >= input_cell_lon_max ) continue;
         if(output_cell_lon_max <= input_cell_lon_min ) continue;
 
-        if ( (xvertices = clip_2dx2d_acc( input_cell_lon_vertices, input_cell_lat_vertices, nvertices1,
+        if ( (xvertices = clip_2dx2d_gpu( input_cell_lon_vertices, input_cell_lat_vertices, nvertices1,
                                           output_cell_lon_vertices, output_cell_lat_vertices, nvertices2,
                                           xcell_lon_vertices, xcell_lat_vertices)) > 0 ){
-          double xcell_area = poly_area_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices);
+          double xcell_area = poly_area_gpu(xcell_lon_vertices, xcell_lat_vertices, xvertices);
           if( xcell_area/min(input_cell_area, output_cell_area) > AREA_RATIO_THRESH ) {
             store_xcell_area[approx_nxcells_b4_ij1+ixcell] = xcell_area;
             parent_input_index[approx_nxcells_b4_ij1+ixcell]  = ij1;
@@ -256,7 +256,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
     }
   }
 
-  copy_data_to_interp_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
+  copy_data_to_interp_on_device_gpu(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
                                     &xcell_dclon, &xcell_dclat,
                                     approx_nxcells_per_ij1, parent_input_index, parent_output_index,
                                     store_xcell_area, interp_for_itile);
@@ -280,7 +280,7 @@ int create_xgrid_2dx2d_order1_acc(const int nlon_input_cells,  const int nlat_in
   void create_xgrid_2DX2D_order2
   This routine generate exchange grids between two grids for the second order
 *******************************************************************************/
-int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_input_cells,
+int create_xgrid_2dx2d_order2_gpu(const int nlon_input_cells,  const int nlat_input_cells,
                                   const int nlon_output_cells, const int nlat_output_cells,
                                   const int jlat_overlap_starts, const int jlat_overlap_ends,
                                   const double *input_grid_lon,  const double *input_grid_lat,
@@ -350,15 +350,15 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
       double summed_input_clat_ij1=0.;
       int approx_nxcells_b4_ij1=0, ixcell=0;
 
-      get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
+      get_cell_vertices_gpu(ij1, nlon_input_cells, input_grid_lon, input_grid_lat,
                             input_cell_lon_vertices, input_cell_lat_vertices);
-      double input_cell_lat_min = minval_double_acc(4, input_cell_lat_vertices);
-      double input_cell_lat_max = maxval_double_acc(4, input_cell_lat_vertices);
-      int nvertices1 = fix_lon_acc(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
-      double input_cell_lon_min = minval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_lon_max = maxval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_lon_cent = avgval_double_acc(nvertices1, input_cell_lon_vertices);
-      double input_cell_area = poly_area_acc(input_cell_lon_vertices, input_cell_lat_vertices, nvertices1);
+      double input_cell_lat_min = minval_double_gpu(4, input_cell_lat_vertices);
+      double input_cell_lat_max = maxval_double_gpu(4, input_cell_lat_vertices);
+      int nvertices1 = fix_lon_gpu(input_cell_lon_vertices, input_cell_lat_vertices, 4, M_PI);
+      double input_cell_lon_min = minval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_lon_max = maxval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_lon_cent = avgval_double_gpu(nvertices1, input_cell_lon_vertices);
+      double input_cell_area = poly_area_gpu(input_cell_lon_vertices, input_cell_lat_vertices, nvertices1);
 
 #pragma acc loop seq
       for(int i=1; i<=ij1 ; i++) approx_nxcells_b4_ij1 += approx_nxcells_per_ij1[i-1];
@@ -400,17 +400,17 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
         if(output_cell_lon_min >= input_cell_lon_max ) continue;
         if(output_cell_lon_max <= input_cell_lon_min ) continue;
 
-        if ( (xvertices = clip_2dx2d_acc( input_cell_lon_vertices, input_cell_lat_vertices, nvertices1,
+        if ( (xvertices = clip_2dx2d_gpu( input_cell_lon_vertices, input_cell_lat_vertices, nvertices1,
                                           output_cell_lon_vertices, output_cell_lat_vertices, nvertices2,
                                           xcell_lon_vertices, xcell_lat_vertices)) > 0 ){
-          double xcell_area = poly_area_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices);
+          double xcell_area = poly_area_gpu(xcell_lon_vertices, xcell_lat_vertices, xvertices);
           if( xcell_area/min(input_cell_area, output_cell_area) > AREA_RATIO_THRESH ) {
             double xcell_clon, xcell_clat;
             store_xcell_area[approx_nxcells_b4_ij1+ixcell] = xcell_area;
             parent_input_index[approx_nxcells_b4_ij1+ixcell]  = ij1;
             parent_output_index[approx_nxcells_b4_ij1+ixcell] = ij2;
-            poly_ctrlon_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices, input_cell_lon_cent, &xcell_clon);
-            poly_ctrlat_acc(xcell_lon_vertices, xcell_lat_vertices, xvertices, &xcell_clat);
+            poly_ctrlon_gpu(xcell_lon_vertices, xcell_lat_vertices, xvertices, input_cell_lon_cent, &xcell_clon);
+            poly_ctrlat_gpu(xcell_lon_vertices, xcell_lat_vertices, xvertices, &xcell_clat);
             store_xcell_dclon[approx_nxcells_b4_ij1+ixcell] = xcell_clon/xcell_area;
             store_xcell_dclat[approx_nxcells_b4_ij1+ixcell] = xcell_clat/xcell_area;
             summed_input_area_ij1 += xcell_area;
@@ -431,7 +431,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
     }
   }
 
-  copy_data_to_interp_on_device_acc(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
+  copy_data_to_interp_on_device_gpu(nxcells, input_grid_ncells, upbound_nxcells, nxcells_per_ij1,
                                     store_xcell_dclon, store_xcell_dclat, approx_nxcells_per_ij1, parent_input_index,
                                     parent_output_index, store_xcell_area, interp_for_itile);
 
@@ -452,11 +452,11 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
       double readin_area = readin_input_area[ij1];
       if(fabs(input_area - readin_area)/readin_area > AREA_RATIO) {
         double x[4], y[4], input_cell_lon_cent;
-        get_cell_vertices_acc(ij1, nlon_input_cells, input_grid_lon, input_grid_lat, x, y);
-        int n = fix_lon_acc(x, y, 4, M_PI);
-        input_cell_lon_cent = avgval_double_acc(n, x);
-        poly_ctrlon_acc(x, y, n, input_cell_lon_cent, &input_clon);
-        poly_ctrlat_acc(x, y, n, &input_clat);
+        get_cell_vertices_gpu(ij1, nlon_input_cells, input_grid_lon, input_grid_lat, x, y);
+        int n = fix_lon_gpu(x, y, 4, M_PI);
+        input_cell_lon_cent = avgval_double_gpu(n, x);
+        poly_ctrlon_gpu(x, y, n, input_cell_lon_cent, &input_clon);
+        poly_ctrlat_gpu(x, y, n, &input_clat);
         input_area = readin_area;
       }
       interp_for_itile->dcentroid_lon[ix] -= input_clon/input_area;
@@ -487,7 +487,7 @@ int create_xgrid_2dx2d_order2_acc(const int nlon_input_cells,  const int nlat_in
 
 };/* get_xgrid_2Dx2D_order2 */
 
-int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_input_cells,
+int create_xgrid_great_circle_gpu(const int *nlon_input_cells, const int *nlat_input_cells,
                                   const int *nlon_output_cells, const int *nlat_output_cells,
                                   const double *input_grid_lon, const double *input_grid_lat,
                                   const double *output_grid_lon, const double *output_grid_lat,
@@ -525,13 +525,13 @@ int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_i
   y2 = (double *)malloc(nx2p*ny2p*sizeof(double));
   z2 = (double *)malloc(nx2p*ny2p*sizeof(double));
 
-  latlon2xyz_acc(nx1p*ny1p, input_grid_lon, input_grid_lat, x1, y1, z1);
-  latlon2xyz_acc(nx2p*ny2p, output_grid_lon, output_grid_lat, x2, y2, z2);
+  latlon2xyz_gpu(nx1p*ny1p, input_grid_lon, input_grid_lat, x1, y1, z1);
+  latlon2xyz_gpu(nx2p*ny2p, output_grid_lon, output_grid_lat, x2, y2, z2);
 
   area1  = (double *)malloc(nx1*ny1*sizeof(double));
   area2 = (double *)malloc(nx2*ny2*sizeof(double));
-  get_grid_great_circle_area_acc(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area1);
-  get_grid_great_circle_area_acc(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area2);
+  get_grid_great_circle_area_gpu(nlon_input_cells, nlat_input_cells, input_grid_lon, input_grid_lat, area1);
+  get_grid_great_circle_area_gpu(nlon_output_cells, nlat_output_cells, output_grid_lon, output_grid_lat, area2);
   n1_in = 4;
   n2_in = 4;
 
@@ -556,9 +556,9 @@ int create_xgrid_great_circle_acc(const int *nlon_input_cells, const int *nlat_i
               x2_in[2] = x2[n2]; y2_in[2] = y2[n2]; z2_in[2] = z2[n2];
               x2_in[3] = x2[n3]; y2_in[3] = y2[n3]; z2_in[3] = z2[n3];
 
-              if (  (n_out = clip_2dx2d_great_circle_acc( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
+              if (  (n_out = clip_2dx2d_great_circle_gpu( x1_in, y1_in, z1_in, n1_in, x2_in, y2_in, z2_in, n2_in,
                                                           x_out, y_out, z_out)) > 0) {
-                xarea = great_circle_area_acc( n_out, x_out, y_out, z_out ) ;
+                xarea = great_circle_area_gpu( n_out, x_out, y_out, z_out ) ;
                 min_area = min(area1[j1*nx1+i1], area2[j2*nx2+i2]);
                 if( xarea/min_area > AREA_RATIO_THRESH ) {
 #ifdef debug_test_create_xgrid

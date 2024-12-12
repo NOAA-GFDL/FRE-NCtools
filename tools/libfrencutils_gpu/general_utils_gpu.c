@@ -25,29 +25,29 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "general_utils_acc.h"
-#include "globals_acc.h"
+#include "general_utils_gpu.h"
+#include "globals_gpu.h"
 
-const double from_pole_threshold_rad_acc = 0.0174533;  // 1.0 deg
+const double from_pole_threshold_rad_gpu = 0.0174533;  // 1.0 deg
 
 //reproduce siena was removed
-int rotate_poly_flag_acc = 0;
-double the_rotation_matrix_acc[3][3] = { 0 };
+int rotate_poly_flag_gpu = 0;
+double the_rotation_matrix_gpu[3][3] = { 0 };
 
 #pragma acc routine seq
-void set_rotate_poly_true_acc(void){
-  rotate_poly_flag_acc = 1;
-  set_the_rotation_matrix_acc();
+void set_rotate_poly_true_gpu(void){
+  rotate_poly_flag_gpu = 1;
+  set_the_rotation_matrix_gpu();
 }
 
-struct Node_acc *nodeList_acc=NULL;
-int curListPos_acc=0;
+struct Node_gpu *nodeList_gpu=NULL;
+int curListPos_gpu=0;
 
-#pragma acc declare copyin(from_pole_threshold_rad_acc)
-#pragma acc declare copyin(rotate_poly_flag_acc)
-#pragma acc declare copyin(nodeList_acc)
-#pragma acc declare copyin(curListPos_acc)
-#pragma acc declare copyin(the_rotation_matrix_acc)
+#pragma acc declare copyin(from_pole_threshold_rad_gpu)
+#pragma acc declare copyin(rotate_poly_flag_gpu)
+#pragma acc declare copyin(nodeList_gpu)
+#pragma acc declare copyin(curListPos_gpu)
+#pragma acc declare copyin(the_rotation_matrix_gpu)
 
 /*********************************************************************
 
@@ -63,7 +63,7 @@ int curListPos_acc=0;
      array:  array of data points  (must be monotonically increasing)
      ia   :  size of array.
  ********************************************************************/
-int nearest_index_acc(double value, const double *array, int ia)
+int nearest_index_gpu(double value, const double *array, int ia)
 {
   int index, i;
   int keep_going;
@@ -94,7 +94,7 @@ int nearest_index_acc(double value, const double *array, int ia)
   double maxval_double(int size, double *data)
   get the maximum value of double array
 *******************************************************************************/
-double maxval_double_acc(int size, const double *data)
+double maxval_double_gpu(int size, const double *data)
 {
   int n;
   double maxval;
@@ -113,7 +113,7 @@ double maxval_double_acc(int size, const double *data)
   double minval_double(int size, double *data)
   get the minimum value of double array
 *******************************************************************************/
-double minval_double_acc(int size, const double *data)
+double minval_double_gpu(int size, const double *data)
 {
   int n;
   double minval;
@@ -131,7 +131,7 @@ double minval_double_acc(int size, const double *data)
   double avgval_double(int size, double *data)
   get the average value of double array
 *******************************************************************************/
-double avgval_double_acc(int size, const double *data)
+double avgval_double_gpu(int size, const double *data)
 {
   int n;
   double avgval;
@@ -149,7 +149,7 @@ double avgval_double_acc(int size, const double *data)
   void latlon2xyz
   Routine to map (lon, lat) to (x,y,z)
 ******************************************************************************/
-void latlon2xyz_acc(int size, const double *lon, const double *lat, double *x, double *y, double *z)
+void latlon2xyz_gpu(int size, const double *lon, const double *lat, double *x, double *y, double *z)
 {
   int n;
 
@@ -165,7 +165,7 @@ void latlon2xyz_acc(int size, const double *lon, const double *lat, double *x, d
        void xyz2laton(np, p, xs, ys)
    Transfer cartesian coordinates to spherical coordinates
    ----------------------------------------------------------*/
-void xyz2latlon_acc( int np, const double *x, const double *y, const double *z, double *lon, double *lat)
+void xyz2latlon_gpu( int np, const double *x, const double *y, const double *z, double *lon, double *lat)
 {
 
   double xx, yy, zz;
@@ -292,7 +292,7 @@ void xyz2latlon_acc( int np, const double *x, const double *y, const double *z, 
   So, I2=\integral dx sin(arctan(tan(lat0)*cos(x-lon0)))  can be shown to give an accurate estimate of grid
   cell areas surrounding the pole without a bump.
    ----------------------------------------------------------------------------*/
-double poly_area_main_acc(const double x[], const double y[], int n) {
+double poly_area_main_gpu(const double x[], const double y[], int n) {
   double area = 0.0;
   int i;
 
@@ -346,7 +346,7 @@ double poly_area_main_acc(const double x[], const double y[], int n) {
   TODO: The tiling error reported by make_coupler mosaic may be non-zero when
   using this feature. This may be developped in the future.
 */
-double poly_area_acc(const double xo[], const double yo[], int n) {
+double poly_area_gpu(const double xo[], const double yo[], int n) {
   double area_pa = 0.0;
   double area_par = 0.0;
   int pole = 0;
@@ -355,14 +355,14 @@ double poly_area_acc(const double xo[], const double yo[], int n) {
   double xr[8];  // rotated lon
   double yr[8];  // rotated lat
 
-  if (rotate_poly_flag_acc == 0) {
-    area_pa = poly_area_main_acc(xo, yo, n);
+  if (rotate_poly_flag_gpu == 0) {
+    area_pa = poly_area_main_gpu(xo, yo, n);
     return area_pa;
   }
   else {
     // anything near enough to the pole gets rotated
-    pole = is_near_pole_acc(yo, n);
-    crosses = crosses_pole_acc(xo, n);
+    pole = is_near_pole_gpu(yo, n);
+    crosses = crosses_pole_gpu(xo, n);
     if (crosses == 1 && pole == 0) {
       printf("ERROR poly_area:  crosses == 1 && pole == 0\n");
     }
@@ -371,15 +371,15 @@ double poly_area_acc(const double xo[], const double yo[], int n) {
       if (n > 8) {
         printf("ERROR poly_area: n > 8. n=%d,n\n");
       }
-      rotate_poly_acc(xo, yo, n, xr, yr);
+      rotate_poly_gpu(xo, yo, n, xr, yr);
 
-      int pole2 = is_near_pole_acc(yr, n);
+      int pole2 = is_near_pole_gpu(yr, n);
       if (pole2 == 1) {
         printf("ERROR poly_area: pole2 == 1\n");
       }
-      area_par = poly_area_main_acc(xr, yr, n);
+      area_par = poly_area_main_gpu(xr, yr, n);
     } else {
-      area_pa = poly_area_main_acc(xo, yo, n);
+      area_pa = poly_area_main_gpu(xo, yo, n);
     }
 
     if (pole == 1) {
@@ -390,7 +390,7 @@ double poly_area_acc(const double xo[], const double yo[], int n) {
   }
 }
 
-int delete_vtx_acc(double x[], double y[], int n, int n_del)
+int delete_vtx_gpu(double x[], double y[], int n, int n_del)
 {
   for (;n_del<n-1;n_del++) {
     x[n_del] = x[n_del+1];
@@ -400,7 +400,7 @@ int delete_vtx_acc(double x[], double y[], int n, int n_del)
   return (n-1);
 } /* delete_vtx */
 
-int insert_vtx_acc(double x[], double y[], int n, int n_ins, double lon_in, double lat_in)
+int insert_vtx_gpu(double x[], double y[], int n, int n_ins, double lon_in, double lat_in)
 {
   int i;
 
@@ -414,14 +414,14 @@ int insert_vtx_acc(double x[], double y[], int n, int n_ins, double lon_in, doub
   return (n+1);
 } /* insert_vtx */
 
-void v_print_acc(double x[], double y[], int n)
+void v_print_gpu(double x[], double y[], int n)
 {
   int i;
 
   for (i=0;i<n;i++) printf(" %20g   %20g\n", x[i]*R2D, y[i]*R2D);
 } /* v_print */
 
-int fix_lon_acc(double x[], double y[], int n, double tlon)
+int fix_lon_gpu(double x[], double y[], int n, double tlon)
 {
   double x_sum, dx;
   int i, nn = n, pole = 0;
@@ -429,7 +429,7 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
   for (i=0;i<nn;i++) if (fabs(y[i])>=HPI-TOLERANCE) pole = 1;
   if (0&&pole) {
     printf("fixing pole cell\n");
-    v_print_acc(x, y, nn);
+    v_print_gpu(x, y, nn);
     printf("---------");
   }
 
@@ -440,11 +440,11 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
       int im=(i+nn-1)%nn, ip=(i+1)%nn;
 
       if (y[im]==y[i] && y[ip]==y[i]) {
-        nn = delete_vtx_acc(x, y, nn, i);
+        nn = delete_vtx_gpu(x, y, nn, i);
         i--;
       }
       else if (y[im]!=y[i] && y[ip]!=y[i]) {
-        nn = insert_vtx_acc(x, y, nn, i, x[i], y[i]);
+        nn = insert_vtx_gpu(x, y, nn, i, x[i], y[i]);
         i++;
       }
   }
@@ -468,8 +468,8 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
       double x2=x[i];
       double ypole= HPI;
       if(y[i]<0.0) ypole = -HPI ;
-      nn = insert_vtx_acc(x, y, nn, i, x2, ypole);
-      nn = insert_vtx_acc(x, y, nn, i, x1, ypole);
+      nn = insert_vtx_gpu(x, y, nn, i, x2, ypole);
+      nn = insert_vtx_gpu(x, y, nn, i, x1, ypole);
       break;
     }
   }
@@ -487,8 +487,8 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
   else if (dx >  M_PI) for (i=0;i<nn;i++) x[i] -= TPI;
 
   if (0&&pole) {
-    printf("area=%g\n", poly_area_acc(x, y,nn));
-    v_print_acc(x, y, nn);
+    printf("area=%g\n", poly_area_gpu(x, y,nn));
+    v_print_gpu(x, y, nn);
     printf("---------");
   }
 
@@ -497,7 +497,7 @@ int fix_lon_acc(double x[], double y[], int n, double tlon)
 
 
 /* Compute the great circle area of a polygon on a sphere */
-double great_circle_area_acc(int n, const double *x, const double *y, const double *z) {
+double great_circle_area_gpu(int n, const double *x, const double *y, const double *z) {
   int i;
   double pnt0[3], pnt1[3], pnt2[3];
   double sum, area;
@@ -517,7 +517,7 @@ double great_circle_area_acc(int n, const double *x, const double *y, const doub
     pnt2[2] = z[(i+2)%n];
 
     /* compute angle for pnt1 */
-    sum += spherical_angle_acc(pnt1, pnt2, pnt0);
+    sum += spherical_angle_gpu(pnt1, pnt2, pnt0);
 
   }
   area = (sum - (n-2.)*M_PI) * RADIUS* RADIUS;
@@ -534,7 +534,7 @@ double great_circle_area_acc(int n, const double *x, const double *y, const doub
           \
            p2
  -----------------------------------------------------------------------------*/
-double spherical_angle_acc(const double *v1, const double *v2, const double *v3)
+double spherical_angle_gpu(const double *v1, const double *v2, const double *v3)
 {
   double angle;
   double px, py, pz, qx, qy, qz, ddd;
@@ -570,7 +570,7 @@ double spherical_angle_acc(const double *v1, const double *v2, const double *v3)
     void vect_cross(e, p1, p2)
     Perform cross products of 3D vectors: e = P1 X P2
     -------------------------------------------------------------------*/
-void vect_cross_acc(const double *p1, const double *p2, double *e )
+void vect_cross_gpu(const double *p1, const double *p2, double *e )
 {
 
   e[0] = p1[1]*p2[2] - p1[2]*p2[1];
@@ -584,14 +584,14 @@ void vect_cross_acc(const double *p1, const double *p2, double *e )
     double* vect_cross(p1, p2)
     return cross products of 3D vectors: = P1 X P2
     -------------------------------------------------------------------*/
-double dot_acc(const double *p1, const double *p2)
+double dot_gpu(const double *p1, const double *p2)
 {
 
   return( p1[0]*p2[0] + p1[1]*p2[1] + p1[2]*p2[2] );
 
 }
 
-double metric_acc(const double *p) {
+double metric_gpu(const double *p) {
   return (sqrt(p[0]*p[0] + p[1]*p[1]+p[2]*p[2]) );
 }
 
@@ -603,7 +603,7 @@ double metric_acc(const double *p) {
    of the intersection.
    NOTE: the intersection doesn't have to be inside the tri or line for this to return true
 */
-int intersect_tri_with_line_acc(const double *plane, const double *l1, const double *l2, double *p,
+int intersect_tri_with_line_gpu(const double *plane, const double *l1, const double *l2, double *p,
                                 double *t)
 {
 
@@ -624,7 +624,7 @@ int intersect_tri_with_line_acc(const double *plane, const double *l1, const dou
   M[3]=l1[1]-l2[1]; M[4]=pnt1[1]-pnt0[1]; M[5]=pnt2[1]-pnt0[1];
   M[6]=l1[2]-l2[2]; M[7]=pnt1[2]-pnt0[2]; M[8]=pnt2[2]-pnt0[2];
   /* Invert M */
-  is_invert = invert_matrix_3x3_acc(M,inv_M);
+  is_invert = invert_matrix_3x3_gpu(M,inv_M);
   if (!is_invert) return 0;
 
   /* Set variable holding vector */
@@ -633,7 +633,7 @@ int intersect_tri_with_line_acc(const double *plane, const double *l1, const dou
   V[2]=l1[2]-pnt0[2];
 
   /* Calculate solution */
-  mult_acc(inv_M, V, X);
+  mult_gpu(inv_M, V, X);
 
   /* Get answer out */
   *t=X[0];
@@ -643,7 +643,7 @@ int intersect_tri_with_line_acc(const double *plane, const double *l1, const dou
   return 1;
 }
 
-void mult_acc(double m[], double v[], double out_v[])
+void mult_gpu(double m[], double v[], double out_v[])
 {
 
   out_v[0]=m[0]*v[0]+m[1]*v[1]+m[2]*v[2];
@@ -653,7 +653,7 @@ void mult_acc(double m[], double v[], double out_v[])
 }
 
 /* returns 1 if matrix is inverted, 0 otherwise */
-int invert_matrix_3x3_acc(double m[], double m_inv[])
+int invert_matrix_3x3_gpu(double m[], double m_inv[])
 {
 
   const double det =  m[0] * (m[4]*m[8] - m[5]*m[7])
@@ -681,35 +681,35 @@ int invert_matrix_3x3_acc(double m[], double m_inv[])
 
 
 
-void rewindList_acc(void)
+void rewindList_gpu(void)
 {
   int n;
 
-  curListPos_acc = 0;
-  if(!nodeList_acc) nodeList_acc = (struct Node_acc *)malloc(MAXNODELIST*sizeof(struct Node_acc));
-  for(n=0; n<MAXNODELIST; n++) initNode_acc(nodeList_acc+n);
+  curListPos_gpu = 0;
+  if(!nodeList_gpu) nodeList_gpu = (struct Node_gpu *)malloc(MAXNODELIST*sizeof(struct Node_gpu));
+  for(n=0; n<MAXNODELIST; n++) initNode_gpu(nodeList_gpu+n);
 
 }
 
-struct Node_acc *getNext_acc()
+struct Node_gpu *getNext_gpu()
 {
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *temp=NULL;
   int n;
 
-  if(!nodeList_acc) {
-    nodeList_acc = (struct Node_acc *)malloc(MAXNODELIST*sizeof(struct Node_acc));
-    for(n=0; n<MAXNODELIST; n++) initNode_acc(nodeList_acc+n);
+  if(!nodeList_gpu) {
+    nodeList_gpu = (struct Node_gpu *)malloc(MAXNODELIST*sizeof(struct Node_gpu));
+    for(n=0; n<MAXNODELIST; n++) initNode_gpu(nodeList_gpu+n);
   }
 
-  temp = nodeList_acc+curListPos_acc;
-  curListPos_acc++;
-  if(curListPos_acc > MAXNODELIST) printf("ERROR getNext_acc: curListPos_acc >= MAXNODELIST\n");
+  temp = nodeList_gpu+curListPos_gpu;
+  curListPos_gpu++;
+  if(curListPos_gpu > MAXNODELIST) printf("ERROR getNext_gpu: curListPos_gpu >= MAXNODELIST\n");
 
   return (temp);
 }
 
 
-void initNode_acc(struct Node_acc *node)
+void initNode_gpu(struct Node_gpu *node)
 {
     node->x = 0;
     node->y = 0;
@@ -718,15 +718,15 @@ void initNode_acc(struct Node_acc *node)
     node->intersect = 0;
     node->inbound = 0;
     node->isInside = 0;
-    node->Next_acc = NULL;
+    node->Next_gpu = NULL;
     node->initialized=0;
 
 }
 
-void addEnd_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u, int inbound, int inside)
+void addEnd_gpu(struct Node_gpu *list, double x, double y, double z, int intersect, double u, int inbound, int inside)
 {
 
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *temp=NULL;
 
   if(list == NULL) printf("ERROR addEnd: list is NULL\n");
 
@@ -735,16 +735,16 @@ void addEnd_acc(struct Node_acc *list, double x, double y, double z, int interse
     /* (x,y,z) might already in the list when intersect is true and u=0 or 1 */
       temp = list;
       while (temp) {
-        if(samePoint_acc(temp->x, temp->y, temp->z, x, y, z)) return;
-        temp=temp->Next_acc;
+        if(samePoint_gpu(temp->x, temp->y, temp->z, x, y, z)) return;
+        temp=temp->Next_gpu;
       }
     temp = list;
-    while(temp->Next_acc)
-      temp=temp->Next_acc;
+    while(temp->Next_gpu)
+      temp=temp->Next_gpu;
 
     /* Append at the end of the list.  */
-    temp->Next_acc = getNext_acc();
-    temp = temp->Next_acc;
+    temp->Next_gpu = getNext_gpu();
+    temp = temp->Next_gpu;
   }
   else {
     temp = list;
@@ -762,13 +762,13 @@ void addEnd_acc(struct Node_acc *list, double x, double y, double z, int interse
 
 /* return 1 if the point (x,y,z) is added in the list, return 0 if it is already in the list */
 
-int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int intersect, double u1, double u2, int inbound,
+int addIntersect_gpu(struct Node_gpu *list, double x, double y, double z, int intersect, double u1, double u2, int inbound,
        int is1, int ie1, int is2, int ie2)
 {
 
   double u1_cur, u2_cur;
   int    i1_cur, i2_cur;
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *temp=NULL;
 
   if(list == NULL) printf("ERROR addEnd: list is NULL\n");
 
@@ -791,13 +791,13 @@ int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int in
     while(temp) {
       if( temp->u == u1_cur && temp->subj_index == i1_cur) return 0;
       if( temp->u_clip == u2_cur && temp->clip_index == i2_cur) return 0;
-      if( !temp->Next_acc ) break;
-      temp=temp->Next_acc;
+      if( !temp->Next_gpu ) break;
+      temp=temp->Next_gpu;
     }
 
     /* Append at the end of the list.  */
-    temp->Next_acc = getNext_acc();
-    temp = temp->Next_acc;
+    temp->Next_gpu = getNext_gpu();
+    temp = temp->Next_gpu;
   }
   else {
     temp = list;
@@ -819,9 +819,9 @@ int addIntersect_acc(struct Node_acc *list, double x, double y, double z, int in
 }
 
 
-int length_acc(struct Node_acc *list)
+int length_gpu(struct Node_gpu *list)
 {
-   struct Node_acc *cur_ptr=NULL;
+   struct Node_gpu *cur_ptr=NULL;
    int count=0;
 
    cur_ptr=list;
@@ -829,14 +829,14 @@ int length_acc(struct Node_acc *list)
    while(cur_ptr)
    {
      if(cur_ptr->initialized ==0) break;
-      cur_ptr=cur_ptr->Next_acc;
+      cur_ptr=cur_ptr->Next_gpu;
       count++;
    }
    return(count);
 }
 
 /* two points are the same if there are close enough */
-int samePoint_acc(double x1, double y1, double z1, double x2, double y2, double z2)
+int samePoint_gpu(double x1, double y1, double z1, double x2, double y2, double z2)
 {
     if( fabs(x1-x2) > EPSLN10 || fabs(y1-y2) > EPSLN10 || fabs(z1-z2) > EPSLN10 )
       return 0;
@@ -846,7 +846,7 @@ int samePoint_acc(double x1, double y1, double z1, double x2, double y2, double 
 
 
 
-int sameNode_acc(struct Node_acc node1, struct Node_acc node2)
+int sameNode_gpu(struct Node_gpu node1, struct Node_gpu node2)
 {
   if( node1.x == node2.x && node1.y == node2.y && node1.z==node2.z )
     return 1;
@@ -855,37 +855,37 @@ int sameNode_acc(struct Node_acc node1, struct Node_acc node2)
 }
 
 
-void addNode_acc(struct Node_acc *list, struct Node_acc inNode_acc)
+void addNode_gpu(struct Node_gpu *list, struct Node_gpu inNode_gpu)
 {
 
-  addEnd_acc(list, inNode_acc.x, inNode_acc.y, inNode_acc.z, inNode_acc.intersect, inNode_acc.u, inNode_acc.inbound, inNode_acc.isInside);
+  addEnd_gpu(list, inNode_gpu.x, inNode_gpu.y, inNode_gpu.z, inNode_gpu.intersect, inNode_gpu.u, inNode_gpu.inbound, inNode_gpu.isInside);
 
 }
 
-struct Node_acc *getNode_acc(struct Node_acc *list, struct Node_acc inNode_acc)
+struct Node_gpu *getNode_gpu(struct Node_gpu *list, struct Node_gpu inNode_gpu)
 {
-  struct Node_acc *thisNode_acc=NULL;
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *thisNode_gpu=NULL;
+  struct Node_gpu *temp=NULL;
 
   temp = list;
   while( temp ) {
-    if( sameNode_acc( *temp, inNode_acc ) ) {
-      thisNode_acc = temp;
+    if( sameNode_gpu( *temp, inNode_gpu ) ) {
+      thisNode_gpu = temp;
       temp = NULL;
       break;
     }
-    temp = temp->Next_acc;
+    temp = temp->Next_gpu;
   }
 
-  return thisNode_acc;
+  return thisNode_gpu;
 }
 
-struct Node_acc *getNextNode_acc(struct Node_acc *list)
+struct Node_gpu *getNextNode_gpu(struct Node_gpu *list)
 {
-  return list->Next_acc;
+  return list->Next_gpu;
 }
 
-void copyNode_acc(struct Node_acc *node_out, struct Node_acc node_in)
+void copyNode_gpu(struct Node_gpu *node_out, struct Node_gpu node_in)
 {
 
   node_out->x = node_in.x;
@@ -894,30 +894,30 @@ void copyNode_acc(struct Node_acc *node_out, struct Node_acc node_in)
   node_out->u = node_in.u;
   node_out->intersect = node_in.intersect;
   node_out->inbound   = node_in.inbound;
-  node_out->Next_acc = NULL;
+  node_out->Next_gpu = NULL;
   node_out->initialized = node_in.initialized;
   node_out->isInside = node_in.isInside;
 }
 
-void printNode_acc(struct Node_acc *list, char *str)
+void printNode_gpu(struct Node_gpu *list, char *str)
 {
-  struct Node_acc *temp;
+  struct Node_gpu *temp;
 
-  if(list == NULL) printf("ERROR printNode_acc: list is NULL\n");
+  if(list == NULL) printf("ERROR printNode_gpu: list is NULL\n");
   if(str) printf("  %s \n", str);
   temp = list;
   while(temp) {
     if(temp->initialized ==0) break;
     printf(" (x, y, z, interset, inbound, isInside) = (%19.15f,%19.15f,%19.15f,%d,%d,%d)\n",
       temp->x, temp->y, temp->z, temp->intersect, temp->inbound, temp->isInside);
-    temp = temp->Next_acc;
+    temp = temp->Next_gpu;
   }
   printf("\n");
 }
 
-int intersectInList_acc(struct Node_acc *list, double x, double y, double z)
+int intersectInList_gpu(struct Node_gpu *list, double x, double y, double z)
 {
-  struct Node_acc *temp;
+  struct Node_gpu *temp;
   int found=0;
 
   temp = list;
@@ -927,7 +927,7 @@ int intersectInList_acc(struct Node_acc *list, double x, double y, double z)
       found = 1;
       break;
     }
-    temp=temp->Next_acc;
+    temp=temp->Next_gpu;
   }
   if (!found) printf("ERROR intersectInList: point (x,y,z) is not found in the list\n");
   if( temp->intersect == 2 )
@@ -942,11 +942,11 @@ int intersectInList_acc(struct Node_acc *list, double x, double y, double z)
    after (x2,y2,z2) is an intersection, if u is greater than the u value of the intersection,
    insert after, otherwise insert before
 */
-void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, double u1, double u2, int inbound,
+void insertIntersect_gpu(struct Node_gpu *list, double x, double y, double z, double u1, double u2, int inbound,
                      double x2, double y2, double z2)
 {
-  struct Node_acc *temp1=NULL, *temp2=NULL;
-  struct Node_acc *temp;
+  struct Node_gpu *temp1=NULL, *temp2=NULL;
+  struct Node_gpu *temp;
   double u_cur;
   int found=0;
 
@@ -957,7 +957,7 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
       found = 1;
       break;
     }
-    temp1=temp1->Next_acc;
+    temp1=temp1->Next_gpu;
   }
   if (!found) printf("ERROR inserAfter: point (x,y,z) is not found in the list\n");
 
@@ -965,7 +965,7 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
   u_cur = u1;
   if(u1 == 1) {
     u_cur = 0;
-    temp1 = temp1->Next_acc;
+    temp1 = temp1->Next_gpu;
     if(!temp1) temp1 = list;
   }
   if(u_cur==0) {
@@ -980,12 +980,12 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
 
   /* when u2 != 0 and u2 !=1, can decide if one end of the point is outside depending on inbound value */
   if(u2 != 0 && u2 != 1) {
-    if(inbound == 1) { /* goes outside, then temp1->Next_acc is an outside point */
+    if(inbound == 1) { /* goes outside, then temp1->Next_gpu is an outside point */
       /* find the next non-intersect point */
-      temp2 = temp1->Next_acc;
+      temp2 = temp1->Next_gpu;
       if(!temp2) temp2 = list;
       while(temp2->intersect) {
-         temp2=temp2->Next_acc;
+         temp2=temp2->Next_gpu;
          if(!temp2) temp2 = list;
       }
 
@@ -996,7 +996,7 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
     }
   }
 
-  temp2 = temp1->Next_acc;
+  temp2 = temp1->Next_gpu;
   while ( temp2 ) {
     if( temp2->intersect == 1 ) {
       if( temp2->u > u_cur ) {
@@ -1006,11 +1006,11 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
     else
       break;
     temp1 = temp2;
-    temp2 = temp2->Next_acc;
+    temp2 = temp2->Next_gpu;
   }
 
   /* assign value */
-  temp = getNext_acc();
+  temp = getNext_gpu();
   temp->x = x;
   temp->y = y;
   temp->z = z;
@@ -1019,14 +1019,14 @@ void insertIntersect_acc(struct Node_acc *list, double x, double y, double z, do
   temp->inbound = inbound;
   temp->isInside = 1;
   temp->initialized = 1;
-  temp1->Next_acc = temp;
-  temp->Next_acc = temp2;
+  temp1->Next_gpu = temp;
+  temp->Next_gpu = temp2;
 
 }
 
-double gridArea_acc(struct Node_acc *grid) {
+double gridArea_gpu(struct Node_gpu *grid) {
   double x[20], y[20], z[20];
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *temp=NULL;
   double area;
   int n;
 
@@ -1037,35 +1037,35 @@ double gridArea_acc(struct Node_acc *grid) {
     y[n] = temp->y;
     z[n] = temp->z;
     n++;
-    temp = temp->Next_acc;
+    temp = temp->Next_gpu;
   }
 
-  area = great_circle_area_acc(n, x, y, z);
+  area = great_circle_area_gpu(n, x, y, z);
 
   return area;
 
 }
 
-int isIntersect_acc(struct Node_acc node) {
+int isIntersect_gpu(struct Node_gpu node) {
 
   return node.intersect;
 
 }
 
 
-int getInbound_acc( struct Node_acc node )
+int getInbound_gpu( struct Node_gpu node )
 {
   return node.inbound;
 }
 
-struct Node_acc *getLast_acc(struct Node_acc *list)
+struct Node_gpu *getLast_gpu(struct Node_gpu *list)
 {
-  struct Node_acc *temp1;
+  struct Node_gpu *temp1;
 
   temp1 = list;
   if( temp1 ) {
-    while( temp1->Next_acc ) {
-      temp1 = temp1->Next_acc;
+    while( temp1->Next_gpu ) {
+      temp1 = temp1->Next_gpu;
     }
   }
 
@@ -1073,24 +1073,24 @@ struct Node_acc *getLast_acc(struct Node_acc *list)
 }
 
 
-int getFirstInbound_acc( struct Node_acc *list, struct Node_acc *nodeOut)
+int getFirstInbound_gpu( struct Node_gpu *list, struct Node_gpu *nodeOut)
 {
-  struct Node_acc *temp=NULL;
+  struct Node_gpu *temp=NULL;
 
   temp=list;
 
   while(temp) {
     if( temp->inbound == 2 ) {
-      copyNode_acc(nodeOut, *temp);
+      copyNode_gpu(nodeOut, *temp);
       return 1;
     }
-    temp=temp->Next_acc;
+    temp=temp->Next_gpu;
   }
 
   return 0;
 }
 
-void getCoordinate_acc(struct Node_acc node, double *x, double *y, double *z)
+void getCoordinate_gpu(struct Node_gpu node, double *x, double *y, double *z)
 {
 
 
@@ -1100,7 +1100,7 @@ void getCoordinate_acc(struct Node_acc node, double *x, double *y, double *z)
 
 }
 
-void getCoordinates_acc(struct Node_acc *node, double *p)
+void getCoordinates_gpu(struct Node_gpu *node, double *p)
 {
 
 
@@ -1110,7 +1110,7 @@ void getCoordinates_acc(struct Node_acc *node, double *p)
 
 }
 
-void setCoordinate_acc(struct Node_acc *node, double x, double y, double z)
+void setCoordinate_gpu(struct Node_gpu *node, double x, double y, double z)
 {
 
 
@@ -1124,16 +1124,16 @@ void setCoordinate_acc(struct Node_acc *node, double x, double y, double z)
    this will also set some inbound value of the points in list1
 */
 
-void setInbound_acc(struct Node_acc *interList, struct Node_acc *list)
+void setInbound_gpu(struct Node_gpu *interList, struct Node_gpu *list)
 {
 
-  struct Node_acc *temp1=NULL, *temp=NULL;
-  struct Node_acc *temp1_prev=NULL, *temp1_next=NULL;
+  struct Node_gpu *temp1=NULL, *temp=NULL;
+  struct Node_gpu *temp1_prev=NULL, *temp1_next=NULL;
   int prev_is_inside, next_is_inside;
 
   /* for each point in interList, search through list to decide the inbound value the interList point */
   /* For each inbound point, the prev node should be outside and the next is inside. */
-  if(length_acc(interList) == 0) return;
+  if(length_gpu(interList) == 0) return;
 
   temp = interList;
 
@@ -1145,14 +1145,14 @@ void setInbound_acc(struct Node_acc *interList, struct Node_acc *list)
       temp1_prev = NULL;
       temp1_next = NULL;
       while(temp1) {
-   if(sameNode_acc(*temp1, *temp)) {
-     if(!temp1_prev) temp1_prev = getLast_acc(list);
-     temp1_next = temp1->Next_acc;
+   if(sameNode_gpu(*temp1, *temp)) {
+     if(!temp1_prev) temp1_prev = getLast_gpu(list);
+     temp1_next = temp1->Next_gpu;
      if(!temp1_next) temp1_next = list;
      break;
    }
    temp1_prev = temp1;
-   temp1 = temp1->Next_acc;
+   temp1 = temp1->Next_gpu;
       }
       if(!temp1_next) printf("ERROR from create_xgrid.c: temp is not in list1\n");
       if( temp1_prev->isInside == 0 && temp1_next->isInside == 1)
@@ -1160,11 +1160,11 @@ void setInbound_acc(struct Node_acc *interList, struct Node_acc *list)
       else
    temp->inbound = 1;
     }
-    temp=temp->Next_acc;
+    temp=temp->Next_gpu;
   }
 }
 
-int isInside_acc(struct Node_acc *node) {
+int isInside_gpu(struct Node_gpu *node) {
 
   if(node->isInside == -1) printf("ERROR from mosaic_util.c: node->isInside is not set\n");
   return(node->isInside);
@@ -1174,12 +1174,12 @@ int isInside_acc(struct Node_acc *node) {
 /*  #define debug_test_create_xgrid */
 
 /* check if node is inside polygon list or not */
- int insidePolygon_acc( struct Node_acc *node, struct Node_acc *list)
+ int insidePolygon_gpu( struct Node_gpu *node, struct Node_gpu *list)
 {
   int i, ip, is_inside;
   double pnt0[3], pnt1[3], pnt2[3];
   double anglesum;
-  struct Node_acc *p1=NULL, *p2=NULL;
+  struct Node_gpu *p1=NULL, *p2=NULL;
 
   anglesum = 0;
 
@@ -1188,7 +1188,7 @@ int isInside_acc(struct Node_acc *node) {
   pnt0[2] = node->z;
 
   p1 = list;
-  p2 = list->Next_acc;
+  p2 = list->Next_gpu;
   is_inside = 0;
 
 
@@ -1199,10 +1199,10 @@ int isInside_acc(struct Node_acc *node) {
     pnt2[0] = p2->x;
     pnt2[1] = p2->y;
     pnt2[2] = p2->z;
-    if(samePoint_acc(pnt0[0], pnt0[1], pnt0[2], pnt1[0], pnt1[1], pnt1[2])) return 1;
-    anglesum += spherical_angle_acc(pnt0, pnt2, pnt1);
-    p1 = p1->Next_acc;
-    p2 = p2->Next_acc;
+    if(samePoint_gpu(pnt0[0], pnt0[1], pnt0[2], pnt1[0], pnt1[1], pnt1[2])) return 1;
+    anglesum += spherical_angle_gpu(pnt0, pnt2, pnt1);
+    p1 = p1->Next_gpu;
+    p2 = p2->Next_gpu;
     if(p2==NULL)p2 = list;
   }
 
@@ -1215,7 +1215,7 @@ int isInside_acc(struct Node_acc *node) {
 
 }
 
-int inside_a_polygon_acc(double *lon1, double *lat1, int *npts, double *lon2, double *lat2)
+int inside_a_polygon_gpu(double *lon1, double *lat1, int *npts, double *lon2, double *lat2)
 {
 
   double x2[20], y2[20], z2[20];
@@ -1223,37 +1223,37 @@ int inside_a_polygon_acc(double *lon1, double *lat1, int *npts, double *lon2, do
   double min_x2, max_x2, min_y2, max_y2, min_z2, max_z2;
   int isinside, i;
 
-  struct Node_acc *grid1=NULL, *grid2=NULL;
+  struct Node_gpu *grid1=NULL, *grid2=NULL;
 
   /* first convert to cartesian grid */
-  latlon2xyz_acc(*npts, lon2, lat2, x2, y2, z2);
-  latlon2xyz_acc(1, lon1, lat1, &x1, &y1, &z1);
+  latlon2xyz_gpu(*npts, lon2, lat2, x2, y2, z2);
+  latlon2xyz_gpu(1, lon1, lat1, &x1, &y1, &z1);
 
-  max_x2 = maxval_double_acc(*npts, x2);
+  max_x2 = maxval_double_gpu(*npts, x2);
   if(x1 >= max_x2+RANGE_CHECK_CRITERIA) return 0;
-  min_x2 = minval_double_acc(*npts, x2);
+  min_x2 = minval_double_gpu(*npts, x2);
   if(min_x2 >= x1+RANGE_CHECK_CRITERIA) return 0;
 
-  max_y2 = maxval_double_acc(*npts, y2);
+  max_y2 = maxval_double_gpu(*npts, y2);
   if(y1 >= max_y2+RANGE_CHECK_CRITERIA) return 0;
-  min_y2 = minval_double_acc(*npts, y2);
+  min_y2 = minval_double_gpu(*npts, y2);
   if(min_y2 >= y1+RANGE_CHECK_CRITERIA) return 0;
 
-  max_z2 = maxval_double_acc(*npts, z2);
+  max_z2 = maxval_double_gpu(*npts, z2);
   if(z1 >= max_z2+RANGE_CHECK_CRITERIA) return 0;
-  min_z2 = minval_double_acc(*npts, z2);
+  min_z2 = minval_double_gpu(*npts, z2);
   if(min_z2 >= z1+RANGE_CHECK_CRITERIA) return 0;
 
 
-  /* add x2,y2,z2 to a Node_acc */
-  rewindList_acc();
-  grid1 = getNext_acc();
-  grid2 = getNext_acc();
+  /* add x2,y2,z2 to a Node_gpu */
+  rewindList_gpu();
+  grid1 = getNext_gpu();
+  grid2 = getNext_gpu();
 
-  addEnd_acc(grid1, x1, y1, z1, 0, 0, 0, -1);
-  for(i=0; i<*npts; i++) addEnd_acc(grid2, x2[i], y2[i], z2[i], 0, 0, 0, -1);
+  addEnd_gpu(grid1, x1, y1, z1, 0, 0, 0, -1);
+  for(i=0; i<*npts; i++) addEnd_gpu(grid2, x2[i], y2[i], z2[i], 0, 0, 0, -1);
 
-  isinside = insidePolygon_acc(grid1, grid2);
+  isinside = insidePolygon_gpu(grid1, grid2);
 
   return isinside;
 
@@ -1264,10 +1264,10 @@ int inside_a_polygon_acc(double *lon1, double *lat1, int *npts, double *lon2, do
   within a threshold from the CGS poles (i.e. near +- Pi/2).
    Otherwise returns 0.
 */
-int is_near_pole_acc(const double y[], int n) {
+int is_near_pole_gpu(const double y[], int n) {
   int pole = 0;
   for (int i = 0; i < n; i++) {
-    if ((fabs(y[i]) + from_pole_threshold_rad_acc) > M_PI_2 ) {
+    if ((fabs(y[i]) + from_pole_threshold_rad_gpu) > M_PI_2 ) {
       pole = 1;
       break;
     }
@@ -1280,7 +1280,7 @@ int is_near_pole_acc(const double y[], int n) {
   sides of a pole. i.e. if the longitudes are seperated by about Pi. Note, for realistic
   data (not huge polygons), if crosses_pole() reutrns 1, so should is_near_pole().
 */
-int crosses_pole_acc(const double x[] , int n) {
+int crosses_pole_gpu(const double x[] , int n) {
   int has_cl = 0;
   for (int i = 0; i < n; i++) {
     int im = (i + n - 1) % n;
@@ -1295,14 +1295,14 @@ int crosses_pole_acc(const double x[] , int n) {
 }
 
 /*
-  Set the_rotation_matrix_acc  global variable.
+  Set the_rotation_matrix_gpu  global variable.
   The rotation is 45 degrees and about the vector with orign at
   earths center and the direction <0,1,1>/SQRT(2).  I.e. a big
   rotation away from the pole if what is being rotaed is near a pole.
   For rotation matricies formulas and examples, see F.S.Hill, Computer
   Graphics Using OpenGL, @nd ed., Chapter 5.3.
 */
-void set_the_rotation_matrix_acc() {
+void set_the_rotation_matrix_gpu() {
   double is2 = 1.0 /M_SQRT2;
 
   double m00 = 0;
@@ -1315,14 +1315,14 @@ void set_the_rotation_matrix_acc() {
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      the_rotation_matrix_acc[i][j] = m[i][j];
+      the_rotation_matrix_gpu[i][j] = m[i][j];
     }
   }
-#pragma acc data update device(the_rotation_matrix_acc[:3][:3])
+#pragma acc data update device(the_rotation_matrix_gpu[:3][:3])
 }
 
 /* Rotate point given the passed in rotation matrix  */
-void rotate_point_acc(double rv[], double rmat [][3]) {
+void rotate_point_gpu(double rv[], double rmat [][3]) {
   double v[3];
 
   for (int i = 0; i < 3; i++) {
@@ -1338,19 +1338,19 @@ void rotate_point_acc(double rv[], double rmat [][3]) {
 
 /*
   Rotate polygon defined by x[], y[] points and store in xr[], yr[]*/
-void rotate_poly_acc(const double x[], const double y[], const int n, double xr[], double yr[]) {
+void rotate_poly_gpu(const double x[], const double y[], const int n, double xr[], double yr[]) {
   double sv[2]; //a rotated lat/lon
   double rv[3]; //rotated xyz point
   for (int i = 0; i < n; i++) {
-    latlon2xyz_acc(1, &x[i], &y[i], &rv[0], &rv[1], &rv[2]);
-    rotate_point_acc(rv, the_rotation_matrix_acc);
-    xyz2latlon_acc(1, &rv[0], &rv[1], &rv[2], &sv[0], &sv[1]);
+    latlon2xyz_gpu(1, &x[i], &y[i], &rv[0], &rv[1], &rv[2]);
+    rotate_point_gpu(rv, the_rotation_matrix_gpu);
+    xyz2latlon_gpu(1, &rv[0], &rv[1], &rv[2], &sv[0], &sv[1]);
     xr[i] = sv[0];
     yr[i] = sv[1];
   }
 }
 
-void pimod_acc(double x[],int nn)
+void pimod_gpu(double x[],int nn)
 {
   for (int i=0;i<nn;i++) {
     if      (x[i] < -M_PI) x[i] += TPI;
@@ -1367,7 +1367,7 @@ void pimod_acc(double x[],int nn)
  if Inner produce <x-x0,y-y0>*<y1-y0, -(x1-x0)> > 0, outside, otherwise inside.
  inner product value = 0 also treate as inside.
 *******************************************************************************/
-int inside_edge_acc(double x0, double y0, double x1, double y1, double x, double y)
+int inside_edge_gpu(double x0, double y0, double x1, double y1, double x, double y)
 {
    const double SMALL = 1.e-12;
    double product;
@@ -1384,7 +1384,7 @@ int inside_edge_acc(double x0, double y0, double x1, double y1, double x, double
    returns true if the lines could be intersected, false otherwise.
    inbound means the direction of (a1,a2) go inside or outside of (q1,q2,q3)
 */
-int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, double *q3,
+int line_intersect_2D_3D_gpu(double *a1, double *a2, double *q1, double *q2, double *q3,
                              double *intersect, double *u_a, double *u_q, int *inbound){
 
   /* Do this intersection by reprsenting the line a1 to a2 as a plane through the
@@ -1403,7 +1403,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   *inbound = 0;
 
   /* first check if any vertices are the same */
-  if(samePoint_acc(a1[0], a1[1], a1[2], q1[0], q1[1], q1[2])) {
+  if(samePoint_gpu(a1[0], a1[1], a1[2], q1[0], q1[1], q1[2])) {
     *u_a = 0;
     *u_q = 0;
     intersect[0] = a1[0];
@@ -1411,7 +1411,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     intersect[2] = a1[2];
     return 1;
    }
-   else if (samePoint_acc(a1[0], a1[1], a1[2], q2[0], q2[1], q2[2])) {
+   else if (samePoint_gpu(a1[0], a1[1], a1[2], q2[0], q2[1], q2[2])) {
     *u_a = 0;
     *u_q = 1;
     intersect[0] = a1[0];
@@ -1419,7 +1419,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     intersect[2] = a1[2];
     return 1;
   }
-   else if(samePoint_acc(a2[0], a2[1], a2[2], q1[0], q1[1], q1[2])) {
+   else if(samePoint_gpu(a2[0], a2[1], a2[2], q1[0], q1[1], q1[2])) {
     *u_a = 1;
     *u_q = 0;
     intersect[0] = a2[0];
@@ -1427,7 +1427,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     intersect[2] = a2[2];
     return 1;
    }
-   else if (samePoint_acc(a2[0], a2[1], a2[2], q2[0], q2[1], q2[2])) {
+   else if (samePoint_gpu(a2[0], a2[1], a2[2], q2[0], q2[1], q2[2])) {
     *u_a = 1;
     *u_q = 1;
     intersect[0] = a2[0];
@@ -1448,7 +1448,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   plane[7]=0.0;
   plane[8]=0.0;
   /* Intersect the segment with the plane */
-  is_inter1 = intersect_tri_with_line_acc(plane, a1, a2, plane_p, u_a);
+  is_inter1 = intersect_tri_with_line_gpu(plane, a1, a2, plane_p, u_a);
 
   if(!is_inter1)
      return 0;
@@ -1470,7 +1470,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   plane[8]=0.0;
 
   /* Intersect the segment with the plane */
-  is_inter2 = intersect_tri_with_line_acc(plane, q1, q2, plane_p, u_q);
+  is_inter2 = intersect_tri_with_line_gpu(plane, q1, q2, plane_p, u_q);
 
   if(!is_inter2)
      return 0;
@@ -1483,10 +1483,10 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   u =*u_a;
 
   /* The two planes are coincidental */
-  vect_cross_acc(a1, a2, c1);
-  vect_cross_acc(q1, q2, c2);
-  vect_cross_acc(c1, c2, c3);
-  coincident = metric_acc(c3);
+  vect_cross_gpu(a1, a2, c1);
+  vect_cross_gpu(q1, q2, c2);
+  vect_cross_gpu(c1, c2, c3);
+  coincident = metric_gpu(c3);
 
   if(fabs(coincident) < EPSLN30) return 0;
 
@@ -1495,7 +1495,7 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
   intersect[1]=a1[1] + u*(a2[1]-a1[1]);
   intersect[2]=a1[2] + u*(a2[2]-a1[2]);
 
-  norm = metric_acc( intersect );
+  norm = metric_gpu( intersect );
   for(i = 0; i < 3; i ++) intersect[i] /= norm;
 
   /* when u_q =0 or u_q =1, the following could not decide the inbound value */
@@ -1510,10 +1510,10 @@ int line_intersect_2D_3D_acc(double *a1, double *a2, double *q1, double *q2, dou
     v2[1] = q3[1]-q2[1];
     v2[2] = q3[2]-q2[2];
 
-    vect_cross_acc(v1, v2, c1);
-    vect_cross_acc(v1, p1, c2);
+    vect_cross_gpu(v1, v2, c1);
+    vect_cross_gpu(v1, p1, c2);
 
-    sense = dot_acc(c1, c2);
+    sense = dot_gpu(c1, c2);
     *inbound = 1;
     if(sense > 0) *inbound = 2; /* v1 going into v2 in CCW sense */
   }
