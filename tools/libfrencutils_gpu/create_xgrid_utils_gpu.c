@@ -21,15 +21,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <openacc.h>
-#include "general_utils_acc.h"
-#include "create_xgrid_utils_acc.h"
-#include "globals_acc.h"
+#include "general_utils_gpu.h"
+#include "create_xgrid_utils_gpu.h"
+#include "globals_gpu.h"
 
 /*******************************************************************************
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, const double *area)
   return the grid area.
 *******************************************************************************/
-void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
+void get_grid_area_gpu(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
 {
   int nx, ny, nxp, i, j, n_in;
   double x_in[20], y_in[20];
@@ -47,18 +47,18 @@ void get_grid_area_acc(const int *nlon, const int *nlat, const double *lon, cons
       y_in[1] = lat[j*nxp+i+1];
       y_in[2] = lat[(j+1)*nxp+i+1];
       y_in[3] = lat[(j+1)*nxp+i];
-      n_in = fix_lon_acc(x_in, y_in, 4, M_PI);
-      area[j*nx+i] = poly_area_acc(x_in, y_in, n_in);
+      n_in = fix_lon_gpu(x_in, y_in, 4, M_PI);
+      area[j*nx+i] = poly_area_gpu(x_in, y_in, n_in);
     }
 
 };  /* get_grid_area */
 
-void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
+void get_grid_great_circle_area_gpu(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area)
 {
   int nx, ny, nxp, nyp, i, j, n_in;
   int n0, n1, n2, n3;
   double x_in[20], y_in[20], z_in[20];
-  struct Node_acc *grid=NULL;
+  struct Node_gpu *grid=NULL;
   double *x=NULL, *y=NULL, *z=NULL;
 
 
@@ -71,7 +71,7 @@ void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const doub
   y = (double *)malloc(nxp*nyp*sizeof(double));
   z = (double *)malloc(nxp*nyp*sizeof(double));
 
-  latlon2xyz_acc(nxp*nyp, lon, lat, x, y, z);
+  latlon2xyz_gpu(nxp*nyp, lon, lat, x, y, z);
 
   for(j=0; j<ny; j++) for(i=0; i < nx; i++) {
       /* clockwise */
@@ -79,13 +79,13 @@ void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const doub
       n1 = (j+1)*nxp+i;
       n2 = (j+1)*nxp+i+1;
       n3 = j*nxp+i+1;
-      rewindList_acc();
-      grid = getNext_acc();
-      addEnd_acc(grid, x[n0], y[n0], z[n0], 0, 0, 0, -1);
-      addEnd_acc(grid, x[n1], y[n1], z[n1], 0, 0, 0, -1);
-      addEnd_acc(grid, x[n2], y[n2], z[n2], 0, 0, 0, -1);
-      addEnd_acc(grid, x[n3], y[n3], z[n3], 0, 0, 0, -1);
-      area[j*nx+i] = gridArea_acc(grid);
+      rewindList_gpu();
+      grid = getNext_gpu();
+      addEnd_gpu(grid, x[n0], y[n0], z[n0], 0, 0, 0, -1);
+      addEnd_gpu(grid, x[n1], y[n1], z[n1], 0, 0, 0, -1);
+      addEnd_gpu(grid, x[n2], y[n2], z[n2], 0, 0, 0, -1);
+      addEnd_gpu(grid, x[n3], y[n3], z[n3], 0, 0, 0, -1);
+      area[j*nx+i] = gridArea_gpu(grid);
     }
 
   free(x);
@@ -98,7 +98,7 @@ void get_grid_great_circle_area_acc(const int *nlon, const int *nlat, const doub
   double poly_ctrlon(const double x[], const double y[], int n, double clon)
   This routine is used to calculate the lontitude of the centroid.
 ---------------------------------------------------------------------------*/
-void poly_ctrlon_acc(const double *x, const double *y, int n, double clon_in, double *ctrlon)
+void poly_ctrlon_gpu(const double *x, const double *y, int n, double clon_in, double *ctrlon)
 {
 
   *ctrlon = 0.0;
@@ -151,7 +151,7 @@ void poly_ctrlon_acc(const double *x, const double *y, int n, double clon_in, do
   (lat2-lat1)/(lon2-lon1) between a pair of vertices in approximating the above
   line integral along the sides of the polygon  \int_c.
  ---------------------------------------------------------------------------*/
-void poly_ctrlat_acc(const double *x, const double *y, int n, double *ctrlat)
+void poly_ctrlat_gpu(const double *x, const double *y, int n, double *ctrlat)
 {
 
   *ctrlat = 0.0;
@@ -183,7 +183,7 @@ void poly_ctrlat_acc(const double *x, const double *y, int n, double *ctrlat)
    Revise Sutherland-Hodgeman algorithm to find the vertices of the overlapping
    between any two grid boxes. It return the number of vertices for the exchange grid.
 *******************************************************************************/
-int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
+int clip_2dx2d_gpu(const double lon1_in[], const double lat1_in[], int n1_in,
                    const double lon2_in[], const double lat2_in[], int n2_in,
                    double lon_out[], double lat_out[])
 {
@@ -207,7 +207,7 @@ int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
   }
   //Some grid boxes near North Pole are clipped wrong (issue #42 )
   //The following heuristic fix seems to work. Why?
-  if(gttwopi){pimod_acc(lon_tmp,n1_in);pimod_acc(lon2_tmp,n2_in);}
+  if(gttwopi){pimod_gpu(lon_tmp,n1_in);pimod_gpu(lon2_tmp,n2_in);}
 
   x2_0 = lon2_tmp[n2_in-1];
   y2_0 = lat2_tmp[n2_in-1];
@@ -216,11 +216,11 @@ int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
     y2_1 = lat2_tmp[i2];
     x1_0 = lon_tmp[n_out-1];
     y1_0 = lat_tmp[n_out-1];
-    inside_last = inside_edge_acc( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
+    inside_last = inside_edge_gpu( x2_0, y2_0, x2_1, y2_1, x1_0, y1_0);
     for(i1=0, i_out=0; i1<n_out; i1++) {
       x1_1 = lon_tmp[i1];
       y1_1 = lat_tmp[i1];
-      if((inside = inside_edge_acc(x2_0, y2_0, x2_1, y2_1, x1_1, y1_1)) != inside_last ) {
+      if((inside = inside_edge_gpu(x2_0, y2_0, x2_1, y2_1, x1_1, y1_1)) != inside_last ) {
         /* there is intersection, the line between <x1_0,y1_0> and  <x1_1,y1_1>
            should not parallel to the line between <x2_0,y2_0> and  <x2_1,y2_1>
            may need to consider truncation error */
@@ -269,19 +269,19 @@ int clip_2dx2d_acc(const double lon1_in[], const double lat1_in[], int n1_in,
    the more expensive of the computatioin. When the value is close to 0,
    some small exchange grid might be lost. Suggest to use value 0.05 for C48.
 *******************************************************************************/
-int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
+int clip_2dx2d_great_circle_gpu(const double x1_in[], const double y1_in[], const double z1_in[], int n1_in,
                                 const double x2_in[], const double y2_in[], const double z2_in [], int n2_in,
                                 double x_out[], double y_out[], double z_out[])
 {
-  struct Node_acc *subjList=NULL;
-  struct Node_acc *clipList=NULL;
-  struct Node_acc *grid1List=NULL;
-  struct Node_acc *grid2List=NULL;
-  struct Node_acc *intersectList=NULL;
-  struct Node_acc *polyList=NULL;
-  struct Node_acc *curList=NULL;
-  struct Node_acc *firstIntersect=NULL, *curIntersect=NULL;
-  struct Node_acc *temp1=NULL, *temp2=NULL, *temp=NULL;
+  struct Node_gpu *subjList=NULL;
+  struct Node_gpu *clipList=NULL;
+  struct Node_gpu *grid1List=NULL;
+  struct Node_gpu *grid2List=NULL;
+  struct Node_gpu *intersectList=NULL;
+  struct Node_gpu *polyList=NULL;
+  struct Node_gpu *curList=NULL;
+  struct Node_gpu *firstIntersect=NULL, *curIntersect=NULL;
+  struct Node_gpu *temp1=NULL, *temp2=NULL, *temp=NULL;
 
   int    i1, i2, i1p, i2p, i2p2, npts1, npts2;
   int    nintersect, n_out;
@@ -299,39 +299,39 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
 
   /* first check the min and max of (x1_in, y1_in, z1_in) with (x2_in, y2_in, z2_in) */
-  min_x1 = minval_double_acc(n1_in, x1_in);
-  max_x2 = maxval_double_acc(n2_in, x2_in);
+  min_x1 = minval_double_gpu(n1_in, x1_in);
+  max_x2 = maxval_double_gpu(n2_in, x2_in);
   if(min_x1 >= max_x2+RANGE_CHECK_CRITERIA) return 0;
-  max_x1 = maxval_double_acc(n1_in, x1_in);
-  min_x2 = minval_double_acc(n2_in, x2_in);
+  max_x1 = maxval_double_gpu(n1_in, x1_in);
+  min_x2 = minval_double_gpu(n2_in, x2_in);
   if(min_x2 >= max_x1+RANGE_CHECK_CRITERIA) return 0;
 
-  min_y1 = minval_double_acc(n1_in, y1_in);
-  max_y2 = maxval_double_acc(n2_in, y2_in);
+  min_y1 = minval_double_gpu(n1_in, y1_in);
+  max_y2 = maxval_double_gpu(n2_in, y2_in);
   if(min_y1 >= max_y2+RANGE_CHECK_CRITERIA) return 0;
-  max_y1 = maxval_double_acc(n1_in, y1_in);
-  min_y2 = minval_double_acc(n2_in, y2_in);
+  max_y1 = maxval_double_gpu(n1_in, y1_in);
+  min_y2 = minval_double_gpu(n2_in, y2_in);
   if(min_y2 >= max_y1+RANGE_CHECK_CRITERIA) return 0;
 
-  min_z1 = minval_double_acc(n1_in, z1_in);
-  max_z2 = maxval_double_acc(n2_in, z2_in);
+  min_z1 = minval_double_gpu(n1_in, z1_in);
+  max_z2 = maxval_double_gpu(n2_in, z2_in);
   if(min_z1 >= max_z2+RANGE_CHECK_CRITERIA) return 0;
-  max_z1 = maxval_double_acc(n1_in, z1_in);
-  min_z2 = minval_double_acc(n2_in, z2_in);
+  max_z1 = maxval_double_gpu(n1_in, z1_in);
+  min_z2 = minval_double_gpu(n2_in, z2_in);
   if(min_z2 >= max_z1+RANGE_CHECK_CRITERIA) return 0;
 
-  rewindList_acc();
+  rewindList_gpu();
 
-  grid1List = getNext_acc();
-  grid2List = getNext_acc();
-  intersectList = getNext_acc();
-  polyList = getNext_acc();
+  grid1List = getNext_gpu();
+  grid2List = getNext_gpu();
+  intersectList = getNext_gpu();
+  polyList = getNext_gpu();
 
   /* insert points into SubjList and ClipList */
-  for(i1=0; i1<n1_in; i1++) addEnd_acc(grid1List, x1_in[i1], y1_in[i1], z1_in[i1], 0, 0, 0, -1);
-  for(i2=0; i2<n2_in; i2++) addEnd_acc(grid2List, x2_in[i2], y2_in[i2], z2_in[i2], 0, 0, 0, -1);
-  npts1 = length_acc(grid1List);
-  npts2 = length_acc(grid2List);
+  for(i1=0; i1<n1_in; i1++) addEnd_gpu(grid1List, x1_in[i1], y1_in[i1], z1_in[i1], 0, 0, 0, -1);
+  for(i2=0; i2<n2_in; i2++) addEnd_gpu(grid2List, x2_in[i2], y2_in[i2], z2_in[i2], 0, 0, 0, -1);
+  npts1 = length_gpu(grid1List);
+  npts2 = length_gpu(grid2List);
 
   n_out = 0;
   /* set the inside value */
@@ -340,29 +340,29 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
   temp = grid1List;
   while(temp) {
-    if(insidePolygon_acc(temp, grid2List))
+    if(insidePolygon_gpu(temp, grid2List))
       temp->isInside = 1;
     else
       temp->isInside = 0;
-    temp = getNextNode_acc(temp);
+    temp = getNextNode_gpu(temp);
   }
 
   /* check if grid2List is inside grid1List */
   temp = grid2List;
   while(temp) {
-    if(insidePolygon_acc(temp, grid1List))
+    if(insidePolygon_gpu(temp, grid1List))
       temp->isInside = 1;
     else
       temp->isInside = 0;
-    temp = getNextNode_acc(temp);
+    temp = getNextNode_gpu(temp);
   }
 
   /* make sure the grid box is clockwise */
 
   /*make sure each polygon is convex, which is equivalent that the great_circle_area is positive */
-  if( gridArea_acc(grid1List) <= 0 )
+  if( gridArea_gpu(grid1List) <= 0 )
     printf("ERROR create_xgrid.c(clip_2dx2d_great_circle): grid box 1 is not convex\n");
-  if( gridArea_acc(grid2List) <= 0 )
+  if( gridArea_gpu(grid2List) <= 0 )
     printf("ERROR create_xgrid.c(clip_2dx2d_great_circle): grid box 2 is not convex\n");
 
   /* get the coordinates from grid1List and grid2List.
@@ -371,17 +371,17 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
   temp = grid1List;
   for(i1=0; i1<npts1; i1++) {
-    getCoordinates_acc(temp, pt1[i1]);
-    temp = temp->Next_acc;
+    getCoordinates_gpu(temp, pt1[i1]);
+    temp = temp->Next_gpu;
   }
   temp = grid2List;
   for(i2=0; i2<npts2; i2++) {
-    getCoordinates_acc(temp, pt2[i2]);
-    temp = temp->Next_acc;
+    getCoordinates_gpu(temp, pt2[i2]);
+    temp = temp->Next_gpu;
   }
 
-  firstIntersect=getNext_acc();
-  curIntersect = getNext_acc();
+  firstIntersect=getNext_gpu();
+  curIntersect = getNext_gpu();
 
   /* first find all the intersection points */
   nintersect = 0;
@@ -395,7 +395,7 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       p2_0 = pt2[i2];
       p2_1 = pt2[i2p];
       p2_2 = pt2[i2p2];
-      if( line_intersect_2D_3D_acc(p1_0, p1_1, p2_0, p2_1, p2_2, intersect, &u1, &u2, &inbound) ) {
+      if( line_intersect_2D_3D_gpu(p1_0, p1_1, p2_0, p2_1, p2_2, intersect, &u1, &u2, &inbound) ) {
         int n_prev, n_cur;
         int is_in_subj, is_in_clip;
 
@@ -404,14 +404,14 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
         /* add the intersection into intersetList, The intersection might already be in
            intersectList and will be taken care addIntersect
         */
-        if(addIntersect_acc(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
+        if(addIntersect_gpu(intersectList, intersect[0], intersect[1], intersect[2], 1, u1, u2, inbound, i1, i1p, i2, i2p)) {
           /* add the intersection into the grid1List */
 
           if(u1 == 1) {
-            insertIntersect_acc(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
+            insertIntersect_gpu(grid1List, intersect[0], intersect[1], intersect[2], 0.0, u2, inbound, p1_1[0], p1_1[1], p1_1[2]);
           }
           else
-            insertIntersect_acc(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
+            insertIntersect_gpu(grid1List, intersect[0], intersect[1], intersect[2], u1, u2, inbound, p1_0[0], p1_0[1], p1_0[2]);
           /* when u1 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
           if(u1==1) {
             p1_1[0] = intersect[0];
@@ -425,9 +425,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
           }
           /* add the intersection into the grid2List */
           if(u2==1)
-            insertIntersect_acc(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
+            insertIntersect_gpu(grid2List, intersect[0], intersect[1], intersect[2], 0.0, u1, 0, p2_1[0], p2_1[1], p2_1[2]);
           else
-            insertIntersect_acc(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
+            insertIntersect_gpu(grid2List, intersect[0], intersect[1], intersect[2], u2, u1, 0, p2_0[0], p2_0[1], p2_0[2]);
           /* when u2 == 0 or 1, need to adjust the vertice to intersect value for roundoff error */
           if(u2==1) {
             p2_1[0] = intersect[0];
@@ -452,9 +452,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
   has_inbound = 0;
   /* loop through intersectList to see if there is any has inbound=1 or 2 */
   temp = intersectList;
-  nintersect = length_acc(intersectList);
+  nintersect = length_gpu(intersectList);
   if(nintersect > 1) {
-    getFirstInbound_acc(intersectList, firstIntersect);
+    getFirstInbound_gpu(intersectList, firstIntersect);
     if(firstIntersect->initialized) {
       has_inbound = 1;
     }
@@ -462,8 +462,8 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
   /* when has_inbound == 0, get the grid1List and grid2List */
   if( !has_inbound && nintersect > 1) {
-    setInbound_acc(intersectList, grid1List);
-    getFirstInbound_acc(intersectList, firstIntersect);
+    setInbound_gpu(intersectList, grid1List);
+    getFirstInbound_gpu(intersectList, firstIntersect);
     if(firstIntersect->initialized) has_inbound = 1;
   }
 
@@ -472,20 +472,20 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
 
   if(has_inbound) {
     maxiter1 = nintersect;
-    temp1 = getNode_acc(grid1List, *firstIntersect);
+    temp1 = getNode_gpu(grid1List, *firstIntersect);
     if( temp1 == NULL) {
       double lon[10], lat[10];
       int i;
-      xyz2latlon_acc(n1_in, x1_in, y1_in, z1_in, lon, lat);
+      xyz2latlon_gpu(n1_in, x1_in, y1_in, z1_in, lon, lat);
       for(i=0; i< n1_in; i++) printf("lon1 = %g, lat1 = %g\n", lon[i]*R2D, lat[i]*R2D);
       printf("\n");
-      xyz2latlon_acc(n2_in, x2_in, y2_in, z2_in, lon, lat);
+      xyz2latlon_gpu(n2_in, x2_in, y2_in, z2_in, lon, lat);
       for(i=0; i< n2_in; i++) printf("lon2 = %g, lat2 = %g\n", lon[i]*R2D, lat[i]*R2D);
       printf("\n");
 
       printf("ERROR firstIntersect is not in the grid1List\n");
     }
-    addNode_acc(polyList, *firstIntersect);
+    addNode_gpu(polyList, *firstIntersect);
     nintersect--;
 
     /* Loop over the grid1List and grid2List to find again the firstIntersect */
@@ -495,17 +495,17 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
     /* Loop through curList to find the next intersection, the loop will end
        when come back to firstIntersect
     */
-    copyNode_acc(curIntersect, *firstIntersect);
+    copyNode_gpu(curIntersect, *firstIntersect);
     iter1 = 0;
     found1 = 0;
 
     while( iter1 < maxiter1 ) {
       /* find the curIntersect in curList and get the next intersection points */
-      temp1 =  getNode_acc(curList, *curIntersect);
-      temp2 = temp1->Next_acc;
+      temp1 =  getNode_gpu(curList, *curIntersect);
+      temp2 = temp1->Next_gpu;
       if( temp2 == NULL ) temp2 = curList;
 
-      maxiter2 = length_acc(curList);
+      maxiter2 = length_gpu(curList);
       found2 = 0;
       iter2  = 0;
       /* Loop until find the next intersection */
@@ -513,16 +513,16 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
         int temp2IsIntersect;
 
         temp2IsIntersect = 0;
-        if( isIntersect_acc( *temp2 ) ) { /* copy the point and switch to the grid2List */
-          struct Node_acc *temp3;
+        if( isIntersect_gpu( *temp2 ) ) { /* copy the point and switch to the grid2List */
+          struct Node_gpu *temp3;
 
           /* first check if temp2 is the firstIntersect */
-          if( sameNode_acc( *temp2, *firstIntersect) ) {
+          if( sameNode_gpu( *temp2, *firstIntersect) ) {
             found1 = 1;
             break;
           }
 
-          temp3 = temp2->Next_acc;
+          temp3 = temp2->Next_gpu;
           if( temp3 == NULL) temp3 = curList;
           if( temp3 == NULL) printf("ERROR creat_xgrid.c: temp3 can not be NULL\n");
           found2 = 1;
@@ -530,19 +530,19 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
              need to keep on curList
           */
           temp2IsIntersect = 1;
-          if( isIntersect_acc(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
+          if( isIntersect_gpu(*temp3) || (temp3->isInside == 1)  ) found2 = 0;
         }
         if(found2) {
-          copyNode_acc(curIntersect, *temp2);
+          copyNode_gpu(curIntersect, *temp2);
           break;
         }
         else {
-          addNode_acc(polyList, *temp2);
+          addNode_gpu(polyList, *temp2);
           if(temp2IsIntersect) {
             nintersect--;
           }
         }
-        temp2 = temp2->Next_acc;
+        temp2 = temp2->Next_gpu;
         if( temp2 == NULL ) temp2 = curList;
         iter2 ++;
       } // while( iter2<maxiter2 )
@@ -551,13 +551,13 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       if( !found2 ) printf("ERROR not found the next intersection\n ");
 
       /* if find the first intersection, the poly found */
-      if( sameNode_acc( *curIntersect, *firstIntersect) ) {
+      if( sameNode_gpu( *curIntersect, *firstIntersect) ) {
         found1 = 1;
         break;
       }
 
       /* add curIntersect to polyList and remove it from intersectList and curList */
-      addNode_acc(polyList, *curIntersect);
+      addNode_gpu(polyList, *curIntersect);
       nintersect--;
 
       /* switch curList */
@@ -579,8 +579,8 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
     /* copy the polygon to x_out, y_out, z_out */
     temp1 = polyList;
     while (temp1 != NULL) {
-      getCoordinate_acc(*temp1, x_out+n_out, y_out+n_out, z_out+n_out);
-      temp1 = temp1->Next_acc;
+      getCoordinate_gpu(*temp1, x_out+n_out, y_out+n_out, z_out+n_out);
+      temp1 = temp1->Next_gpu;
       n_out++;
     }
 
@@ -599,16 +599,16 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       if(temp->intersect != 1) {
         if( temp->isInside == 1) n1in2++;
       }
-      temp = getNextNode_acc(temp);
+      temp = getNextNode_gpu(temp);
     }
     if(npts1==n1in2) { /* grid1 is inside grid2 */
       n_out = npts1;
       n = 0;
       temp = grid1List;
       while( temp ) {
-        getCoordinate_acc(*temp, &x_out[n], &y_out[n], &z_out[n]);
+        getCoordinate_gpu(*temp, &x_out[n], &y_out[n], &z_out[n]);
         n++;
-        temp = getNextNode_acc(temp);
+        temp = getNextNode_gpu(temp);
       }
     }
     if(n_out>0) return n_out;
@@ -624,7 +624,7 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       if(temp->intersect != 1) {
         if( temp->isInside == 1) n2in1++;
       }
-      temp = getNextNode_acc(temp);
+      temp = getNextNode_gpu(temp);
     }
 
     if(npts2==n2in1) { /* grid2 is inside grid1 */
@@ -632,9 +632,9 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
       n = 0;
       temp = grid2List;
       while( temp ) {
-        getCoordinate_acc(*temp, &x_out[n], &y_out[n], &z_out[n]);
+        getCoordinate_gpu(*temp, &x_out[n], &y_out[n], &z_out[n]);
         n++;
-        temp = getNextNode_acc(temp);
+        temp = getNextNode_gpu(temp);
       }
 
     }
@@ -643,7 +643,7 @@ int clip_2dx2d_great_circle_acc(const double x1_in[], const double y1_in[], cons
   return n_out;
 }
 
-void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config *output_grid,
+void get_grid_cell_struct_gpu( const int nlon, const int nlat, const Grid_config *output_grid,
                                Grid_cells_struct_config *grid_cells )
 {
 
@@ -677,20 +677,20 @@ void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config
     int nvertices;
     double lon_vertices[MV], lat_vertices[MV];
 
-    get_cell_vertices_acc( icell, nlon, lon, lat, lon_vertices, lat_vertices );
+    get_cell_vertices_gpu( icell, nlon, lon, lat, lon_vertices, lat_vertices );
 
-    grid_cells->lat_min[icell] = minval_double_acc(4, lat_vertices);
-    grid_cells->lat_max[icell] = maxval_double_acc(4, lat_vertices);
+    grid_cells->lat_min[icell] = minval_double_gpu(4, lat_vertices);
+    grid_cells->lat_max[icell] = maxval_double_gpu(4, lat_vertices);
 
-    nvertices = fix_lon_acc(lon_vertices, lat_vertices, 4, M_PI);
+    nvertices = fix_lon_gpu(lon_vertices, lat_vertices, 4, M_PI);
     grid_cells->nvertices[icell] = nvertices;
 
     if(nvertices>MAX_V) printf("ERROR get_cell_minmaxavg_latlons:  number of cell vertices is greater than MAX_V\n");
-    grid_cells->lon_min[icell]  = minval_double_acc(nvertices, lon_vertices);
-    grid_cells->lon_max[icell]  = maxval_double_acc(nvertices, lon_vertices);
-    grid_cells->lon_cent[icell] = avgval_double_acc(nvertices, lon_vertices);
+    grid_cells->lon_min[icell]  = minval_double_gpu(nvertices, lon_vertices);
+    grid_cells->lon_max[icell]  = maxval_double_gpu(nvertices, lon_vertices);
+    grid_cells->lon_cent[icell] = avgval_double_gpu(nvertices, lon_vertices);
 
-    grid_cells->area[icell] = poly_area_acc(lon_vertices, lat_vertices, nvertices);
+    grid_cells->area[icell] = poly_area_gpu(lon_vertices, lat_vertices, nvertices);
 
     for(int ivertex=0 ; ivertex<nvertices ; ivertex++) {
       grid_cells->lon_vertices[MAX_V*icell+ivertex] = lon_vertices[ivertex];
@@ -700,7 +700,7 @@ void get_grid_cell_struct_acc( const int nlon, const int nlat, const Grid_config
 
 }
 
-void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid_cells)
+void free_grid_cell_struct_gpu( const int ncells, Grid_cells_struct_config *grid_cells)
 {
 
 #pragma acc exit data delete( grid_cells->lon_vertices,  \
@@ -726,7 +726,7 @@ void free_grid_cell_struct_acc( const int ncells, Grid_cells_struct_config *grid
 }
 
 
-void get_cell_vertices_acc( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
+void get_cell_vertices_gpu( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
 {
 
   int i, j;
@@ -746,7 +746,7 @@ void get_cell_vertices_acc( const int icell, const int nlon, const double *lon, 
 
 }
 
-void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcells_per_ij1,
+void create_upbound_nxcells_arrays_on_device_gpu(const int n, int **approx_nxcells_per_ij1,
                                                  int **ij2_start, int **ij2_end)
 {
 
@@ -768,7 +768,7 @@ void create_upbound_nxcells_arrays_on_device_acc(const int n, int **approx_nxcel
 
 }
 
-void free_upbound_nxcells_arrays_acc( const int n, int **approx_nxcells_per_ij1,
+void free_upbound_nxcells_arrays_gpu( const int n, int **approx_nxcells_per_ij1,
                                       int **ij2_start, int **ij2_end)
 {
   int *p_approx_nxcells_per_ij1;
@@ -788,7 +788,7 @@ void free_upbound_nxcells_arrays_acc( const int n, int **approx_nxcells_per_ij1,
   free(*ij2_end)               ; *ij2_end = NULL;
 }
 
-void copy_data_to_interp_on_device_acc(const int nxcells, const int input_ncells, const int upbound_nxcells,
+void copy_data_to_interp_on_device_gpu(const int nxcells, const int input_ncells, const int upbound_nxcells,
                                       int *xcells_per_ij1, double *xcell_dclon, double *xcell_dclat,
                                       int *approx_xcells_per_ij1, int *parent_input_index, int *parent_output_index,
                                       double *xcell_areas, Interp_per_input_tile *interp_for_input_tile)

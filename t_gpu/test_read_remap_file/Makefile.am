@@ -17,19 +17,28 @@
 #* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-check_PROGRAMS = test_get_upbound_nxcells_2dx2d
+check_PROGRAMS = test_read_remap_file
 
-AM_CFLAGS =  $(NETCDF_CFLAGS) \
-            -I$(top_srcdir)/tools/fregrid_acc \
-            -I$(top_srcdir)/tools/libfrencutils \
-            -I$(top_srcdir)/tools/libfrencutils_acc -acc
+AM_CFLAGS = $(NETCDF_CFLAGS) \
+            -I$(top_srcdir)/tools/libfrencutils  \
+            -I$(top_srcdir)/tools/libfrencutils_gpu \
+            -I$(top_srcdir)/tools/fregrid_gpu -acc
 
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
-        $(top_builddir)/tools/fregrid_acc/conserve_interp_acc.o \
-        $(top_builddir)/tools/fregrid_acc/interp_utils_acc.o \
+        $(top_builddir)/tools/fregrid_gpu/conserve_interp_gpu.o \
+        $(top_builddir)/tools/fregrid_gpu/interp_utils_gpu.o \
         $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-        $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a
+        $(top_builddir)/tools/libfrencutils_gpu/libfrencutils_gpu.a
 
-test_get_upbound_nxcells_2dx2d_SOURCES = test_get_upbound_nxcells_2dx2d.c
+test_read_remap_file_SOURCES = test_read_remap_file.c
 
-TESTS = test_get_upbound_nxcells_2dx2d
+TESTS = test_read_remap_file_conserve.sh
+
+EXTRA_DIST = test_read_remap_file_conserve.sh
+
+
+TESTS_ENVIRONMENT = test_make_remap_file_conserve="$(srcdir)/test_make_remap_file_conserve.py"
+
+TEST_EXTENSIONS = .sh
+
+CLEANFILES = *.nc *txt

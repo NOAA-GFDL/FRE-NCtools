@@ -20,21 +20,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <openacc.h>
-#include "globals_acc.h"
-#include "general_utils_acc.h"
+#include "globals_gpu.h"
+#include "general_utils_gpu.h"
 
 /*******************************************************************************
 void copy_grid_to_device( const int itile, Grid_config *grid )
 Copies lat lon coordinates to device
 *******************************************************************************/
-void copy_grid_to_device_acc( const int npoints, const double *lat, const double *lon )
+void copy_grid_to_device_gpu( const int npoints, const double *lat, const double *lon )
 {
 
 #pragma acc enter data copyin(lon[:npoints], lat[:npoints])
 
 }
 
-void delete_grid_from_device_acc( const int npoints, const double *lat, const double *lon )
+void delete_grid_from_device_gpu( const int npoints, const double *lat, const double *lon )
 {
 
 #pragma acc exit data delete(lat[:npoints], lon[:npoints])
@@ -45,24 +45,24 @@ void delete_grid_from_device_acc( const int npoints, const double *lat, const do
 void copy_interp_to_device( Interp_config *interp )
 Copies the interp struct to device
 *******************************************************************************/
-void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const Interp_config_acc *interp_acc,
+void copy_interp_to_device_gpu( const int ntiles_in, const int ntiles_out, const Interp_config_gpu *interp_gpu,
                                 const unsigned int opcode )
 {
 
-#pragma acc enter data copyin(interp_acc[:ntiles_out])
+#pragma acc enter data copyin(interp_gpu[:ntiles_out])
   for(int otile=0 ; otile<ntiles_out; otile++) {
 
-#pragma acc enter data copyin( interp_acc[otile].input_tile[:ntiles_in] )
+#pragma acc enter data copyin( interp_gpu[otile].input_tile[:ntiles_in] )
 
     for(int itile=0 ; itile<ntiles_in ; itile++) {
 
-      int nxcells = interp_acc[otile].input_tile[itile].nxcells;
-#pragma acc enter data copyin( interp_acc[otile].input_tile[itile].input_parent_cell_index[:nxcells], \
-                               interp_acc[otile].input_tile[itile].output_parent_cell_index[:nxcells],\
-                               interp_acc[otile].input_tile[itile].xcell_area[:nxcells] )
+      int nxcells = interp_gpu[otile].input_tile[itile].nxcells;
+#pragma acc enter data copyin( interp_gpu[otile].input_tile[itile].input_parent_cell_index[:nxcells], \
+                               interp_gpu[otile].input_tile[itile].output_parent_cell_index[:nxcells],\
+                               interp_gpu[otile].input_tile[itile].xcell_area[:nxcells] )
         if( opcode & CONSERVE_ORDER2) {
-#pragma acc enter data copyin( interp_acc[otile].input_tile[itile].dcentroid_lon[:nxcells], \
-                               interp_acc[otile].input_tile[itile].dcentroid_lat[:nxcells])
+#pragma acc enter data copyin( interp_gpu[otile].input_tile[itile].dcentroid_lon[:nxcells], \
+                               interp_gpu[otile].input_tile[itile].dcentroid_lat[:nxcells])
         }
 
     } // ntiles_in
@@ -74,7 +74,7 @@ void copy_interp_to_device_acc( const int ntiles_in, const int ntiles_out, const
 void get_input_skip_cells
 assign mask to skip input cells in xgrid creation
 *******************************************************************************/
-void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
+void get_input_grid_mask_gpu(const int mask_size, double **input_grid_mask)
 {
 
   double *p_input_grid_mask;
@@ -89,7 +89,7 @@ void get_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
 
 }
 
-void free_input_grid_mask_acc(const int mask_size, double **input_grid_mask)
+void free_input_grid_mask_gpu(const int mask_size, double **input_grid_mask)
 {
   double *p_input_grid_mask;
 

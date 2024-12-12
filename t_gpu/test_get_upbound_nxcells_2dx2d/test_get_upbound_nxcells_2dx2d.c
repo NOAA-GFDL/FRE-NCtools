@@ -28,11 +28,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <openacc.h>
-#include "globals_acc.h"
-#include "conserve_interp_acc.h"
-#include "interp_utils_acc.h"
-#include "create_xgrid_utils_acc.h"
-#include "create_xgrid_acc.h"
+#include "globals_gpu.h"
+#include "conserve_interp_gpu.h"
+#include "interp_utils_gpu.h"
+#include "create_xgrid_utils_gpu.h"
+#include "create_xgrid_gpu.h"
 
 typedef struct {
   int ncells_input;
@@ -322,33 +322,33 @@ int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_stru
   double *input_grid_mask;
 
   //copy grid to device
-  copy_grid_to_device_acc(ngridpts_input, input_grid->latc, input_grid->lonc);
-  copy_grid_to_device_acc(ngridpts_output, output_grid->latc, output_grid->lonc);
+  copy_grid_to_device_gpu(ngridpts_input, input_grid->latc, input_grid->lonc);
+  copy_grid_to_device_gpu(ngridpts_output, output_grid->latc, output_grid->lonc);
 
   //get mask to skip input cells in creating xgrid
-  get_input_grid_mask_acc(ncells_input, &input_grid_mask);
+  get_input_grid_mask_gpu(ncells_input, &input_grid_mask);
   if( ! acc_is_present(input_grid_mask, ncells_input*sizeof(double)) ) {
     printf("INPUT_GRID_MASK IS NOT ON DEVICE!"); exit(1);
   }
 
   //get output grid cell info
-  get_grid_cell_struct_acc(nlon_output_cells, nlat_output_cells, output_grid, output_grid_cells);
+  get_grid_cell_struct_gpu(nlon_output_cells, nlat_output_cells, output_grid, output_grid_cells);
 
   //get bounding indices
-  get_bounding_indices_acc(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
+  get_bounding_indices_gpu(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
                            output_grid->latc, input_grid->latc, &jlat_overlap_starts, &jlat_overlap_ends);
   if(jlat_overlap_starts != 0) printf("SMETHING IS WRONG WITH JLAT_OVERLAP_STARTS %d\n", jlat_overlap_starts);
   if(jlat_overlap_ends != nlat_input_cells-1) // this is what was in the original.
     printf("SOMETHING IS WRONG WITH JLAT_OVERLAP_ENDS %d %d\n", jlat_overlap_ends, nlat_input_cells-1);
 
   //malloc and create arrays
-  create_upbound_nxcells_arrays_on_device_acc(ncells_input, &p_approx_nxcells_per_ij1, &p_ij2_start, &p_ij2_end);
+  create_upbound_nxcells_arrays_on_device_gpu(ncells_input, &p_approx_nxcells_per_ij1, &p_ij2_start, &p_ij2_end);
 
   // check to ensure all data have been transferred/created to device
   check_data_on_device(input_grid, output_grid, p_approx_nxcells_per_ij1, p_ij2_start, p_ij2_end,
                        output_grid_cells);
 
-  *upbound_nxcells = get_upbound_nxcells_2dx2d_acc(input_grid->nxc, input_grid->nyc, output_grid->nxc, output_grid->nyc,
+  *upbound_nxcells = get_upbound_nxcells_2dx2d_gpu(input_grid->nxc, input_grid->nyc, output_grid->nxc, output_grid->nyc,
                                                    jlat_overlap_starts, jlat_overlap_ends,
                                                    input_grid->lonc, input_grid->latc, output_grid->lonc, output_grid->latc,
                                                    input_grid_mask, output_grid_cells,
@@ -358,7 +358,7 @@ int run_tests(Grid_config *input_grid, Grid_config *output_grid, Grid_cells_stru
   *ij2_start = p_ij2_start;
   *ij2_end = p_ij2_end;
 
-  free_input_grid_mask_acc(ncells_input, &input_grid_mask);
+  free_input_grid_mask_gpu(ncells_input, &input_grid_mask);
 
   return 0;
 
@@ -372,8 +372,8 @@ void cleanup_test(Answers *answers, Grid_config *input_grid, Grid_config *output
   int ncells_output = output_grid->nxc * output_grid->nyc;
   int ncells_input  = input_grid->nxc * input_grid->nyc;
 
-  free_grid_cell_struct_acc(ncells_output, output_grid_cells);
-  free_upbound_nxcells_arrays_acc(ncells_input, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
+  free_grid_cell_struct_gpu(ncells_output, output_grid_cells);
+  free_upbound_nxcells_arrays_gpu(ncells_input, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
 
 }
 

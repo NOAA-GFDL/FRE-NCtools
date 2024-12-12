@@ -17,25 +17,25 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = fregrid_acc
+bin_PROGRAMS = fregrid_gpu
 
 AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS) \
-            -I$(top_srcdir)/tools/libfrencutils_acc \
+            -I$(top_srcdir)/tools/libfrencutils_gpu \
             -I$(top_srcdir)/tools/fregrid \
             $(OPENACC_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
-fregrid_acc_SOURCES = conserve_interp_acc.c \
-                      conserve_interp_acc.h \
-                      interp_utils_acc.c \
-                      interp_utils_acc.h \
-                      fregrid_utils_acc.c \
-                      fregrid_utils_acc.h \
-                      fregrid_acc.c
+fregrid_gpu_SOURCES = conserve_interp_gpu.c \
+                      conserve_interp_gpu.h \
+                      interp_utils_gpu.c \
+                      interp_utils_gpu.h \
+                      fregrid_utils_gpu.c \
+                      fregrid_utils_gpu.h \
+                      fregrid_gpu.c
 
-fregrid_acc_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \
+fregrid_gpu_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \
                     $(top_builddir)/tools/fregrid/conserve_interp.o \
                     $(top_builddir)/tools/fregrid/bilinear_interp.o \
                     $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-                    $(top_builddir)/tools/libfrencutils_acc/libfrencutils_acc.a \
+                    $(top_builddir)/tools/libfrencutils_gpu/libfrencutils_gpu.a \
                     $(LDADD)
