@@ -58,7 +58,7 @@ TESTS = Test01-check_programs_exist.sh \
         Test13-make_quick_mosaic.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
-        Test25-hydrology.sh \
+        Test25-hydrology.sh
 
 EXTRA_DIST = $(TESTS) \
              test_utils.bash \
