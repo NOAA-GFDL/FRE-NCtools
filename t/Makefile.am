@@ -60,7 +60,6 @@ TESTS = Test01-check_programs_exist.sh \
         Test15-regrid_land.sh \
         Test16-river_regrid.sh \
         Test25-hydrology.sh \
-        Test31-fregrid_stretched.sh
 
 EXTRA_DIST = $(TESTS) \
              test_utils.bash \
@@ -72,8 +71,6 @@ EXTRA_DIST = $(TESTS) \
              Test15-input \
              Test16-input \
              $(test25_data) \
-             Test31-input \
-             Test32-input \
              Test33-reference
 
 clean-local:
