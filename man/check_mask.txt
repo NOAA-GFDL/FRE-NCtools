@@ -9,7 +9,7 @@ check_mask - configure the processors which contain all land points
 SYNOPSIS
 --------
 [verse]
-check_mask --grid_file grid_file [options]
+check_mask --grid_file _grid_file_ [options]
 
 DESCRIPTION
 -----------
