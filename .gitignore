@@ -94,7 +94,6 @@ tests/create_plevel_test_ncfile
 tests/create_salt_temp_file
 tests/create_timeavg_test_ncfiles
 tests/f_test_version
-tests/fregrid/remap-file
 tools/check_mask/check_mask
 tools/cubic_utils/make_remap_file
 tools/fregrid/fregrid

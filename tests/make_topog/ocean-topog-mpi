@@ -27,7 +27,7 @@ fi
 
 # Check if we should skip the MPI tests
 command -v make_topog_parallel && test -z "$SKIP_MPI_TESTS" \
-    || skip_ "make_topog_parellel not available"
+    || skip_ "MPI tests disabled"
 
 # Create ocean hgrid
 make_hgrid \

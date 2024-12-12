@@ -26,7 +26,8 @@ fi
 . "${srcdir=.}/init.sh"
 
 # Check if we should skip the MPI tests
-command -v make_coupler_mosaic_parallel && test -z "$SKIP_MPI_TESTS"  || skip_ "mpi tests disabled"
+command -v make_coupler_mosaic_parallel && test -z "$SKIP_MPI_TESTS"  \
+    || skip_ "MPI tests disabled"
 
 # Create ocean hgrid
 make_hgrid \
