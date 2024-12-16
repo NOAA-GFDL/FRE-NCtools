@@ -137,27 +137,34 @@ test x"$(ncdump -k decomp_classic.nc)" = x"64-bit offset" \
 
 # input of netCDF-4 should be "netCDF-4"
 # Not implemented yet
-ncgen -4 -o decomp_netcdf4.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
+mkfifo ncdmp_pipe
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -4 -o decomp_netcdf4.nc.0000 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_netcdf4.nc.0000
-ncgen -4 -o decomp_netcdf4.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" \
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -4 -o decomp_netcdf4.nc.0001 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_netcdf4.nc.0001
 mppnccombine decomp_netcdf4.nc || framework_failure_ failed to combine decomp_netcdf4.nc
 test x"$(ncdump -k decomp_netcdf4.nc)" = x"$(ncdump -k decomp_netcdf4.nc.0000)" \
     || fail_ decomp_netcdf4.nc is not $(ncdump -k decomp_netcdf4.nc.0000), but is $(ncdump -k decomp_netcdf4.nc)
 
 # input of cdf5 should be "cdf5"
-ncgen -5 -o decomp_cdf5.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -5 -o decomp_cdf5.nc.0000 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_cdf5.nc.0000
-ncgen -5 -o decomp_cdf5.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" \
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -5 -o decomp_cdf5.nc.0001 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_cdf5.nc.0001
 mppnccombine decomp_cdf5.nc || framework_failure_ failed to combine decomp_cdf5.nc
 test x"$(ncdump -k decomp_cdf5.nc)" = x"$(ncdump -k decomp_cdf5.nc.0000)" \
     || fail_ decomp_cdf5.nc is not $(ncdump -k decomp_cdf5.nc.0000) but is $(ncdump -k decomp_cdf5.nc)
 
 # input of 64-bit offset should be "64-bit offset"
-ncgen -6 -o decomp_64offset.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -6 -o decomp_64offset.nc.0000 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_64offest.nc.0000
-ncgen -6 -o decomp_64offset.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" \
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -6 -o decomp_64offset.nc.0001 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_64offest.nc.0001
 mppnccombine decomp_64offset.nc || framework_failure_ failed to combine decomp_64offset.nc
 test x"$(ncdump -k decomp_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)" \
@@ -165,11 +172,14 @@ test x"$(ncdump -k decomp_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)
     Got: $(ncdump -k decomp_64offset.nc)
 
 # input of netCDF-4 classic should be "netCDF-4 classic model"
-ncgen -7 -o decomp_netcdf4_classic.nc.0000 <<< "$(ncdump decomp_classic.nc.0000)" \
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -7 -o decomp_netcdf4_classic.nc.0000 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_netcdf4_classic.nc.0000
-ncgen -7 -o decomp_netcdf4_classic.nc.0001 <<< "$(ncdump decomp_classic.nc.0001)" \
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -7 -o decomp_netcdf4_classic.nc.0001 <ncdmp_pipe \
     || framework_failure_ failed to create decomp_netcdf4_classic.nc.0001
 mppnccombine decomp_netcdf4_classic.nc || framework_failure_ failed to combine decomp_netcdf4_classic.nc
 test x"$(ncdump -k decomp_netcdf4_classic.nc)" = x"$(ncdump -k decomp_netcdf4_classic.nc.0000)" \
     || fail_ decomp_netcdf4_classic.nc is not $(ncdump -k decomp_netcdf4_classic.nc.0000). \
     Got: $(ncdump -k decomp_netcdf4_classic.nc)
+
