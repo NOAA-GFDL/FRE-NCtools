@@ -264,6 +264,7 @@ AC_CONFIG_FILES([Makefile
                  lib/libnfu/Makefile
                  man/Makefile
                  src/Makefile
+                 tests/Makefile
                  tools/libfrencutils/Makefile
                  tools/libfrencutils_gpu/Makefile
                  tools/check_mask/Makefile
@@ -296,7 +297,6 @@ AC_CONFIG_FILES([Makefile
                  t_gpu/test_get_grid_cell_struct/Makefile
                  t_gpu/test_get_upbound_nxcells_2dx2d/Makefile
                  t_gpu/test_get_interp_order1/Makefile
-
 ])
 
 AC_OUTPUT
