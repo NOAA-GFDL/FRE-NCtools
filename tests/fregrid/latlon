@@ -66,7 +66,6 @@ make_solo_mosaic  \
     --mosaic_name latlon_mosaic  \
     --tile_file latlon_grid.nc \
     || framework_failure_ failed to create lat-lon mosaic file
-ls
 
 #Remap data from CM2.1 ocean grid onto regular lat-lon grid.
 fregrid \
@@ -78,4 +77,11 @@ fregrid \
 	--check_conserve \
     || fail_ failed regrid input file
 test -f ocean_temp_salt.latlon.nc || fail_ output file does not exist
-ls
+# This ncdump is to ensure the file is valid, and to allow further
+# test verification to be written.
+ncdump ocean_temp_salt.latlon.nc \
+    || fail_ failed to ncdump ocean_temp_salt.latlon.nc
+
+# Check that yaxis has only 5 grid points
+ncdump -h ocean_temp_salt.latlon.nc | grep -q 'yaxis  *=  *5  *;' \
+    || fail_ yaxis has wrong number of grid points
