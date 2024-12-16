@@ -93,8 +93,8 @@ AM_CONDITIONAL([WITH_MPI], [test x"$with_mpi" = x"yes"])
 AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$with_mpi" = x"yes" && test -z "$SKIP_MPI_TEST"])
 
 # Build with OpenACC support.  Default is 'no'
-AC_ARG_ENABLE([acc],
-  [AS_HELP_STRING([--enable-acc],
+AC_ARG_ENABLE([gpu],
+  [AS_HELP_STRING([--enable-gpu],
     [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu. (default no)])])
 AS_IF([test ${enable_gpu:-no} = yes],
   [enable_gpu=yes],
