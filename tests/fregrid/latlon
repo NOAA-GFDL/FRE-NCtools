@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+# Create the required input files
+$builddir/create_salt_temp_file || framework_failure_ failed to create ocean_salt_temp.nc
+# create the required horizontal grids
+# Make the CM2.1-like grid and mosaic
+make_hgrid \
+    --grid_type tripolar_grid \
+    --nxbnd 2 \
+    --nybnd 2 \
+    --xbnd -280,80 \
+    --ybnd -82,90 \
+    --nlon 720 \
+    --nlat 400 \
+    --grid_name CM2.1_grid \
+    || framework_failure_ failed to create CM2.1-like grid file
+
+make_solo_mosaic \
+    --num_tiles 1 \
+    --dir ./ \
+    --mosaic_name CM2.1_mosaic \
+    --tile_file CM2.1_grid.nc \
+    --periodx 360 \
+    || framework_failure_ failed to create CM2.1-like mosaic
+
+# Create regular lat-lon grid (100:160, -15:15, size is 360x180) grid and mosaic
+make_hgrid  \
+    --grid_type regular_lonlat_grid  \
+    --nxbnd 2  \
+    --nybnd 2  \
+    --xbnd 0,360  \
+    --ybnd -2,2  \
+    --nlon 720  \
+    --nlat 10  \
+    --grid_name latlon_grid \
+    || framework_failure_ failed to create lat-lon grid file
+
+make_solo_mosaic  \
+    --num_tiles 1  \
+    --dir ./  \
+    --mosaic_name latlon_mosaic  \
+    --tile_file latlon_grid.nc \
+    || framework_failure_ failed to create lat-lon mosaic file
+ls
+
+#Remap data from CM2.1 ocean grid onto regular lat-lon grid.
+fregrid \
+	--input_mosaic CM2.1_mosaic.nc   \
+	--input_file ocean_temp_salt.nc   \
+	--scalar_field temp,salt  \
+	--output_file ocean_temp_salt.latlon.nc   \
+	--output_mosaic latlon_mosaic.nc   \
+	--check_conserve \
+    || fail_ failed regrid input file
+test -f ocean_temp_salt.latlon.nc || fail_ output file does not exist
+ls

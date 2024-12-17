@@ -36,7 +36,9 @@ module load PrgEnv-gnu/6.0.10
 module load gcc/12.1.0
 module load cray-hdf5/1.12.1.3
 module load cray-netcdf/4.8.1.3
-module load nccmp
+
+# Additional required modules
+module load nco/5.1.9
 
 # Add bats to PATH
 # Needed for testing

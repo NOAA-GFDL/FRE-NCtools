@@ -21,26 +21,32 @@
 # Prelude
 AC_PREREQ([2.63])
 AC_INIT(
-  [FRE NC Tools],
+  [FRE NCTools],
   [2024.04],
-  [oar.gfdl.help@noaa.gov],
+  [https://github.com/NOAA-GFDL/FRE-NCtools/issues],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
 
-# Place the git description informatin in the configure script
+# Place the git description information in the configure script
 m4_define([git_revision],
-  [m4_esyscmd_s([git describe --always --dirty 2> /dev/null || echo "unknown version"])])
-AC_REVISION([$git_revision])
-
+  [m4_esyscmd_s([git describe --tags --always --dirty 2> /dev/null || echo "unknown version"])])
+AC_REVISION([git_revision])
 m4_define([git_hashval],
-  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown githash"])])
-AC_REVISION([$git_hashval])
+  [m4_esyscmd_s([git rev-parse HEAD 2> /dev/null || echo "unknown git hash"])])
+AC_REVISION([git_hashval])
+m4_define([git_date],
+  [m4_esyscmd_s([git show --no-patch --format=%as HEAD 2> /dev/null || date +%Y-%m-%d])])
+AC_REVISION([git_date])
+m4_define([copyright_year],
+  [m4_substr(git_date, 0, 4)])
 
-AC_CONFIG_SRCDIR([postprocessing/land_utils/combine-ncc.F90])
+AC_CONFIG_SRCDIR([src/land_utils/combine-ncc.F90])
 AC_CONFIG_MACRO_DIR([m4])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-AM_INIT_AUTOMAKE([foreign -Wall -Werror -Woverride tar-ustar])
+# Remove -Werror from automake options until OS vendors brings in a newer
+# version of automake.
+AM_INIT_AUTOMAKE([foreign -Wall -Woverride tar-pax subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([docs install-docs])
 
 # Check for programs
@@ -69,6 +75,8 @@ AC_FC_SRCEXT([F90])
 AC_FC_LINE_LENGTH([unlimited])
 AC_FC_FREEFORM()
 AC_FC_MODULE_EXTENSION()
+AC_FC_MODULE_FLAG()
+AC_FC_MODULE_OUTPUT_FLAG()
 GX_FC_DEFAULT_REAL_KIND8_FLAG()
 GX_FC_DEFAULT_REAL_KIND4_FLAG()
 
@@ -78,20 +86,19 @@ AC_SEARCH_LIBS([ceil],[m])
 # Default MPI build is off
 build_mpi=no
 LX_FIND_MPI()
-AS_IF([test x"$with_mpi" = x"yes"],
-   [if test x"$have_C_mpi" = x"yes"; then
-      build_mpi="yes"
-    fi])
-AM_CONDITIONAL([WITH_MPI], [test x"$build_mpi" = x"yes"])
-AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$build_mpi" = x"yes" -a -z "$SKIP_MPI_TEST"])
+AS_IF([test x"$with_mpi" = x"yes" && test x"$have_C_mpi" = x"no"], [
+  AC_MSG_ERROR([MPI build requested but no MPI compiler found.])
+])
+AM_CONDITIONAL([WITH_MPI], [test x"$with_mpi" = x"yes"])
+AM_CONDITIONAL([WITH_MPI_TESTS], [test x"$with_mpi" = x"yes" && test -z "$SKIP_MPI_TEST"])
 
-#Build with OpenACC suport.  Default is 'no'
+# Build with OpenACC support.  Default is 'no'
 AC_ARG_ENABLE([gpu],
-            [AS_HELP_STRING([--enable-gpu],
-                            [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu.(default no)])])
+  [AS_HELP_STRING([--enable-gpu],
+    [Builds with OpenACC. This will result in a second executable for fregrid, fregrid_gpu. (default no)])])
 AS_IF([test ${enable_gpu:-no} = yes],
-      [enable_gpu=yes],
-      [enable_gpu=no])
+  [enable_gpu=yes],
+  [enable_gpu=no])
 # check compile flags
 AS_IF([test ${enable_gpu} = yes],
       [GX_OPENACC_FLAGS()])
@@ -107,6 +114,10 @@ if test ! -z "$FC_CRAY_POINTER_FLAG"; then
    FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"
 fi
 
+# Check for programs
+AC_PROG_GREP
+AC_PROG_EGREP
+AC_PROG_SED
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
 if test -n "$ASCIIDOC"; then
@@ -127,18 +138,63 @@ AC_CHECK_PROGS(BATS, [bats])
 AC_CHECK_PROGS(PROVE, [prove])
 AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
 
-AC_PYTHON_MODULE(xarray, [], python3)
+# Although these are supplied with the NetCDF C library, we'll double
+# check that ncgen and ncdump are available
+AC_ARG_VAR([NCGEN], [Path to ncgen])
+AC_PATH_PROG(NCGEN, [ncgen])
+AS_IF([test -z "$NCGEN"],
+  [AC_MSG_ERROR([Cannot find ncgen.  Please ensure ncgen is in PATH or set the environment variable NCGEN to the full path.])])
+
+AC_ARG_VAR([NCDUMP], [Path to ncdump])
+AC_PATH_PROG(NCDUMP, [ncdump])
+AS_IF([test -z "$NCDUMP"],
+  [AC_MSG_ERROR([Cannot find ncdump.  Please ensure ncdump is in PATH or set the environment variable NCDUMP to the full path.])])
+
+AC_ARG_VAR([NCRCAT], [Path to ncrcat])
+AC_PATH_PROG(NCRCAT, [ncrcat])
+AS_IF([test -z "$NCRCAT"],
+  [AC_MSG_ERROR([Cannot find ncrcat.  Please ensure ncrcat is in PATH or set the environment variable NCRCAT to the full path.])])
+
+AC_ARG_VAR([NCATTED], [Path to ncatted])
+AC_PATH_PROG(NCATTED, [ncatted])
+AS_IF([test -z "$NCATTED"],
+  [AC_MSG_ERROR([Cannot find ncatted.  Please ensure ncatted is in PATH or set the environment variable NCATTED to the full path.])])
+
+AC_ARG_VAR([NCKS], [Path to ncks])
+AC_PATH_PROG(NCKS, [ncks])
+AS_IF([test -z "$NCKS"],
+  [AC_MSG_ERROR([Cannot find ncks.  Please ensure ncks is in PATH or set the environment variable NCKS to the full path.])])
+
+AC_ARG_VAR([PERL], [Path to perl])
+AC_PATH_PROG(PERL, [perl])
+AX_PROG_PERL_MODULES([List::MoreUtils], dnl
+  eval AS_TR_CPP(HAVE_PLMOD_LIST_MOREUTILS)=yes,
+  AC_MSG_WARN([Perl module List::MoreUtils not found.  Some applications will not be installed.]))
+AM_CONDITIONAL([HAVE_PLMOD_LIST_MOREUTILS], [test x$HAVE_PLMOD_LIST_MOREUTILS = xyes])
+
+AX_PYTHON_MODULE([xarray],[],[python3])
 if test ${HAVE_PYMOD_XARRAY} = yes; then
   AM_CONDITIONAL([SKIP_XARRAY_TESTS], false )
 else
   AM_CONDITIONAL([SKIP_XARRAY_TESTS], true )
 fi
 
+# Look for mpirun, mpiexec, srun application
+AC_ARG_VAR([MPIRUN], [Path to mpirun])
+AS_IF([test x"$with_mpi" = x"yes"], [
+  AC_CHECK_PROGS(MPIRUN, [srun aprun mpirun mpiexec])
+  AS_IF([test -z "$MPIRUN"],
+    [AC_MSG_WARN([Cannot find a suitable MPI launch application.  MPI tests will be skipped.])])
+])
+
 # Check if openacc.h exists
 if test "$enable_gpu" = yes ; then
    AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
    AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
 fi
+
+# Check for getrusage.
+AC_CHECK_FUNCS([getrusage])
 
 # Check for library
 AX_LIB_NETCDF()
@@ -171,13 +227,21 @@ AS_IF([test $ac_cv_type_long_double_wider = no],
 # Check if Test25-input link points to an existing directory
 AM_CONDITIONAL([HAVE_TEST25_INPUT], [test -e ${srcdir}/t/Test25-input/grid_spec.nc])
 
-# Other defs
-AC_DEFINE([GIT_REVISION], "git_revision",
-          [Holds the 'git describe' information if configure ran within a git working directory])
-AC_DEFINE([GIT_HEADHASH], "git_hashval",
-          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])
+# Set macros
+AS_VAR_SET([GIT_REVISION], ["git_revision"])dnl
+AC_DEFINE([GIT_REVISION], ["git_revision"],
+          [Holds the 'git describe' information if configure ran within a git working directory])dnl
+AC_SUBST(GIT_REVISION)dnl
+AS_VAR_SET([GIT_HEADHASH], ["git_hashval"])dnl
+AC_DEFINE([GIT_HEADHASH], ["git_hashval"],
+          [Holds the 'git rev-parse HEAD' information if configure ran within a git working directory])dnl
+AC_SUBST(GIT_HEADHASH)dnl
+AS_VAR_SET([COPYRIGHT_YEAR], ["copyright_year"])dnl
+AC_DEFINE([COPYRIGHT_YEAR], ["copyright_year"],
+          [Year to place in Copyright notices printed with --version information])dnl
+AC_SUBST(COPYRIGHT_YEAR)dnl
 
-#Code for setting rpath based ncview's configure.in code.
+# Code for setting rpath based ncview's configure.in code.
 AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
   for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS
   do
@@ -197,14 +261,10 @@ AC_SUBST(RPATH_FLAGS) dnl
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 postprocessing/combine_restarts/Makefile
-                 postprocessing/iceberg_comb/Makefile
-                 postprocessing/land_utils/Makefile
-                 postprocessing/list_ncvars/Makefile
-                 postprocessing/mppnccombine/Makefile
-                 postprocessing/plevel/Makefile
-                 postprocessing/split_ncvars/Makefile
-                 postprocessing/timavg/Makefile
+                 lib/libnfu/Makefile
+                 man/Makefile
+                 src/Makefile
+                 tests/Makefile
                  tools/libfrencutils/Makefile
                  tools/libfrencutils_gpu/Makefile
                  tools/check_mask/Makefile
@@ -237,7 +297,6 @@ AC_CONFIG_FILES([Makefile
                  t_gpu/test_get_grid_cell_struct/Makefile
                  t_gpu/test_get_upbound_nxcells_2dx2d/Makefile
                  t_gpu/test_get_interp_order1/Makefile
-
 ])
 
 AC_OUTPUT

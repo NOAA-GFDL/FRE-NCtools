@@ -118,20 +118,6 @@ load test_utils
   run_and_check -v mppncscatter
 }
 
-@test "Check mppnccombine exists and is executable" {
-  run_and_check -v mppnccombine
-  run mppnccombine -h
-  [ "$status" -eq 1 ]
-}
-
-@test "Check combine-ncc exists and is executable" {
-  run_and_check -v combine-ncc
-}
-
-@test "Check decompress-ncc exists and is executable" {
-  run_and_check -v decompress-ncc
-}
-
 @test "Check cr_lake_files exists and is executable" {
      run_and_check -v cr_lake_files
 
@@ -144,4 +130,3 @@ load test_utils
 @test "Check rmv_parallel_rivers exists and is executable" {
      run_and_check -v rmv_parallel_rivers
 }
-

@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+# create C48 grid for atmos/land
+make_hgrid \
+    --grid_type gnomonic_ed \
+    --nlon 96 \
+    --grid_name C48_grid || framework_failure_ failed to create C48 grid
+
+# create C48 solo mosaic for atmos/land
+make_solo_mosaic \
+    --num_tiles 6 \
+    --dir . \
+    --mosaic C48_mosaic \
+    --tile_file C48_grid.tile1.nc,C48_grid.tile2.nc,C48_grid.tile3.nc,C48_grid.tile4.nc,C48_grid.tile5.nc,C48_grid.tile6.nc \
+    || fail_ failed to create C48 solo mosaic
+# Ensure C48_mosaic.nc is created
+test -f C48_mosaic.nc || fail_ C48_mosaic.nc not created

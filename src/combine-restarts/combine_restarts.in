@@ -1,0 +1,218 @@
+#!/bin/sh
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
+script_name=$(basename "$0")
+
+pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
+
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+
+usage () {
+    echo "Usage: combine_restarts [OPTIONS]"
+}
+
+help () {
+    echo "Usage:"
+    echo "     combine_restarts [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "     -C              Options to pass to combine-ncc"
+    echo "     -M              Options to pass to mppnccombine, default are"
+    echo "                     '${mppCombOpts_default}'"
+    echo "     -n              Print the commands that would be executed, but do"
+    echo "                     not execute them."
+    echo "     -h              Display this help and exit"
+    echo "     -v              Be verbose in output"
+    echo "     -V              Output version information and exit"
+}
+
+echoerr() {
+    echo "$@" 1>&2
+}
+
+# Default values
+verbose=0
+remove_files=0
+dryrun=0
+combineNccOpts=""
+mppCombOpts_default='-64 -h 16384 -m'
+mppCombOpts="$mppCombOpts_default"
+
+while getopts :hC:M:nrvV OPT; do
+    case "$OPT" in
+    h)
+        help
+        exit $EXIT_SUCCESS
+        ;;
+    C)
+        combineNccOpts="${OPTARG}"
+        ;;
+    M)
+        mppCombOpts="${OPTARG}"
+        ;;
+    n)
+        dryrun=1
+        ;;
+    r)
+        remove_files=1
+        ;;
+    v)
+        verbose=$((verbose + 1))
+        ;;
+    V)
+        $pkg_libexec_dir/print_version $script_name
+        exit $EXIT_SUCCESS
+        ;;
+    \?)
+        echoerr "${script_name}: -${OPTARG}: Unknown option"
+        usage >&2
+        exit $EXIT_FAILURE
+        ;;
+    esac
+done
+
+# Determine if the required commands are available, if not exit.  As
+# all of these commands are part of FRE, usually if one is missing
+# all are missing.
+reqCommands="is-compressed \
+             combine-ncc \
+             mppnccombine \
+             iceberg_comb.sh"
+for c in $reqCommands
+do
+  command -v ${c} > /dev/null 2>&1
+  if [ $? -ne 0 ]
+  then
+    echoerr "${script_name}: Required application \"${c}\" is not in PATH." >&2
+    exit 1
+  fi
+done
+
+# Grep patterens needed
+patternGrepTail='\.[0-9]{4}$'
+patternGrepRestartsOrNC='\<res\>|\<nc\>'
+
+restartFiles=$( ls -1 | @EGREP@ "$patternGrepRestartsOrNC.*$patternGrepTail" | @SED@ -r "s/$patternGrepTail//g" | sort -u )
+
+for f in ${restartFiles}
+do
+    if [ ${verbose} -gt 0 ]
+    then
+        echoerr "debug1: processing for combined file '${f}'"
+    fi
+    inputFiles=$( ls -1 | @EGREP@ "${f}${patternGrepTail}" | xargs )
+    if [ $( echo ${inputFiles} | wc -w ) -gt 0 ]
+    then
+        # Check if file is a compressed file
+        is-compressed ${inputFiles%% *}
+        if [ $? -eq 0 ]
+        then
+            # File is land compressed
+            combine_ncc_cmd="combine-ncc $combineNccOpts ${inputFiles} ${f}"
+            if [ ${verbose} -gt 1 ]
+            then
+                echoerr "debug2: $combine_ncc_cmd"
+            fi
+            if [ $dryrun -gt 0 ]
+            then
+                echo $combine_ncc_cmd
+            else
+                eval $combine_ncc_cmd
+            fi
+            if [ $? -ne 0 ]
+            then
+                echoerr "${script_name}: error while combining land-compressed file '${f}'"
+                exit $EXIT_FAILURE
+            else
+                if [ $remove_files -gt 0 ]
+                then
+                    if [ $dryrun -gt 0 ]
+                    then
+                        echo rm -f ${inputFiles}
+                    else
+                        \rm -f ${inputFiles}
+                    fi
+                fi
+            fi
+        elif iceberg_comb.sh -c ${inputFiles%% *}
+        then
+            # combine using icebergs_comb.sh
+            iceberg_comb_cmd="iceberg_comb.sh ${inputFiles} ${f}"
+            if [ ${verbose} -gt 1 ]
+            then
+                echoerr "debug2: calling '$iceberg_comb_cmd'"
+            fi
+            if [ $dryrun -gt 0 ]
+            then
+                echo $iceberg_comb_cmd
+            else
+                eval $iceberg_comb_cmd
+            fi
+            if [ $? -ne 0 ]
+            then
+                echoerr "${script_name}: error while combining icebergs file '${f}'"
+                exit $EXIT_FAILURE
+            else
+                if [ $remove_files -gt 0 ]
+                then
+                    if [ $dryrun -gt 0 ]
+                    then
+                        echo rm -f ${inputFiles}
+                    else
+                        \rm -f ${inputFiles}
+                    fi
+                fi
+            fi
+        else
+            if [ -e ${f} ]
+            then
+                # Remove exising output file
+                \rm -f ${f}
+            fi
+            mppnccombine_cmd="mppnccombine $mppCombOpts ${f} ${inputFiles}"
+            if [ ${verbose} -gt 1 ]
+            then
+                echoerr "debug1: calling '$mppnccombine_cmd'"
+            fi
+            if [ $dryrun -gt 0 ]
+            then
+                echo $mppnccombine_cmd
+            else
+                eval $mppnccombine_cmd
+            fi
+            if [ $? -ne 0 ]; then
+                echoerr "${script_name}: error while combining file '${f}'"
+                exit $EXIT_FAILURE
+            else
+                if [ $remove_files -gt 0 ]
+                then
+                    if [ $dryrun -gt 0 ]
+                    then
+                        echo rm -f ${inputFiles}
+                    else
+                        \rm -f ${inputFiles}
+                    fi
+                fi
+            fi
+        fi
+    fi
+done

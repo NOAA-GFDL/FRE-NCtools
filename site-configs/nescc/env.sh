@@ -52,13 +52,15 @@ module prepend-path CMAKE_PREFIX_PATH "/apps/gnu/gcc-9.2.0/"
 # Load the Intel compilers
 module load intel/${intel_version}
 
-# bats and nccmp are needed for tests
+# bats is needed for tests
 module prepend-path PATH /home/Seth.Underwood/opt/bats/0.4.0/bin
-module load nccmp/1.8.5
 
 # Load the Intel modules required for building
 module load netcdf/$ncc_version
 module load impi/$mpi_version
+
+# Other required modules
+module load nco
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site

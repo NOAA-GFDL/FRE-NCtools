@@ -1,0 +1,185 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v mppnccombine
+    mppnccombine -V
+fi
+
+. "${srcdir=.}/init.sh"
+
+# Create the two decomposed NetCDF files
+ncgen -3 -o decomp_classic.nc.0000 << EOF || framework_failure_ failed to create decomp_classic.nc.0000
+netcdf compress {
+dimensions:
+  grid_xt = 5 ;
+  grid_yt = 10 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 1, 5 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 10, 1, 10 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0000" ;
+  :NumFilesInSet = 2 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 0.0, 1.0, 2.0, 3.0, 4.0 ;
+  grid_yt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  time = 0 ;
+  var =
+    0, 1, 2, 3, 4,
+    10, 11, 12, 13, 14,
+    20, 21, 22, 23, 24,
+    30, 31, 32, 33, 34,
+    40, 41, 42, 43, 44,
+    50, 51, 52, 53, 54,
+    60, 61, 62, 63, 64,
+    70, 71, 72, 73, 74,
+    80, 81, 82, 83, 84,
+    90, 91, 92, 93, 94 ;
+}
+EOF
+
+ncgen -3 -o decomp_classic.nc.0001 << EOF || framework_failure_ failed to create decomp_classic.nc.0001
+netcdf compress {
+dimensions:
+  grid_xt = 5 ;
+  grid_yt = 10 ;
+  time = UNLIMITED ; // (1 currently)
+variables:
+  double grid_xt(grid_xt) ;
+    grid_xt:long_name = "T-cell longitude" ;
+    grid_xt:units = "degrees_E" ;
+    grid_xt:axis = "X" ;
+    grid_xt:domain_decomposition = 1, 10, 6, 10 ;
+  double grid_yt(grid_yt) ;
+    grid_yt:long_name = "T-cell latitude" ;
+    grid_yt:units = "degrees_N" ;
+    grid_yt:axis = "Y" ;
+    grid_yt:domain_decomposition = 1, 10, 1, 10 ;
+  double time(time) ;
+    time:long_name = "time" ;
+    time:units = "days since 0001-01-01 00:00:00" ;
+    time:axis = "T" ;
+    time:calendar_type = "NOLEAP" ;
+    time:calendar = "noleap" ;
+  float var(grid_yt, grid_xt) ;
+    var:long_name = "Decomposed variable" ;
+    var:units = "m" ;
+    var:missing_value = 1.e+20f ;
+    var:_FillValue = 1.e+20f ;
+    var:dummy_attribute = "just a dummy attribute" ;
+// global attributed:
+  :filename = "decomp.nc.0001" ;
+  :NumFilesInSet = 2 ;
+  :dummy_global_att = "a global dummy attribute" ;
+data:
+  grid_xt = 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  grid_yt = 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ;
+  time = 0 ;
+  var =
+    5, 6, 7, 8, 9,
+    15, 16, 17, 18, 19,
+    25, 26, 27, 28, 29,
+    35, 36, 37, 38, 39,
+    45, 46, 47, 48, 49,
+    55, 56, 57, 58, 59,
+    65, 66, 67, 68, 69,
+    75, 76, 77, 78, 79,
+    85, 86, 87, 88, 89,
+    95, 96, 97, 98, 99 ;
+}
+EOF
+
+# input of classic should be "64-bit offset"
+mppnccombine decomp_classic.nc || framework_failure_ failed to combine decomp_classic.nc
+test x"$(ncdump -k decomp_classic.nc)" = x"64-bit offset" \
+    || fail_ decomp_classic.nc is not 64-bit offset.  Got: $(ncdump -k decomp_classic.nc)
+
+# input of netCDF-4 should be "netCDF-4"
+# Not implemented yet
+mkfifo ncdmp_pipe
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -4 -o decomp_netcdf4.nc.0000 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_netcdf4.nc.0000
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -4 -o decomp_netcdf4.nc.0001 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_netcdf4.nc.0001
+mppnccombine decomp_netcdf4.nc || framework_failure_ failed to combine decomp_netcdf4.nc
+test x"$(ncdump -k decomp_netcdf4.nc)" = x"$(ncdump -k decomp_netcdf4.nc.0000)" \
+    || fail_ decomp_netcdf4.nc is not $(ncdump -k decomp_netcdf4.nc.0000), but is $(ncdump -k decomp_netcdf4.nc)
+
+# input of cdf5 should be "cdf5"
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -5 -o decomp_cdf5.nc.0000 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_cdf5.nc.0000
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -5 -o decomp_cdf5.nc.0001 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_cdf5.nc.0001
+mppnccombine decomp_cdf5.nc || framework_failure_ failed to combine decomp_cdf5.nc
+test x"$(ncdump -k decomp_cdf5.nc)" = x"$(ncdump -k decomp_cdf5.nc.0000)" \
+    || fail_ decomp_cdf5.nc is not $(ncdump -k decomp_cdf5.nc.0000) but is $(ncdump -k decomp_cdf5.nc)
+
+# input of 64-bit offset should be "64-bit offset"
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -6 -o decomp_64offset.nc.0000 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_64offest.nc.0000
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -6 -o decomp_64offset.nc.0001 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_64offest.nc.0001
+mppnccombine decomp_64offset.nc || framework_failure_ failed to combine decomp_64offset.nc
+test x"$(ncdump -k decomp_64offset.nc)" = x"$(ncdump -k decomp_64offset.nc.0000)" \
+    || fail_ decomp_64offset.nc is not $(ncdump -k decomp_64offset.nc.0000).  \
+    Got: $(ncdump -k decomp_64offset.nc)
+
+# input of netCDF-4 classic should be "netCDF-4 classic model"
+ncdump decomp_classic.nc.0000 >ncdmp_pipe &
+ncgen -7 -o decomp_netcdf4_classic.nc.0000 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_netcdf4_classic.nc.0000
+ncdump decomp_classic.nc.0001 >ncdmp_pipe &
+ncgen -7 -o decomp_netcdf4_classic.nc.0001 <ncdmp_pipe \
+    || framework_failure_ failed to create decomp_netcdf4_classic.nc.0001
+mppnccombine decomp_netcdf4_classic.nc || framework_failure_ failed to combine decomp_netcdf4_classic.nc
+test x"$(ncdump -k decomp_netcdf4_classic.nc)" = x"$(ncdump -k decomp_netcdf4_classic.nc.0000)" \
+    || fail_ decomp_netcdf4_classic.nc is not $(ncdump -k decomp_netcdf4_classic.nc.0000). \
+    Got: $(ncdump -k decomp_netcdf4_classic.nc)
+

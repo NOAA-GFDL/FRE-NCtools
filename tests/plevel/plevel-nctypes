@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v plevel.sh
+    plevel.sh -V
+fi
+
+. "$srcdir/init.sh"
+
+# Generate the test_input.nc file
+$builddir/create_plevel_test_ncfile || framework_failure_
+
+# Output classic netCDF
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NC classic failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"
+
+# Output 64-bit offset
+$builddir/create_plevel_test_ncfile -6 || framework_failure_
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NC 64-bit offset failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"
+
+# Output NetCDF 4
+$builddir/create_plevel_test_ncfile -4 || framework_failure_
+plevel.sh -i test_input.nc temp || fail_ plevel.sh NetCDF4 failed
+test "$(ncdump -k test_input.nc)" = "$(ncdump -k plevel.nc)"  || \
+    fail_ plevel.nc wrong type.  Expected \"$(ncdump -k test_input.nc)\" got \"$(ncdump -k plevel.nc)\"

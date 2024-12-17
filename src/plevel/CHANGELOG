@@ -1,0 +1,12 @@
+2009-06-10 Aleksey Yakovelv <Aleksey.Yakovlev@noaa.gov>
+    * Initial version (Makefile, CVS ver 17.0.4.2)
+    * Add rules to build MPI-based executable
+    * Simplified according to fre-nctools standards
+
+2017-03-17 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Changed Makefile to match new build system
+
+2024-11-24 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Add command-line to history attribute
+    * Add FRE-NCtools version information to a new fre-nctools global
+      attribute in the output NetCDF file.

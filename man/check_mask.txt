@@ -1,0 +1,177 @@
+check_mask(1)
+=============
+
+NAME
+----
+
+check_mask - configure the processors which contain all land points
+
+SYNOPSIS
+--------
+[verse]
+check_mask --grid_file _grid_file_ [options]
+
+DESCRIPTION
+-----------
+
+check_mask is used to configure the processors which contains all land points to
+be masked out for ocean model (*--model* ocean). It also is used to configure the
+processors which contains all ocean points to be masked out for land model
+(*--model* land). This program is supposed to run on single processor. This tool
+will print out number of processors to be masked, layout of the domain, masked
+out processors list. These information will be written into files, with file
+name is `mask_table.n_mask.layout(1)Xlayout(2)`. The model is expected to read
+file mask_table if you want to mask out some processors.
+
+The ocean model is assumed to be logically rectangular grid and land model could
+be multiple tiles grid (like cubic shpere grid with 6 tiles). For land model,
+each processor list has three entries: layout position in x-direction, layout
+position in y-direction and tile number. For ocean model, each processor list
+has two entries: layout position in x-direction, layout position in y-direction.
+
+The purpose of using mask domain is to decrease the processor usage without
+decreasing the performance, without changing bits relative to the case run
+without the mask domain option. The mask domain option acts to mask out regions
+that have zero ocean points (i.e., points that are all land) in both the ocean
+and sea ice models or mask out regions that have zero land points (i.e., points
+that are all ocean) in land model
+
+OPTIONS
+-------
+
+*--grid_file* _grid_file_::
+Specify the grid file to be used in the model run. There are three possible
+choices for the grid file.
+
+1. Old version of grid (contains field wet). Old version of grid is only for
+model = ocean.
+
+2. solo mosaic grid which contains field gridfiles. It should be the ocean solo
+mosaic and ocean_topog file needs to be specified. This is only valid for model
+= ocean.
+
+3. coupled mosaic grid which contains field lnd_mosaic. This is only valid for
+model = land.
+
+*--ocean_topog* _topog_file_::
+Specify the topography information for ocean mosaic. The field name of the
+topography is depth_tile# or depth when ntiles = 1, The topography data is
+positive down. This option is only for model = ocea.n
+
+*--min_pe* _pe_number_::
+Specify the smallest processor count to be checked.
+
+*--max_pe* _pe_number_::
+Specify the largest processor count to be checked.
+
+*--layout* _x_layout_,_y_layout_::
+Specify the layout to be checked. When layout is specified, --min_pe and
+--max_pe will be ignored.
+
+
+*--halo* _halo_size_::
+Specify the halo size in the ocean model. When there is no ocean points on a
+processor (including halo data), the processor will be masked out. Default value
+is 1.
+
+*--sea_level* _sea_level_::
+Specify the sea level ( in meters ) and its value will be used to determine
+land/sea mask. When topography of a grid cell is less than sea level, this grid
+cell will be land, otherwise it will be ocean. Default value is 0
+
+*--show_valid_only*::
+When set, only layouts valid with OBC are shown.
+
+*--nobc* _num_open_bc_::
+Number of open boundary condition. Its value should be less than MAX_OBC
+(current is 4 ). Default vaule is 0 for nobc.
+
+*--direction* _d(1),...,d(nobc)_::
+Open boundary direction. Each element value should be west, east, south or
+north.
+
+*--is* _is(1),...,is(nobc)_::
+Starting i-index for open boundary condition. The index is Fortran index.
+
+*--ie* _ie(1),...,ie(nobc)_::
+Ending i-index for open boundary condition. The index is Fortran index.
+
+*--js* _js(1),...,js(nobc)_::
+Starting j-index for open boundary condition. The index is Fortran index.
+
+*--je* _je(1),...,je(nobc)_::
+Ending i-index for open boundary condition. The index is Fortran index.
+
+*--model* _model_::
+Specify the component model. Its value could be _ocean_ or _land_. The default
+value is _ocean_.
+
+EXAMPLES
+--------
+
+. Use mask domain in fully coupled model for ocean
++
+----
+$ check_mask --grid_file ocean_mosaic.nc \
+   --ocean_topog ocean_topog.nc \
+   --min_pe 100 --max_pe 200 --model ocean
+----
++
+This will create a list of mask_table with filename
+_mask_table.n_mask.layout(1)Xlayout(2)_, where _n_mask_ is the number of masked
+domain processors, _layout(1)_ is the x layout value and _layout(2)_ is the y
+layout value.  For example the file "mask_table.9.18x10" has layout=(18,10) and
+9 domain processor is masked out.
++
+To use this file in a FMS run, place the mask_table file in the INPUT directory.
+Set ocean_model_nml layout variable to "layout(1),layout(2)", and the mask_table
+variable to "INPUT/mask_table_file".  Set the coupler_nml ocean_npes variable to
+(layout(1) x layout(2) - n_mask).  For the "mask_table.9.18x10" file example,
+ocean_model_nml/layout = 18,10; ocean_model_nml/mask_table =
+"INPUT/mask_table.9.18x10"; and coupler_nml/ocean_npes = 171.  (171 = 18*10-9).
++
+NOTE: For coupled models using concurrent coupling, you may only wish to set
+ocean_model_nml variable mask_table, and not set ice_model_nml mask_table. The
+reason for avoiding the ice_model use of mask_table with fully coupled models is
+that, 1. the mask_table for the sea ice may not be necessary for performance
+enhancement in fully coupled models, and 2. most importantly, setting mask_table
+for sea ice complicates the layout for the ice model in fully coupled models.
+
+. Use mask domain in sea-ice model (baltic1 experiment, ocean, ice,
+atmosphere and land are all on the same grid)
++
+----
+$ check_mask --grid_file baltic1_grid_spec.nc \
+   --min_pe 60 --max_pe 80
+----
++
+This will create a list of mask_table with filename
+mask_table.n_mask.layout(1)Xlayout(2). For example mask_table.26.6x11 has
+layout=(6,11) and 26 domain processor is masked out. As in example 1, place the
+file in the INPUT directory, set ocean_model_nml/layout = 6,11, and
+ocean_model_nml/mask_table = "INPUT/mask_table.26.6x11".  Since this model has
+the ocean, ice, atmosphere and land on the same grid, set these same variables
+to the same value in ice_model_nml, atmos_model_nml, and land_model_nml.  The experiment
+will run on 40 processors (6*11-26).
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

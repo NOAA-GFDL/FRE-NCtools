@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v plevel.sh
+    plevel.sh -V
+fi
+
+. "$srcdir/init.sh"
+
+# Generate the test_input.nc file
+$builddir/create_plevel_test_ncfile || framework_failure_
+
+# Run plevel.sh writing all time levels
+plevel.sh -i test_input.nc -a -t ,, || fail_ plevel.sh failed
+ncdump -v time plevel.nc | grep 'time = UNLIMITED ; // (10 currently)' || fail_ expected 10 time levels
+
+# run plevel.sh output only time levels 1 and 3
+plevel.sh -i test_input.nc -a -t 2,5,2
+ncdump -v time plevel.nc | grep ' time = 1, 3 ;' || fail_ expected two time levels

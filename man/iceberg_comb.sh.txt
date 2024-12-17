@@ -1,0 +1,61 @@
+iceberg_comb.sh(1)
+=================
+
+NAME
+----
+iceberg_comb.sh - combine the iceberg restart files, taking into account any files without icebergs
+
+SYNOPSIS
+--------
+[verse]
+iceberg_comb.sh [options] <in_file> [<in_file> ...] <out_file>
+
+
+DESCRIPTION
+-----------
+*iceberg_comb.sh* takes a list of FMS iceberg restart files, and
+combines them using the NCO record concatenation utility *ncrcat*.  It
+checks the list of _<in_file>_ to determine if they actually contain
+any icebergs prior to performing the *ncrcat*.
+
+OPTIONS
+-------
+*-c*::
+Check if file is a valid icebergs file.  Will exit with zero if valid,
+or 255 if not a valid icebergs file.  Other non-zero exit status
+indicate an error occurred.
+
+*-h*::
+Print the help message
+
+*-v*::
+Increase verbosity.  Can be repeated.
+
+*-V*::
+Print the version and exit
+
+SEE ALSO
+--------
+*ncrcat*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Niki Zadeh and Seth Underwood
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

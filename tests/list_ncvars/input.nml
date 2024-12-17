@@ -1,0 +1,11 @@
+ &input
+   filename = 'file.nc',
+   list_static = .true.,
+   list_nonstatic = .true.,
+   var0d = .true.,
+   var1d = .true.,
+   var2d = .true.,
+   var3d = .true.,
+   var4d = .true.
+ &end
+

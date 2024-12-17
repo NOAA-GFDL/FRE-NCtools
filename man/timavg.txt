@@ -1,0 +1,86 @@
+timavg(1)
+=========
+
+NAME
+----
+
+timavg - Average variables in a netCDF file over the time axis
+
+SYNOPSIS
+--------
+[verse]
+timavg [-a] [-b] [-d] [-m] -o _ofile_ _file_ [_file_ ...]
+
+DESCRIPTION
+-----------
+
+timavg calls the Fortran program _time_average_ to calculate an average for
+variables stored in a netCDF file over the time axis.
+
+OPTIONS
+-------
+
+*-a*::
+Ignore "average information does not agree" errors.
+
+*-b*::
+Adds time axis bounds and cell methods (CF convention)
+
+*-d*::
+Turns on command echo (for debugging).
+
+*-m*::
+Average time (instead of end time) for t-axis values
+
+*-W*::
+Suppress warning messages (use with caution).
+
+*-w* _wght_::
+Minimum fraction of missing data needed for valid data. Defaults to 0.0.
+
+*-o* _ofile_::
+Name of the output file.  Defaults to _timavg.nc_.
+
+*-z* _level_::
+If using NetCDF4, use deflation level.  Defaults to input file settings (-1).
+
+*-s* _1|0_::
+If using NetCDF4, use shuffle if 1 and don't use if 0. Defaults to input file
+settings (-1).
+
+*-h*::
+Display this help and exit.
+
+*-V*::
+Output version information and exit.
+
+_file_ [_file_ ...]
+list netcdf files, each file will be a time record in the output file (the files
+should be in chronological order)
+
+SEE ALSO
+--------
+
+time_average(1), netcdf(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Aleksey Yakovelv and Seth Underwood
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

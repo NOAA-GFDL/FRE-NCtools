@@ -1,0 +1,99 @@
+plevel.sh(1)
+============
+
+NAME
+----
+plevel.sh -  Interpolates data from model levels to pressure level
+
+SYNOPSIS
+--------
+[verse]
+plevel.sh [-a] [-3] [-0] [-f] [-d #] -i file [-o out_file] [-m] [-z #] [-s] [fields.....]
+
+DESCRIPTION
+-----------
+
+Interpolates data from model levels to pressure levels. The input
+model grid is a hybrid sigma-pressure coordinate and the output
+pressure levels may be specified. The minimum required input fields
+are "bk", "pk", and "ps".
+
+OPTIONS
+-------
+*-a*::
+Output all fields converting 3d fields to pressure levels.
+
+*-3*::
+Output and convert all 3d fields to pressure levels.
+
+*-0*::
+When fields sphum or zsurf do not exist use zero, otherwise fail.
+
+*-m*::
+Default missing value is used for all fields (the _FillValue).
+
+*-x*::
+DO NOT set data extrapolated beneath the surface to missing values.
+
+*-i* _file_::
+Input netcdf file, the file must contain the required variables (pk,
+bk, ps, ...). If the -i files option is omitted a usage message is
+printed.
+
+*-o* _out_file_::
+The output file name. (Default: plevel.nc)
+
+*-p* _plevs_::
+A list of output pressure levels in pascals (with no decimal point).
+The default is the 17 NCEP reananalysis levels (bottom to top). The
+list must be in quotes and values must be separated by a space.
+
+*-d* _value_::
+The verbosity level, use an integer number where value >= 0. (Default:
+value=1)
+
+*-t* _#,#,#_::
+The starting, ending, and increment index for time axis processing
+where # is a positive number. (The default is to process all time
+indices.)
+
+*-z* _#_::
+If using NetCDF4, use deflation of level #. Defaults to input file
+settings.
+
+*-s* _1|0_::
+If using NetCDF4, use shuffle if 1 and don't use if 0. Defaults to
+input file settings.
+
+_fields_::
+A list of (additional, up to 40) output fields. If this list is not
+supplied, then the "-a" or "-3" option must be specified.  Possible
+list entries included any fields in the input files, and additional
+fields: slp, hght. Requesting slp or hght may require additional input
+fields to be available in the input file.
+
+SEE ALSO
+--------
+*plevel_interp*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Aleksey Yakovelv and Seth Underwood
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

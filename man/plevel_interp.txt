@@ -1,0 +1,144 @@
+plevel_interp(1)
+================
+
+NAME
+----
+
+plevel_interp - Interpolates data from model levels to pressure level
+
+SYNOPSIS
+--------
+[verse]
+plevel_interp
+
+DESCRIPTION
+-----------
+
+plevel_interp reads a NetCDF file and interpolates data from model levels to
+pressure levels. The input model grid is a hybrid sigma-pressure coordinate and
+the output pressure levels may be specified. The minimum required input fields
+are _bk_, _pk_, and _ps_.
+
+This program also reads in a required namelist file, _plev.input.nml_, which
+must have at least an _input_ namelist, which will specify the input file name,
+the output file name, the output pressure levels, and the names of the fields to
+be interpolated.  The input and output files must be specified.  The namelist
+_input_ variables are:
+
+NAMELISTS
+---------
+
+The _input_ namelist contains the following variables:
+
+*character(len=256)* :: _in_file_name_::
+Input NetCDF file.
+
+*character(len=256)* :: _out_file_name_::
+Output NetCDF file.
+
+*character(len=NF90_MAX_NAME), dimension(MAX_FIELD_NAMES)* :: _field_names_::
+Names of (additional) fields to be interpolated.  If do_all_fields and
+do_all_3d_fields are false, then these fields must be present.
+
+*real, dimension(MAX_PLEVS)* :: _pout_::
+Output pressure levels in pascals.
+
+*logical* :: _do_all_fields_ = .false.::
+If .true., interpolate all fields in the input file.
+
+*logical* :: _do_all_3d_fields_ = .false.::
+If .true., interpolate all 3D fields in the input file.
+
+*logical* :: _mask_extrap_ = .false.::
+If .true., set points below the bottom level to the missing value
+
+*integer* :: _time_beg_ = 1::
+Starting time index.
+
+*integer* :: _time_end_ = 0::
+Ending time index.  If 0, use the last time index.
+
+*integer* :: _time_inc_ = 1::
+Time index increment.
+
+*logical* :: _allow_zero_topog_ = .false.::
+If .true., allow zero topography.
+
+*logical* :: _allow_zero_sphum_ = .false.::
+If .true., allow zero specific humidity.
+
+*logical* :: _use_default_missing_value_ = .false.::
+If .true., use the NetCDF default for missing/fill value
+
+*integer* :: _verbose_ = 1::
+Verbose level.  The higher the number, the more output. Useful for debugging.
+
+*integer* :: _user_deflation_ = -1::
+Deflation level for new variables. -1 means use input file settings.
+
+*integer* :: _user_shuffle_ = -1::
+Shuffle setting for new variables. -1 means use input file settings.
+
+*character(len=4096)* :: _command_line_::
+This program is typically called using the plevel.sh script. This variable will
+hold the string used to launch this program, which is added to the history
+attibute of the written NetCDF file.  If this variable is empty, then the
+namelist options with their values will be added to the history attribte.
+
+The namelist _names_ variables are:
+
+*character(len=NF90_MAX_NAME)* :: _temp_name_ = 'temp'::
+Name of the temperature varuable.
+
+*character(len=NF90_MAX_NAME)* :: _sphum_name_ = 'sphum'::
+Name of the specific humidity variable.
+
+*character(len=NF90_MAX_NAME)* :: _hght_name_ = 'hght'::
+Name of the height variable.
+
+*character(len=NF90_MAX_NAME)* :: _slp_name_ = 'slp'::
+Name of the surface level pressure variable.
+
+*character(len=NF90_MAX_NAME)* :: _ps_name_ = 'ps'::
+Name of the pressure variable.
+
+*character(len=NF90_MAX_NAME)* :: _zsurf_name_ = 'zsurf'::
+Name of the absolute surface elevation variable.
+
+*character(len=NF90_MAX_NAME)* :: _bk_name_ = 'bk'::
+Name of the bk variable.
+
+*character(len=NF90_MAX_NAME)* :: _pk_name_ = 'pk'::
+name of the pk variable.
+
+FILES
+-----
+
+_plev.input.nml_::
+File that contains the _input_ and optional _names_ Fortran namelists.
+
+SEE ALSO
+--------
+*plevel*(1), *netcdf*(3)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Bruce Wyman
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v split_ncvars.pl --version
+fi
+
+. ${srcdir=.}/init.sh; path_prepend_ ../src
+
+test $have_plmod_list_moreutils = no && skip_ "perl module List::MoreUtils not available"
+
+# Use the test netCDF files from plevel and timeavg
+${builddir=.}/create_timeavg_test_ncfiles || framework_failure_ "failed to create timeavg test files"
+${builddir=.}/create_plevel_test_ncfile || framework_failure_ "failed to create plevel test files"
+
+# Run split_ncvars.pl with default options
+split_ncvars.pl test_input.nc || fail_ split_ncvars.pl test_input.nc failed
+# Check that ps.nc, temp.nc and dummy.nc were created
+test -f ps.nc || fail_ ps.nc not created
+test -f temp.nc || fail_ temp.nc not created
+test -f dummy.nc || fail_ dummy.nc not created
+
+# Run split_ncvars.pl with multiple input files
+split_ncvars.pl test_input_*.nc || fail_ split_ncvars.pl multiple input files failed
+# var1.nc and var2.nc were created
+test -f var1.nc || fail_ var1.nc not created with multiple input files
+test -f var2.nc || fail_ var2.nc not created with multiple input files
+# Verify there are 60 time steps
+ncdump -h var1.nc | grep -q '60 currently' || fail_ var1.nc does not have 60 time steps

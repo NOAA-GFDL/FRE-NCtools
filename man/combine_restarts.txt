@@ -1,0 +1,65 @@
+combine_restarts(1)
+===================
+
+NAME
+----
+combine_restarts - simple script to combine restart files
+
+SYNOPSIS
+--------
+[verse]
+combine_restarts [options]
+
+
+DESCRIPTION
+-----------
+*combine_restarts* will use the correct combine utility (*mppnccombine*,
+*combine-ncc*, or *iceberg_comb.sh*) to combine any restart files that reside in the
+current working directory.  *combine_restarts* uses the same options used
+in the FRE workflow.
+
+OPTIONS
+-------
+*-C <combine-ncc_options>*::
+Options to pass to combine-ncc
+
+*-M <mppnccombine_options>*::
+Options to pass to mppnccombine
+
+*-n*::
+Print the commands that would be executed, but do not execute them
+
+*-h*::
+Print the help message
+
+*-v*::
+Increase verbosity.  Can be repeated.
+
+*-V*::
+Output version information and exit
+
+SEE ALSO
+--------
+*mppnccombine*(1), *combine-ncc*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Seth Underwood
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

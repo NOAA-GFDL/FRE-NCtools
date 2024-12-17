@@ -6,6 +6,7 @@ build.fre-nctools*
 build
 *.exe
 *.1
+.DS_Store
 
 # http://www.gnu.org/software/automake
 
@@ -60,9 +61,11 @@ m4/lt~obsolete.m4
 t/Test22/
 t/Test23/
 t/Test26/
+*.nc
 
 # Other build generated files
 config.h
+*.mod
 postprocessing/land_utils/combine-ncc
 postprocessing/land_utils/decompress-ncc
 postprocessing/land_utils/is-compressed

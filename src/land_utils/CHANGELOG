@@ -1,0 +1,11 @@
+2009-06-10 Aleksey Yakovlev <Aleksey.Yakovlev@noaa.gov>
+    * Initial version (Makefile, CVS ver 17.0.4.2)
+    * Add rules to build MPI-based executable
+    * Simplified according to fre-nctools standards
+
+2017-03-17 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Changed Makefile to match new build system
+
+2024-10-24 Seth Underwood <Seth.Underwood@noaa.gov>
+    * Add --version options
+    * Moved libnfu to its own directory

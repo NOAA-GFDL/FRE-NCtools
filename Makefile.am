@@ -19,14 +19,8 @@
 #***********************************************************************
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = postprocessing/combine_restarts \
-          postprocessing/iceberg_comb \
-          postprocessing/land_utils \
-          postprocessing/list_ncvars \
-          postprocessing/mppnccombine \
-          postprocessing/plevel \
-          postprocessing/split_ncvars \
-          postprocessing/timavg \
+SUBDIRS = lib/libnfu \
+          src \
           tools/libfrencutils \
           tools/check_mask \
           tools/cubic_utils \
@@ -52,6 +46,9 @@ SUBDIRS = postprocessing/combine_restarts \
           tools/simple_hydrog/rmvpr \
           tools/nc_null_check
 
+SUBDIRS += man \
+           tests
+
 if WITH_CHECK_PROGS
 SUBDIRS += t
 endif
@@ -61,3 +58,9 @@ SUBDIRS += tools/libfrencutils_gpu
 SUBDIRS += tools/fregrid_gpu
 SUBDIRS += t_gpu
 endif
+
+# Shortcut targets to make it easier to run (very) expensive tests.
+check-expensive:
+	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
+check-very-expensive:
+	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes

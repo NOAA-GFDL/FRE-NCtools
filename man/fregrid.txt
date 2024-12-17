@@ -1,0 +1,310 @@
+fregrid(1)
+==========
+
+NAME
+----
+
+fregrid - remaps scalar and vector data onto different grid resolutions
+
+SYNOPSIS
+--------
+[verse]
+fregrid --input_mosaic input_mosaic --input_file input_file [options]
+
+DESCRIPTION
+
+fregrid remaps data (scalar or vector) from an input_mosaic onto an
+output_mosaic, but the output (or target) grid can also be specified
+through the inputs lonBegin, lonEnd, latBegin, latEnd, nlon and nlat.
+Currently only T-cell scalar regridding and AGRID vector regridding
+(where the vector field is expressed in spherical coordinates) is
+available.  Vector fields can be mapped as vectors only from the cubic
+grid to the lat-lon grid, and while using bilinear interpolation; but
+users can instead specify the vector components as (independent)
+scalar components and thereby choose a conservative interpolation. The
+interpolation algorithm used is controlled by *--interp_method* with
+default 'conserve_order1'. Currently the implemented remapping schemes
+are 'conserve_order1', 'conserve_order2' and 'bilinear'. Alternative
+schemes can be added if needed. fregrid expects NetCDF format input.
+scalar_field and/or u_field/v_field must be specified. u_fld and v_fld
+must be paired together. If using NetCDF4, output will have the same
+deflation and shuffle settings unless specified.
+
+OPTIONS
+-------
+
+*--input_mosaic* _input_mosaic_::
+
+Specify the input mosaic information. This file contains list of tile
+files which specify the grid information for each tile.
+
+
+*--input_file* _input_file_::
+
+Specify the input file name. The suffix '.nc' can be omitted. The
+suffix 'tile#' should not present for multiple-tile files. The number
+of files must be 1 for scalar regridding and can be 1 or 2 for vector
+regridding. File path should not be includes.
+
+*--scalar_field* _scalar_fld_::
+
+Specify the scalar field name to be regridded. The multiple entry
+field names are separated by comma.
+
+*--u_field* _u_fld_::
+
+Specify the vector field u-component name to be regridded. The
+multiple entry field names are separated by comma. u_field must be
+paired together with v_field. u_field corresponds to the zonal
+component of the vector field
+
+*--v_field* _v_fld_::
+
+Specify the vector field v-component name to be regridded. The
+multiple entry field names are separated by comma. v_field must be
+paired together with u_field. v_field corresponds to the meridional
+component of the vector field.
+
+*--output_mosaic* _output_mosaic_::
+
+Specify the output mosaic information. This file contains list of tile
+files which specify the grid information for each tile. If
+output_mosaic is not specified, nlon and nlat must be specified.
+
+*--lonBegin* _decimal_::
+
+Specify the starting longitude(in degree) of the geographical region
+of the target grid on which the output is desired. The default value
+is 0.
+
+*--lonEnd* _decimal_::
+
+Specify the ending longitude(in degree) of the geographical region of
+the target grid on which the output is desired. The default value is
+360.
+
+*--latBegin* _decimal_::
+
+Specify the starting latitude(in degree) of the geographical region of
+the target grid on which the output is desired. The default value is
+-90.
+
+*--latEnd* _decimal_::
+
+Specify the ending latitude(in degree) of the geographical region of
+the target grid on which the output is desired. The default value is
+90.
+
+*--nlon* _integer_::
+
+Specify number of grid box cells in x-direction for a regular lat-lon
+grid.
+
+*--nlat* _integer_::
+
+Specify number of grid box cells in y-direction for a regular lat-lon
+grid.
+
+*--KlevelBegin* _integer_::
+
+Specify begin index of the k-level (depth axis) that to be regridded.
+
+*--KlevelEnd* _integer_::
+
+Specify end index of the k-level (depth axis) that to be regridded.
+
+*--LstepBegin* _integer_::
+
+Specify the begin index of L-step (time axis) that to be regridded.
+
+*--LstepEnd* _integer_::
+
+Specify the end index of L-step (time axis) that to be regridded.
+
+*--output_file* _output_file_::
+
+Specify the output file name. If not presented, output_file will take
+the value of input_file. The suffix '.nc' can be omitted. The suffix
+'tile#' should not present for multiple-tile files. The number of
+files must be 1 for scalar regridding and can be 1 or 2 for vector
+regridding. File path should not be includes.
+
+*--input_dir* _input_dir_::
+
+Specify the path that stores input_file. If not presented, the input
+file is assumed to be stored in current directory.
+
+*--output_dir* _output_dir_::
+
+Specify the path that will store output file. If not presented, the
+output file will be stored in current directory.
+
+*--remap_file* _remap_file_::
+
+Specify the file name that saves remapping information. If remap_file
+is specified and the file does not exist, remapping information will
+be calculated ans stored in remap_file. If remap_file is specified and
+the file exists, remapping information will be read from remap_file.
+
+*--interp_method* _interp_method_::
+
+Specify the remapping algorithm to be used. Default is
+'conserve_order1'. Currently only 'conserve_order1',
+'conserve_order2', 'conserve_order2_monotonic' and 'bilinear'
+remapping scheme are implemented in this tool. The bilinear scheme can
+only be used to remap data from cubic grid to regular latlon grid.
+When interp_method is 'bilinear', nlon and nlat must be specified and
+the output data in y-direction will be located at the center of cell
+or bound of the cell depending on the setting of y_center.
+
+*--test_case* _test_case_::
+
+Specify the test function to be used for testing.
+
+*--grid_type* _grid_type_::
+
+Specify the vector field grid location. default is AGRID and only
+AGRID is implemented yet.
+
+*--symmetry*::
+
+Indicate the grid is symmetry or not.
+
+*--target_grid*::
+
+Use target grid cell area instead of calculating based on exchange
+grid area. default is off.
+
+*--finer_step* _integer_::
+
+This is used only for bilinear interpolation. Set finer_step to a
+positive integer to reduce noise in interpolation and get a relatively
+smooth output. The default value is 0. When finer_step is greater than
+0, fregrid will first remap data from source grid onto a finer grid
+with resolution that is power of 2 of destination grid resolution
+using bilinear interpolation, then using volume averaging to remap
+data from finer grid onto destination grid.
+
+*--center_y*::
+
+Output latitude will locate at cell center, i.e., the starting
+latitude will be -89 when nlat = 90. when center_y is not set,
+starting latitude will be -90. for bilinear interpolation. For
+conservative interpolation, center_y is assumed.
+
+*--check_conserve*::
+
+Check the conservation of conservative interpolation. The area sum
+will be printed out for input and output mosaic.
+
+*--monotonic*::
+
+When specified, use monotonic interpolation when interp_method is
+'conserve_order2'.
+
+*--weight_file*::
+
+Specify the filename that store weight_field. The suffix '.tile#.nc'
+should not present for multiple-tile files. weight_field is used to
+adjust the source weight. Normally it could be area fraction. When
+weight_field is specified, the weight_file will default to be
+input_file if weight_file is not specified.
+
+*--weight_field*::
+
+Specify the name of weight field in weight_file
+
+*--dst_vgrid*::
+
+Specify the destination vertical grid file. Data will be remapped onto
+the destination vertical grid. When --dst_vgrid is specified,
+--extrapolate is assumed to be specified.
+
+*--extrapolate*::
+
+Will extrapolate data onto masked points when specified.
+
+*--stop_crit* _criteria_::
+
+The stopping criteria when extrapolating data onto missing points.
+Default is 0.005.
+
+*--standard_dimension*::
+
+When specified, the dimension and field name for longitude and
+latitude axis will be 'lon' and 'lat'. 'lon_bnd' and 'lat_bnd' will be
+longitude and latitude bound name. The dimension of lon_bounds is
+(2,nlon) and the dimension of lat_bounds is (2,nlat).
+
+*--associated_file_dir* _dir_::
+
+Specify the path of the associated files.
+
+*--debug*::
+
+Will print out memory usage and running time.
+
+*--format*::
+
+netcdf file format. Valid values are 'netcdf4', 'netcdf4_classic',
+'64bit_offset', 'classic'. When format is not specified, will use the
+format of input_file.
+
+*--nthreads* _num_threads_::
+
+Specify number of OpenMP threads.
+
+*--deflation* _deflation_::
+
+If using NetCDF4 , use deflation of level _deflation_. Defaults to
+input file settings.
+
+*--shuffle* _shuffle_::
+
+If using NetCDF4 , use shuffle if 1 and don't use if 0 Defaults to
+input file settings.
+
+EXAMPLES
+--------
+
+. Remap C48 data onto N45 grid.
++
+This example uses GFDL-CM3 data as example
++
+----
+$ fregrid --input_mosaic C48_mosaic.nc --input_dir input_dir \
+    --input_file input_file --scalar_field temp,salt \
+    --nlon 144 --nlat 90
+----
+
+. Remap data onto cm2m ocean grid with extrapolation and vertical interpolation.
++
+----
+$ fregrid --input_mosaic levitus_mosaic.nc --input_dir inputdir \
+    --input_file WOA09_ann_theta.nc --scalar_field POTENTIAL_TEMP \
+    --output_file WOA09_ann_theta_cm2g_extrap.nc \
+    --output_mosaic cm2m_ocean_mosaic.nc --extrapolate \
+    --dst_vgrid inputdir/cm2m_ocean_vgrid.nc
+----
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

@@ -1,0 +1,84 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+# This test verifies that the iceberg_comb.sh script will exit if
+# one of the expected files (based on numFilesInSet) is missing
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v iceberg_comb.sh
+    iceberg_comb.sh -V
+fi
+
+. "$srcdir/init.sh"
+
+# Create the un-combined files
+ncgen -o iceberg_test.nc.0000 << EOF || framework_failure_
+netcdf iceberg_test.nc {
+dimensions:
+  i = UNLIMITED ; // (5 currently)
+variables:
+  double lon(i) ;
+    lon:long_name = "longitude" ;
+    lon:units = "degrees_E" ;
+  double lat(i) ;
+    lat:long_name = "latitude" ;
+    lat:units = "degrees_N" ;
+    int i ;
+// global attributes:
+                :NumFilesInSet = 3 ;
+                :file_format_major_version = 0 ;
+                :file_format_minor_version = 1 ;
+                :time_axis = 0 ;
+data:
+  i = 5 ;
+  lon = 1, 2, 3, 4, 5 ;
+  lat = 15, 14, 13, 12, 11 ;
+}
+EOF
+
+ncgen -o iceberg_test.nc.0001 << EOF || framework_failure_
+netcdf iceberg_test.nc {
+dimensions:
+  i = UNLIMITED ; // (2 currently)
+variables:
+  double lon(i) ;
+    lon:long_name = "longitude" ;
+    lon:units = "degrees_E" ;
+  double lat(i) ;
+    lat:long_name = "latitude" ;
+    lat:units = "degrees_N" ;
+    int i ;
+// global attributes:
+                :NumFilesInSet = 3 ;
+                :file_format_major_version = 0 ;
+                :file_format_minor_version = 1 ;
+                :time_axis = 0 ;
+data:
+  i = 5 ;
+  lon = 6, 7 ;
+  lat = 10, 9 ;
+}
+EOF
+
+iceberg_comb.sh iceberg_test.nc.000? iceberg_test.nc && fail_
+
+Exit $fail

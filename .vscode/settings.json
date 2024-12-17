@@ -1,0 +1,40 @@
+{
+    "cSpell.words": [
+        "Balaji",
+        "Forrestal",
+        "fregrid",
+        "hght",
+        "Malyshev",
+        "Mohan",
+        "mppnccombine",
+        "NCEP",
+        "plevel",
+        "plevs",
+        "reananalysis",
+        "regridded",
+        "regridding",
+        "Sergey",
+        "sphum",
+        "Tauber",
+        "Tushar",
+        "Vahlenkamp",
+        "zsurf"
+    ],
+    "cSpell.languageSettings": [
+        {
+            // use with cpp or c files
+            "languageId": "cpp,c",
+            // turn off compound words, because it is only checking strings.
+            "allowCompoundWords": false,
+            // Only check comments and strings
+            "includeRegExpList": [
+                "CStyleComment",
+                "string"
+            ],
+            // Exclude includes, because they are also strings.
+            "ignoreRegExpList": [
+                "/#include.*/",
+            ]
+        }
+    ]
+}

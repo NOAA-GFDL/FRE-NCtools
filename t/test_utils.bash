@@ -91,8 +91,8 @@ function run_and_check()
     run command $cmd
     if [ $status -ne 0 ];
     then
-	    echo failed:  $cmd
-	    echo $output && exit 1
+      echo failed:  $cmd
+      echo $output && exit 1
     fi
 }
 
@@ -105,12 +105,12 @@ function get_csv_filename_list()
     local pattern=$2
     local filelist=""
     for file in $dir"/"$pattern; do
-	if [[ $filelist == "" ]]
-	then
-	    filelist="$file" #if this is the first file
-	else
-	    filelist=$filelist",""$file"
-	fi
+      if [[ $filelist == "" ]]
+      then
+        filelist="$file" #if this is the first file
+      else
+        filelist=$filelist",""$file"
+      fi
     done
     echo $filelist  #I.e. this return must be capture by a $(...)
 }

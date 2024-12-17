@@ -1,0 +1,164 @@
+#!/bin/sh
+#
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+#
+# FRE-NCTools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FRE-NCTools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
+script_name=$(basename $0)
+
+pkg_libexec_dir=${PKGLIBEXECDIR:-@pkglibexecdir@}
+
+echoerr() {
+    echo "$@" 1>&2
+}
+
+usage() {
+    cat << EOF
+Usage:  $script_name -s | -t [-0123] files...
+
+    -s      list names of static fields (no time dimension)
+    -t      list names of non-static fields (with time dimension)
+    -0      list names of scalar fields
+    -1      list names of 1-d fields
+    -2      list names of 2-d fields
+    -3      list names of 3-d fields
+    -4      list names of 4-d fields
+    -h      Display this help and exit
+    -V      Output version information and exit
+    files   list of netcdf files
+
+   Options -0,1,2,3,4 exclude the time dimension.
+   Must specify either "-s" or "-t".
+   Also must specify one (or more) of the following: -0, -1, -2, -3, -4.
+   A file name must be supplied.
+   Variables that are also dimensions are skipped.
+   Variables that end in "_T1", "_T2", and "_DT" are skipped.
+   Variables that are character data types are skipped.
+
+Example:  $script_name -st -0123 myfile.nc
+
+    This will list all variables (static and non-static) that
+    have a rank of 0, 1, 2, or 3.
+EOF
+}
+
+static=".false."
+nonstatic=".false."
+var0d=".false."
+var1d=".false."
+var2d=".false."
+var3d=".false."
+var4d=".false."
+
+while getopts :hstV01234 OPT
+do
+    case "$OPT" in
+        s)
+            static=".true."
+            ;;
+        t)
+            nonstatic=".true."
+            ;;
+        0)
+            var0d=".true."
+            ;;
+        1)
+            var1d=".true."
+            ;;
+        2)
+            var2d=".true."
+            ;;
+        3)
+            var3d=".true."
+            ;;
+        4)
+            var4d=".true."
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        V)
+            $pgk_libexec_dir/print_version $script_name
+            exit 0
+            ;;
+        \?)
+            echoerr "${script_name}: unknown option: -${OPTARG}"
+            echoerr ""
+            usage >&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Ensure the user supplied a set of file, and that the files exist
+if [ $# -le 0 ]
+then
+    echoerr "${script_name}: need to supply at least one file"
+    exit 1
+fi
+for f in $*
+do
+    if [ ! -f $f ]
+    then
+        echoerr "${script_name}: $f: No such file or directory"
+        exit 1
+    fi
+done
+
+# Check that the user requested something
+if [ $static = ".false" -a $nonstatic = ".false." ]
+then
+    echoerr "${script_name}: Must request at least one of -s or -t"
+    exit 1
+fi
+if [ $var0d = ".false." -a $var1d = ".false." \
+     -a $var2d = ".false" -a $var3d = ".false." \
+     -a $var4d = ".false" ]
+then
+    echoerr "${script_name}: Must request at least one -0, -1, -2, -3 or -4"
+    exit 1
+fi
+
+# Create a unique namelist file
+nml_name=$(mktemp nml.XXXXXX)
+
+# loop thru netcdf files
+for file in $*
+do
+    cat > $nml_name << EOF
+ &input
+   filename = '$file',
+   list_static = $static,
+   list_nonstatic = $nonstatic,
+   var0d = $var0d,
+   var1d = $var1d,
+   var2d = $var2d,
+   var3d = $var3d,
+   var4d = $var4d,
+ &end
+EOF
+
+    # run the Fortran application
+    $pkg_libexec_dir/list_ncvars < $nml_name
+done
+
+# clean up
+rm -f $nml_name

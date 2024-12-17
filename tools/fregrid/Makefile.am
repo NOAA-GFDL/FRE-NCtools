@@ -31,8 +31,7 @@ fregrid_SOURCES = bilinear_interp.c \
                   conserve_interp.h \
                   fregrid_util.c \
                   fregrid_util.h \
-                  fregrid.c \
-                  globals.h
+                  fregrid.c
 fregrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
 
 fregrid_parallel_SOURCES = $(fregrid_SOURCES)

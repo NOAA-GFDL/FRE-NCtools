@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v split_ncvars.pl --version
+fi
+
+. ${srcdir=.}/init.sh; path_prepend_ ../src
+
+test $have_plmod_list_moreutils = no && skip_ "perl module List::MoreUtils not available"
+
+# Use the test netCDF files from plevel
+${builddir=.}/create_plevel_test_ncfile || framework_failure_ "failed to create plevel test files"
+mkdir idir || framework_failure_ "failed to create idir"
+mv test_input.nc idir || framework_failure_ "failed to move test_input.nc to idir"
+
+# Run split_ncvars.pl
+split_ncvars.pl -i idir test_input.nc || fail_ split_ncvars.pl test_input.nc failed
+# Check that ps.nc, temp.nc and dummy.nc were created in the out directory
+test -f ps.nc || fail_ ps.nc not created
+test -f temp.nc || fail_ temp.nc not created
+test -f dummy.nc || fail_ dummy.nc not created
