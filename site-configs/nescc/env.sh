@@ -59,6 +59,9 @@ module prepend-path PATH /home/Seth.Underwood/opt/bats/0.4.0/bin
 module load netcdf/$ncc_version
 module load impi/$mpi_version
 
+# Other required modules
+module load nco
+
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
 

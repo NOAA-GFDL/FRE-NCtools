@@ -37,6 +37,9 @@ module load gcc/12.1.0
 module load cray-hdf5/1.12.1.3
 module load cray-netcdf/4.8.1.3
 
+# Additional required modules
+module load nco/5.1.9
+
 # Add bats to PATH
 # Needed for testing
 module append-path PATH /ncrc/home2/Seth.Underwood/opt/bats/0.4.0/bin
