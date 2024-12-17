@@ -45,6 +45,7 @@ module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8
 # bats, and python are needed for tests
 module load bats
 module load python
+module load nco
 
 # Load the GCC compilers
 module load gcc/$gcc_version

@@ -51,6 +51,7 @@ module prepend-path CPATH /apps/gcc-8/gcc-8.3.0/include
 module load intel/${intel_version}
 module load netcdf/${ncc_version}
 module load hdf5/${hdf_version}
+module load nco
 
 # Set CONFIG_SITE to the correct config.site file for the system
 setenv CONFIG_SITE $( dirname $(readlink -f $0) )/config.site
