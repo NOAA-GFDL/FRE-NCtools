@@ -71,7 +71,7 @@ none of both will be created.
 
 *--interp_order* _order_::
 
-Specify the order of conservative interplation. Its value can be 1 ( linear
+Specify the order of conservative interpolation. Its value can be 1 ( linear
 order ) or 2 ( second order ) with default value 2.
 
 *--sea_level* _level_::
@@ -101,7 +101,7 @@ Debug memory usage.
 
 *--rotate_poly*
 
-Set to calculate polar polygon areas by caculating the area of a copy of the
+Set to calculate polar polygon areas by calculating the area of a copy of the
 polygon, with the copy being rotated far away from the pole.
 
 *--verbose*
@@ -135,13 +135,12 @@ COPYRIGHT AND LICENSE
 ---------------------
 Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
 
-The Flexible Modeling System (FMS) is free software; you can
-redistribute it and/or modify it and are expected to follow the terms
-of the GNU General Public License as published by the Free Software
-Foundation; either version 2 of the License, or (at your option) any
-later version.
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-FMS is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-for more details.
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
