@@ -88,6 +88,7 @@ src/version.h
 src/version.inc
 tests/c_test_version
 tests/create_5degree_topog
+tests/create_daily_tile_files
 tests/create_mask_topog
 tests/create_ocean_mask_grid
 tests/create_plevel_test_ncfile

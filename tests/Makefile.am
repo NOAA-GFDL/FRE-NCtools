@@ -36,6 +36,7 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 check_PROGRAMS = \
   create_5degree_topog \
+  create_daily_tile_files \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
@@ -78,6 +79,7 @@ tools_tests = \
     make_coupler_mosaic/coupled-model \
     make_coupler_mosaic/coupled-model-mpi \
     make_coupler_mosaic/coupled-model-nest \
+    fregrid/cubedsphere \
     fregrid/latlon \
     fregrid/remap-file \
     fregrid/remap-file-mpi \
