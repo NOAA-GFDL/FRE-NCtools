@@ -28,25 +28,25 @@ int main(int argc, char **argv) {
                 basename(argv[0]));
         exit(1);
     }
+    // Where to store the filename
+    size_t in_fn_length = snprintf(NULL, 0, "%s.tile1.nc", argv[1]);
+    char *in_tile_file_name = malloc(in_fn_length + 1);
+    size_t out_fn_length = snprintf(NULL, 0, "%s.tile1.nc", OUT_FILE_BASE);
+    char *out_tile_file_name = malloc(out_fn_length + 1);
     // Check that all tile files exist
     for (int i = 1; i <= 6; i++) {
-        char *tile_file_name;
-        asprintf(&tile_file_name, "%s.tile%d.nc", argv[1], i);
-        if (access(tile_file_name, F_OK) == -1) {
+        snprintf(in_tile_file_name, in_fn_length + 1, "%s.tile%d.nc", argv[1], i);
+        if (access(in_tile_file_name, F_OK) == -1) {
             fprintf(stderr,
                     "Error: %s does not exist\n",
-                    tile_file_name);
+                    in_tile_file_name);
             exit(1);
         }
-        free(tile_file_name);
     }
-
     for (int i = 1; i <= 6; i++) {
-        char *tile_file_name;
-        asprintf(&tile_file_name, "%s.tile%d.nc", argv[1], i);
+        snprintf(in_tile_file_name, in_fn_length + 1, "%s.tile%d.nc", argv[1], i);
         // Open the input file
-        check_err(nc_open(tile_file_name, NC_NOWRITE, &ncid_in), __LINE__);
-        free(tile_file_name);
+        check_err(nc_open(in_tile_file_name, NC_NOWRITE, &ncid_in), __LINE__);
         // Get the dimensions from the input file.
         int nx_dimid, ny_dimid, nxp_dimid, nyp_dimid;
         size_t nx_in, ny_in, nxp_in, nyp_in;
@@ -70,9 +70,8 @@ int main(int argc, char **argv) {
         check_err(nc_close(ncid_in), __LINE__);
 
         // Create the output file
-        asprintf(&tile_file_name, "%s.tile%d.nc", OUT_FILE_BASE, i);
-        check_err(nc_create(tile_file_name, NC_CLOBBER, &ncid_out), __LINE__);
-        free(tile_file_name);
+        snprintf(out_tile_file_name, out_fn_length + 1, "%s.tile%d.nc", OUT_FILE_BASE, i);
+        check_err(nc_create(out_tile_file_name, NC_CLOBBER, &ncid_out), __LINE__);
         // Define the dimensions
         int xt_dimid, yt_dimid;
         check_err(nc_def_dim(ncid_out, "grid_xt", nx_in/2, &xt_dimid), __LINE__);
@@ -146,6 +145,7 @@ int main(int argc, char **argv) {
         check_err(nc_close(ncid_out), __LINE__);
         free(var_data);
     }
-
+    free (in_tile_file_name);
+    free (out_tile_file_name);
     return 0;
 }
