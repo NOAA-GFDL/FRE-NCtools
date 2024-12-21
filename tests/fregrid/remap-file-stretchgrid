@@ -25,7 +25,7 @@ fi
 
 . "${srcdir=.}/init.sh"
 
-#expensive_
+expensive_
 
 make_hgrid \
     --grid_type gnomonic_ed \
