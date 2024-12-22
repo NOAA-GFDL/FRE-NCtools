@@ -50,21 +50,21 @@ int main(int argc, char **argv) {
 
         // Define variables
         check_err(nc_def_var(ncid, "time", NC_DOUBLE, 1, &time_dim, &times_id), __LINE__);
-        check_err(nc_put_att_text(ncid, times_id, "bounds", 10, "time_bnds"), __LINE__);
+        check_err(nc_put_att_text(ncid, times_id, "bounds", 9, "time_bnds"), __LINE__);
 
         check_err(nc_def_var(ncid, "lat", NC_FLOAT, 1, &yt_dim, &xt_id), __LINE__);
         check_err(nc_def_var(ncid, "lon", NC_FLOAT, 1, &xt_dim, &yt_id), __LINE__);
         check_err(nc_def_var(ncid, "time_bnds", NC_FLOAT, 2, (int[]){time_dim, bnds_dim}, &time_bnds_id), __LINE__);
-        check_err(nc_put_att_text(ncid, time_bnds_id, "units", 5, "days"), __LINE__);
-        check_err(nc_put_att_text(ncid, time_bnds_id, "long_name", 21, "time axis boundaries"), __LINE__);
+        check_err(nc_put_att_text(ncid, time_bnds_id, "units", 4, "days"), __LINE__);
+        check_err(nc_put_att_text(ncid, time_bnds_id, "long_name", 20, "time axis boundaries"), __LINE__);
 
         check_err(nc_def_var(ncid, "var1", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &var1_id), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "type", 11, "times data"), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "units", 2, "s"), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "long_name", 11, "variable 1"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "type", 10, "times data"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "units", 1, "s"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "long_name", 10, "variable 1"), __LINE__);
 
         check_err(nc_def_var(ncid, "var2", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &var2_id), __LINE__);
-        check_err(nc_put_att_text(ncid, var2_id, "type", 12, "random data"), __LINE__);
+        check_err(nc_put_att_text(ncid, var2_id, "type", 11, "random data"), __LINE__);
 
         // End define mode
         check_err(nc_enddef(ncid), __LINE__);

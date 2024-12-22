@@ -79,13 +79,13 @@ int main(int argc, char **argv) {
         // Define the grid variables
         int xt_varid, yt_varid;
         check_err(nc_def_var(ncid_out, "grid_xt", NC_FLOAT, 1, &xt_dimid, &xt_varid), __LINE__);
-        check_err(nc_put_att_text(ncid_out, xt_varid, "units", 13, "degrees east"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, xt_varid, "long_name", 16, "T-cell latitude"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, xt_varid, "cartesian_axis", 2, "X"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, xt_varid, "units", 12, "degrees east"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, xt_varid, "long_name", 15, "T-cell latitude"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, xt_varid, "cartesian_axis", 1, "X"), __LINE__);
         check_err(nc_def_var(ncid_out, "grid_yt", NC_FLOAT, 1, &yt_dimid, &yt_varid), __LINE__);
-        check_err(nc_put_att_text(ncid_out, yt_varid, "units", 14, "degrees north"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, yt_varid, "long_name", 17, "T-cell longitude"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, yt_varid, "cartesian_axis", 2, "Y"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, yt_varid, "units", 13, "degrees north"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, yt_varid, "long_name", 16, "T-cell longitude"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, yt_varid, "cartesian_axis", 1, "Y"), __LINE__);
         // Define a static variable
         int static_varid;
         check_err(nc_def_var(ncid_out, "static", NC_FLOAT, 2, (int[]){yt_dimid, xt_dimid}, &static_varid), __LINE__);
@@ -96,10 +96,10 @@ int main(int argc, char **argv) {
         // Define the time variable
         int time_varid;
         check_err(nc_def_var(ncid_out, "time", NC_DOUBLE, 1, &time_dimid, &time_varid), __LINE__);
-        check_err(nc_put_att_text(ncid_out, time_varid, "units", 31, "days since 0001-01-01 00:00:00"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, time_varid, "long_name", 5, "Time"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, time_varid, "calendar", 7, "noleap"), __LINE__);
-        check_err(nc_put_att_text(ncid_out, time_varid, "calendar_type", 7, "noleap"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, time_varid, "units", 30, "days since 0001-01-01 00:00:00"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, time_varid, "long_name", 4, "Time"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, time_varid, "calendar", 6, "noleap"), __LINE__);
+        check_err(nc_put_att_text(ncid_out, time_varid, "calendar_type", 6, "noleap"), __LINE__);
         // Define a time-dependent variable
         int tvar_varid;
         check_err(nc_def_var(ncid_out, "tvar", NC_FLOAT, 3, (int[]){time_dimid, yt_dimid, xt_dimid}, &tvar_varid), __LINE__);
@@ -127,8 +127,14 @@ int main(int argc, char **argv) {
         }
         check_err(nc_put_var_float(ncid_out, static_varid, var_data), __LINE__);
 
+        double time_data;
         // Write the time-dependent variables
         for (int rec=0; rec < TIME; rec++) {
+            time_data = (double)rec;
+            check_err(nc_put_vara_double(ncid_out, time_varid,
+                                         (size_t[1]){rec},
+                                         (size_t[1]){1},
+                                         &time_data), __LINE__);
             for (int i = 0; i < ny_in/2; i++) {
                 yval = y_in[i*2];
                 for (int j = 0; j < nx_in/2; j++) {

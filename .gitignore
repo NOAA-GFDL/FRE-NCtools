@@ -65,6 +65,7 @@ t/Test26/
 *.nc
 
 # Other build generated files
+gt-*/
 config.h
 *.mod
 src/combine_restarts
@@ -127,3 +128,13 @@ tools/simple_hydrog/postp/cp_river_vars
 tools/simple_hydrog/rmvpr/rmv_parallel_rivers
 tools/transfer_to_mosaic_grid/transfer_to_mosaic_grid
 
+# Ignore generated files from vscode makefile extension
+defines.awk
+subs*.awk
+conftest
+conftest.*
+confdefs.*
+confinc.*
+confmf.*
+conf*/
+conf*.file

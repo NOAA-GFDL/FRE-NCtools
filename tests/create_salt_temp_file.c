@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     check_err(nc_put_att_text(ncid, salt_id, "long_name", 4, "salt"), __LINE__);
 
     // Add Global attribute
-    check_err(nc_put_att_text(ncid, NC_GLOBAL, "description", 16, "Test input file"), __LINE__);
+    check_err(nc_put_att_text(ncid, NC_GLOBAL, "description", 15, "Test input file"), __LINE__);
 
     // End define mode
     check_err(nc_enddef(ncid), __LINE__);

@@ -36,17 +36,17 @@ int main(int argc, char **argv) {
 
     // Define variables
     check_err(nc_def_var(ncid, "grid_xt", NC_FLOAT, 1, &xt_dim, &xt_id), __LINE__);
-        check_err(nc_put_att_text(ncid, xt_id, "units", 13, "degrees east"), __LINE__);
-    check_err(nc_put_att_text(ncid, xt_id, "point_spacing", 5, "even"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "units", 12, "degrees east"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "point_spacing", 4, "even"), __LINE__);
 
     check_err(nc_def_var(ncid, "grid_yt", NC_FLOAT, 1, &yt_dim, &yt_id), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "units", 14, "degrees north"), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "point_spacing", 5, "even"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "units", 13, "degrees north"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "point_spacing", 4, "even"), __LINE__);
 
     check_err(nc_def_var(ncid, "TOPO", NC_FLOAT, 2, (int[]){yt_dim, xt_dim}, &topo_id), __LINE__);
     check_err(nc_put_att_text(ncid, topo_id, "units", 1, "m"), __LINE__);
-    check_err(nc_put_att_text(ncid, topo_id, "long_name", 9, "Topography"), __LINE__);
-    check_err(nc_put_att_text(ncid, topo_id, "long_name_mod", 30, "regrid: G_P5DEGREE on X@AAV, on Y@AAV"), __LINE__);
+    check_err(nc_put_att_text(ncid, topo_id, "long_name", 10, "Topography"), __LINE__);
+    check_err(nc_put_att_text(ncid, topo_id, "long_name_mod", 37, "regrid: G_P5DEGREE on X@AAV, on Y@AAV"), __LINE__);
     check_err(nc_put_att_float(ncid, topo_id, "missing_value", NC_FLOAT, 1, (float[]){0.f}), __LINE__);
     check_err(nc_put_att_float(ncid, topo_id, "_FillValue", NC_FLOAT, 1, (float[]){0.f}), __LINE__);
 
