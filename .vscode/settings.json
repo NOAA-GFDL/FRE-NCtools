@@ -36,5 +36,29 @@
                 "/#include.*/",
             ]
         }
-    ]
+    ],
+    "makefile.dryrunSwitches": [
+        "--always-make",
+        "--print-directory",
+        "--dry-run",
+        "--assume-old=Makefile",
+        "Makefile",
+        "all",
+        "AM_MAKEFLAGS=--assume-old=Makefile Makefile"
+    ],
+    "fortran.linter.includePaths": [
+        "/opt/homebrew/include",
+        "${workspaceFolder}/**"
+    ],
+    "fortran.fortls.preprocessor.directories": [
+        "/opt/homebrew/include",
+        "./lib"
+    ],
+    "fortran.fortls.suffixes": [
+        "inc"
+    ],
+    "fortran.fortls.directories": [
+        "./**",
+        "/opt/homebrew/include"
+    ],
 }
