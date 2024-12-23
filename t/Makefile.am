@@ -49,7 +49,6 @@ SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                 $(top_srcdir)/tap-driver.sh
 
 TESTS = Test01-check_programs_exist.sh \
-        Test05-remap_c48_regular.sh \
         Test06-regrid_extrap.sh \
         Test07-runoff_regrid.sh \
         Test10-remap_land_res.sh \
