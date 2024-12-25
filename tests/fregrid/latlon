@@ -26,7 +26,7 @@ fi
 . "${srcdir=.}/init.sh"
 
 # Create the required input files
-$builddir/create_salt_temp_file || framework_failure_ failed to create ocean_salt_temp.nc
+$builddir/create_temp_salt_file || framework_failure_ failed to create ocean_temp_salt.nc
 # create the required horizontal grids
 # Make the CM2.1-like grid and mosaic
 make_hgrid \
@@ -36,7 +36,7 @@ make_hgrid \
     --xbnd -280,80 \
     --ybnd -82,90 \
     --nlon 720 \
-    --nlat 400 \
+    --nlat 360 \
     --grid_name CM2.1_grid \
     || framework_failure_ failed to create CM2.1-like grid file
 

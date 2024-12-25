@@ -40,13 +40,12 @@ check_PROGRAMS = \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
-  create_salt_temp_file \
+  create_temp_salt_file \
   create_timeavg_test_ncfiles \
   c_test_version \
   f_test_version
 
 create_plevel_test_ncfile_SOURCES=create_plevel_test_ncfile.c
-create_salt_temp_file_SOURCES=create_salt_temp_file.c
 create_timeavg_test_ncfiles_SOURCES=create_timeavg_test_ncfiles.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
@@ -80,6 +79,7 @@ tools_tests = \
     make_coupler_mosaic/coupled-model-mpi \
     make_coupler_mosaic/coupled-model-nest \
     fregrid/cubedsphere \
+    fregrid/extrapolate \
     fregrid/latlon \
     fregrid/remap-file \
     fregrid/remap-file-mpi \
