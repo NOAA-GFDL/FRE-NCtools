@@ -40,6 +40,7 @@ check_PROGRAMS = \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
+  create_runoff_file \
   create_temp_salt_file \
   create_timeavg_test_ncfiles \
   c_test_version \
@@ -83,7 +84,8 @@ tools_tests = \
     fregrid/latlon \
     fregrid/remap-file \
     fregrid/remap-file-mpi \
-    fregrid/remap-file-stretchgrid
+    fregrid/remap-file-stretchgrid \
+    runoff_regrid/runoff_regrid
 
 combine_tests = \
     combine-ncc/combine \
