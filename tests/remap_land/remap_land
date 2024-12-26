@@ -1,0 +1,70 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+# create C48 source grid and mosaic for atmos/land
+make_hgrid \
+    --grid_type gnomonic_ed \
+    --nlon 96 \
+    --grid_name src_grid \
+    || framework_failure_ failed to create C48 grid
+make_solo_mosaic \
+    --num_tiles 6 \
+    --dir ./ \
+    --mosaic_name src_mosaic \
+    --tile_file src_grid.tile1.nc,src_grid.tile2.nc,src_grid.tile3.nc,src_grid.tile4.nc,src_grid.tile5.nc,src_grid.tile6.nc \
+    || framework_failure_ failed to create C48 mosaic
+
+# create C192 target grid and mosaic for atmos/land
+make_hgrid \
+    --grid_type gnomonic_ed \
+    --nlon 192 \
+    --grid_name tgt_grid \
+    || framework_failure_ failed to create C192 grid
+make_solo_mosaic \
+    --num_tiles 6 \
+    --dir ./ \
+    --mosaic_name tgt_mosaic \
+    --tile_file tgt_grid.tile1.nc,tgt_grid.tile2.nc,tgt_grid.tile3.nc,tgt_grid.tile4.nc,tgt_grid.tile5.nc,tgt_grid.tile6.nc \
+    || framework_failure_ failed to create C192 mosaic
+
+${builddir=..}/create_land_remap_files src_grid
+${builddir=..}/create_land_remap_files tgt_grid
+
+remap_land \
+    --file_type land \
+    --src_mosaic src_mosaic.nc \
+    --dst_mosaic tgt_mosaic.nc \
+    --src_restart land_remap48 \
+    --dst_restart output \
+    --dst_cold_restart land_remap96 \
+    --remap_file remap_file_c48_to_c192 \
+    --print_memory \
+    || fail_ failed to remap land data
+test $(ls -1 output.tile*.nc | wc -l) -eq 6 \
+    || fail_ Wrong number of output.tile*.nc files created.  Expected 6, got $(ls -1 output.tile*.nc | wc -l)
+test $(ls -1 remap_file_c48_to_c192.tile*.nc | wc -l) -eq 6 \
+    || fail_ Wrong numbe of remap_file_c48_to_c192.tile*.nc file created.  Expected 6, got $(ls -1 remap_file_c48_to_c192.tile*.nc)

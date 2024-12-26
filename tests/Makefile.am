@@ -37,6 +37,7 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 check_PROGRAMS = \
   create_5degree_topog \
   create_daily_tile_files \
+  create_land_remap_files \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
@@ -85,6 +86,7 @@ tools_tests = \
     fregrid/remap-file \
     fregrid/remap-file-mpi \
     fregrid/remap-file-stretchgrid \
+    remap_land/remap_land \
     runoff_regrid/runoff_regrid
 
 combine_tests = \
