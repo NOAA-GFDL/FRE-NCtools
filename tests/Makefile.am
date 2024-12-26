@@ -41,6 +41,7 @@ check_PROGRAMS = \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
+  create_regional_file \
   create_runoff_file \
   create_temp_salt_file \
   create_timeavg_test_ncfiles \
@@ -80,6 +81,7 @@ tools_tests = \
     make_coupler_mosaic/coupled-model \
     make_coupler_mosaic/coupled-model-mpi \
     make_coupler_mosaic/coupled-model-nest \
+    make_regional_mosaic/make_regional_mosaic \
     fregrid/cubedsphere \
     fregrid/extrapolate \
     fregrid/latlon \

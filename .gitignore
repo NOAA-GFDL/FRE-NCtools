@@ -95,6 +95,7 @@ tests/create_land_remap_files
 tests/create_mask_topog
 tests/create_ocean_mask_grid
 tests/create_plevel_test_ncfile
+tests/create_regional_file
 tests/create_runoff_file
 tests/create_temp_salt_file
 tests/create_timeavg_test_ncfiles
