@@ -1,0 +1,65 @@
+make_regional_mosaic(1)
+=======================
+
+NAME
+----
+
+make_regional_mosaic - Generate horizontal grid and solo mosaic for regional output
+
+SYNOPSIS
+--------
+[verse]
+make_regional_mosaic --global_mosaic _global_mosaic_ --regional_file _regional_file_
+
+DESCRIPTION
+-----------
+
+make_regional_mosaic can generate horizontal grid and solo mosaic for
+a regional output. The created grid and solo mosaic could be used to
+regrid regional output data onto regular lat-lon grid.  The output
+files are named _regional_mosaic.nc_ and _regional_grid.tileN.nc_,
+where _N_ matches the tile number of the regional file.
+
+OPTIONS
+-------
+
+*--global_mosaic* _global_mosaic_::
+
+Specify the mosaic file for the global grid.
+
+*--regional_file* _regional_file_::
+
+Specify the regional model output file.
+
+EXAMPLES
+--------
+
+Generate a regional grid for tile 1 (_regional_grid.tile1.nc_), and
+the regional mosaic file (_regional_mosaic.nc_).
+
+----
+$ make_regional_mosaic --global_mosaic C48_mosaic.nc \
+    --regional_file rregionatmos_4xdaily.tile1.nc
+----
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

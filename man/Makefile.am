@@ -34,6 +34,7 @@ EXTRA_DIST = \
   make_topog_parallel.1 \
   make_coupler_mosaic.txt \
   make_coupler_mosaic_parallel.1 \
+  make_regional_mosaic.txt \
   make_solo_mosaic.txt \
   mppnccombine.txt \
   plevel_interp.txt \
@@ -69,6 +70,7 @@ man_MANS += \
   make_vgrid.1 \
   make_topog.1 \
   make_coupler_mosaic.1 \
+  make_regional_mosaic.1 \
   make_solo_mosaic.1 \
   mppnccombine.1 \
   scatter-ncc.1 \
