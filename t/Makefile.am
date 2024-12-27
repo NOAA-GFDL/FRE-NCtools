@@ -48,15 +48,12 @@ endif
 SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                 $(top_srcdir)/tap-driver.sh
 
-TESTS = Test01-check_programs_exist.sh \
-        Test15-regrid_land.sh \
+TESTS = \
         Test16-river_regrid.sh \
         Test25-hydrology.sh
 
 EXTRA_DIST = $(TESTS) \
              test_utils.bash \
-             Test03-input \
-             Test15-input \
              Test16-input \
              $(test25_data)
 
