@@ -23,7 +23,7 @@ then
     set -x
 fi
 
-#. "${srcdir=.}/init.sh"
+. "${srcdir=.}/init.sh"
 
 # create C48 grid for atmos/land
 make_hgrid \
