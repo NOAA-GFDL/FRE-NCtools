@@ -62,6 +62,10 @@ OPTIONS
     List of Y dimension names to scatter (for those not detectable through
     metadata).
 
+SEE ALSO
+--------
+*mppnccombine*(1)
+
 BUGS
 ----
 Open bug reports at {package_bugreport}.
