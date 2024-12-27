@@ -37,6 +37,7 @@ EXTRA_DIST = \
   make_regional_mosaic.txt \
   make_solo_mosaic.txt \
   mppnccombine.txt \
+  mppncscatter.txt \
   plevel_interp.txt \
   plevel.sh.txt \
   scatter-ncc.txt \
@@ -73,6 +74,7 @@ man_MANS += \
   make_regional_mosaic.1 \
   make_solo_mosaic.1 \
   mppnccombine.1 \
+  mppncscatter.1 \
   scatter-ncc.1 \
   split_ncvars.pl.1 \
   timavg.1 \

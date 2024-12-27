@@ -1,0 +1,87 @@
+mppncscatter(1)
+===============
+
+NAME
+----
+
+mppncscatter - Decomposes a single NetCDF file into distributed files
+
+SYNOPSIS
+--------
+[verse]
+mppncscatter [OPTIONS] _in_file_
+
+DESCRIPTION
+-----------
+
+mppncscatter decomposes a single NetCDF file into many files (converse to
+mppnccombine).  The output files are created in the current working directory by
+default and prefixed with the input file name, i.e. in.nc.0000 ...
+
+OPTIONS
+-------
+
+*-h*, *--help*, *--usage*::
+    Give this usage message.
+
+*-i*, *--io-layout-x* _N_::
+    Set io-layout for X dimension.
+
+*-j*, *--io-layout-y* _N_::
+    Set io-layout for Y dimension.
+*-n*, *--dry-run*::
+    Run without writing files.
+
+*-p*, *--prefix* _PATH_
+    Prefix path for output files.
+
+*-s*, *--start* _N_::
+    Start file name suffix numbers from N (default is 0).
+
+*-V*, *--verbose*::
+    Progressively output messages to stdout.
+
+*-v*, *--version*::
+    Print program version.
+
+*-w*, *--width* _N_::
+    Width for output filename suffix digits.  -w 4 (default) creates in.nc.0000
+    ...
+
+*-x*, *--npx* _N_::
+    Try to split domain evenly into N columns.
+
+*-X*, *--xdims* _d1_,...::
+    List of X dimension names to scatter (for those not detectable through
+    metadata).
+
+*-y*, *--npy* _N_::
+    Try to split domain evenly into N rows.
+
+*-Y*, *--ydims* _d1_,...::
+    List of Y dimension names to scatter (for those not detectable through
+    metadata).
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Remik Ziemlinski
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright (C) 2007,2009-2010,2012,2013 Remik Ziemlinski
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, write to the Free Software Foundation, 59 Temple Place -
+Suite 330, Boston, MA 02111-1307, USA.
