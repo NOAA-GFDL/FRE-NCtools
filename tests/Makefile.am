@@ -82,6 +82,7 @@ tools_tests = \
     make_coupler_mosaic/coupled-model-mpi \
     make_coupler_mosaic/coupled-model-nest \
     make_regional_mosaic/make_regional_mosaic \
+    make_quick_mosaic/coupled-model-quick \
     mppncscatter/xyt-decomp \
     fregrid/cubedsphere \
     fregrid/extrapolate \
