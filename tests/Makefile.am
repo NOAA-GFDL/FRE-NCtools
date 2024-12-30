@@ -30,7 +30,7 @@ else
 have_plmod_list_moreutils="no"
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/tools/libfrencutils
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
@@ -42,6 +42,7 @@ check_PROGRAMS = \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
   create_regional_file \
+  create_river_regrid_file \
   create_runoff_file \
   create_temp_salt_file \
   create_timeavg_test_ncfiles \
@@ -91,6 +92,7 @@ tools_tests = \
     fregrid/remap-file-mpi \
     fregrid/remap-file-stretchgrid \
     remap_land/remap_land \
+    river_regrid/river_regrid \
     runoff_regrid/runoff_regrid
 
 combine_tests = \

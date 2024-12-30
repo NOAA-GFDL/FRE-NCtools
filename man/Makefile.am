@@ -41,6 +41,7 @@ EXTRA_DIST = \
   mppncscatter.txt \
   plevel_interp.txt \
   plevel.sh.txt \
+  river_regrid.txt \
   scatter-ncc.txt \
   split_ncvars.pl.txt \
   timavg.txt \
@@ -66,8 +67,6 @@ man_MANS += \
   list_ncvars.1 \
   list_ncvars.csh.1 \
   list_ncvars.sh.1 \
-  plevel_interp.1 \
-  plevel.sh.1 \
   make_hgrid.1 \
   make_vgrid.1 \
   make_topog.1 \
@@ -77,6 +76,9 @@ man_MANS += \
   make_solo_mosaic.1 \
   mppnccombine.1 \
   mppncscatter.1 \
+  plevel_interp.1 \
+  plevel.sh.1 \
+  river_regrid.1 \
   scatter-ncc.1 \
   split_ncvars.pl.1 \
   timavg.1 \
