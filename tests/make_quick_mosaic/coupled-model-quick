@@ -25,9 +25,6 @@ fi
 
 . "${srcdir=.}/init.sh"
 
-# Test grid for coupled model (land and atmosphere are C48 and ocean is 1 degree
-# tripolar grid)
-
 # Create ocean hgrid
 make_hgrid \
     --grid_type tripolar_grid \
@@ -67,20 +64,6 @@ make_topog \
     --scale_factor -1 \
     --vgrid ocean_vgrid.nc \
     --output topog.nc || framework_failure_ failed to create ocean topography data
-
-# create C48 grid for atmos/land
-make_hgrid \
-    --grid_type gnomonic_ed \
-    --nlon 96 \
-    --grid_name C48_grid || framework_failure_ failed to create C48 grid
-
-# create C48 solo mosaic for atmos/land
-make_solo_mosaic \
-    --num_tiles 6 \
-    --dir . \
-    --mosaic C48_mosaic \
-    --tile_file C48_grid.tile1.nc,C48_grid.tile2.nc,C48_grid.tile3.nc,C48_grid.tile4.nc,C48_grid.tile5.nc,C48_grid.tile6.nc \
-    || framework_failure_ failed to create C48 solo mosaic
 
 #Make the quick mosaic
 make_quick_mosaic \
