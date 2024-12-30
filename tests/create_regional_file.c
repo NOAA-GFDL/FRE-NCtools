@@ -107,8 +107,8 @@ int main(int argc, char **argv) {
     float *xt_data = malloc(nx * sizeof(int));
     float *yt_data = malloc(ny * sizeof(int));
 
-    for (int i = 0; i < nx; i++) xt_data[i] = 1 + nx_start + i;
-    for (int i = 0; i < ny; i++) yt_data[i] = 1 + ny_start + i;
+    for (int i = 0; i < nx; i++) xt_data[i] = nx_start + i;
+    for (int i = 0; i < ny; i++) yt_data[i] = ny_start + i;
 
     // Writing static data
     stat = nc_put_var_float(ncid, xt_id, &xt_data[0]);
