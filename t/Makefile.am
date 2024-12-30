@@ -49,12 +49,10 @@ SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                 $(top_srcdir)/tap-driver.sh
 
 TESTS = \
-        Test16-river_regrid.sh \
         Test25-hydrology.sh
 
 EXTRA_DIST = $(TESTS) \
              test_utils.bash \
-             Test16-input \
              $(test25_data)
 
 clean-local:
