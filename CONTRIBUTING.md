@@ -85,7 +85,7 @@ workflow](https://guides.github.com/activities/forking/).  When
 submitting a Pull Request, follow these steps:
 
 1. Follow all instructions in the template
-1. Follow the [style guide](#style-guide)
+1. Follow the language [style guides](#style-guides)
 1. After submitting your pull request, verify all [status
    checks](https://help.github.com/articles/about-status-checks/) are
    passing.
@@ -107,7 +107,7 @@ All new features and bug fixes should, when possible, include a test.
 If a test is not included with a pull request, the pull request should
 explain the reason for not including the test.
 
-## Style Guide
+## Style Guides
 
 FRE-NCtools does not have an official style guide.  However, we
 request work in a tool follows the same style already used.  We will
