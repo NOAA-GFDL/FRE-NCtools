@@ -65,7 +65,8 @@ $MPIRUN -n $ncpu fregrid \
     --lonEnd 310.0 \
     --remap_file fregrid_remap_file_640_by_400-mpi.nc \
     --check_conserve
+ls -lrt
 test -f fregrid_remap_file_640_by_400-mpi.nc \
     || fail_ remap file not created mpi
-$builddir/nc_cmp -md fregrid_remap_file_640_by_400.nc fregrid_remap_file_640_by_400-mpi.nc \
+"${top_srcdir}"/nc_cmp -md fregrid_remap_file_640_by_400.nc fregrid_remap_file_640_by_400-mpi.nc \
     || fail_ fregrid_remap_file_640_by_400.nc and fregrid_remap_file_640_by_400-mpi.nc differ
