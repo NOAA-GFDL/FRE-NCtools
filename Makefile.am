@@ -49,10 +49,6 @@ SUBDIRS = lib/libnfu \
 SUBDIRS += man \
            tests
 
-if WITH_CHECK_PROGS
-SUBDIRS += t
-endif
-
 if ENABLE_GPU
 SUBDIRS += tools/libfrencutils_gpu
 SUBDIRS += tools/fregrid_gpu

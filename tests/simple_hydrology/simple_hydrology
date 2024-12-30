@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+# This script will run through all the applications used in the
+# make_simple_hydrog.csh script.
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+#expensive_
+
+# Create required files
+"${srcdir=../../../tests}"/simple_hydrology/river_regrid \
+    || framework_failure_ failed to create river regrid files
+
+# Test cp_river_vars -- Called post-processing step in make_simple_hydrog.csh script
+# Generate the fort.5 file for cp_river_vars
+ls -1 river_data_C48.tile?.nc | wc -l > fort.5 \
+    || framework_failure_ failed to counting the number of river_data_C48.tile?.nc files
+ls -1 river_data_C48.tile?.nc >> fort.5 \
+    || framework_failure_ failed to create fort.5 file for cp_river_vars
+# Run cp_river_vars on the river regrid files
+cp_river_vars < fort.5 \
+    || fail_ failed to run cp_river_vars
+# Test that out.cp_river_vars exists
+test -f out.cp_river_vars \
+    || fail_ out.cp_river_vars does not exist
+# Test that the river_network.tile?.nc files exist
+for i in 1 2 3 4 5 6
+do
+    test -f river_network.tile${i}.nc \
+        || fail_ river_network.tile${i}.nc does not exist
+done
+# Move the river_network.tile?.nc files to river_network.tile?.nc.pp
+# to ensure the river_network.tile?.nc files are created by the
+# rmv_parallel_rivers step.
+for i in 1 2 3 4 5 6
+do
+    mv river_network.tile${i}.nc river_network.tile${i}.nc.pp \
+        || framework_failure_ failed to move river_network.tile${i}.nc to river_network.tile${i}.nc.pp
+done
+
+
+# Test rmv_parallel_rivers -- Call the remove parallel rivers
+# post-processing step in make_simple_hydrog.csh script
+# Generate the fort.5 file for rmv_parallel_rivers
+rm fort.5 || framework_failure_ failed to remove fort.5 for remove parallel rivers
+ls -1 river_network.tile?.nc.pp | wc -l > fort.5 \
+    || framework_failure_ failed to counting the number of river_network.tile?.nc.pp files
+ls -1 river_network.tile?.nc.pp >> fort.5 \
+    || framework_failure_ failed to create fort.5 file for rmv_parallel_rivers
+echo "F" >> fort.5 \
+    || framework_failure_ failed to add F \(add_ocean_const\) to fort.5 file for rmv_parallel_rivers
+# Run rmv_parallel_rivers on the river network files
+rmv_parallel_rivers < fort.5 \
+    || fail_ failed to run rmv_parallel_rivers
+# Check for the existence of the out.rmv_parallel_rivers file
+test -f out.rmv_parallel_rivers \
+    || fail_ out.rmv_parallel_rivers does not exist
+# Check for the existence of the river_network.tile?.nc files
+for i in 1 2 3 4 5 6
+do
+    test -f river_network.tile${i}.nc \
+        || fail_ river_network.tile${i}.nc does not exist
+done
+
+# Test cr_lake_files -- Call add GLCC water bodies data
+# Generate the fort.5 file for cr_lake_files
+rm fort.5 || framework_failure_ failed to remove fort.5 for add GLCC water bodies data
+ls -1 river_network.tile?.nc | wc -l > fort.5 \
+    || framework_failure_ failed to counting the number of river_network.tile?.nc files
+ls -1 river_network.tile?.nc >> fort.5 \
+    || framework_failure_ failed to create fort.5 file for cr_lake_files
+# Generate the glcc file
+${builddir=..}/create_hydro_glcc_file \
+    || framework_failure_ failed to create hydro_glcc.nc file
+echo "hydro_glcc.nc" >> fort.5 \
+    || framework_failure_ failed to add hydro_glcc.nc to fort.5 file for cr_lake_files
+echo "2.0" >> fort.5 \
+    || framework_failure_ failed to add 2.0 \(travel_thresh\) to fort.5 file for cr_lake_files
+# Need an input.nml file for FMS/MPP
+touch input.nml
+# Run cr_lake_files on the river network files
+cr_lake_files < fort.5 \
+    || fail_ failed to run cr_lake_files
+# Check that the lake_frac.tile?.nc files exist
+for i in 1 2 3 4 5 6
+do
+    test -f lake_frac.tile${i}.nc \
+        || fail_ lake_frac.tile${i}.nc does not exist
+done

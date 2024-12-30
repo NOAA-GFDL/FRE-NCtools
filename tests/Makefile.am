@@ -37,6 +37,7 @@ LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 check_PROGRAMS = \
   create_5degree_topog \
   create_daily_tile_files \
+  create_hydro_glcc_file \
   create_land_remap_files \
   create_mask_topog \
   create_ocean_mask_grid \
