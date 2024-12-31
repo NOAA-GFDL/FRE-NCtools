@@ -3,8 +3,12 @@
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
 # image dockerfile is maintained here:
 # https://gitlab.gfdl.noaa.gov/fre/hpc-me
-name: FRE-NCtools CI
-on: [push, pull_request]
+name: FRE-NCtools Check Expensive
+on:
+  workflow_run:
+    workflows: ["FRE-NCtools CI"]
+    types:
+      - completed
 jobs:
   CI:
     runs-on: ubuntu-latest
@@ -30,7 +34,7 @@ jobs:
     - name: Build
       run: make -C build -j
     - name: Run most tests (skip the slow ones)
-      run: make -C build -j check
+      run: make -C build -j check-very-expensive
     - name: Save log file on failure
       uses: actions/upload-artifact@v4.4.0
       if: failure()
