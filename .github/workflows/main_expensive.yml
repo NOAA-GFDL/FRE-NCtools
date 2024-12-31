@@ -34,7 +34,7 @@ jobs:
     - name: Build
       run: make -C build -j
     - name: Run most tests (skip the slow ones)
-      run: make -C build -j check-very-expensive
+      run: make -C build check-very-expensive
     - name: Save log file on failure
       uses: actions/upload-artifact@v4.4.0
       if: failure()
