@@ -19,9 +19,15 @@
 #***********************************************************************
 
 noinst_LIBRARIES = \
-    libnfu/libnfu.a
+    libnfu/libnfu.a \
+	libfrencutils/libfrencutils.a
 
+if WITH_MPI
+  noinst_LIBRARIES += \
+	libfrencutils/libfrencutils_mpi.a
+endif
 
+AM_CFLAGS = $(NETCDF_CFLAGS)
 AM_FCFLAGS =  $(FC_MODOUT)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
@@ -40,3 +46,4 @@ clean-local:
 	$(RM) *.$(FC_MODEXT)
 
 include $(top_srcdir)/lib/libnfu/local.mk
+include $(top_srcdir)/lib/libfrencutils/local.mk

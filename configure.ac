@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/libfrencutils/Makefile
                  tools/libfrencutils_gpu/Makefile
                  tools/check_mask/Makefile
                  tools/cubic_utils/Makefile

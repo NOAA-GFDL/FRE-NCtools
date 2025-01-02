@@ -17,11 +17,31 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = check_mask
 
-AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils \
-            $(NETCDF_CFLAGS)
-LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a \
-        $(NETCDF_LDFLAGS) $(NETCDF_LIBS)  $(RPATH_FLAGS)
+libfrencutils_libfrencutils_a_SOURCES = \
+    libfrencutils/affinity.c \
+    libfrencutils/constant.h \
+    libfrencutils/create_xgrid.c \
+    libfrencutils/create_xgrid.h \
+    libfrencutils/globals.h \
+    libfrencutils/gradient_c2l.c \
+    libfrencutils/gradient_c2l.h \
+    libfrencutils/interp.c \
+    libfrencutils/interp.h \
+    libfrencutils/mosaic_util.c \
+    libfrencutils/mosaic_util.h \
+    libfrencutils/mpp_domain.c \
+    libfrencutils/mpp_domain.h \
+    libfrencutils/mpp_io.c \
+    libfrencutils/mpp_io.h \
+    libfrencutils/mpp.c \
+    libfrencutils/mpp.h \
+    libfrencutils/read_mosaic.c \
+    libfrencutils/read_mosaic.h \
+    libfrencutils/tool_util.c \
+    libfrencutils/tool_util.h
 
-check_mask_SOURCES = check_mask.c
+libfrencutils_libfrencutils_mpi_a_SOURCES = \
+    $(libfrencutils_libfrencutils_a_SOURCES)
+libfrencutils_libfrencutils_mpi_a_CFLAGS = \
+    -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)

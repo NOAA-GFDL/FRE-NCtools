@@ -19,9 +19,9 @@
 #***********************************************************************
 bin_PROGRAMS = make_solo_mosaic
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
+AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils \
             $(NETCDF_CFLAGS)
-LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 make_solo_mosaic_SOURCES = get_contact.c \

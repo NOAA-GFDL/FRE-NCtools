@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/libfrencutils \
           tools/check_mask \
           tools/cubic_utils \
           tools/fregrid \

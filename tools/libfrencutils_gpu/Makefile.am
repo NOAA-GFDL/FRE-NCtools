@@ -19,7 +19,7 @@
 #***********************************************************************
 noinst_LIBRARIES = libfrencutils_gpu.a
 
-AM_CFLAGS = $(NETCDF_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/tools/libfrencutils
+AM_CFLAGS = $(NETCDF_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils
 
 libfrencutils_gpu_a_SOURCES = create_xgrid_gpu.c \
                               create_xgrid_gpu.h \
@@ -28,4 +28,4 @@ libfrencutils_gpu_a_SOURCES = create_xgrid_gpu.c \
                               general_utils_gpu.c \
                               general_utils_gpu.h
 
-libfrencutils_gpu_a_LIBADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a
+libfrencutils_gpu_a_LIBADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a

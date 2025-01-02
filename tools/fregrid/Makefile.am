@@ -22,7 +22,7 @@ if WITH_MPI
   bin_PROGRAMS += fregrid_parallel
 endif
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils $(NETCDF_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
 fregrid_SOURCES = bilinear_interp.c \
@@ -32,8 +32,8 @@ fregrid_SOURCES = bilinear_interp.c \
                   fregrid_util.c \
                   fregrid_util.h \
                   fregrid.c
-fregrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
+fregrid_LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a $(LDADD)
 
 fregrid_parallel_SOURCES = $(fregrid_SOURCES)
 fregrid_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
-fregrid_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
+fregrid_parallel_LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)

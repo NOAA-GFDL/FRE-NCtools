@@ -19,7 +19,7 @@
 #***********************************************************************
 bin_PROGRAMS = make_hgrid
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
+AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils \
             $(NETCDF_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
@@ -29,4 +29,4 @@ make_hgrid_SOURCES = create_conformal_cubic_grid.c \
                      create_hgrid.h \
                      create_lonlat_grid.c \
                      make_hgrid.c
-make_hgrid_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
+make_hgrid_LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a $(LDADD)
