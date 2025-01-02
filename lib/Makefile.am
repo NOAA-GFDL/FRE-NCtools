@@ -18,17 +18,25 @@
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
 
-noinst_LIBRARIES = libnfu.a
+noinst_LIBRARIES = \
+    libnfu/libnfu.a
 
-AM_FCFLAGS =  $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+
+AM_FCFLAGS =  $(FC_MODOUT)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
-libnfu_a_SOURCES = nfu.F90 nfu_compress.F90
+# Items to handle Fortran module files
+SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
 
-nfu_mod.$(FC_MODEXT): nfu.$(OBJEXT)
-nfu_compress_mod.$(FC_MODEXT): nfu_compress.$(OBJEXT)
+.F90_mod.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
-nfu_compress.$(OBJEXT): nfu_mod.$(FC_MODEXT)
+.F90.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
 clean-local:
 	$(RM) *.$(FC_MODEXT)
+
+include $(top_srcdir)/lib/libnfu/local.mk

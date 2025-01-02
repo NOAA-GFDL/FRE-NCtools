@@ -257,7 +257,7 @@ AC_SUBST(RPATH_FLAGS) dnl
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 lib/libnfu/Makefile
+                 lib/Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile

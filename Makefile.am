@@ -19,7 +19,7 @@
 #***********************************************************************
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib/libnfu \
+SUBDIRS = lib \
           src \
           tools/libfrencutils \
           tools/check_mask \
