@@ -24,12 +24,6 @@ else
 skipflag=""
 endif
 
-if HAVE_PLMOD_LIST_MOREUTILS
-have_plmod_list_moreutils="yes"
-else
-have_plmod_list_moreutils="no"
-endif
-
 AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/tools/libfrencutils
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
@@ -60,7 +54,6 @@ TESTS_ENVIRONMENT = \
     builddir=$(abs_builddir); export builddir; \
     MPIRUN=$(MPIRUN); export MPIRUN; \
     skipflag=$(skipflag); export skipflag; \
-    have_plmod_list_moreutils=$(have_plmod_list_moreutils); export have_plmod_list_moreutils; \
     PKGLIBEXECDIR="$(abs_top_builddir)/src"; export PKGLIBEXECDIR; \
     for d in $$( find $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \

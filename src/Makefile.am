@@ -16,12 +16,9 @@ bin_SCRIPTS = \
   list_ncvars.csh \
   list_ncvars.sh \
   plevel.sh \
+  split_ncvars.pl \
   timavg \
   timavg.csh
-
-if HAVE_PLMOD_LIST_MOREUTILS
-  bin_SCRIPTS += split_ncvars.pl
-endif
 
 pkglibexec_PROGRAMS = \
   list_ncvars \
@@ -212,3 +209,8 @@ timavg.csh: timeavg/timavg.csh.in Makefile
 split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
 	$(do_subst) < $(srcdir)/split_ncvars/split_ncvars.pl.in > split_ncvars.pl
 	chmod +x split_ncvars.pl
+
+install-exec-hook:
+	ln $(DESTDIR)$(bindir)/split_ncvars.pl $(DESTDIR)$(bindir)/split_ncvars
+install-data-hook:
+	ln $(DESTDIR)$(mandir)/man1/split_ncvars.pl.1 $(DESTDIR)$(mandir)/man1/split_ncvars.1
