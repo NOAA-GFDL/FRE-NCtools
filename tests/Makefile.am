@@ -165,6 +165,7 @@ EXTRA_DIST = \
   make_hgrid/grid_spec.tile4.ncl \
   make_hgrid/grid_spec.tile5.ncl \
   make_hgrid/grid_spec.tile6.ncl \
+  simple_hydrology/river_regrid \
   $(TESTS)
 
 # Shortcut targets to make it easier to run (very) expensive tests.
