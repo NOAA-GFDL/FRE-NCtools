@@ -30,7 +30,7 @@ else
 have_plmod_list_moreutils="no"
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/tools/libfrencutils
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/lib/libfrencutils
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
