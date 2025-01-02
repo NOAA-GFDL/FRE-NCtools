@@ -19,14 +19,12 @@
 #***********************************************************************
 
 libfrencutils_gpu_libfrencutils_gpu_a_SOURCES = \
-    libfrencutils_gpu\create_xgrid_gpu.c \
-    libfrencutils_gpu\create_xgrid_gpu.h \
-    libfrencutils_gpu\create_xgrid_utils_gpu.c \
-    libfrencutils_gpu\create_xgrid_utils_gpu.h \
-    libfrencutils_gpu\general_utils_gpu.c \
-    libfrencutils_gpu\general_utils_gpu.h
+    libfrencutils_gpu/create_xgrid_gpu.c \
+    libfrencutils_gpu/create_xgrid_gpu.h \
+    libfrencutils_gpu/create_xgrid_utils_gpu.c \
+    libfrencutils_gpu/create_xgrid_utils_gpu.h \
+    libfrencutils_gpu/general_utils_gpu.c \
+    libfrencutils_gpu/general_utils_gpu.h
 
 libfrencutils_gpu_libfrencutils_gpu_a_CFLAGS = \
     $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils
-libfrencutils_gpu_libfrencutils_gpu_a_LIBADD = \
-    $(top_builddir)/lib/libfrencutils/libfrencutils.a

@@ -42,12 +42,14 @@ libnctf_a_SOURCES = \
   nct_nc_utils.F90
 nodist_libnctf_a_SOURCES = \
   nct_nc_utils.$(FC_MODEXT)
-BUILT_SOURCES += nct_nc_utils.$(FC_MODEXT)
+BUILT_SOURCES += \
+  nct_nc_utils.$(FC_MODEXT)
+nct_nc_utils.o: nct_nc_utils.F90
 
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
 
-AM_FCFLAGS = $(FC_MODOUT)$(MODDIR)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_FCFLAGS = $(FC_MODINC)$(@D) $(FC_MODOUT)$(@D)/.mods $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
 AM_CFLAGS = $(NETCDF_CFLAGS)
 LDADD = libver.a $(NETCDF_LDFLAGS) $(RPATH_FLAGS)
 
@@ -105,12 +107,20 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
 SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
 
 .F90_mod.$(FC_MODEXT):
-	@$(MKDIR_P) $(@D)
+	@ echo Hello 1
+	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+	cp $(@D)/.mods/$(@F) $(@D)/$(@F)
 
 .F90.$(FC_MODEXT):
-	@$(MKDIR_P) $(@D)
+	@ echo Hello 2
+	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+	@cp $(@D)/.mods/$(@F) $(@D)/$(@F)
+
+# This is needed to override the Make default, implicit target
+.mod.o:
+	@:
 
 # ********************************************************* #
 # land_util programs                                        #
