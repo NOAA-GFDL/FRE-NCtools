@@ -22,13 +22,13 @@ check_PROGRAMS = test_get_grid_cell_struct
 
 AM_CFLAGS =  $(NETCDF_CFLAGS) \
             -I$(top_srcdir)/tools/fregrid_gpu \
-            -I$(top_srcdir)/tools/libfrencutils \
-            -I$(top_srcdir)/tools/libfrencutils_gpu -acc
+            -I$(top_srcdir)/lib/libfrencutils \
+            -I$(top_srcdir)/lib/libfrencutils_gpu -acc
 
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
         $(top_builddir)/tools/fregrid_gpu/interp_utils_gpu.o \
-        $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-        $(top_builddir)/tools/libfrencutils_gpu/libfrencutils_gpu.a
+        $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+        $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a
 
 test_get_grid_cell_struct_SOURCES = test_get_grid_cell_struct.c
 

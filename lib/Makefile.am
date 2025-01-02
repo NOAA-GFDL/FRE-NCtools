@@ -23,8 +23,13 @@ noinst_LIBRARIES = \
 	libfrencutils/libfrencutils.a
 
 if WITH_MPI
-  noinst_LIBRARIES += \
-	libfrencutils/libfrencutils_mpi.a
+    noinst_LIBRARIES += \
+        libfrencutils/libfrencutils_mpi.a
+endif
+
+if ENABLE_GPU
+    noinst_LIBRARIES += \
+		libfrencutils_gpu/libfrencutils_gpu.a
 endif
 
 AM_CFLAGS = $(NETCDF_CFLAGS)
@@ -47,3 +52,4 @@ clean-local:
 
 include $(top_srcdir)/lib/libnfu/local.mk
 include $(top_srcdir)/lib/libfrencutils/local.mk
+include $(top_srcdir)/lib/libfrencutils_gpu/local.mk

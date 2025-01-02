@@ -19,9 +19,10 @@
 #***********************************************************************
 bin_PROGRAMS = fregrid_gpu
 
-AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils $(NETCDF_CFLAGS) \
-            -I$(top_srcdir)/tools/libfrencutils_gpu \
+AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils \
+            -I$(top_srcdir)/lib/libfrencutils_gpu \
             -I$(top_srcdir)/tools/fregrid \
+            $(NETCDF_CFLAGS) \
             $(OPENACC_CFLAGS)
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
 
@@ -37,5 +38,5 @@ fregrid_gpu_LDADD = $(top_builddir)/tools/fregrid/fregrid_util.o \
                     $(top_builddir)/tools/fregrid/conserve_interp.o \
                     $(top_builddir)/tools/fregrid/bilinear_interp.o \
                     $(top_builddir)/lib/libfrencutils/libfrencutils.a \
-                    $(top_builddir)/tools/libfrencutils_gpu/libfrencutils_gpu.a \
+                    $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a \
                     $(LDADD)

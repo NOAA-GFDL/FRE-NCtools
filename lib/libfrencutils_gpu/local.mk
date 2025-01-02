@@ -17,15 +17,16 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-noinst_LIBRARIES = libfrencutils_gpu.a
 
-AM_CFLAGS = $(NETCDF_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils
+libfrencutils_gpu_libfrencutils_gpu_a_SOURCES = \
+    libfrencutils_gpu\create_xgrid_gpu.c \
+    libfrencutils_gpu\create_xgrid_gpu.h \
+    libfrencutils_gpu\create_xgrid_utils_gpu.c \
+    libfrencutils_gpu\create_xgrid_utils_gpu.h \
+    libfrencutils_gpu\general_utils_gpu.c \
+    libfrencutils_gpu\general_utils_gpu.h
 
-libfrencutils_gpu_a_SOURCES = create_xgrid_gpu.c \
-                              create_xgrid_gpu.h \
-                              create_xgrid_utils_gpu.c \
-                              create_xgrid_utils_gpu.h \
-                              general_utils_gpu.c \
-                              general_utils_gpu.h
-
-libfrencutils_gpu_a_LIBADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a
+libfrencutils_gpu_libfrencutils_gpu_a_CFLAGS = \
+    $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils
+libfrencutils_gpu_libfrencutils_gpu_a_LIBADD = \
+    $(top_builddir)/lib/libfrencutils/libfrencutils.a
