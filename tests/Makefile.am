@@ -54,6 +54,7 @@ TESTS_ENVIRONMENT = \
     builddir=$(abs_builddir); export builddir; \
     MPIRUN=$(MPIRUN); export MPIRUN; \
     skipflag=$(skipflag); export skipflag; \
+    PREFIX=$(abs_top_builddir)/src; export PREFIX; \
     PKGLIBEXECDIR="$(abs_top_builddir)/src"; export PKGLIBEXECDIR; \
     for d in $$( find $(abs_top_builddir)/tools -mindepth 1 -not -path '*/\.*' -type d ); do \
       PATH="$$d"'$(PATH_SEPARATOR)'"$$PATH"; \

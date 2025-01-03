@@ -125,7 +125,7 @@ my $ncatted
 my $list_ncvars
     = defined( $ENV{LIST_NCVARS} )
     ? $ENV{LIST_NCVARS}
-    : "$/list_ncvars.csh";
+    : "$prefix/list_ncvars.csh";
 
 my $ncdump
     = defined( $ENV{NCDUMP} )
