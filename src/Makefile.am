@@ -6,9 +6,13 @@ combine_programs = \
   mppnccombine \
   scatter-ncc
 
+grid_programs = \
+  check_mask
+
 bin_PROGRAMS = \
   decompress-ncc \
-  $(combine_programs)
+  $(combine_programs) \
+  $(grid_programs)
 
 bin_SCRIPTS = \
   combine_restarts \
@@ -50,8 +54,13 @@ c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
 
 AM_FCFLAGS = $(FC_MODINC)$(@D) $(FC_MODOUT)$(@D)/.mods $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
-AM_CFLAGS = $(NETCDF_CFLAGS)
-LDADD = libver.a $(NETCDF_LDFLAGS) $(RPATH_FLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS) \
+  -I$(top_srcdir)/lib/libfrencutils
+LDADD = libver.a \
+  $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+  $(NETCDF_LDFLAGS) \
+  $(NETCDF_LIBS) \
+  $(RPATH_FLAGS)
 
 BUILT_SOURCES += version.inc
 version.inc: Makefile
@@ -222,3 +231,8 @@ timavg.csh: timeavg/timavg.csh.in Makefile
 split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
 	$(do_subst) < $(srcdir)/split_ncvars/split_ncvars.pl.in > split_ncvars.pl
 	chmod +x split_ncvars.pl
+
+# ********************************************************* #
+# check_mask                                                #
+# ********************************************************* #
+check_mask_SOURCES = check-mask/check_mask.c
