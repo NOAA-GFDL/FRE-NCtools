@@ -10,6 +10,10 @@ grid_programs = \
   make_remap_file \
   fregrid
 
+if ENABLE_GPU
+  grid_programs += fregrid_gpu
+endif
+
 bin_PROGRAMS = \
   decompress-ncc \
   check_mask \
@@ -261,3 +265,21 @@ fregrid_SOURCES = \
   fre-grid/fregrid_util.h \
   fre-grid/fregrid.c
 fregrid_parallel_SOURCES = $(fregrid_SOURCES)
+
+fregrid_gpu_CFLAGS = \
+  -I$(top_srcdir)/lib/libfrencutils_gpu \
+  $(AM_CFLAGS) \
+  $(OPENACC_CFLAGS)
+
+fregrid_gpu_SOURCES = \
+  fregrid-gpu/conserve_interp_gpu.c \
+  fregrid-gpu/conserve_interp_gpu.h \
+  fregrid-gpu/interp_utils_gpu.c \
+  fregrid-gpu/interp_utils_gpu.h \
+  fregrid-gpu/fregrid_utils_gpu.c \
+  fregrid-gpu/fregrid_utils_gpu.h \
+  fregrid-gpu/fregrid_gpu.c
+
+fregrid_gpu_LDADD = \
+  $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a \
+  $(LDADD)

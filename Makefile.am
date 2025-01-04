@@ -46,7 +46,6 @@ SUBDIRS += man \
            tests
 
 if ENABLE_GPU
-SUBDIRS += tools/fregrid_gpu
 SUBDIRS += t_gpu
 endif
 
