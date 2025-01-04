@@ -7,13 +7,19 @@ combine_programs = \
   scatter-ncc
 
 grid_programs = \
-  make_remap_file
+  make_remap_file \
+  fregrid
 
 bin_PROGRAMS = \
   decompress-ncc \
   check_mask \
   $(combine_programs) \
   $(grid_programs)
+
+if WITH_MPI
+  bin_PROGRAMS += \
+    fregrid_parallel
+endif
 
 bin_SCRIPTS = \
   combine_restarts \
@@ -242,3 +248,16 @@ check_mask_SOURCES = check-mask/check_mask.c
 # make_remap_file                                           #
 # ********************************************************* #
 make_remap_file_SOURCES = cubic_utils/make_remap_file.c
+
+# ********************************************************* #
+# fregrid                                                   #
+# ********************************************************* #
+fregrid_SOURCES = \
+  fre-grid/bilinear_interp.c \
+  fre-grid/bilinear_interp.h \
+  fre-grid/conserve_interp.c \
+  fre-grid/conserve_interp.h \
+  fre-grid/fregrid_util.c \
+  fre-grid/fregrid_util.h \
+  fre-grid/fregrid.c
+fregrid_parallel_SOURCES = $(fregrid_SOURCES)
