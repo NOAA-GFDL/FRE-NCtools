@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/cubic_utils/Makefile
                  tools/fregrid/Makefile
                  tools/fregrid_gpu/Makefile
                  tools/make_coupler_mosaic/Makefile

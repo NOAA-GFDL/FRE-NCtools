@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/cubic_utils \
           tools/fregrid \
           tools/make_coupler_mosaic \
           tools/make_hgrid \

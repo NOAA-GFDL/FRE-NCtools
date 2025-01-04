@@ -1,0 +1,84 @@
+make_remap_file(1)
+==================
+
+NAME
+----
+
+make_remap_file - create cubic sphere grid remap file
+
+SYNOPSIS
+--------
+[verse]
+
+make_remap_file  --input_mosaic _input_mosaic_ --output_mosaic _output_mosaic_
+    --remap_file _remap_file_ [--interp_method _method_]
+
+DESCRIPTION
+-----------
+
+make_remap_file create remap file from cubic sphere grid to ubic sphere grid.
+The ratio of grid size of input and output grid must be integer. The purpose of
+this tool is to create remap file on single processor for very high resoluton
+grid (It will large processor count and long time to create such file).
+Currently this tool can only remap file for data on grid cell center.
+
+OPTIONS
+-------
+
+*--input_mosaic* _input_mosaic_::
+
+Specify the input mosaic information. This file contains list of tile files
+which specify the grid information for each tile.
+
+*--output_mosaic* _output_mosaic_::
+
+Specify the output mosaic information. This file contains list of tile files
+which specify the grid information for each tile. If output_mosaic is not
+specified, nlon and nlat must be specified.
+
+*--remap_file* _remap_file_::
+
+Specify the file name that saves remapping information. If remap_file is
+specified and the file does not exist, remapping information will be calculated
+ans stored in remap_file. If remap_file is specified and the file exists,
+remapping information will be read from remap_file.
+
+*--interp_method* _interp_method_::
+
+Specify the remapping algorithm to be used. Default is 'conserve_order1'.
+Currently only 'conserve_order1', 'conserve_order2' remapping scheme are
+implemented in this tool.
+
+EXAMPLES
+--------
+
+Remap scalar and vector data onto different grid resolutions
+
+----
+$ make_remap_file --input_mosaic C3072_mosaic.nc \
+    --output_mosaic C6144_mosaic.nc
+    --remap_file remap_C3072_to_C6144.nc \
+    --interp_method conserve_order2fregrid
+----
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

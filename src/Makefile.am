@@ -7,10 +7,11 @@ combine_programs = \
   scatter-ncc
 
 grid_programs = \
-  check_mask
+  make_remap_file
 
 bin_PROGRAMS = \
   decompress-ncc \
+  check_mask \
   $(combine_programs) \
   $(grid_programs)
 
@@ -236,3 +237,8 @@ split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
 # check_mask                                                #
 # ********************************************************* #
 check_mask_SOURCES = check-mask/check_mask.c
+
+# ********************************************************* #
+# make_remap_file                                           #
+# ********************************************************* #
+make_remap_file_SOURCES = cubic_utils/make_remap_file.c
