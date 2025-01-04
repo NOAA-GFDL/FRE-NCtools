@@ -22,9 +22,6 @@ libnfu_libnfu_a_SOURCES = \
     libnfu/nfu.F90 \
     libnfu/nfu_compress.F90
 
-libnfu/nfu_mod.$(FC_MODEXT): libnfu/nfu.$(OBJEXT)
-libnfu/nfu_compress_mod.$(FC_MODEXT): libnfu/nfu_compress.$(OBJEXT)
-
 libnfu/nfu_compress.$(OBJEXT): libnfu/nfu_mod.$(FC_MODEXT)
 
 clean-local:
