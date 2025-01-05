@@ -9,6 +9,7 @@ combine_programs = \
 grid_programs = \
   fregrid \
   make_coupler_mosaic \
+  make_hgrid \
   make_remap_file
 
 if WITH_MPI
@@ -308,3 +309,14 @@ make_coupler_mosaic_parallel_LDADD = \
   $(MPI_CLDFLAGS)
 make_coupler_mosaic_parallel_SOURCES = \
   $(make_coupler_mosaic_SOURCES)
+
+# ********************************************************* #
+# make_coupler_mosaic                                       #
+# ********************************************************* #
+make_hgrid_SOURCES = \
+  make-hgrid/create_conformal_cubic_grid.c \
+  make-hgrid/create_gnomonic_cubic_grid.c \
+  make-hgrid/create_grid_from_file.c \
+  make-hgrid/create_hgrid.h \
+  make-hgrid/create_lonlat_grid.c \
+  make-hgrid/make_hgrid.c
