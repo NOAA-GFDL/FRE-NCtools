@@ -7,8 +7,15 @@ combine_programs = \
   scatter-ncc
 
 grid_programs = \
-  make_remap_file \
-  fregrid
+  fregrid \
+  make_coupler_mosaic \
+  make_remap_file
+
+if WITH_MPI
+  grid_programs += \
+    fregrid_parallel \
+    make_coupler_mosaic_parallel
+endif
 
 if ENABLE_GPU
   grid_programs += fregrid_gpu
@@ -19,11 +26,6 @@ bin_PROGRAMS = \
   check_mask \
   $(combine_programs) \
   $(grid_programs)
-
-if WITH_MPI
-  bin_PROGRAMS += \
-    fregrid_parallel
-endif
 
 bin_SCRIPTS = \
   combine_restarts \
@@ -264,7 +266,15 @@ fregrid_SOURCES = \
   fre-grid/fregrid_util.c \
   fre-grid/fregrid_util.h \
   fre-grid/fregrid.c
-fregrid_parallel_SOURCES = $(fregrid_SOURCES)
+fregrid_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+fregrid_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+fregrid_parallel_SOURCES = \
+  $(fregrid_SOURCES)
 
 fregrid_gpu_CFLAGS = \
   -I$(top_srcdir)/lib/libfrencutils_gpu \
@@ -283,3 +293,18 @@ fregrid_gpu_SOURCES = \
 fregrid_gpu_LDADD = \
   $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a \
   $(LDADD)
+
+# ********************************************************* #
+# make_coupler_mosaic                                       #
+# ********************************************************* #
+make_coupler_mosaic_SOURCES = \
+  make-coupler-mosaic/make_coupler_mosaic.c
+make_coupler_mosaic_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+make_coupler_mosaic_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+make_coupler_mosaic_parallel_SOURCES = \
+  $(make_coupler_mosaic_SOURCES)

@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/make_coupler_mosaic/Makefile
                  tools/make_hgrid/Makefile
                  tools/make_land_domain/Makefile
                  tools/make_quick_mosaic/Makefile
