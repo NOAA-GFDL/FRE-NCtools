@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,58 +81,58 @@ int main(int argc, char **argv) {
 
     // Define variables
     check_err(nc_def_var(ncid, "time", NC_DOUBLE, 1, &time_dim, &times_id), __LINE__);
-    check_err(nc_put_att_text(ncid, times_id, "units", 31, "days since 0001-01-01 00:00:00"), __LINE__);
-    check_err(nc_put_att_text(ncid, times_id, "long_name", 5, "Time"), __LINE__);
-    check_err(nc_put_att_text(ncid, times_id, "calendar", 7, "noleap"), __LINE__);
-    check_err(nc_put_att_text(ncid, times_id, "calendar_type", 7, "noleap"), __LINE__);
-    check_err(nc_put_att_text(ncid, times_id, "cartesian_axis", 2, "T"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "units", 30, "days since 0001-01-01 00:00:00"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "long_name", 4, "Time"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "calendar", 6, "noleap"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "calendar_type", 6, "noleap"), __LINE__);
+    check_err(nc_put_att_text(ncid, times_id, "cartesian_axis", 1, "T"), __LINE__);
 
     check_err(nc_def_var(ncid, "grid_xt", NC_FLOAT, 1, &xt_dim, &xt_id), __LINE__);
-    check_err(nc_put_att_text(ncid, xt_id, "units", 13, "degrees east"), __LINE__);
-    check_err(nc_put_att_text(ncid, xt_id, "long_name", 16, "T-cell latitude"), __LINE__);
-    check_err(nc_put_att_text(ncid, xt_id, "cartesian_axis", 2, "X"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "units", 12, "degrees east"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "long_name", 15, "T-cell latitude"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "cartesian_axis", 1, "X"), __LINE__);
 
     check_err(nc_def_var(ncid, "grid_yt", NC_FLOAT, 1, &yt_dim, &yt_id), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "units", 14, "degrees north"), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "long_name", 17, "T-cell longitude"), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "cartesian_axis", 2, "Y"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "units", 13, "degrees north"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "long_name", 16, "T-cell longitude"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "cartesian_axis", 1, "Y"), __LINE__);
 
     check_err(nc_def_var(ncid, "phalf", NC_FLOAT, 1, &phalf_dim, &phalf_id), __LINE__);
-    check_err(nc_put_att_text(ncid, phalf_id, "units", 2, "mb"), __LINE__);
-    check_err(nc_put_att_text(ncid, phalf_id, "long_name", 18, "ref half pressure level"), __LINE__);
-    check_err(nc_put_att_text(ncid, phalf_id, "cartesian_axis", 2, "Z"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "units", 1, "mb"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "long_name", 23, "ref half pressure level"), __LINE__);
+    check_err(nc_put_att_text(ncid, phalf_id, "cartesian_axis", 1, "Z"), __LINE__);
     check_err(nc_put_att_text(ncid, phalf_id, "positive", 4, "down"), __LINE__);
 
     check_err(nc_def_var(ncid, "pfull", NC_FLOAT, 1, &pfull_dim, &pfull_id), __LINE__);
-    check_err(nc_put_att_text(ncid, pfull_id, "units", 2, "mb"), __LINE__);
-    check_err(nc_put_att_text(ncid, pfull_id, "long_name", 17, "ref full pressure level"), __LINE__);
-    check_err(nc_put_att_text(ncid, pfull_id, "cartesian_axis", 2, "Z"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "units", 1, "mb"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "long_name", 23, "ref full pressure level"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "cartesian_axis", 1, "Z"), __LINE__);
     check_err(nc_put_att_text(ncid, pfull_id, "positive", 4, "down"), __LINE__);
 
     check_err(nc_def_var(ncid, "pk", NC_FLOAT, 1, &phalf_dim, &pk_id), __LINE__);
-    check_err(nc_put_att_text(ncid, pk_id, "units", 7, "pascal"), __LINE__);
-    check_err(nc_put_att_text(ncid, pk_id, "long_name", 39, "pressure part of the hybrid coordinate"), __LINE__);
-    check_err(nc_put_att_text(ncid, pk_id, "cell_methods", 12, "time: point"), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "units", 6, "pascal"), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "long_name", 38, "pressure part of the hybrid coordinate"), __LINE__);
+    check_err(nc_put_att_text(ncid, pk_id, "cell_methods", 11, "time: point"), __LINE__);
 
     check_err(nc_def_var(ncid, "bk", NC_FLOAT, 1, &phalf_dim, &bk_id), __LINE__);
-    check_err(nc_put_att_text(ncid, bk_id, "units", 5, "none"), __LINE__);
-    check_err(nc_put_att_text(ncid, bk_id, "long_name", 32, "vertical coordinate sigma value"), __LINE__);
-    check_err(nc_put_att_text(ncid, bk_id, "cell_methods", 12, "time: point"), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "units", 4, "none"), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "long_name", 31, "vertical coordinate sigma value"), __LINE__);
+    check_err(nc_put_att_text(ncid, bk_id, "cell_methods", 11, "time: point"), __LINE__);
 
     check_err(nc_def_var(ncid, "ps", NC_FLOAT, 3, (int[]){time_dim, xt_dim, yt_dim}, &ps_id), __LINE__);
-    check_err(nc_put_att_text(ncid, ps_id, "units", 3, "Pa"), __LINE__);
-    check_err(nc_put_att_text(ncid, ps_id, "long_name", 17, "surface pressure"), __LINE__);
+    check_err(nc_put_att_text(ncid, ps_id, "units", 2, "Pa"), __LINE__);
+    check_err(nc_put_att_text(ncid, ps_id, "long_name", 16, "surface pressure"), __LINE__);
     check_err(nc_put_att_text(ncid, ps_id, "cell_methods", 10, "time: mean"), __LINE__);
 
     check_err(nc_def_var(ncid, "temp", NC_FLOAT, 4, (int[]){time_dim, pfull_dim, xt_dim, yt_dim}, &temp_id), __LINE__);
     check_err(nc_put_att_text(ncid, temp_id, "units", 1, "K"), __LINE__);
-    check_err(nc_put_att_text(ncid, temp_id, "long_name", 8, "Temperature"), __LINE__);
-    check_err(nc_put_att_text(ncid, temp_id, "cell_methods", 12, "time: point"), __LINE__);
+    check_err(nc_put_att_text(ncid, temp_id, "long_name", 11, "Temperature"), __LINE__);
+    check_err(nc_put_att_text(ncid, temp_id, "cell_methods", 11, "time: point"), __LINE__);
 
     check_err(nc_def_var(ncid, "dummy", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &dummy_id), __LINE__);
 
     // Assign global attributes
-    check_err(nc_put_att_text(ncid, NC_GLOBAL, "description", 55, "Sample netCDF file for testing run_timepressure_interp"), __LINE__);
+    check_err(nc_put_att_text(ncid, NC_GLOBAL, "description", 54, "Sample netCDF file for testing run_timepressure_interp"), __LINE__);
 
     // End define mode
     check_err(nc_enddef(ncid), __LINE__);

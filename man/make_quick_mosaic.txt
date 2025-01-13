@@ -1,0 +1,78 @@
+make_quick_mosaic(1)
+====================
+
+NAME
+----
+
+make_quick_mosaic - Generate a completel FMS coupled grid
+
+SYNOPSIS
+--------
+[verse]
+make_quick_mosaic --input_mosaic _input_mosaic_file_ [OPTIONS]
+
+DESCRIPTION
+-----------
+
+make_quick_mosaic generate a complete grid a FMS coupler. When *--ocean_topog*
+is not specified, it takes a coupled mosaic as input_mosaic. Otherwise it
+takes a solo mosaic as input_mosaic. The atmosphere, ocean and land grid will
+be the same. The land/sea mask will be decided by the land/sea mask of
+input_mosaic if ocean_topog is not specified, otherwise by the ocean_topog
+file.
+
+OPTIONS
+-------
+
+Required
+~~~~~~~~
+
+*--input_mosaic* _input_mosaic_file_::
+    Specify the input mosaic file name.
+
+Optional
+~~~~~~~~
+
+*--mosaic_name* _output_mosaic_file_::
+Coupler mosaic name. The output coupler mosaic file will be mosaic_name.nc.
+default value is 'quick_mosaic'
+
+*--ocean_topog* _ocean_topog_file_::
+Ocean topography file.
+
+*--sea_level* _sea_level_::
+Specify the sea level (in meters) and its value will be used to determine
+land/sea mask. When topography of a grid cell is less than sea level, this grid
+cell will be land, otherwise it will be ocean. Default value is 0.
+
+*--land_frac_file* _frac_file_::
+Land fraction file.
+
+*--land_frac_field* _frac_field_::
+Land fraction field.
+
+SEE ALSO
+--------
+*make_solo_mosaic*(1), *make_coupler_mosaic*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

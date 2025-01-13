@@ -134,10 +134,6 @@ if test -n "$ASCIIDOC"; then
 fi
 AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 
-AC_CHECK_PROGS(BATS, [bats])
-AC_CHECK_PROGS(PROVE, [prove])
-AM_CONDITIONAL([WITH_CHECK_PROGS], [test -n "$PROVE" -a -n "$BATS"])
-
 # Although these are supplied with the NetCDF C library, we'll double
 # check that ncgen and ncdump are available
 AC_ARG_VAR([NCGEN], [Path to ncgen])
@@ -291,7 +287,6 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
                  tools/simple_hydrog/libfmslite/Makefile
-                 t/Makefile
                  t_gpu/Makefile
                  t_gpu/test_read_remap_file/Makefile
                  t_gpu/test_get_grid_cell_struct/Makefile

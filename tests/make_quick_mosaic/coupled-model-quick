@@ -25,10 +25,6 @@ fi
 
 . "${srcdir=.}/init.sh"
 
-# Check if we should skip the MPI tests
-command -v make_topog_parallel && test -z "$SKIP_MPI_TESTS" \
-    || skip_ "MPI tests disabled"
-
 # Create ocean hgrid
 make_hgrid \
     --grid_type tripolar_grid \
@@ -39,7 +35,8 @@ make_hgrid \
     --dlon 1.0,1.0 \
     --dlat 1.0,1.0,0.6666667,0.3333333,0.6666667,1.0,1.0 \
     --grid_name ocean_hgrid \
-    --center c_cell || framework_failure_ failed to create ocean hgrid
+    --center c_cell \
+    || framework_failure_ failed to create ocean hgrid
 
 # create ocean_vgrid
 make_vgrid \
@@ -58,20 +55,7 @@ make_solo_mosaic \
     --periodx 360 || framework_failure_ failed to create ocean solo mosaic
 
 # create ocean topography data
-$builddir/create_5degree_topog \
-    || framework_failure_ failed to create input file 5degree_topog.nc
-get_ncpu_
-$MPIRUN -n $ncpu make_topog_parallel \
-    --mosaic ocean_mosaic.nc \
-    --topog_type realistic \
-    --topog_file 5degree_topog.nc \
-    --topog_field TOPO \
-    --scale_factor -1 \
-    --vgrid ocean_vgrid.nc \
-    --output topog_parallel.nc || fail_ failed to create ocean topography data
-# Ensure topog.nc is created
-test -f topog_parallel.nc || fail_ topog_parallel.nc not created
-
+$builddir/create_5degree_topog || framework_failure_ failed to create input file 5degree_topog.nc
 make_topog \
     --mosaic ocean_mosaic.nc \
     --topog_type realistic \
@@ -81,6 +65,17 @@ make_topog \
     --vgrid ocean_vgrid.nc \
     --output topog.nc || framework_failure_ failed to create ocean topography data
 
-# Ensure the parallel and serial output files are the same
-$top_srcdir/tests/nc_cmp -d topog.nc topog_parallel.nc \
-    || fail_ "topog.nc and topog_parallel.nc differ"
+#Make the quick mosaic
+make_quick_mosaic \
+    --input_mosaic ocean_mosaic.nc \
+    --ocean_topog topog.nc \
+    || fail_ failed to create quick mosaic
+# Check that the output files are created
+test -f atmos_mosaic_tile1Xland_mosaic_tile1.nc \
+    || fail_ atmos_mosaic_tile1Xland_mosaic_tile1.nc not created
+test -f atmos_mosaic_tile1Xocean_mosaic_tile1.nc \
+    || fail_ atmos_mosaic_tile1Xocean_mosaic_tile1.nc not created
+test -f land_mosaic_tile1Xocean_mosaic_tile1.nc \
+    || fail_ land_mosaic_tile1Xocean_mosaic_tile1.nc not created
+test -f mosaic.nc \
+    || fail_ mosaic.nc not created

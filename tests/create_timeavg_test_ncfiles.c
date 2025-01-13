@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,21 +69,21 @@ int main(int argc, char **argv) {
 
         // Define variables
         check_err(nc_def_var(ncid, "time", NC_DOUBLE, 1, &time_dim, &times_id), __LINE__);
-        check_err(nc_put_att_text(ncid, times_id, "bounds", 10, "time_bnds"), __LINE__);
+        check_err(nc_put_att_text(ncid, times_id, "bounds", 9, "time_bnds"), __LINE__);
 
         check_err(nc_def_var(ncid, "lat", NC_FLOAT, 1, &yt_dim, &xt_id), __LINE__);
         check_err(nc_def_var(ncid, "lon", NC_FLOAT, 1, &xt_dim, &yt_id), __LINE__);
         check_err(nc_def_var(ncid, "time_bnds", NC_FLOAT, 2, (int[]){time_dim, bnds_dim}, &time_bnds_id), __LINE__);
-        check_err(nc_put_att_text(ncid, time_bnds_id, "units", 5, "days"), __LINE__);
-        check_err(nc_put_att_text(ncid, time_bnds_id, "long_name", 21, "time axis boundaries"), __LINE__);
+        check_err(nc_put_att_text(ncid, time_bnds_id, "units", 4, "days"), __LINE__);
+        check_err(nc_put_att_text(ncid, time_bnds_id, "long_name", 20, "time axis boundaries"), __LINE__);
 
         check_err(nc_def_var(ncid, "var1", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &var1_id), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "type", 11, "times data"), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "units", 2, "s"), __LINE__);
-        check_err(nc_put_att_text(ncid, var1_id, "long_name", 11, "variable 1"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "type", 10, "times data"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "units", 1, "s"), __LINE__);
+        check_err(nc_put_att_text(ncid, var1_id, "long_name", 10, "variable 1"), __LINE__);
 
         check_err(nc_def_var(ncid, "var2", NC_FLOAT, 3, (int[]){time_dim, yt_dim, xt_dim}, &var2_id), __LINE__);
-        check_err(nc_put_att_text(ncid, var2_id, "type", 12, "random data"), __LINE__);
+        check_err(nc_put_att_text(ncid, var2_id, "type", 11, "random data"), __LINE__);
 
         // End define mode
         check_err(nc_enddef(ncid), __LINE__);

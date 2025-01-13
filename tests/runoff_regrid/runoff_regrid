@@ -25,10 +25,6 @@ fi
 
 . "${srcdir=.}/init.sh"
 
-# Check if we should skip the MPI tests
-command -v make_coupler_mosaic_parallel && test -z "$SKIP_MPI_TESTS"  \
-    || skip_ "MPI tests disabled"
-
 # Create ocean hgrid
 make_hgrid \
     --grid_type tripolar_grid \
@@ -47,8 +43,7 @@ make_vgrid \
     --bnds 0.,220.,5500. \
     --dbnds 10.,10.,367.14286 \
     --center c_cell \
-    --grid_name ocean_vgrid \
-    || framework_failure_ failed to create ocean vgrid
+    --grid_name ocean_vgrid || framework_failure_ failed to create ocean vgrid
 
 # create ocean solo mosaic
 make_solo_mosaic \
@@ -59,7 +54,7 @@ make_solo_mosaic \
     --periodx 360 || framework_failure_ failed to create ocean solo mosaic
 
 # create ocean topography data
-$builddir/create_5degree_topog \
+${builddir=..}/create_5degree_topog \
     || framework_failure_ failed to create input file 5degree_topog.nc
 make_topog \
     --mosaic ocean_mosaic.nc \
@@ -68,47 +63,14 @@ make_topog \
     --topog_field TOPO \
     --scale_factor -1 \
     --vgrid ocean_vgrid.nc \
-    --output topog.nc \
-    || framework_failure_ failed to create ocean topography data
+    --output topog.nc || framework_failure_ failed to create ocean topography data
 
-# create C48 grid for atmos/land
-make_hgrid \
-    --grid_type gnomonic_ed \
-    --nlon 96 \
-    --grid_name C48_grid \
-    || framework_failure_ failed to create C48 grid
-
-# create C48 solo mosaic for atmos/land
-make_solo_mosaic \
-    --num_tiles 6 \
-    --dir . \
-    --mosaic C48_mosaic \
-    --tile_file C48_grid.tile1.nc,C48_grid.tile2.nc,C48_grid.tile3.nc,C48_grid.tile4.nc,C48_grid.tile5.nc,C48_grid.tile6.nc \
-    || framework_failure_ failed to create C48 solo mosaic
-
-# coupler_mosaic with and without parallel and compare
-get_ncpu_
-$MPIRUN -n $ncpu make_coupler_mosaic_parallel \
-    --atmos_mosaic C48_mosaic.nc \
-    --ocean_mosaic ocean_mosaic.nc \
-    --ocean_topog  topog.nc \
-    --check \
-    --area_ratio_thresh 1.e-10 \
-    --mosaic_name grid_spec_parallel \
-    || fail_ failed to create coupler_mosaic
-
-# Ensure grid_spec.nc is created
-test -f grid_spec_parallel.nc || fail_ grid_spec_parallel.nc not created
-
-make_coupler_mosaic \
-    --atmos_mosaic C48_mosaic.nc \
-    --ocean_mosaic ocean_mosaic.nc \
-    --ocean_topog  topog.nc \
-    --check \
-    --area_ratio_thresh 1.e-10 \
-    --mosaic_name grid_spec \
-    || framework_failure_ failed to create coupler_mosaic
-
-# Ensure grid_spec.nc and grid_spec_parallel.nc are the same
-$top_srcdir/tests/nc_cmp -dm grid_spec.nc grid_spec_parallel.nc \
-    || fail_ grid_spec.nc and grid_spec_parallel.nc are different
+${builddir}/create_runoff_file
+runoff_regrid \
+    --input_file runoff_input.nc \
+    --input_fld_name runoff \
+    --output_mosaic ocean_mosaic.nc \
+    --output_topog topog.nc \
+    --output_file runoff_regrid.nc
+test -f runoff_regrid.nc \
+    || fail_ runoff_regrid.nc not created

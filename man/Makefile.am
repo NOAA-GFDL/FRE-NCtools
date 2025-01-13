@@ -34,10 +34,14 @@ EXTRA_DIST = \
   make_topog_parallel.1 \
   make_coupler_mosaic.txt \
   make_coupler_mosaic_parallel.1 \
+  make_quick_mosaic.txt \
+  make_regional_mosaic.txt \
   make_solo_mosaic.txt \
   mppnccombine.txt \
+  mppncscatter.txt \
   plevel_interp.txt \
   plevel.sh.txt \
+  river_regrid.txt \
   scatter-ncc.txt \
   split_ncvars.pl.txt \
   timavg.txt \
@@ -63,14 +67,18 @@ man_MANS += \
   list_ncvars.1 \
   list_ncvars.csh.1 \
   list_ncvars.sh.1 \
-  plevel_interp.1 \
-  plevel.sh.1 \
   make_hgrid.1 \
   make_vgrid.1 \
   make_topog.1 \
   make_coupler_mosaic.1 \
+  make_quick_mosaic.1 \
+  make_regional_mosaic.1 \
   make_solo_mosaic.1 \
   mppnccombine.1 \
+  mppncscatter.1 \
+  plevel_interp.1 \
+  plevel.sh.1 \
+  river_regrid.1 \
   scatter-ncc.1 \
   split_ncvars.pl.1 \
   timavg.1 \

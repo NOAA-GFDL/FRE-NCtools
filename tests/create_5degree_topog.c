@@ -1,3 +1,22 @@
+/***********************************************************************
+ *                   GNU Lesser General Public License
+ *
+ * This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+ *
+ * FRE-NCtools is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FRE-NCTools.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 #include <netcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,17 +55,17 @@ int main(int argc, char **argv) {
 
     // Define variables
     check_err(nc_def_var(ncid, "grid_xt", NC_FLOAT, 1, &xt_dim, &xt_id), __LINE__);
-        check_err(nc_put_att_text(ncid, xt_id, "units", 13, "degrees east"), __LINE__);
-    check_err(nc_put_att_text(ncid, xt_id, "point_spacing", 5, "even"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "units", 12, "degrees east"), __LINE__);
+    check_err(nc_put_att_text(ncid, xt_id, "point_spacing", 4, "even"), __LINE__);
 
     check_err(nc_def_var(ncid, "grid_yt", NC_FLOAT, 1, &yt_dim, &yt_id), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "units", 14, "degrees north"), __LINE__);
-    check_err(nc_put_att_text(ncid, yt_id, "point_spacing", 5, "even"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "units", 13, "degrees north"), __LINE__);
+    check_err(nc_put_att_text(ncid, yt_id, "point_spacing", 4, "even"), __LINE__);
 
     check_err(nc_def_var(ncid, "TOPO", NC_FLOAT, 2, (int[]){yt_dim, xt_dim}, &topo_id), __LINE__);
     check_err(nc_put_att_text(ncid, topo_id, "units", 1, "m"), __LINE__);
-    check_err(nc_put_att_text(ncid, topo_id, "long_name", 9, "Topography"), __LINE__);
-    check_err(nc_put_att_text(ncid, topo_id, "long_name_mod", 30, "regrid: G_P5DEGREE on X@AAV, on Y@AAV"), __LINE__);
+    check_err(nc_put_att_text(ncid, topo_id, "long_name", 10, "Topography"), __LINE__);
+    check_err(nc_put_att_text(ncid, topo_id, "long_name_mod", 37, "regrid: G_P5DEGREE on X@AAV, on Y@AAV"), __LINE__);
     check_err(nc_put_att_float(ncid, topo_id, "missing_value", NC_FLOAT, 1, (float[]){0.f}), __LINE__);
     check_err(nc_put_att_float(ncid, topo_id, "_FillValue", NC_FLOAT, 1, (float[]){0.f}), __LINE__);
 

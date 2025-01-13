@@ -4,6 +4,7 @@
 *.gz
 build.fre-nctools*
 build
+_build
 *.exe
 *.1
 .DS_Store
@@ -22,6 +23,7 @@ Makefile.in
 # http://www.gnu.org/software/autoconf
 
 .deps
+.dirstamp
 autom4te.cache
 /autoscan.log
 /autoscan-*.log
@@ -64,36 +66,62 @@ t/Test26/
 *.nc
 
 # Other build generated files
+gt-*/
 config.h
 *.mod
-postprocessing/land_utils/combine-ncc
-postprocessing/land_utils/decompress-ncc
-postprocessing/land_utils/is-compressed
-postprocessing/land_utils/nfu_compress_mod.mod
-postprocessing/land_utils/nfu_mod.mod
-postprocessing/land_utils/scatter-ncc
-postprocessing/mppnccombine/mppnccombine
-postprocessing/plevel/moisture_convert_mod.mod
-postprocessing/plevel/pinterp_utilities_mod.mod
-postprocessing/plevel/plev_constants_mod.mod
-postprocessing/plevel/pressure_interp_mod.mod
+src/combine_restarts
+src/combine-ncc
+src/decompress-ncc
+src/iceberg_comb.sh
+src/is-compressed
+src/list_ncvars
+src/list_ncvars.csh
+src/list_ncvars.sh
+src/scatter-ncc
+src/mppnccombine
+src/plevel-interp
+src/plevel.sh
+src/print_version
+src/split_ncvars.pl
+src/timavg
+src/timavg.csh
+src/time_average
+src/version.h
+src/version.inc
+tests/c_test_version
+tests/create_5degree_topog
+tests/create_daily_tile_files
+tests/create_land_remap_files
+tests/create_mask_topog
+tests/create_ocean_mask_grid
+tests/create_plevel_test_ncfile
+tests/create_regional_file
+tests/create_runoff_file
+tests/create_temp_salt_file
+tests/create_timeavg_test_ncfiles
+tests/f_test_version
 tools/check_mask/check_mask
 tools/cubic_utils/make_remap_file
 tools/fregrid/fregrid
+tools/fregrid/fregrid_parallel
 tools/make_coupler_mosaic/make_coupler_mosaic
+tools/make_coupler_mosaic/make_coupler_mosaic_parallel
 tools/make_hgrid/make_hgrid
 tools/make_land_domain/make_land_domain
 tools/make_quick_mosaic/make_quick_mosaic
 tools/make_regional_mosaic/make_regional_mosaic
 tools/make_solo_mosaic/make_solo_mosaic
 tools/make_topog/make_topog
+tools/make_topog/make_topog_parallel
 tools/make_vgrid/make_vgrid
 tools/mppncscatter/mppncscatter
 tools/nc_null_check/nc_null_check
 tools/ncexists/ncexists
 tools/remap_land/remap_land
+tools/remap_land/remap_land_parallel
 tools/river_regrid/river_regrid
 tools/runoff_regrid/runoff_regrid
+tools/runoff_regrid/runoff_regrid_parallel
 tools/simple_hydrog/lakes/cr_lake_files
 tools/simple_hydrog/libfmslite/constants_mod.mod
 tools/simple_hydrog/libfmslite/horiz_interp_bilinear_mod.mod
@@ -104,3 +132,13 @@ tools/simple_hydrog/postp/cp_river_vars
 tools/simple_hydrog/rmvpr/rmv_parallel_rivers
 tools/transfer_to_mosaic_grid/transfer_to_mosaic_grid
 
+# Ignore generated files from vscode makefile extension
+defines.awk
+subs*.awk
+conftest
+conftest.*
+confdefs.*
+confinc.*
+confmf.*
+conf*/
+conf*.file

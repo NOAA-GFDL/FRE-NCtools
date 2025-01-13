@@ -30,22 +30,27 @@ else
 have_plmod_list_moreutils="no"
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/tools/libfrencutils
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
 check_PROGRAMS = \
   create_5degree_topog \
+  create_daily_tile_files \
+  create_hydro_glcc_file \
+  create_land_remap_files \
   create_mask_topog \
   create_ocean_mask_grid \
   create_plevel_test_ncfile \
-  create_salt_temp_file \
+  create_regional_file \
+  create_river_regrid_file \
+  create_runoff_file \
+  create_temp_salt_file \
   create_timeavg_test_ncfiles \
   c_test_version \
   f_test_version
 
 create_plevel_test_ncfile_SOURCES=create_plevel_test_ncfile.c
-create_salt_temp_file_SOURCES=create_salt_temp_file.c
 create_timeavg_test_ncfiles_SOURCES=create_timeavg_test_ncfiles.c
 c_test_version_SOURCES=libtests/c_test_version.c
 f_test_version_SOURCES=libtests/f_test_version.f90
@@ -78,7 +83,18 @@ tools_tests = \
     make_coupler_mosaic/coupled-model \
     make_coupler_mosaic/coupled-model-mpi \
     make_coupler_mosaic/coupled-model-nest \
-    fregrid/latlon
+    make_regional_mosaic/make_regional_mosaic \
+    make_quick_mosaic/coupled-model-quick \
+    mppncscatter/xyt-decomp \
+    fregrid/cubedsphere \
+    fregrid/extrapolate \
+    fregrid/latlon \
+    fregrid/remap-file \
+    fregrid/remap-file-mpi \
+    fregrid/remap-file-stretchgrid \
+    remap_land/remap_land \
+    river_regrid/river_regrid \
+    runoff_regrid/runoff_regrid
 
 combine_tests = \
     combine-ncc/combine \
@@ -149,6 +165,7 @@ EXTRA_DIST = \
   make_hgrid/grid_spec.tile4.ncl \
   make_hgrid/grid_spec.tile5.ncl \
   make_hgrid/grid_spec.tile6.ncl \
+  simple_hydrology/river_regrid \
   $(TESTS)
 
 # Shortcut targets to make it easier to run (very) expensive tests.

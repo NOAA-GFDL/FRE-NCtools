@@ -66,3 +66,4 @@ make_topog \
     --output topog.nc || fail_ failed to create ocean topography data
 # Ensure topog.nc is created
 test -f topog.nc || fail_ topog.nc not created
+ncdump topog.nc

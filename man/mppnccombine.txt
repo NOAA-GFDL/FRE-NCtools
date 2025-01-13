@@ -95,6 +95,10 @@ the blocking factor (-k) to 1. Any value set for -k on the
 command-line will be ignored. To estimate memory usage for a
 a different blocking factor, simply multiply the estimate by k.
 
+SEE ALSO
+--------
+*mppncscatter*(1)
+
 BUGS
 ----
 Open bug reports at {package_bugreport}.

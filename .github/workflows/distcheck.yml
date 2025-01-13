@@ -4,7 +4,11 @@
 # image dockerfile is maintained here:
 # https://gitlab.gfdl.noaa.gov/fre/hpc-me
 name: FRE-NCtools CI
-on: [push, pull_request]
+on:
+  workflow_run:
+    workflows: ["FRE-NCtools Check Expensive"]
+    types:
+      - completed
 jobs:
   CI:
     runs-on: ubuntu-latest
@@ -27,10 +31,8 @@ jobs:
         mkdir build && cd build
         autoreconf -i ../configure.ac
         ../configure $MPI $QUAD_P || cat config.log
-    - name: Build
-      run: make -C build -j
-    - name: Run most tests (skip the slow ones)
-      run: make -C build -j check
+    - name: Build distribution with check
+      run: make DISTCHECK_CONFIGURE_FLAGS="$MPI $QUAD_P" -C build -j
     - name: Save log file on failure
       uses: actions/upload-artifact@v4.4.0
       if: failure()

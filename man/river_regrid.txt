@@ -1,0 +1,98 @@
+river_regrid(1)
+===============
+
+NAME
+----
+
+river_regrid - remap river network from a global regular lat-lon to another grid
+
+SYNOPSIS
+--------
+[verse]
+river_regrid --mosaic _mosaic_grid_ --river_src _river_src_file_ [OPTIONS]
+
+DESCRIPTION
+-----------
+
+river_regrid will remap river network data from global regular lat-lon
+grid onto any other grid (includes regular lat-lon grid and cubic
+grid), which is specified through option *--mosaic*. The river network
+source data is specified through option *--river_src*.
+
+OPTIONS
+-------
+
+*--mosaic* _mosaic_grid_::
+
+Specify the mosaic file of destination grid. This mosaic file should
+be a coupler mosaic file, which contains link to land solo mosaic and
+the exchange grid file.
+
+*--river_src* _river_src_file_::
+
+specify the river network source data file. The data is assumed on
+regular lat-lon grid and the longitude is assumed from 0 to 360 degree
+and latitude is assumed from -90 to 90 degree.
+
+*--output* _output_file_::
+
+specify the output file base name. the suffix '.nc' should not be
+included in the output_file. The default value is river_output. For
+one tile mosaic, the actual result will be $output_file.nc. For
+multiple tile mosaic, the result will be _$output.tile#.nc_.
+
+*--land_thresh* _land_thresh_::
+
+Any grid cell with land fraction greater than 1-land_thresh will have
+land fraction = 1. Default value is 0.
+
+
+*--min_frac* _min_frac_::
+
+Any grid cell with land fraction less than min_frac will
+have land fraction = 0.
+
+*--read_land_mask*::
+
+Read the land fraction from file land_mask.tile#.nc if
+it is specified. If not, read the exchange grid and
+compute the land fraction. It is recommended to set this
+option when atmosphere grid is a nested grid.
+
+EXAMPLES
+--------
+
+Regrid the river network in the river_network_mrg_0.5deg_ad3nov_0.nc
+file on the the grid specified by the grid_spec.nc file.
+
+----
+$ river_regrid --mosaic grid_spec.nc --river_srr \
+  river_network_mrg_0.5deg_ad3nov_0.125.nc --land_thresh 1.e-4 \
+  --min_frac 0
+----
+
+SEE ALSO
+--------
+*make_coupler_mosaic*(1)
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
