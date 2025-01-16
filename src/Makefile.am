@@ -16,7 +16,8 @@ grid_programs = \
   make_quick_mosaic \
   make_solo_mosaic \
   make_topog \
-  make_vgrid
+  make_vgrid \
+  remap_land
 
 if WITH_MPI
   grid_programs += \
@@ -397,3 +398,17 @@ mppncscatter_SOURCES = \
   mpp-ncscatter/util.h \
   mpp-ncscatter/xmalloc.c \
   mpp-ncscatter/xmalloc.h
+
+# ********************************************************* #
+# remap_land                                                #
+# ********************************************************* #
+remap_land_SOURCES = \
+  remap-land/remap_land.c
+remap_land_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+remap_land_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+  $(LDADD)
+remap_land_parallel_SOURCES = \
+  $(remap_land_SOURCES)

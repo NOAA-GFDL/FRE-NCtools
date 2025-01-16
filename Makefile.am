@@ -22,7 +22,6 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = lib \
           src \
           tools/ncexists \
-          tools/remap_land \
           tools/river_regrid \
           tools/runoff_regrid \
           tools/transfer_to_mosaic_grid \

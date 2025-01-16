@@ -263,7 +263,6 @@ AC_CONFIG_FILES([Makefile
                  tests/Makefile
                  tools/ncexists/Makefile
                  tools/nc_null_check/Makefile
-                 tools/remap_land/Makefile
                  tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
