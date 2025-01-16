@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/make_topog \
           tools/make_vgrid \
           tools/mppncscatter \
           tools/ncexists \

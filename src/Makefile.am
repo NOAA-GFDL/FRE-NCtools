@@ -14,12 +14,14 @@ grid_programs = \
   make_regional_mosaic \
   make_remap_file \
   make_quick_mosaic \
-  make_solo_mosaic
+  make_solo_mosaic \
+  make_topog
 
 if WITH_MPI
   grid_programs += \
     fregrid_parallel \
-    make_coupler_mosaic_parallel
+    make_coupler_mosaic_parallel \
+    make_topog_parallel
 endif
 
 if ENABLE_GPU
@@ -350,3 +352,20 @@ make_solo_mosaic_SOURCES = \
   make-solo-mosaic/get_contact.c \
   make-solo-mosaic/get_contact.h \
   make-solo-mosaic/make_solo_mosaic.c
+
+# ********************************************************* #
+# make_topog                                                #
+# ********************************************************* #
+make_topog_SOURCES = \
+  make-topog/topog.c \
+  make-topog/topog.h \
+  make-topog/make_topog.c
+make_topog_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+make_topog_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+make_topog_parallel_SOURCES = \
+  $(make_topog_SOURCES)

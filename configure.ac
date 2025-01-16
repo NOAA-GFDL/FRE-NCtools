@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/make_topog/Makefile
                  tools/make_vgrid/Makefile
                  tools/mppncscatter/Makefile
                  tools/ncexists/Makefile
