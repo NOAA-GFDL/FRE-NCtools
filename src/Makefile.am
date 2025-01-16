@@ -13,7 +13,8 @@ grid_programs = \
   make_land_domain \
   make_regional_mosaic \
   make_remap_file \
-  make_quick_mosaic
+  make_quick_mosaic \
+  make_solo_mosaic
 
 if WITH_MPI
   grid_programs += \
@@ -341,3 +342,11 @@ make_quick_mosaic_SOURCES = \
 # ********************************************************* #
 make_regional_mosaic_SOURCES = \
   make-regional-mosaic/make_regional_mosaic.c
+
+# ********************************************************* #
+# make_solo_mosaic                                          #
+# ********************************************************* #
+make_solo_mosaic_SOURCES = \
+  make-solo-mosaic/get_contact.c \
+  make-solo-mosaic/get_contact.h \
+  make-solo-mosaic/make_solo_mosaic.c
