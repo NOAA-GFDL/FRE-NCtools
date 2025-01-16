@@ -11,6 +11,7 @@ grid_programs = \
   make_coupler_mosaic \
   make_hgrid \
   make_land_domain \
+  make_regional_mosaic \
   make_remap_file \
   make_quick_mosaic
 
@@ -334,3 +335,9 @@ make_land_domain_SOURCES = \
 # ********************************************************* #
 make_quick_mosaic_SOURCES = \
   make-quick-mosaic/make_quick_mosaic.c
+
+# ********************************************************* #
+# make_regional_mosaic                                      #
+# ********************************************************* #
+make_regional_mosaic_SOURCES = \
+  make-regional-mosaic/make_regional_mosaic.c
