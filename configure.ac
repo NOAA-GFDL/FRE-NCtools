@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/mppncscatter/Makefile
                  tools/ncexists/Makefile
                  tools/nc_null_check/Makefile
                  tools/remap_land/Makefile

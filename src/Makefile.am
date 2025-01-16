@@ -32,6 +32,7 @@ endif
 bin_PROGRAMS = \
   decompress-ncc \
   check_mask \
+  mppncscatter \
   $(combine_programs) \
   $(grid_programs)
 
@@ -378,3 +379,21 @@ make_vgrid_SOURCES = \
   make-vgrid/create_vgrid.c \
   make-vgrid/create_vgrid.h \
   make-vgrid/make_vgrid.c
+
+# ********************************************************* #
+# mppncscatter                                              #
+# ********************************************************* #
+mppncscatter_SOURCES = \
+  mpp-ncscatter/common.h \
+  mpp-ncscatter/main.c \
+  mpp-ncscatter/mppncscatter.c \
+  mpp-ncscatter/mppncscatter.h \
+  mpp-ncscatter/opt.c \
+  mpp-ncscatter/opt.h \
+  mpp-ncscatter/scatterdim.c \
+  mpp-ncscatter/scatterdim.h \
+  mpp-ncscatter/strlist.c \
+  mpp-ncscatter/strlist.h \
+  mpp-ncscatter/util.h \
+  mpp-ncscatter/xmalloc.c \
+  mpp-ncscatter/xmalloc.h

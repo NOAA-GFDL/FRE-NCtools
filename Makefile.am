@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/mppncscatter \
           tools/ncexists \
           tools/remap_land \
           tools/river_regrid \
