@@ -17,13 +17,15 @@ grid_programs = \
   make_solo_mosaic \
   make_topog \
   make_vgrid \
-  remap_land
+  remap_land \
+  river_regrid
 
 if WITH_MPI
   grid_programs += \
     fregrid_parallel \
     make_coupler_mosaic_parallel \
-    make_topog_parallel
+    make_topog_parallel \
+    remap_land_parallel
 endif
 
 if ENABLE_GPU
@@ -139,13 +141,11 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
 SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
 
 .F90_mod.$(FC_MODEXT):
-	@ echo Hello 1
 	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 	cp $(@D)/.mods/$(@F) $(@D)/$(@F)
 
 .F90.$(FC_MODEXT):
-	@ echo Hello 2
 	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 	@cp $(@D)/.mods/$(@F) $(@D)/$(@F)
@@ -412,3 +412,9 @@ remap_land_parallel_LDADD = \
   $(LDADD)
 remap_land_parallel_SOURCES = \
   $(remap_land_SOURCES)
+
+# ********************************************************* #
+# river_regrid                                              #
+# ********************************************************* #
+river_regrid_SOURCES = \
+  river-regrid/river_regrid.c
