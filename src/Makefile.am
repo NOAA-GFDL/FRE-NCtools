@@ -11,7 +11,8 @@ grid_programs = \
   make_coupler_mosaic \
   make_hgrid \
   make_land_domain \
-  make_remap_file
+  make_remap_file \
+  make_quick_mosaic
 
 if WITH_MPI
   grid_programs += \
@@ -322,5 +323,14 @@ make_hgrid_SOURCES = \
   make-hgrid/create_lonlat_grid.c \
   make-hgrid/make_hgrid.c
 
+# ********************************************************* #
+# make_land_domain                                          #
+# ********************************************************* #
 make_land_domain_SOURCES = \
   make-land-domain/make_land_domain.c
+
+# ********************************************************* #
+# make_quick_mosaic                                         #
+# ********************************************************* #
+make_quick_mosaic_SOURCES = \
+  make-quick-mosaic/make_quick_mosaic.c

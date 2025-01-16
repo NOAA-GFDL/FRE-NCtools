@@ -261,7 +261,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/make_quick_mosaic/Makefile
                  tools/make_regional_mosaic/Makefile
                  tools/make_solo_mosaic/Makefile
                  tools/make_topog/Makefile
