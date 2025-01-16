@@ -15,7 +15,8 @@ grid_programs = \
   make_remap_file \
   make_quick_mosaic \
   make_solo_mosaic \
-  make_topog
+  make_topog \
+  make_vgrid
 
 if WITH_MPI
   grid_programs += \
@@ -369,3 +370,11 @@ make_topog_parallel_LDADD = \
   $(MPI_CLDFLAGS)
 make_topog_parallel_SOURCES = \
   $(make_topog_SOURCES)
+
+# ********************************************************* #
+# make_vgrid                                                #
+# ********************************************************* #
+make_vgrid_SOURCES = \
+  make-vgrid/create_vgrid.c \
+  make-vgrid/create_vgrid.h \
+  make-vgrid/make_vgrid.c
