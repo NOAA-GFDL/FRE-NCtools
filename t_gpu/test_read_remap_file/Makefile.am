@@ -21,15 +21,15 @@
 check_PROGRAMS = test_read_remap_file
 
 AM_CFLAGS = $(NETCDF_CFLAGS) \
-            -I$(top_srcdir)/tools/libfrencutils  \
-            -I$(top_srcdir)/tools/libfrencutils_gpu \
+            -I$(top_srcdir)/lib/libfrencutils  \
+            -I$(top_srcdir)/lib/libfrencutils_gpu \
             -I$(top_srcdir)/tools/fregrid_gpu -acc
 
 LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS) \
         $(top_builddir)/tools/fregrid_gpu/conserve_interp_gpu.o \
         $(top_builddir)/tools/fregrid_gpu/interp_utils_gpu.o \
-        $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-        $(top_builddir)/tools/libfrencutils_gpu/libfrencutils_gpu.a
+        $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+        $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a
 
 test_read_remap_file_SOURCES = test_read_remap_file.c
 

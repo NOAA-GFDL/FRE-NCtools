@@ -17,13 +17,12 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = make_solo_mosaic
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS)
-LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-        $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
+libnfu_libnfu_a_SOURCES = \
+    libnfu/nfu.F90 \
+    libnfu/nfu_compress.F90
 
-make_solo_mosaic_SOURCES = get_contact.c \
-                           get_contact.h \
-                           make_solo_mosaic.c
+libnfu/nfu_compress.$(OBJEXT): libnfu/nfu_mod.$(FC_MODEXT)
+
+clean-local:
+	$(RM) *.$(FC_MODEXT)

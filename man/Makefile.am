@@ -36,6 +36,7 @@ EXTRA_DIST = \
   make_coupler_mosaic_parallel.1 \
   make_quick_mosaic.txt \
   make_regional_mosaic.txt \
+  make_remap_file.txt \
   make_solo_mosaic.txt \
   mppnccombine.txt \
   mppncscatter.txt \
@@ -73,6 +74,7 @@ man_MANS += \
   make_coupler_mosaic.1 \
   make_quick_mosaic.1 \
   make_regional_mosaic.1 \
+  make_remap_file.1 \
   make_solo_mosaic.1 \
   mppnccombine.1 \
   mppncscatter.1 \

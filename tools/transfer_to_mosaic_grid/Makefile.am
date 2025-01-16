@@ -19,9 +19,9 @@
 #***********************************************************************
 bin_PROGRAMS = transfer_to_mosaic_grid
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
+AM_CFLAGS = -I$(top_srcdir)/lib/libfrencutils \
             $(NETCDF_CFLAGS)
-LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a \
         $(NETCDF_LDFLAGS) $(NETCDF_LIBS)  $(RPATH_FLAGS)
 
 transfer_to_mosaic_grid_SOURCES = transfer_to_mosaic.c

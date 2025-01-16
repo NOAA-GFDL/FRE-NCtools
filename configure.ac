@@ -257,29 +257,12 @@ AC_SUBST(RPATH_FLAGS) dnl
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 lib/libnfu/Makefile
+                 lib/Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/libfrencutils/Makefile
-                 tools/libfrencutils_gpu/Makefile
-                 tools/check_mask/Makefile
-                 tools/cubic_utils/Makefile
-                 tools/fregrid/Makefile
-                 tools/fregrid_gpu/Makefile
-                 tools/make_coupler_mosaic/Makefile
-                 tools/make_hgrid/Makefile
-                 tools/make_land_domain/Makefile
-                 tools/make_quick_mosaic/Makefile
-                 tools/make_regional_mosaic/Makefile
-                 tools/make_solo_mosaic/Makefile
-                 tools/make_topog/Makefile
-                 tools/make_vgrid/Makefile
-                 tools/mppncscatter/Makefile
                  tools/ncexists/Makefile
                  tools/nc_null_check/Makefile
-                 tools/remap_land/Makefile
-                 tools/river_regrid/Makefile
                  tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
                  tools/simple_hydrog/Makefile

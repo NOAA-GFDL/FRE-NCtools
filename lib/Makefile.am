@@ -17,11 +17,39 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = make_quick_mosaic
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS)
-LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
-        $(NETCDF_LDFLAGS) $(NETCDF_LIBS)  $(RPATH_FLAGS)
+noinst_LIBRARIES = \
+    libnfu/libnfu.a \
+	libfrencutils/libfrencutils.a
 
-make_quick_mosaic_SOURCES = make_quick_mosaic.c
+if WITH_MPI
+    noinst_LIBRARIES += \
+        libfrencutils/libfrencutils_mpi.a
+endif
+
+if ENABLE_GPU
+    noinst_LIBRARIES += \
+		libfrencutils_gpu/libfrencutils_gpu.a
+endif
+
+AM_CFLAGS = $(NETCDF_CFLAGS)
+AM_FCFLAGS =  $(FC_MODOUT)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
+
+# Items to handle Fortran module files
+SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
+
+.F90_mod.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+
+.F90.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+
+clean-local:
+	$(RM) *.$(FC_MODEXT)
+
+include $(top_srcdir)/lib/libnfu/local.mk
+include $(top_srcdir)/lib/libfrencutils/local.mk
+include $(top_srcdir)/lib/libfrencutils_gpu/local.mk

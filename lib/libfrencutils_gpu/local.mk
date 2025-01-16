@@ -17,20 +17,14 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-bin_PROGRAMS = make_topog
-if WITH_MPI
-  bin_PROGRAMS += make_topog_parallel
-endif
 
-AM_CFLAGS = -I$(top_srcdir)/tools/libfrencutils \
-            $(NETCDF_CFLAGS)
-LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
+libfrencutils_gpu_libfrencutils_gpu_a_SOURCES = \
+    libfrencutils_gpu/create_xgrid_gpu.c \
+    libfrencutils_gpu/create_xgrid_gpu.h \
+    libfrencutils_gpu/create_xgrid_utils_gpu.c \
+    libfrencutils_gpu/create_xgrid_utils_gpu.h \
+    libfrencutils_gpu/general_utils_gpu.c \
+    libfrencutils_gpu/general_utils_gpu.h
 
-make_topog_SOURCES = make_topog.c \
-                     topog.c \
-                     topog.h
-make_topog_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a $(LDADD)
-
-make_topog_parallel_SOURCES = $(make_topog_SOURCES)
-make_topog_parallel_CFLAGS = -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
-make_topog_parallel_LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils_mpi.a $(LDADD) $(MPI_CLDFLAGS)
+libfrencutils_gpu_libfrencutils_gpu_a_CFLAGS = \
+    $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils

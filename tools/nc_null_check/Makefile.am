@@ -19,9 +19,9 @@
 #***********************************************************************
 bin_PROGRAMS = nc_null_check
 
-AM_FCFLAGS = -I$(top_srcdir)/tools/libfrencutils \
+AM_FCFLAGS = -I$(top_srcdir)/lib/libfrencutils \
 				$(NETCDF_FCFLAGS)
-LDADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a \
+LDADD = $(top_builddir)/lib/libfrencutils/libfrencutils.a \
         $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS)  $(RPATH_FLAGS)
 
 nc_null_check_SOURCES = nc_null_check.F90

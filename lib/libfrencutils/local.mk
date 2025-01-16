@@ -17,15 +17,31 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-noinst_LIBRARIES = libfrencutils_gpu.a
 
-AM_CFLAGS = $(NETCDF_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/tools/libfrencutils
+libfrencutils_libfrencutils_a_SOURCES = \
+    libfrencutils/affinity.c \
+    libfrencutils/constant.h \
+    libfrencutils/create_xgrid.c \
+    libfrencutils/create_xgrid.h \
+    libfrencutils/globals.h \
+    libfrencutils/gradient_c2l.c \
+    libfrencutils/gradient_c2l.h \
+    libfrencutils/interp.c \
+    libfrencutils/interp.h \
+    libfrencutils/mosaic_util.c \
+    libfrencutils/mosaic_util.h \
+    libfrencutils/mpp_domain.c \
+    libfrencutils/mpp_domain.h \
+    libfrencutils/mpp_io.c \
+    libfrencutils/mpp_io.h \
+    libfrencutils/mpp.c \
+    libfrencutils/mpp.h \
+    libfrencutils/read_mosaic.c \
+    libfrencutils/read_mosaic.h \
+    libfrencutils/tool_util.c \
+    libfrencutils/tool_util.h
 
-libfrencutils_gpu_a_SOURCES = create_xgrid_gpu.c \
-                              create_xgrid_gpu.h \
-                              create_xgrid_utils_gpu.c \
-                              create_xgrid_utils_gpu.h \
-                              general_utils_gpu.c \
-                              general_utils_gpu.h
-
-libfrencutils_gpu_a_LIBADD = $(top_builddir)/tools/libfrencutils/libfrencutils.a
+libfrencutils_libfrencutils_mpi_a_SOURCES = \
+    $(libfrencutils_libfrencutils_a_SOURCES)
+libfrencutils_libfrencutils_mpi_a_CFLAGS = \
+    -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)
