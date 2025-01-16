@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/make_land_domain \
           tools/make_quick_mosaic \
           tools/make_regional_mosaic \
           tools/make_solo_mosaic \

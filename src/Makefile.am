@@ -10,6 +10,7 @@ grid_programs = \
   fregrid \
   make_coupler_mosaic \
   make_hgrid \
+  make_land_domain \
   make_remap_file
 
 if WITH_MPI
@@ -320,3 +321,6 @@ make_hgrid_SOURCES = \
   make-hgrid/create_hgrid.h \
   make-hgrid/create_lonlat_grid.c \
   make-hgrid/make_hgrid.c
+
+make_land_domain_SOURCES = \
+  make-land-domain/make_land_domain.c
