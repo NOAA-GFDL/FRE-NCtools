@@ -108,7 +108,9 @@ void create_gaussian_topog(int nx, int ny, const double *x, const double *y, dou
   double bump_height, bump_scale, xcent, ycent, arg, bottom;
   double xe, xw, ys, yn;
   double *xt, *yt;
-  int i, j, nxp, nyp;
+  int i, j, nxp;
+
+  nxp = nx + 1;
 
   xt = (double *)malloc(nx*ny*sizeof(double));
   yt = (double *)malloc(nx*ny*sizeof(double));
