@@ -144,7 +144,7 @@ void create_gaussian_topog(int nx, int ny, const double *x, const double *y, dou
   printf("The ocean floor rises with a slope of %f meters/deg towards the east and %f "
 	 " meters/deg to the north.", slope_x, slope_y) ;
 
-  for(j=0;i<nx*ny;j++){
+  for(j=0;j<nx*ny;j++){
       arg = pow(xt[i]-xcent,2) + pow(yt[i]-ycent,2);
       bottom = bottom_depth - bump_height*exp(-arg/pow(bump_scale,2));
       bottom = bottom - slope_x*(xt[i]-xw)- slope_y*(yt[i]-ys);
