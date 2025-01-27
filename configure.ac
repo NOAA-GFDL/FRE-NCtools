@@ -163,10 +163,6 @@ AS_IF([test -z "$NCKS"],
 
 AC_ARG_VAR([PERL], [Path to perl])
 AC_PATH_PROG(PERL, [perl])
-AX_PROG_PERL_MODULES([List::MoreUtils], dnl
-  eval AS_TR_CPP(HAVE_PLMOD_LIST_MOREUTILS)=yes,
-  AC_MSG_WARN([Perl module List::MoreUtils not found.  Some applications will not be installed.]))
-AM_CONDITIONAL([HAVE_PLMOD_LIST_MOREUTILS], [test x$HAVE_PLMOD_LIST_MOREUTILS = xyes])
 
 AX_PYTHON_MODULE([xarray],[],[python3])
 if test ${HAVE_PYMOD_XARRAY} = yes; then
