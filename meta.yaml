@@ -13,6 +13,8 @@ requirements:
     - conda-forge::libnetcdf
     - conda-forge::netcdf-fortran
     - conda-forge::nco
+    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::openmp
   run:
 
 test:
