@@ -12,7 +12,8 @@ jobs:
 #        enable_quad_precision: ['', '--enable-quad-precision']
 
     container:
-      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
+      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24.7.1_gcc14.2.0
+#      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
 #      env:
 #        MPI: ${{ matrix.with_mpi }}
 #        QUAD_P: ${{ matrix.enable_quad_precision }}
