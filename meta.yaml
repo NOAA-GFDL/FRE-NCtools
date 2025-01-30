@@ -10,8 +10,9 @@ build:
 
 requirements:
   build:
-    - libnetcdf
-    - netcdf-fortran
+    - conda-forge::libnetcdf
+    - conda-forge::netcdf-fortran
+    - conda-forge::nco
   run:
 
 test:
