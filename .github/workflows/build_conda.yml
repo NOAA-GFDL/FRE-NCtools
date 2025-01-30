@@ -6,16 +6,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        with_mpi: ['','--with-mpi']
-        enable_quad_precision: ['', '--enable-quad-precision']
+#    strategy:
+#      matrix:
+#        with_mpi: ['','--with-mpi']
+#        enable_quad_precision: ['', '--enable-quad-precision']
 
     container:
       image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
-      env:
-        MPI: ${{ matrix.with_mpi }}
-        QUAD_P: ${{ matrix.enable_quad_precision }}
+#      env:
+#        MPI: ${{ matrix.with_mpi }}
+#        QUAD_P: ${{ matrix.enable_quad_precision }}
 
     steps:
       - name: Checkout Files
