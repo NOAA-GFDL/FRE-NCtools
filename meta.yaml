@@ -15,6 +15,7 @@ requirements:
     - conda-forge::nco
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::openmp
+    - conda-forge::tcsh
   run:
 
 test:
