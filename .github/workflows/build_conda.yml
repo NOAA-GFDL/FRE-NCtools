@@ -1,0 +1,36 @@
+name: build_conda
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        with_mpi: ['','--with-mpi']
+        enable_quad_precision: ['', '--enable-quad-precision']
+
+    container:
+      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
+      env:
+        MPI: ${{ matrix.with_mpi }}
+        QUAD_P: ${{ matrix.enable_quad_precision }}
+
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Run Conda to Build
+        run: |
+          # append the reqd channels
+          conda config --append channels conda-forge
+          conda config --append channels noaa-gfdl
+
+          # install conda-build and conda-verify
+          conda install conda-build conda-verify
+
+          # conda build
+          conda build .
