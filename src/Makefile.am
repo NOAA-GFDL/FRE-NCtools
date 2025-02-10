@@ -36,6 +36,7 @@ bin_PROGRAMS = \
   decompress-ncc \
   check_mask \
   mppncscatter \
+  ncexists \
   $(combine_programs) \
   $(grid_programs)
 
@@ -398,6 +399,12 @@ mppncscatter_SOURCES = \
   mpp-ncscatter/util.h \
   mpp-ncscatter/xmalloc.c \
   mpp-ncscatter/xmalloc.h
+
+# ********************************************************* #
+# ncexists                                                  #
+# ********************************************************* #
+ncexists_SOURCES = \
+  nc-exists/ncexists.c
 
 # ********************************************************* #
 # remap_land                                                #

@@ -40,6 +40,7 @@ EXTRA_DIST = \
   make_solo_mosaic.txt \
   mppnccombine.txt \
   mppncscatter.txt \
+  ncexists.txt \
   plevel_interp.txt \
   plevel.sh.txt \
   river_regrid.txt \
@@ -78,6 +79,7 @@ man_MANS += \
   make_solo_mosaic.1 \
   mppnccombine.1 \
   mppncscatter.1 \
+  ncexists.1 \
   plevel_interp.1 \
   plevel.sh.1 \
   river_regrid.1 \
