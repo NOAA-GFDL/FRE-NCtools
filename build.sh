@@ -1,4 +1,4 @@
 autoreconf -i
-./configure --prefix=$PREFIX --disable-ocean-model-grid-generator
+./configure --prefix=$PREFIX
 make -j
 make install
