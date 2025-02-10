@@ -44,6 +44,7 @@ EXTRA_DIST = \
   river_regrid.txt \
   scatter-ncc.txt \
   split_ncvars.pl.txt \
+  split_ncvars.pl.1 \
   timavg.txt \
   timavg.csh.1 \
   time_average.txt \
@@ -80,6 +81,7 @@ man_MANS += \
   plevel.sh.1 \
   river_regrid.1 \
   scatter-ncc.1 \
+  split_ncvars.pl.txt \
   split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
