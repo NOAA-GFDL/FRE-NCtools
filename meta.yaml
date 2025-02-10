@@ -1,6 +1,6 @@
 package:
   name: fre-nctools
-  version: conda.alpha
+  version: alpha
 
 source:
   path: .
@@ -10,17 +10,20 @@ build:
 
 requirements:
   build:
+    - conda-forge::autoconf
+    - conda-forge::automake
     - conda-forge::libnetcdf
     - conda-forge::netcdf-fortran
     - conda-forge::nco
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::openmp
+    - conda-forge::mpich
     - conda-forge::tcsh
   run:
 
 test:
   commands:
-    - make check-expensive
+    - make check RUN_EXPENSIVE_TESTS=yes
 
 about:
   license: LGPL-3.0
