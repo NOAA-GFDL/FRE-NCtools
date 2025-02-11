@@ -28,7 +28,6 @@
 use strict;
 use Cwd;
 use Getopt::Long;
-use List::MoreUtils qw{uniq};
 Getopt::Long::Configure("bundling");
 use File::Path;
 use File::Spec;
@@ -126,7 +125,7 @@ my $ncatted
 my $list_ncvars
     = defined( $ENV{LIST_NCVARS} )
     ? $ENV{LIST_NCVARS}
-    : "$/list_ncvars.csh";
+    : "$prefix/list_ncvars.sh";
 
 my $ncdump
     = defined( $ENV{NCDUMP} )
@@ -578,6 +577,7 @@ sub get_variable_dimensions {
     my $var  = shift;
     my %cartesian_coords;
     my @coords;
+    my %var_dims;
 
     # Get a list of the cartesian coordinates that are in a file
     while ( $dump =~ /\t\t(.*):(cartesian_axis|axis) = "(.*)"/g ) {
@@ -586,7 +586,8 @@ sub get_variable_dimensions {
 
     # Compare the cartesian coords to those of the variables
     if ( $dump =~ /\t.*$var\((.+)\)/ ) {
-        @coords = uniq map { grep $_, split /,\s/, $1 } keys %cartesian_coords;
+        @var_dims{ split /,\s/, $1 } = ();
+        @coords = grep { exists $cartesian_coords{$_} } keys %var_dims;
     }
     return \@coords;
 }

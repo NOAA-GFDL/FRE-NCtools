@@ -46,12 +46,9 @@ bin_SCRIPTS = \
   list_ncvars.csh \
   list_ncvars.sh \
   plevel.sh \
+  split_ncvars.pl \
   timavg \
   timavg.csh
-
-if HAVE_PLMOD_LIST_MOREUTILS
-  bin_SCRIPTS += split_ncvars.pl
-endif
 
 pkglibexec_PROGRAMS = \
   list_ncvars \

@@ -215,7 +215,7 @@ int main(int argc, char* argv[])
   printf("total number of land points is %d\n", nlands);
   land_ntile = (int **)malloc(nfaces*sizeof(int *));
   for(face=0; face<nfaces; face++) {
-    land_ntile[face] = (int *)malloc(nx*nx*sizeof(int));
+    land_ntile[face] = (int *)malloc(nx*ny*sizeof(int));
     for(n=0; n<nx*ny; n++) land_ntile[face][n] = 0;
   }
 
