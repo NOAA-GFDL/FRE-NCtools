@@ -1,3 +1,6 @@
+// Words to ignore in cspell
+// cspell:ignore idir odir onefile
+
 split_ncvars.pl(1)
 ==================
 
@@ -8,7 +11,7 @@ split_ncvars.pl - Extract variables from a netCDF file into their own file
 SYNOPSIS
 --------
 [verse]
-split_ncvars.pl [-d] [-l] [-i _idir_] [-o _odir_] [-f _file_] [-v _vars_] _file_ [_file_ ...]
+split_ncvars.pl [-d] [-l] [-i _in_dir_] [-o _out_dir_] [-f _file_] [-v _vars_] _file_ [_file_ ...]
 
 DESCRIPTION
 -----------

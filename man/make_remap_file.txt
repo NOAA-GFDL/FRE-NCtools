@@ -1,3 +1,6 @@
+// Ignore these words with cspell
+// cspell:ignore nlon nlat
+
 make_remap_file(1)
 ==================
 
@@ -16,11 +19,12 @@ make_remap_file  --input_mosaic _input_mosaic_ --output_mosaic _output_mosaic_
 DESCRIPTION
 -----------
 
-make_remap_file create remap file from cubic sphere grid to ubic sphere grid.
-The ratio of grid size of input and output grid must be integer. The purpose of
-this tool is to create remap file on single processor for very high resoluton
-grid (It will large processor count and long time to create such file).
-Currently this tool can only remap file for data on grid cell center.
+make_remap_file creates a remap file from cubic sphere grid to cubic
+sphere grid. The ratio of grid size of input and output grid must be
+integer. The purpose of this tool is to create remap file on single
+processor for very high resolution grid (It will large processor count
+and long time to create such file). Currently this tool can only remap
+file for data on grid cell center.
 
 OPTIONS
 -------

@@ -204,7 +204,7 @@ iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
 	chmod +x iceberg_comb.sh
 
 # ********************************************************* #
-# plevel                                                    #
+# plevel.sh                                                 #
 # ********************************************************* #
 plevel.sh: plevel/plevel.sh.in Makefile
 	$(do_subst) < $(srcdir)/plevel/plevel.sh.in > plevel.sh

@@ -1,0 +1,114 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "dictionaryDefinitions": [
+        {
+            "name": "people",
+            "path": "dicts/people.txt",
+            "description": "A list of people's names",
+            "addWords": true
+        },
+        {
+            "name": "fre-nctools",
+            "path": "dicts/fre-nctools.txt",
+            "description": "A list of words used in the nctools project",
+            "addWords": true
+        },
+        {
+            "name": "automake",
+            "path": "dicts/automake.txt",
+            "description": "A list of words used in automake files",
+            "addWords": false
+        },
+        {
+            "name": "fortran",
+            "path": "dicts/fortran.txt",
+            "description": "A list of Fortran keywords",
+            "addWords": false
+        }
+    ],
+    "dictionaries": [
+        "people",
+        "fortran",
+        "fre-nctools",
+        "scientific-terms-us",
+        ],
+    "enabledLanguageIds": [
+        "automake",
+        "c",
+        "cpp",
+        "fortran",
+        "plaintext",
+    ],
+    "languageSettings":[
+        {
+            // use with cpp or c files
+            "languageId": "cpp,c",
+            // turn off compound words, because it is only checking strings.
+            "allowCompoundWords": false,
+            "patterns": [
+                {
+                    "name": "FtnStyleComment",
+                    "pattern": ["!(?:.*)"],
+                    "description": "Fortran style comments"
+                }
+            ],
+            // Only check comments and strings
+            "includeRegExpList": [
+                "CStyleComment",
+                "string"
+            ],
+            // Exclude includes, because they are also strings.
+            "ignoreRegExpList": [
+                "/#include.*/",
+            ],
+            "dictionaries": [
+            ]
+        },
+        {
+            "languageId": "fortran",
+            "patterns": [
+                {
+                    "name": "FtnStyleComment",
+                    "pattern": ["!(?:.*)"],
+                    "description": "Fortran style comments"
+                }
+            ],
+            "includeRegExpList": [
+                "FtnStyleComment",
+                "string"
+            ],
+            "dictionaries": [
+                "fortran"
+            ],
+        },
+        {
+            "languageId": "automake",
+            "patterns": [
+                {
+                    "name": "AutomakeComment",
+                    "pattern": ["#(?:.*)"],
+                    "description": "Automake style comments"
+                }
+            ],
+            "includeRegExpList": [
+                "AutomakeComment",
+                "string"
+            ],
+            "dictionaries": [
+                "automake"
+            ],
+        },
+    ],
+    "overrides": [
+        {
+            "filename": "*.{f90,F90,f,F,for,ftn,Ftn,FOR,FTN,inc}",
+            "languageId": "fortran",
+        },
+        {
+            "filename": "*.am",
+            "languageId": "automake"
+        }
+    ]
+
+}

@@ -10,7 +10,7 @@ SYNOPSIS
 --------
 [verse]
 remap_land --src_mosaic src_mosaic --src_restart src_restart
-           --dst_mosaic dst_msoaic --dst_restart dst_restart
+           --dst_mosaic dst_mosaic --dst_restart dst_restart
            --dst_cold_restart dst_cold_restart
            --land_src_restart land_src_restart
            --land_dst_cold_restart land_dst_cold_restart
@@ -100,7 +100,7 @@ $ remap_land --file_type land --src_mosaic C192_mosaic.nc \
 ----
 for type in soil snow cana glac lake vegn1 vegn2
 do
-   if [ "$type" = "vegn1" -o "$type" = "vegn2"
+   if [ "$type" = "vegn1" -o "$type" = "vegn2" ]
    then
       filetype='vegn'
    else
