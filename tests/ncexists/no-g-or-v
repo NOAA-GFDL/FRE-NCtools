@@ -29,4 +29,5 @@ fi
 
 $top_srcdir/tests/ncexists/create-test-file.sh || framework_failure_ "Failed to create test file"
 
-ncexists -f test.nc && fail_ ncexists should exit with an error code when -g or -v is not specified
+# This test should fail because -v  or -g is not specified
+ncexists -f test.nc && fail_ ncexists should exit with an error code when -g or -v is not specified || true

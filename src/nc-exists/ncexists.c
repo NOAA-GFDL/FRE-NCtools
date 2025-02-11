@@ -20,19 +20,52 @@
 /*
   Copyright (C) 2011 NOAA Geophysical Fluid Dynamics Lab, Princeton, NJ
 */
-#include <stdio.h>
-#include <string.h>
-#include <netcdf.h>
+#include <getopt.h>
 #include <ctype.h>
+#include <netcdf.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include "getopt.h"
+#include "version.h"
 
-void handle_error(int status);
+char *program_name = "ncexists";
 
-int main (int argc, char **argv)
+void
+usage (int status)
 {
+  fprintf (stdout,
+           "Usage: %s -f filename -g global_attribute\n"
+           "   or: %s -f filename -v variable [-a attribute]\n",
+           program_name, program_name);
+  fputs ("Prints 1 to stdout if variable or attribute is found, "
+         "0 if not found.\n",
+         stdout);
+  fputs ("\n"
+         "  -f, --filename=FILENAME    netCDF file\n"
+         "  -g, --global=ATTRIBUTE     global attribute\n"
+         "  -v, --variable=VARIABLE    variable\n"
+         "  -a, --attribute=ATTRIBUTE  variable attribute\n"
+         "  -h, --help                 display this help and exit\n"
+         "  -V, --version              output version information and exit\n",
+         stdout);
+  exit (status);
+}
 
+void
+handle_error (int status)
+{
+  if (status != NC_NOERR)
+    {
+      fprintf (stderr, "%s: %s\n",
+               program_name, nc_strerror (status));
+      exit (EXIT_FAILURE);
+    }
+}
+
+int
+main (int argc, char **argv)
+{
   int status;
   char *filename = NULL;
   char *attr = NULL;
@@ -44,113 +77,139 @@ int main (int argc, char **argv)
   size_t t_len;
   int global = 0;
   int c;
-  char *usage = "Usage: ncexists -f filename [ -g global_attribute || -v variable || -v variable -a attribute ]\n       Returns 1 if variable or attribute is found, 0 if not found.\n";
   nc_type vr_type, t_type;
 
+  static struct option const long_options[] = {
+    {"filename", required_argument, 0, 'f'},
+    {"variable", required_argument, 0, 'v'},
+    {"attribute", required_argument, 0, 'a'},
+    {"global", required_argument, 0, 'g'},
+    {"help", no_argument, 0, 'h'},
+    {"version", no_argument, 0, 'V'},
+    {0, 0, 0, 0}
+  };
 
-
- if (argc == 1)
-  {
-  	printf ("%s\n",usage);
-	//printf ("No arguments: exiting\n");
-	return 0;
-  }
+  if (argc == 1)
+    {
+      fprintf (stderr, "%s: No arguments specified\n", program_name);
+      usage (EXIT_FAILURE);
+    }
   else
-  {
-	while ((c = getopt (argc, argv, "f:v:g:a:")) != -1)
-	{
-		switch (c)
-            	{
-           		case 'f':
-             		filename = optarg;
-             		break;
+    {
+      while ((c = getopt_long (argc, argv,
+                               "hVf:v:g:a:",
+                               long_options, NULL)) != -1)
+        {
+          switch (c)
+            {
+            case 'f':
+              filename = optarg;
+              break;
 
-			case 'g':
-         	        gattr = optarg;
-			global = 1;
-       		        break;
+            case 'g':
+              gattr = optarg;
+              global = 1;
+              break;
 
-			case 'v':
-			var_name = optarg;
-			break;
+            case 'v':
+              var_name = optarg;
+              break;
 
-			case 'a':
-        	        attr= optarg;
-        	        break;
+            case 'a':
+              attr = optarg;
+              break;
 
+            case 'h':
+              usage (EXIT_SUCCESS);
+              break;
 
+            case 'V':
+              print_version (program_name);
+              exit (EXIT_SUCCESS);
+              break;
 
-			case '?':
-             			printf("%s\n", usage);
-             			return 1;
-                        default:
-				printf("%s\n", usage);
-             			abort ();
-           	}
-	 }
+            case '?':
+              usage(EXIT_FAILURE);
+              break;
 
-	 if (global == 1)
-	 {
+            default:
+              usage(EXIT_FAILURE);
+              break;
+            }
+        }
 
-		status = nc_open(filename, NC_NOWRITE, &ncid);
-	 	if (status != NC_NOERR) handle_error(status);
+      // Ensure the user has specified a filename
+      if (filename == NULL)
+        {
+          fprintf (stderr, "%s: No filename specified\n",
+                   program_name);
+          usage (EXIT_FAILURE);
+        }
 
-	 	status = nc_inq_att (ncid, NC_GLOBAL, gattr, &t_type, &t_len);
-     	 	if (status == NC_NOERR)
-		{
-			printf ("1\n");
-		}
-		else
-		{
-			printf ("0\n");
-		}
-	 }
-	 else
-	 {
-	 	status = nc_open(filename, 0, &ncid);
-	 	if (status != NC_NOERR) handle_error(status);
+      // Ensure the user has specified a variable or global attribute
+      if (var_name == NULL && gattr == NULL)
+        {
+          fprintf (stderr, "%s: No variable or global attribute specified\n",
+                   program_name);
+          exit (EXIT_FAILURE);
+        }
 
-		status = nc_inq_varid (ncid, var_name, &var_id);
-     	 	if (status == NC_NOERR)
-		{
-                    if ( attr == NULL )
-                    {
-                         printf ("1\n");
-                    }
-                    else
-                    {
-	 	 	status = nc_inq_att (ncid, var_id, attr, &vr_type, &vr_len);
-         		if (status == NC_NOERR)
-			{
-				 printf ("1\n");
-			}
-			else
-			{
-				printf ("0\n");
-			}
-                    }
-		}
-                else
+      // check if the filename exists and is readable
+      int access_status = access (filename, R_OK);
+      if (access_status != 0)
+        {
+          fprintf (stderr, "%s: %s: %s\n",
+                   program_name, filename, strerror (errno));
+          exit (EXIT_FAILURE);
+        }
+
+      // Open the netCDF file
+      handle_error (nc_open (filename, NC_NOWRITE, &ncid));
+
+      if (global == 1)
+        {
+          status = nc_inq_att (ncid, NC_GLOBAL, gattr, &t_type, &t_len);
+          if (status == NC_NOERR)
+            {
+              printf ("1\n");
+            }
+          else
+            {
+              printf ("0\n");
+            }
+        }
+      else
+        {
+          status = nc_inq_varid (ncid, var_name, &var_id);
+          if (status == NC_NOERR)
+            {
+              if (attr == NULL)
                 {
-                    printf ("0\n");
+                  printf ("1\n");
                 }
-	 }
+              else
+                {
+                  status = nc_inq_att (ncid, var_id, attr, &vr_type, &vr_len);
+                  if (status == NC_NOERR)
+                    {
+                      printf ("1\n");
+                    }
+                  else
+                    {
+                      printf ("0\n");
+                    }
+                }
+            }
+          else
+            {
+              printf ("0\n");
+            }
+        }
 
+      status = nc_close (ncid); /* close netCDF dataset */
+      if (status != NC_NOERR)
+        handle_error (status);
+    }
 
-	 status = nc_close(ncid);       /* close netCDF dataset */
-     	 if (status != NC_NOERR) handle_error(status);
-
-}
-
-
-  exit(0);
-}
-
-void handle_error(int status)
-{
-     if (status != NC_NOERR)
-     {
-        fprintf(stderr, "%s\n", nc_strerror(status));
-        exit(-1);
-     }
+  exit (EXIT_SUCCESS);
 }

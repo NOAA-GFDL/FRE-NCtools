@@ -29,5 +29,6 @@ fi
 
 $top_srcdir/tests/ncexists/create-test-file.sh || framework_failure_ "Failed to create test file"
 
-ncexists && fail_ ncexists should exit with an error code if -f is not specified
-ncexists -f does-not-exist.nc && fail_ ncexists should exit with an error code if the file does not exist
+# Both are tests that should fail.
+ncexists && fail_ ncexists should exit with an error code if -f is not specified || true
+ncexists -f does-not-exist.nc && fail_ ncexists should exit with an error code if the file does not exist || true
