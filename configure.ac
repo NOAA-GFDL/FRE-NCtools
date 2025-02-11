@@ -258,7 +258,6 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  tests/Makefile
                  tools/nc_null_check/Makefile
-                 tools/runoff_regrid/Makefile
                  tools/transfer_to_mosaic_grid/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile

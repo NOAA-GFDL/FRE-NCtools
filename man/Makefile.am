@@ -27,13 +27,10 @@ EXTRA_DIST = \
   is-compressed.txt \
   list_ncvars.txt \
   list_ncvars.sh.txt \
-  list_ncvars.csh.1 \
   make_hgrid.txt \
   make_vgrid.txt \
   make_topog.txt \
-  make_topog_parallel.1 \
   make_coupler_mosaic.txt \
-  make_coupler_mosaic_parallel.1 \
   make_quick_mosaic.txt \
   make_regional_mosaic.txt \
   make_remap_file.txt \
@@ -44,10 +41,10 @@ EXTRA_DIST = \
   plevel_interp.txt \
   plevel.sh.txt \
   river_regrid.txt \
+  remap_land.txt \
   scatter-ncc.txt \
   split_ncvars.pl.txt \
   timavg.txt \
-  timavg.csh.1 \
   time_average.txt \
   asciidoc.conf
 
@@ -83,6 +80,7 @@ man_MANS += \
   plevel_interp.1 \
   plevel.sh.1 \
   river_regrid.1 \
+  remap_land.1 \
   scatter-ncc.1 \
   split_ncvars.pl.1 \
   timavg.1 \
@@ -91,7 +89,8 @@ man_MANS += \
 if WITH_MPI
 man_MANS += \
   make_coupler_mosaic_parallel.1 \
-  make_topog_parallel.1
+  make_topog_parallel.1 \
+  remap_land_parallel.1
 endif
 endif
 
@@ -105,6 +104,23 @@ endif
           -acopyright_year=$(COPYRIGHT_YEAR) \
           --asciidoc-opts="-f $(ASCIIDOC_CFG)" \
           $<
+
+make_alias_1 = @echo ".so man1/$<" > $@
+
+list_ncvars.csh.1: list_ncvars.sh.1
+	$(make_alias_1)
+
+make_coupler_mosaic_parallel.1: make_coupler_mosaic.1
+	$(make_alias_1)
+
+make_topog_parallel.1: make_topog.1
+	$(make_alias_1)
+
+remap_land_parallel.1: remap_land.1
+	$(make_alias_1)
+
+timavg.csh.1: timavg.1
+	$(make_alias_1)
 
 clean-local:
 	$(RM) *.1 *.xml

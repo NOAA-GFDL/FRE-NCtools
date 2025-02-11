@@ -18,14 +18,16 @@ grid_programs = \
   make_topog \
   make_vgrid \
   remap_land \
-  river_regrid
+  river_regrid \
+  runoff_regrid
 
 if WITH_MPI
   grid_programs += \
     fregrid_parallel \
     make_coupler_mosaic_parallel \
     make_topog_parallel \
-    remap_land_parallel
+    remap_land_parallel \
+    runoff_regrid_parallel
 endif
 
 if ENABLE_GPU
@@ -408,17 +410,32 @@ ncexists_SOURCES = \
 # ********************************************************* #
 remap_land_SOURCES = \
   remap-land/remap_land.c
+remap_land_parallel_SOURCES = \
+  $(remap_land_SOURCES)
 remap_land_parallel_CFLAGS = \
   -Duse_libMPI \
   $(AM_CFLAGS)
 remap_land_parallel_LDADD = \
   $(top_builddir)/lib/libfrencutils/libfrencutils.a \
   $(LDADD)
-remap_land_parallel_SOURCES = \
-  $(remap_land_SOURCES)
 
 # ********************************************************* #
 # river_regrid                                              #
 # ********************************************************* #
 river_regrid_SOURCES = \
   river-regrid/river_regrid.c
+
+# ********************************************************* #
+# runoff_regrid                                             #
+# ********************************************************* #
+runoff_regrid_SOURCES = \
+  runoff-regrid/runoff_regrid.c
+runoff_regrid_parallel_SOURCES = \
+  $(runoff_regrid_SOURCES)
+runoff_regrid_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+runoff_regrid_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
