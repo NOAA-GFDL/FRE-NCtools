@@ -233,6 +233,7 @@ AC_DEFINE([COPYRIGHT_YEAR], ["copyright_year"],
           [Year to place in Copyright notices printed with --version information])dnl
 AC_SUBST(COPYRIGHT_YEAR)dnl
 
+# cspell:ignore RPDIR RPATHFLAGS
 # Code for setting rpath based ncview's configure.in code.
 AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
   for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS

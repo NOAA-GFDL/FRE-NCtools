@@ -15,6 +15,12 @@
             "addWords": true
         },
         {
+            "name": "autoconf",
+            "path": "dicts/autoconf.txt",
+            "description": "A list of words used in autoconf files",
+            "addWords": false
+        },
+        {
             "name": "automake",
             "path": "dicts/automake.txt",
             "description": "A list of words used in automake files",
@@ -83,6 +89,23 @@
             ],
         },
         {
+            "languageId": "autoconf",
+            "patterns": [
+                {
+                    "name": "AutoconfComment",
+                    "pattern": ["#(?:.*)"],
+                    "description": "Autoconf style comments"
+                }
+            ],
+            "includeRegExpList": [
+                "AutoconfComment",
+                "string"
+            ],
+            "dictionaries": [
+                "autoconf"
+            ],
+        },
+        {
             "languageId": "automake",
             "patterns": [
                 {
@@ -104,6 +127,10 @@
         {
             "filename": "*.{f90,F90,f,F,for,ftn,Ftn,FOR,FTN,inc}",
             "languageId": "fortran",
+        },
+        {
+            "filename": "*.ac",
+            "languageId": "autoconf"
         },
         {
             "filename": "*.am",

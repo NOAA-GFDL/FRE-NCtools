@@ -60,10 +60,24 @@ vegn
 
 # External packages
 ncdump
+ncgen
 ncrcat
 ncatted
 ncks
+ncview
+mpirun
+mpiexec
+srun
+
+# Development terms used in FRE-NCtools
+openacc
+getrusage
+sched
+getaffinity
+hashval
+rpath
 
 # Terms used across NOAA
 NOAA
 CMIP
+
