@@ -68,6 +68,8 @@ ncview
 mpirun
 mpiexec
 srun
+netCDF
+netcdff
 
 # Development terms used in FRE-NCtools
 openacc

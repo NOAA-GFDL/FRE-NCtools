@@ -129,7 +129,7 @@
             "languageId": "fortran",
         },
         {
-            "filename": "*.ac",
+            "filename": "*.{ac,m4}",
             "languageId": "autoconf"
         },
         {
