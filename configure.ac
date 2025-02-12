@@ -199,6 +199,12 @@ AX_LIB_NETCDFF()
 if test "$with_netcdf_fortran" = "no"; then
   AC_MSG_ERROR([Unable to find NetCDF Fortran library.])
 fi
+
+# Check if using an external libFMS library
+GX_LIB_FMS()
+AS_IF([test "$with_fms" = "no"], [
+AC_MSG_NOTICE([Using the FRE-NCtools libfmslite])])
+AM_CONDITIONAL([WITHOUT_EXTERN_FMS], [test "$with_fms" = "no"])
 AC_LANG_POP([Fortran])
 
 # Check if Linux sched_getaffinity is available
@@ -263,7 +269,6 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
-                 tools/simple_hydrog/libfmslite/Makefile
                  t_gpu/Makefile
                  t_gpu/test_read_remap_file/Makefile
                  t_gpu/test_get_grid_cell_struct/Makefile
