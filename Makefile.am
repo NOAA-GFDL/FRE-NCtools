@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib \
           src \
-          tools/transfer_to_mosaic_grid \
           tools/simple_hydrog \
           tools/simple_hydrog/libfmslite \
           tools/simple_hydrog/postp \

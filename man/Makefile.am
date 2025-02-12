@@ -46,6 +46,7 @@ EXTRA_DIST = \
   split_ncvars.pl.txt \
   timavg.txt \
   time_average.txt \
+  transfer_to_mosaic_grid.txt \
   asciidoc.conf
 
 # Documentation settings
@@ -85,7 +86,8 @@ man_MANS += \
   split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
-  time_average.1
+  time_average.1 \
+  transfer_to_mosaic_grid.1
 if WITH_MPI
 man_MANS += \
   make_coupler_mosaic_parallel.1 \

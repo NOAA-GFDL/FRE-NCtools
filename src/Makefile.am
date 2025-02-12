@@ -19,7 +19,8 @@ grid_programs = \
   make_vgrid \
   remap_land \
   river_regrid \
-  runoff_regrid
+  runoff_regrid \
+  transfer_to_mosaic_grid
 
 if WITH_MPI
   grid_programs += \
@@ -439,3 +440,9 @@ runoff_regrid_parallel_LDADD = \
   $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
   $(LDADD) \
   $(MPI_CLDFLAGS)
+
+# ********************************************************* #
+# transfer_to_mosaic_grid                                   #
+# ********************************************************* #
+transfer_to_mosaic_grid_SOURCES = \
+  transfer-mosaic-grid/transfer_to_mosaic.c
