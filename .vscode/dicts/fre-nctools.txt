@@ -12,6 +12,7 @@ iceberg_comb.sh
 interp
 is-compressed
 levitus
+libfrencutils
 libnctf
 libver
 list_ncvars
@@ -78,8 +79,18 @@ sched
 getaffinity
 hashval
 rpath
+CC
+FC
+CFLAGS
+FCFLAGS
+LDFLAGS
+autoreconf
+autotools
+nvfortran
 
 # Terms used across NOAA
 NOAA
 CMIP
 
+# Other Terms
+spack

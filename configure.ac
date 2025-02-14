@@ -264,7 +264,6 @@ AC_CONFIG_FILES([Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/nc_null_check/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile

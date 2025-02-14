@@ -24,8 +24,7 @@ SUBDIRS = lib \
           tools/simple_hydrog \
           tools/simple_hydrog/postp \
           tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr \
-          tools/nc_null_check
+          tools/simple_hydrog/rmvpr
 
 SUBDIRS += man \
            tests
