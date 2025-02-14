@@ -6,6 +6,7 @@ combine-ncc
 combine_restarts
 decompress-ncc
 fregrid
+fre-nctools
 gridfiles
 hgrid
 iceberg_comb.sh
