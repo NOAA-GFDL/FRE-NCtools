@@ -29,10 +29,6 @@ SUBDIRS = lib \
 SUBDIRS += man \
            tests
 
-if ENABLE_GPU
-SUBDIRS += t_gpu
-endif
-
 # Shortcut targets to make it easier to run (very) expensive tests.
 check-expensive:
 	$(MAKE) check RUN_EXPENSIVE_TESTS=yes

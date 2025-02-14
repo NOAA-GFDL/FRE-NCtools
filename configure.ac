@@ -268,11 +268,6 @@ AC_CONFIG_FILES([Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
-                 t_gpu/Makefile
-                 t_gpu/test_read_remap_file/Makefile
-                 t_gpu/test_get_grid_cell_struct/Makefile
-                 t_gpu/test_get_upbound_nxcells_2dx2d/Makefile
-                 t_gpu/test_get_interp_order1/Makefile
 ])
 
 AC_OUTPUT
