@@ -26,6 +26,10 @@ fi
 
 . ${srcdir=.}/init.sh; path_prepend_ ../src
 
+# Set paths to list-vars script and just-compiled exec
+export LIST_NCVARS=`find ../.. -name list_ncvars.sh`
+export PKGLIBEXECDIR=$(dirname $LIST_NCVARS)
+
 # Use the test netCDF files from plevel
 ${builddir=.}/create_plevel_test_ncfile || framework_failure_ "failed to create plevel test files"
 
