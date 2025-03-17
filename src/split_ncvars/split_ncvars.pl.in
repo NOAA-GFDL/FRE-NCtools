@@ -127,6 +127,10 @@ my $list_ncvars
     ? $ENV{LIST_NCVARS}
     : "$prefix/bin/list_ncvars.sh";
 
+unless (-f $list_ncvars) {
+    die "ERROR: required list-vars script not available (was looking for '$list_ncvars')";
+}
+
 my $ncdump
     = defined( $ENV{NCDUMP} )
     ? $ENV{NCDUMP}
