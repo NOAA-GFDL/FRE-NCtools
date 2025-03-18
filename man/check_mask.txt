@@ -1,3 +1,6 @@
+// These are words to have cspell ignore in this file
+// cspell:ignore nobc
+
 check_mask(1)
 =============
 
@@ -24,7 +27,7 @@ name is `mask_table.n_mask.layout(1)Xlayout(2)`. The model is expected to read
 file mask_table if you want to mask out some processors.
 
 The ocean model is assumed to be logically rectangular grid and land model could
-be multiple tiles grid (like cubic shpere grid with 6 tiles). For land model,
+be multiple tiles grid (like cubic sphere grid with 6 tiles). For land model,
 each processor list has three entries: layout position in x-direction, layout
 position in y-direction and tile number. For ocean model, each processor list
 has two entries: layout position in x-direction, layout position in y-direction.
@@ -56,7 +59,7 @@ model = land.
 *--ocean_topog* _topog_file_::
 Specify the topography information for ocean mosaic. The field name of the
 topography is depth_tile# or depth when ntiles = 1, The topography data is
-positive down. This option is only for model = ocea.n
+positive down. This option is only for model = ocean.
 
 *--min_pe* _pe_number_::
 Specify the smallest processor count to be checked.
@@ -84,7 +87,7 @@ When set, only layouts valid with OBC are shown.
 
 *--nobc* _num_open_bc_::
 Number of open boundary condition. Its value should be less than MAX_OBC
-(current is 4 ). Default vaule is 0 for nobc.
+(current is 4 ). Default value is 0.
 
 *--direction* _d(1),...,d(nobc)_::
 Open boundary direction. Each element value should be west, east, south or

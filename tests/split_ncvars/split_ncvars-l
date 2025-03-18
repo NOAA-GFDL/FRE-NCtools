@@ -24,10 +24,19 @@ then
     command -v split_ncvars.pl --version
 fi
 
-. ${srcdir=.}/init.sh; path_prepend_ ../src
+. ${srcdir=.}/init.sh; path_prepend_ ../../src
+
+# Need to use the included list_ncvars.sh script.  Otherwise,
+# split_ncvars will look for list_ncvars.sh in the installed bin
+# directory.
+export LIST_NCVARS=$(readlink -f ../../src/list_ncvars.sh)
+
+# list_ncvars.sh needs to know where to find the built list_ncvars
+# executable.
+export PKGLIBEXECDIR=$(readlink -f ../../src)
 
 # Use the test netCDF files from timeavg
-${builddir=.}/create_timeavg_test_ncfiles || framework_failure_ "failed to create test files"
+${builddir=..}/create_timeavg_test_ncfiles || framework_failure_ "failed to create test files"
 
 # Run split_ncvars.pl
 split_ncvars.pl -l test_input_1.nc || fail_ split_ncvars.pl test_input.nc failed

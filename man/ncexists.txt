@@ -1,0 +1,69 @@
+ncexists(1)
+===========
+
+NAME
+----
+
+ncexists - Check if a NetCDF file has a variable, variable or global attribute
+
+SYNOPSIS
+--------
+[verse]
+ncexists -f filename -g global_attribute
+ncexists -f filename -v variable [-a attribute]
+
+DESCRIPTION
+-----------
+
+Check if the given NetCDF file contains the global attribute, if a
+variable exists, or if a variable has an attribute defined.
+
+Prints 1 to stdout if variable or attribute is found, 0 if not found.
+
+OPTIONS
+-------
+
+*-f*, *--filename" _filename_::
+Path to NetCDF file to check.
+
+*-v*, *--variable* _variable_::
+Name of the variable to check.
+
+*-a*, *--attribute* _attribute_::
+Name of the variable attribute to check.  The *-v* option must be
+specified.
+
+*-g*, *--global* _attribute_::
+Name of the global attribute to check.  This option will supersede the
+*-v* and *-a* options.
+
+*-h*, *--help*::
+
+Print the usage message and exit.
+
+
+*-V*, *--version*::
+
+Print the version information and exit.
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Miguel Zuniga
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

@@ -1,0 +1,56 @@
+make_land_domain(1)
+===================
+
+NAME
+----
+
+make_land_domain - Create a land domain NetCDF file from a coupled mosaic file
+
+SYNOPSIS
+--------
+[verse]
+make_land_domain --grid_file grid_file --land_restart land_restart [--output_file output_file]
+
+DESCRIPTION
+-----------
+
+make_land_domain prepares data to be used in unstructured grid land model domain
+decomposition.
+
+OPTIONS
+-------
+
+*--grid_file* _grid_file_::
+
+Coupled mosaic file name
+
+*--land_restart* _land_restart_::
+
+Specify the source file of land restart file. The file name should not contain
+the tile# and normally in the for 'land.res'
+
+*--output_file* _output_file_::
+
+Specify the output file name. The default value is 'land_domain.nc'.
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

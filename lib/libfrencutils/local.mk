@@ -17,20 +17,31 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib \
-          src \
-          tools/simple_hydrog \
-          tools/simple_hydrog/postp \
-          tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr
+libfrencutils_libfrencutils_a_SOURCES = \
+    libfrencutils/affinity.c \
+    libfrencutils/constant.h \
+    libfrencutils/create_xgrid.c \
+    libfrencutils/create_xgrid.h \
+    libfrencutils/globals.h \
+    libfrencutils/gradient_c2l.c \
+    libfrencutils/gradient_c2l.h \
+    libfrencutils/interp.c \
+    libfrencutils/interp.h \
+    libfrencutils/mosaic_util.c \
+    libfrencutils/mosaic_util.h \
+    libfrencutils/mpp_domain.c \
+    libfrencutils/mpp_domain.h \
+    libfrencutils/mpp_io.c \
+    libfrencutils/mpp_io.h \
+    libfrencutils/mpp.c \
+    libfrencutils/mpp.h \
+    libfrencutils/read_mosaic.c \
+    libfrencutils/read_mosaic.h \
+    libfrencutils/tool_util.c \
+    libfrencutils/tool_util.h
 
-SUBDIRS += man \
-           tests
-
-# Shortcut targets to make it easier to run (very) expensive tests.
-check-expensive:
-	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
-check-very-expensive:
-	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes
+libfrencutils_libfrencutils_mpi_a_SOURCES = \
+    $(libfrencutils_libfrencutils_a_SOURCES)
+libfrencutils_libfrencutils_mpi_a_CFLAGS = \
+    -Duse_libMPI $(MPI_CFLAGS) $(AM_CFLAGS)

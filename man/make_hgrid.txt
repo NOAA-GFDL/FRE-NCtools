@@ -1,3 +1,11 @@
+// Words to ignore with cspell
+// cspell:ignore nlat nlon lonlat dlat dlon
+// cspell:ignore nxbnds nybnds xbnds ybnds
+// cspell:ignore nxbnd nybnd xbnd ybnd
+// cspell:ignore nratio
+// cspell:ignore MAXBOUNDS
+// cspell:ignore istart iend jstart jend
+
 make_hgrid(1)
 =============
 
@@ -14,14 +22,14 @@ DESCRIPTION
 -----------
 
 make_hgrid can generate different types of horizontal grid. The output data is
-on a supergrid (model grid size x refinement(=2)).  For _cubic_grid_, six grid
+on a super grid (model grid size x refinement(=2)).  For _cubic_grid_, six grid
 files which contain the grid information for each tile will be generate,
 otherwise one file will be generated you can specify the grid type through
 *--grid_type*. The value of grid_type can be _from_file_, _spectral_grid_,
 _spherical_grid_, _conformal_cubic_grid_, _gnomonic_ed_ or
 _simple_cartesian_grid_, with default value _spherical_grid_. *--nlon* and
-*--nlat* must be specified to indicate supergrid size (for _cubic_grid_,
-*--nlat* is not needed because nlat has the same value as nlon.  Besides
+*--nlat* must be specified to indicate super grid size (for _cubic_grid_,
+*--nlat* is not needed because nlat has the same value as nlon).  Besides
 *--nlon* and *--nlat*, other optional and requirement arguments for each type
 are:
 
@@ -53,17 +61,17 @@ grid size. number of bounds must be 2 in both and x and y-direction.
 length.
 
 _f_plane_grid_::
-For setting geometric fractors according to f-plane. *--f_plane_latitude* need
+For setting geometric factors according to f-plane. *--f_plane_latitude* need
 to be specified.
 
 _beta_plane_grid_::
-For setting geometric fractors according to beta plane. *--f_plane_latitude*
+For setting geometric factors according to beta plane. *--f_plane_latitude*
 need to be specified
 
 Two algorithms are provided for creating 'tripolar_grid' and
 'regular_lonlat_grid'. Monotonic cubic interpolation and legacy algorithm using
 cosine function to configure grid cell location.  The monotonic cubic
-interpolation is developed by Russell Fiedler and the detail of the alrogithm is
+interpolation is developed by Russell Fiedler and the detail of the algorithm is
 explained in
 https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/moler/interp.pdf.
 More details of the algorithm is available in
@@ -99,7 +107,7 @@ entry are allowed but the number should be less than MAXBOUNDS.
 Specify number of zonal regions for varying resolution.
 
 *--nybnds* _nybnds_::
-Specify number of meridinal regions for varying resolution.
+Specify number of meridional regions for varying resolution.
 
 *--xbnds* _x(1),...,x(nxbnds)_::
 Specify boundaries for defining zonal regions of varying resolution. When
@@ -111,11 +119,11 @@ poles.
 Specify boundaries for defining meridional regions of varying resolution.
 
 *--nlon* _nlon(1),...,nlon(nxbnds-1)_::
-Number of model grid points(supergrid) for each zonal regions of varying
+Number of model grid points(super grid) for each zonal regions of varying
 resolution.
 
 *--nlat* _nlat(1),...,nlat(nybnds-1)_::
-Number of model grid points(supergid) for each meridinal regions of varying
+Number of model grid points(super gid) for each meridional regions of varying
 resolution.
 
 *--dlon* _dlon(1),...,dlon(nxbnds)_::
@@ -129,8 +137,8 @@ Specify latitude for joining spherical and rotated bipolar grid. Default value
 is 65 degree.
 
 *--nratio* _nratio_::
-Speicify the refinement ratio when calculating cell length and area of
-supergrid.
+Specify the refinement ratio when calculating cell length and area of
+super grid.
 
 *--simple_dx* _dimple_dx_::
 Specify the uniform cell length in x-direction for simple cartesian grid.
@@ -160,7 +168,7 @@ following options must be set: *--stretch_factor*, *--target_lon* and
 *--do_cube_transform*::
 Reorient the rotated cubed sphere so that tile 6 has north facing upward, which
 would make analysis and explaining nest placement much easier. When set the
-following must be set: *--stretch_factor*, *--latget_lon*, and *--target_lat*.
+following must be set: *--stretch_factor*, *--target_lon*, and *--target_lat*.
 
 *--stretch_factor* _factor_::
 Stretching factor for the grid.
@@ -189,19 +197,19 @@ development. It only needs to be specified when *--nest_grids* is set.
 
 *--istart_nest* _istart_nest(1),...,istart_nest(nests-1)_::
 Specify the comma-separated list of starting i-direction index(es) of nest
-grid(s) in parent tile supergrid (Fortran index).
+grid(s) in parent tile super grid (Fortran index).
 
 *--iend_nest* _iend_nest(1),...,iend_nest(nests-1)_::
 Specify the comma-separated list of ending i-direction index(es) of nest grids
-in parent tile supergrid (Fortran index).
+in parent tile super grid (Fortran index).
 
 *--jstart_nest* _jstart_nest(1),...,jstart_nest(nests-1)_::
 Specify the comma-separated list of starting j-direction index(es) of nest grids
-in parent tile supergrid (Fortran index).
+in parent tile super grid (Fortran index).
 
 *--jend_nest* _jend_nest(1),...,jend_nest(nests-1)_::
 Specify the comma-separated list of ending j-direction index(es) of nest grids
-in parent tile supergrid (Fortran index).
+in parent tile super grid (Fortran index).
 
 *--great_circle_algorithm*::
 When specified, great_circle_algorithm will be used to compute grid cell area.
@@ -214,7 +222,7 @@ _gnomonic_ed_.
 When specified, will not output length(dx,dy) and angle (angle_dx, angle_dy)
 
 *--rotate_poly*::
-Set to calculate polar polygon areas by caculating the area of a copy of the
+Set to calculate polar polygon areas by calculating the area of a copy of the
 polygon, with the copy being rotated far away from the pole.
 
 *--verbose*::
@@ -224,7 +232,7 @@ will be silent when there is no error.
 EXAMPLES
 --------
 
-. generating regular lon-lat grid (supergrid size 60x20)
+. generating regular lon-lat grid (super grid size 60x20)
 +
 ----
 $ make_hgrid --grid_type regular_lonlat_grid --nxbnd 2 --nybnd 2 \
@@ -250,7 +258,7 @@ $ make_hgrid --grid_type tripolar_grid --nxbnd 2 --nybnd 7 \
    --grid_name om3_grid --center c_cell
 ----
 
-. generating simple cartesian grid(supergrid size 20x20)
+. generating simple cartesian grid(super grid size 20x20)
 +
 ----
 $ make_hgrid --grid_type simple_cartesian_grid --xbnd 0,30 \
@@ -258,7 +266,7 @@ $ make_hgrid --grid_type simple_cartesian_grid --xbnd 0,30 \
    --simple_dy 1000
 ----
 
-. generating conformal cubic grid. (supergrid size 60x60 for each tile)
+. generating conformal cubic grid. (super grid size 60x60 for each tile)
 +
 ----
 $ make_hgrid --grid_type conformal_cubic_grid --nlon 60 --nratio 2
@@ -287,7 +295,7 @@ $ make_hgrid --grid_type gnomonic_ed --nlon 192 --do_schmidt \
    --iend_nest 42,82 --jend_nest 42,82 --halo 3
 ----
 
-. generating spectral grid. (supergrid size 128x64)
+. generating spectral grid. (super grid size 128x64)
 +
 ----
 $ make_hgrid --grid_type spectral_grid --nlon 128 --nlat 64
@@ -301,9 +309,9 @@ $ make_hgrid --grid_type from_file --my_grid_file my_grid_file \
 ----
 +
 *Contents of sample my_grid_file*. The first line of my_grid_file will be text (
-will be ignored) followed by nlon+1 lines of real value of x-direction supergrid
+will be ignored) followed by nlon+1 lines of real value of x-direction super grid
 bound location. Then another line of text ( will be ignored), followed by nlat+1
-lines of real value of y-direction supergrid bound location.  For example:
+lines of real value of y-direction super grid bound location.  For example:
 +
 ----
 x-grid
@@ -365,6 +373,7 @@ differ  by more than 1 part in 10E6
 
 SEE ALSO
 --------
+//cspell:disable-next-line
 *make_vgrid*(1), *make_topo*(1)
 
 BUGS

@@ -1,3 +1,7 @@
+// These are words to have cspell ignore in this file
+// cspell:ignore --nlon --nlat --Klevel --Lstep
+// cspell:ignore --dst_vgrid --nthreads
+
 fregrid(1)
 ==========
 
@@ -12,11 +16,12 @@ SYNOPSIS
 fregrid --input_mosaic input_mosaic --input_file input_file [options]
 
 DESCRIPTION
+-----------
 
 fregrid remaps data (scalar or vector) from an input_mosaic onto an
 output_mosaic, but the output (or target) grid can also be specified
-through the inputs lonBegin, lonEnd, latBegin, latEnd, nlon and nlat.
-Currently only T-cell scalar regridding and AGRID vector regridding
+through the inputs lonBegin, lonEnd, latBegin, latEnd, nLon and nLat.
+Currently only T-cell scalar regridding and A-grid vector regridding
 (where the vector field is expressed in spherical coordinates) is
 available.  Vector fields can be mapped as vectors only from the cubic
 grid to the lat-lon grid, and while using bilinear interpolation; but
@@ -69,7 +74,7 @@ component of the vector field.
 
 Specify the output mosaic information. This file contains list of tile
 files which specify the grid information for each tile. If
-output_mosaic is not specified, nlon and nlat must be specified.
+output_mosaic is not specified, nLon and nLat must be specified.
 
 *--lonBegin* _decimal_::
 
@@ -152,8 +157,8 @@ Specify the remapping algorithm to be used. Default is
 'conserve_order1'. Currently only 'conserve_order1',
 'conserve_order2', 'conserve_order2_monotonic' and 'bilinear'
 remapping scheme are implemented in this tool. The bilinear scheme can
-only be used to remap data from cubic grid to regular latlon grid.
-When interp_method is 'bilinear', nlon and nlat must be specified and
+only be used to remap data from cubic grid to regular lat-lon grid.
+When interp_method is 'bilinear', nLon and nLat must be specified and
 the output data in y-direction will be located at the center of cell
 or bound of the cell depending on the setting of y_center.
 
@@ -163,8 +168,8 @@ Specify the test function to be used for testing.
 
 *--grid_type* _grid_type_::
 
-Specify the vector field grid location. default is AGRID and only
-AGRID is implemented yet.
+Specify the vector field grid location. default is A-grid and only
+A-grid is implemented yet.
 
 *--symmetry*::
 
@@ -188,7 +193,7 @@ data from finer grid onto destination grid.
 *--center_y*::
 
 Output latitude will locate at cell center, i.e., the starting
-latitude will be -89 when nlat = 90. when center_y is not set,
+latitude will be -89 when nLat = 90. when center_y is not set,
 starting latitude will be -90. for bilinear interpolation. For
 conservative interpolation, center_y is assumed.
 
@@ -234,7 +239,7 @@ Default is 0.005.
 When specified, the dimension and field name for longitude and
 latitude axis will be 'lon' and 'lat'. 'lon_bnd' and 'lat_bnd' will be
 longitude and latitude bound name. The dimension of lon_bounds is
-(2,nlon) and the dimension of lat_bounds is (2,nlat).
+(2,nLon) and the dimension of lat_bounds is (2,nLat).
 
 *--associated_file_dir* _dir_::
 
@@ -277,14 +282,16 @@ $ fregrid --input_mosaic C48_mosaic.nc --input_dir input_dir \
     --nlon 144 --nlat 90
 ----
 
+// cspell:ignore extrap vgrid
+
 . Remap data onto cm2m ocean grid with extrapolation and vertical interpolation.
 +
 ----
-$ fregrid --input_mosaic levitus_mosaic.nc --input_dir inputdir \
+$ fregrid --input_mosaic levitus_mosaic.nc --input_dir input_dir \
     --input_file WOA09_ann_theta.nc --scalar_field POTENTIAL_TEMP \
     --output_file WOA09_ann_theta_cm2g_extrap.nc \
     --output_mosaic cm2m_ocean_mosaic.nc --extrapolate \
-    --dst_vgrid inputdir/cm2m_ocean_vgrid.nc
+    --dst_vgrid input_dir/cm2m_ocean_vgrid.nc
 ----
 
 BUGS

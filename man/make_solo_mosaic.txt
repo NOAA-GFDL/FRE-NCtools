@@ -1,3 +1,6 @@
+// Ignore these words with cspell
+// cspell:ignore periodx periody
+
 make_solo_mosaic(1)
 ===================
 

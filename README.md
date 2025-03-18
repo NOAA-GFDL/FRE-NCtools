@@ -25,7 +25,7 @@ The tools available in FRE-NCtools are:
 * iceberg_comb -- Combine iceberg history files
 * combine-ncc -- Combine distributed unstructured FMS grid netCDF files
 * decompress-ncc -- Convert an unstructured FMS grid file to a standard lat-lon grid
-* mppnccombine -- Combine destributed FMS netCDF files
+* mppnccombine -- Combine distributed FMS netCDF files
 * is-compressed -- Determine if a netCDF file has an unstructured FMS grid
 * scatter-ncc -- Distribute an unstructured FMS grid netCDF file for initializing a FMS climate model
 * mppncscatter -- Distribute FMS netCDF file for initializing a FMS climate model
@@ -50,16 +50,15 @@ The tools available in FRE-NCtools are:
 ### Statistical and Informational Tools
 
 * list_ncvars -- List the variables in a netCDF file
-* plevel -- Interpolates data from model levels to pressure levels
-* split_ncvars -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
+* plevel.sh -- Interpolates data from model levels to pressure levels
+* split_ncvars.pl -- Write the variables in a FMS netCDF file into multiple netCDF files, one file per netCDf field
 * timavg -- Create a time average netCDF file
 * ncexists -- Checks for variables and attributes in a netCDF file
-* nc_null_check -- Checks to see if the value of the attribute *bounds* of variable *lat* has a null character
 
 
 ### Other Tools
 There are several tools that have parallel versions and can overcome memory and cpu constrains of the serial
-conterpart. E.g. fregrid_parallel reproduces the functionality of fregrid, and among other things it is
+counterpart. E.g. fregrid_parallel reproduces the functionality of fregrid, and among other things it is
 commonly used to generate the remapping weights for high resolution grids.  (for further information, see the
 "extreme fregrid" document).
 The [Ocean Model Grid Generator](https://github.com/NOAA-GFDL/ocean_model_grid_generator) can be copied or
@@ -168,7 +167,7 @@ parallel running versions of certain FRE-NCtools applications.
 ### OpenACC-enabled NCTools applications
 The option `--enable-acc=yes` to the `configure` command will configure for building
 the fregrid_acc executable that is capable of offloading computation to GPUs.  Currently, only
-NVDIA compilers are supported to enable OpenACC directives in fregrid_acc and libfrencutils_acc.
+NVIDIA compilers are supported to enable OpenACC directives in fregrid_acc and libfrencutils_acc.
 Please ensure that `FC=nvfortran` and `CC=nvc`.
 
 ## Building on a GFDL-managed system
@@ -179,7 +178,7 @@ For example:
 
 ```
 # Note: env.sh builds a set of commands to configure the environment.
-# The backquotes (not single quotes!) do command substitution, using the
+# The back quotes (not single quotes!) do command substitution, using the
 # standard output of env.sh as input to "eval". eval then executes the
 # set of environment-setting shell commands.
 eval `site-configs/<site>/env.sh`

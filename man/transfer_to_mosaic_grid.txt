@@ -1,0 +1,48 @@
+transfer_to_mosaic_grid(1)
+==========================
+
+NAME
+----
+
+transfer_to_mosaic_grid - transfer old grid files to the current mosaic grid
+
+SYNOPSIS
+--------
+[verse]
+transfer_to_mosaic_grid --input_file _input_file_
+
+DESCRIPTION
+-----------
+
+Transfers previous version grid file (The grid file has field x_T.y_T
+) into a mosaic grid. The input file could be a ocean only grid or a
+coupled grid.
+
+OPTIONS
+-------
+
+*--input_file* _input_file_::
+
+The file name of previous version grid.
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Vinod Kumar and Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

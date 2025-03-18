@@ -17,20 +17,12 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib \
-          src \
-          tools/simple_hydrog \
-          tools/simple_hydrog/postp \
-          tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr
+libnfu_libnfu_a_SOURCES = \
+    libnfu/nfu.F90 \
+    libnfu/nfu_compress.F90
 
-SUBDIRS += man \
-           tests
+libnfu/nfu_compress.$(OBJEXT): libnfu/nfu_mod.$(FC_MODEXT)
 
-# Shortcut targets to make it easier to run (very) expensive tests.
-check-expensive:
-	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
-check-very-expensive:
-	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes
+clean-local:
+	$(RM) *.$(FC_MODEXT)

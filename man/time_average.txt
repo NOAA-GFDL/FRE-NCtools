@@ -1,3 +1,6 @@
+// Ignore these words in cspell
+// cspell:ignore skip_tavg_errors
+
 time_average(1)
 ===============
 
@@ -13,8 +16,8 @@ _time_average_ reads the variables in a netCDF file, and computes an average of
 those variables over the time axis.  _time_average_ uses a Fortran namelist
 _input_ to configure the application.
 
-NAMELISTS
----------
+NAMELIST
+--------
 
 *character(len=2048)*, dimension(MAX_FILES) :: _file_names_::
 Input file names.

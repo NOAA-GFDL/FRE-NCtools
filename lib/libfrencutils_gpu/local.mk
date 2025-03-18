@@ -17,20 +17,14 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib \
-          src \
-          tools/simple_hydrog \
-          tools/simple_hydrog/postp \
-          tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr
+libfrencutils_gpu_libfrencutils_gpu_a_SOURCES = \
+    libfrencutils_gpu/create_xgrid_gpu.c \
+    libfrencutils_gpu/create_xgrid_gpu.h \
+    libfrencutils_gpu/create_xgrid_utils_gpu.c \
+    libfrencutils_gpu/create_xgrid_utils_gpu.h \
+    libfrencutils_gpu/general_utils_gpu.c \
+    libfrencutils_gpu/general_utils_gpu.h
 
-SUBDIRS += man \
-           tests
-
-# Shortcut targets to make it easier to run (very) expensive tests.
-check-expensive:
-	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
-check-very-expensive:
-	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes
+libfrencutils_gpu_libfrencutils_gpu_a_CFLAGS = \
+    $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils

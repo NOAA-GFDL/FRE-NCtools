@@ -36,12 +36,12 @@ EXAMPLES
 
 Generate a regional grid for tile 1 (_regional_grid.tile1.nc_), and
 the regional mosaic file (_regional_mosaic.nc_).
-
+// cspell:disable
 ----
 $ make_regional_mosaic --global_mosaic C48_mosaic.nc \
     --regional_file rregionatmos_4xdaily.tile1.nc
 ----
-
+//cspell:enable
 BUGS
 ----
 Open bug reports at {package_bugreport}.

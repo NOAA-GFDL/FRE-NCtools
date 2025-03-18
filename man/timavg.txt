@@ -35,7 +35,7 @@ Average time (instead of end time) for t-axis values
 *-W*::
 Suppress warning messages (use with caution).
 
-*-w* _wght_::
+*-w* _weight_::
 Minimum fraction of missing data needed for valid data. Defaults to 0.0.
 
 *-o* _ofile_::

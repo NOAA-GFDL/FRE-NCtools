@@ -1,3 +1,6 @@
+# cspell:ignore ldflag lnetcdff lnetcdf
+# cspell:ignore FCCPPFLAGS FCLDFLAGS
+# cspell:ignore xccache
 # ===========================================================================
 #      https://www.gnu.org/software/autoconf-archive/ax_lib_netcdf4.html
 # ===========================================================================
@@ -347,7 +350,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [use netcdf])], [AS_VAR_SET([ax_netcdf_mo
 FCFLAGS=$_ax_fc_lib_netcdf_save_FCFLAGS
 ])
 # Check to see if the F90 bindings are usable in the netcdf library.  As we
-# already know if the netCDF Fortran library is available, we can shortcircuit
+# already know if the netCDF Fortran library is available, we can short circuit
 # this test using the results above.
 # Some compilers will not correctly mangle the module routine names unless the
 # file extension is .f90.  We will switch the file extension for this test to

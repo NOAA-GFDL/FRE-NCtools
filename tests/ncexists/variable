@@ -21,24 +21,13 @@
 if test "$VERBOSE" = yes
 then
     set -x
-    command -v split_ncvars.pl --version
+    command -v ncexists
+    ncexists --version
 fi
 
-. ${srcdir=.}/init.sh; path_prepend_ ../../src
+. "${srcdir=.}/init.sh"
 
-# Need to use the included list_ncvars.sh script.  Otherwise,
-# split_ncvars will look for list_ncvars.sh in the installed bin
-# directory.
-export LIST_NCVARS=$(readlink -f ../../src/list_ncvars.sh)
+"${top_srcdir=../..}/tests/ncexists/create-test-file.sh" || framework_failure_ "Failed to create test file"
 
-# list_ncvars.sh needs to know where to find the built list_ncvars
-# executable.
-export PKGLIBEXECDIR=$(readlink -f ../../src)
-
-# Use the test netCDF files from plevel
-${builddir=..}/create_plevel_test_ncfile || framework_failure_ "failed to create test files"
-
-# Run split_ncvars.pl
-output=$(split_ncvars.pl -p -VVV test_input.nc) || fail_ split_ncvars.pl test_input.nc failed
-# Check for expected output
-grep -q 'var=temp; timename=time; vlist=temp,ps,pk,bk' <<< "$output" || fail_ output does not contain expected output
+test $(ncexists -f test.nc -v var) -eq 1 || fail_ ncexists did not find the var variable
+test $(ncexists -f test.nc -v does_not_exist) -eq 0 || fail_ ncexists found a non-existent variable

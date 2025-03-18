@@ -6,9 +6,42 @@ combine_programs = \
   mppnccombine \
   scatter-ncc
 
+grid_programs = \
+  fregrid \
+  make_coupler_mosaic \
+  make_hgrid \
+  make_land_domain \
+  make_regional_mosaic \
+  make_remap_file \
+  make_quick_mosaic \
+  make_solo_mosaic \
+  make_topog \
+  make_vgrid \
+  remap_land \
+  river_regrid \
+  runoff_regrid \
+  transfer_to_mosaic_grid
+
+if WITH_MPI
+  grid_programs += \
+    fregrid_parallel \
+    make_coupler_mosaic_parallel \
+    make_topog_parallel \
+    remap_land_parallel \
+    runoff_regrid_parallel
+endif
+
+if ENABLE_GPU
+  grid_programs += fregrid_gpu
+endif
+
 bin_PROGRAMS = \
   decompress-ncc \
-  $(combine_programs)
+  check_mask \
+  mppncscatter \
+  ncexists \
+  $(combine_programs) \
+  $(grid_programs)
 
 bin_SCRIPTS = \
   combine_restarts \
@@ -39,14 +72,21 @@ libnctf_a_SOURCES = \
   nct_nc_utils.F90
 nodist_libnctf_a_SOURCES = \
   nct_nc_utils.$(FC_MODEXT)
-BUILT_SOURCES += nct_nc_utils.$(FC_MODEXT)
+BUILT_SOURCES += \
+  nct_nc_utils.$(FC_MODEXT)
+nct_nc_utils.o: nct_nc_utils.F90
 
 c_netcdf_ldadds = $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 f_netcdf_ldadds = $(NETCDF_FCLDFLAGS) $(NETCDF_FCLIBS) libnctf.a
 
-AM_FCFLAGS = $(FC_MODOUT)$(MODDIR)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
-AM_CFLAGS = $(NETCDF_CFLAGS)
-LDADD = libver.a $(NETCDF_LDFLAGS) $(RPATH_FLAGS)
+AM_FCFLAGS = $(FC_MODINC)$(@D) $(FC_MODOUT)$(@D)/.mods $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+AM_CFLAGS = $(NETCDF_CFLAGS) \
+  -I$(top_srcdir)/lib/libfrencutils
+LDADD = libver.a \
+  $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+  $(NETCDF_LDFLAGS) \
+  $(NETCDF_LIBS) \
+  $(RPATH_FLAGS)
 
 BUILT_SOURCES += version.inc
 version.inc: Makefile
@@ -102,12 +142,18 @@ do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \
 SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
 
 .F90_mod.$(FC_MODEXT):
-	@$(MKDIR_P) $(@D)
+	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+	cp $(@D)/.mods/$(@F) $(@D)/$(@F)
 
 .F90.$(FC_MODEXT):
-	@$(MKDIR_P) $(@D)
+	@$(MKDIR_P) $(@D)/.mods
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+	@cp $(@D)/.mods/$(@F) $(@D)/$(@F)
+
+# This is needed to override the Make default, implicit target
+.mod.o:
+	@:
 
 # ********************************************************* #
 # land_util programs                                        #
@@ -159,7 +205,7 @@ iceberg_comb.sh: iceberg-comb/iceberg_comb.sh.in Makefile
 	chmod +x iceberg_comb.sh
 
 # ********************************************************* #
-# plevel                                                    #
+# plevel.sh                                                 #
 # ********************************************************* #
 plevel.sh: plevel/plevel.sh.in Makefile
 	$(do_subst) < $(srcdir)/plevel/plevel.sh.in > plevel.sh
@@ -210,7 +256,193 @@ split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
 	$(do_subst) < $(srcdir)/split_ncvars/split_ncvars.pl.in > split_ncvars.pl
 	chmod +x split_ncvars.pl
 
-install-exec-hook:
-	ln $(DESTDIR)$(bindir)/split_ncvars.pl $(DESTDIR)$(bindir)/split_ncvars
-install-data-hook:
-	ln $(DESTDIR)$(mandir)/man1/split_ncvars.pl.1 $(DESTDIR)$(mandir)/man1/split_ncvars.1
+# ********************************************************* #
+# check_mask                                                #
+# ********************************************************* #
+check_mask_SOURCES = check-mask/check_mask.c
+
+# ********************************************************* #
+# make_remap_file                                           #
+# ********************************************************* #
+make_remap_file_SOURCES = cubic_utils/make_remap_file.c
+
+# ********************************************************* #
+# fregrid                                                   #
+# ********************************************************* #
+fregrid_SOURCES = \
+  fre-grid/bilinear_interp.c \
+  fre-grid/bilinear_interp.h \
+  fre-grid/conserve_interp.c \
+  fre-grid/conserve_interp.h \
+  fre-grid/fregrid_util.c \
+  fre-grid/fregrid_util.h \
+  fre-grid/fregrid.c
+fregrid_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+fregrid_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+fregrid_parallel_SOURCES = \
+  $(fregrid_SOURCES)
+
+fregrid_gpu_CFLAGS = \
+  -I$(top_srcdir)/lib/libfrencutils_gpu \
+  $(AM_CFLAGS) \
+  $(OPENACC_CFLAGS)
+
+fregrid_gpu_SOURCES = \
+  fregrid-gpu/conserve_interp_gpu.c \
+  fregrid-gpu/conserve_interp_gpu.h \
+  fregrid-gpu/interp_utils_gpu.c \
+  fregrid-gpu/interp_utils_gpu.h \
+  fregrid-gpu/fregrid_utils_gpu.c \
+  fregrid-gpu/fregrid_utils_gpu.h \
+  fregrid-gpu/fregrid_gpu.c
+
+fregrid_gpu_LDADD = \
+  $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a \
+  $(LDADD)
+
+# ********************************************************* #
+# make_coupler_mosaic                                       #
+# ********************************************************* #
+make_coupler_mosaic_SOURCES = \
+  make-coupler-mosaic/make_coupler_mosaic.c
+make_coupler_mosaic_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+make_coupler_mosaic_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+make_coupler_mosaic_parallel_SOURCES = \
+  $(make_coupler_mosaic_SOURCES)
+
+# ********************************************************* #
+# make_coupler_mosaic                                       #
+# ********************************************************* #
+make_hgrid_SOURCES = \
+  make-hgrid/create_conformal_cubic_grid.c \
+  make-hgrid/create_gnomonic_cubic_grid.c \
+  make-hgrid/create_grid_from_file.c \
+  make-hgrid/create_hgrid.h \
+  make-hgrid/create_lonlat_grid.c \
+  make-hgrid/make_hgrid.c
+
+# ********************************************************* #
+# make_land_domain                                          #
+# ********************************************************* #
+make_land_domain_SOURCES = \
+  make-land-domain/make_land_domain.c
+
+# ********************************************************* #
+# make_quick_mosaic                                         #
+# ********************************************************* #
+make_quick_mosaic_SOURCES = \
+  make-quick-mosaic/make_quick_mosaic.c
+
+# ********************************************************* #
+# make_regional_mosaic                                      #
+# ********************************************************* #
+make_regional_mosaic_SOURCES = \
+  make-regional-mosaic/make_regional_mosaic.c
+
+# ********************************************************* #
+# make_solo_mosaic                                          #
+# ********************************************************* #
+make_solo_mosaic_SOURCES = \
+  make-solo-mosaic/get_contact.c \
+  make-solo-mosaic/get_contact.h \
+  make-solo-mosaic/make_solo_mosaic.c
+
+# ********************************************************* #
+# make_topog                                                #
+# ********************************************************* #
+make_topog_SOURCES = \
+  make-topog/topog.c \
+  make-topog/topog.h \
+  make-topog/make_topog.c
+make_topog_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+make_topog_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+make_topog_parallel_SOURCES = \
+  $(make_topog_SOURCES)
+
+# ********************************************************* #
+# make_vgrid                                                #
+# ********************************************************* #
+make_vgrid_SOURCES = \
+  make-vgrid/create_vgrid.c \
+  make-vgrid/create_vgrid.h \
+  make-vgrid/make_vgrid.c
+
+# ********************************************************* #
+# mppncscatter                                              #
+# ********************************************************* #
+mppncscatter_SOURCES = \
+  mpp-ncscatter/common.h \
+  mpp-ncscatter/main.c \
+  mpp-ncscatter/mppncscatter.c \
+  mpp-ncscatter/mppncscatter.h \
+  mpp-ncscatter/opt.c \
+  mpp-ncscatter/opt.h \
+  mpp-ncscatter/scatterdim.c \
+  mpp-ncscatter/scatterdim.h \
+  mpp-ncscatter/strlist.c \
+  mpp-ncscatter/strlist.h \
+  mpp-ncscatter/util.h \
+  mpp-ncscatter/xmalloc.c \
+  mpp-ncscatter/xmalloc.h
+
+# ********************************************************* #
+# ncexists                                                  #
+# ********************************************************* #
+ncexists_SOURCES = \
+  nc-exists/ncexists.c
+
+# ********************************************************* #
+# remap_land                                                #
+# ********************************************************* #
+remap_land_SOURCES = \
+  remap-land/remap_land.c
+remap_land_parallel_SOURCES = \
+  $(remap_land_SOURCES)
+remap_land_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+remap_land_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+  $(LDADD)
+
+# ********************************************************* #
+# river_regrid                                              #
+# ********************************************************* #
+river_regrid_SOURCES = \
+  river-regrid/river_regrid.c
+
+# ********************************************************* #
+# runoff_regrid                                             #
+# ********************************************************* #
+runoff_regrid_SOURCES = \
+  runoff-regrid/runoff_regrid.c
+runoff_regrid_parallel_SOURCES = \
+  $(runoff_regrid_SOURCES)
+runoff_regrid_parallel_CFLAGS = \
+  -Duse_libMPI \
+  $(AM_CFLAGS)
+runoff_regrid_parallel_LDADD = \
+  $(top_builddir)/lib/libfrencutils/libfrencutils_mpi.a \
+  $(LDADD) \
+  $(MPI_CLDFLAGS)
+
+# ********************************************************* #
+# transfer_to_mosaic_grid                                   #
+# ********************************************************* #
+transfer_to_mosaic_grid_SOURCES = \
+  transfer-mosaic-grid/transfer_to_mosaic.c
