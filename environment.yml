@@ -1,0 +1,14 @@
+name: fre-nctools
+channels:
+  - conda-forge
+  - noaa-gfdl
+dependencies:
+ - autoconf
+ - automake
+ - libnetcdf
+ - netcdf-fortran
+ - nco
+ - hdf5=1.14.*=mpi*
+ - openmp
+ - mpich
+ - tcsh
