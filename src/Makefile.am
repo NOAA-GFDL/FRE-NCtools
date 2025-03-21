@@ -210,7 +210,9 @@ split_ncvars.pl: split_ncvars/split_ncvars.pl.in Makefile
 	$(do_subst) < $(srcdir)/split_ncvars/split_ncvars.pl.in > split_ncvars.pl
 	chmod +x split_ncvars.pl
 
-install-exec-hook:
-	ln $(DESTDIR)$(bindir)/split_ncvars.pl $(DESTDIR)$(bindir)/split_ncvars
-install-data-hook:
-	ln $(DESTDIR)$(mandir)/man1/split_ncvars.pl.1 $(DESTDIR)$(mandir)/man1/split_ncvars.1
+# TODO causes issues with distclean
+#install-exec-hook:
+#	ln $(DESTDIR)$(bindir)/split_ncvars.pl $(DESTDIR)$(bindir)/split_ncvars
+# TODO file not found, might run before docs are built
+#install-data-hook:
+#	ln $(DESTDIR)$(mandir)/man1/split_ncvars.pl.1 $(DESTDIR)$(mandir)/man1/split_ncvars.1

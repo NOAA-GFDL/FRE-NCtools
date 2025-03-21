@@ -1,0 +1,41 @@
+name: Create release draft with generated distribution file
+
+on:
+  push:
+    tags:
+      - 20*.*
+      - 20*.*.*
+
+jobs:
+  create-release-dist:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y nco which netcdf-bin libnetcdf-dev \
+          libnetcdff-dev mpich gcc gfortran asciidoc docbook-xsl docbook-xml \
+          python3 python3-numpy python3-pytest perl git make libtool autoconf 
+    - name: Configure
+      run: |
+        mkdir build && cd build
+        autoreconf -if ../configure.ac
+        ../configure
+    - name: Build and create distribution file
+      run: |
+        cd build
+        make
+        make distcheck
+        make dist
+    - name: Create release draft and upload file
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          build/fre-nctools-*.*.tar.gz
+          build/fre-nctools-*.*.*.tar.gz
+        draft: True
+        generate_release_notes: True
+        make_latest: True
