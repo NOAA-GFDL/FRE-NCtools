@@ -23,12 +23,12 @@ jobs:
       run: |
         mkdir build && cd build
         autoreconf -if ../configure.ac
-        ../configure --enable-mpi
+        ../configure
     - name: Build and create distribution file
       run: |
         cd build
         make
-        make -k distcheck
+        make distcheck
         make dist
     - name: Create release draft and upload file
       uses: softprops/action-gh-release@v2
