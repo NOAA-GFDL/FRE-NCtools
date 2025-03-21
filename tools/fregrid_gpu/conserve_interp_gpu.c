@@ -52,7 +52,6 @@ void setup_conserve_interp_gpu(int ntiles_input_grid, Grid_config *input_grid, i
 
     int nlon_output_cells = output_grid[otile].nxc;
     int nlat_output_cells = output_grid[otile].nyc;
-    int ncells_output_grid = nlon_output_cells*nlat_output_cells;
     int ngridpts_output_grid = (nlon_output_cells+1)*(nlat_output_cells+1);
 
     Grid_cells_struct_config output_grid_cells;
