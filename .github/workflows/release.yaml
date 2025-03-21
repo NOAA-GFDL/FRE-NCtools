@@ -3,7 +3,7 @@ name: Create release draft with generated distribution file
 on:
   push:
     tags:
-      - 20*.* # TODO update in 75 years
+      - 20*.*
       - 20*.*.*
 
 jobs:
@@ -37,3 +37,5 @@ jobs:
           build/fre-nctools-*.*.tar.gz
           build/fre-nctools-*.*.*.tar.gz
         draft: True
+        generate_release_notes: True
+        make_latest: True
