@@ -18,6 +18,7 @@
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
 #include <stdlib.h>
+#include <openacc.h>
 #include <stdio.h>
 #include <string.h>
 #include <netcdf.h>
@@ -80,7 +81,9 @@ void setup_conserve_interp_gpu(int ntiles_input_grid, Grid_config *input_grid, i
       get_bounding_indices_gpu(nlon_output_cells, nlat_output_cells, nlon_input_cells, nlat_input_cells,
                                output_grid[otile].latc, input_grid[itile].latc, &jlat_overlap_starts, &jlat_overlap_ends);
 
-      create_upbound_nxcells_arrays_on_device_gpu( ncells_input_grid, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
+      approx_nxcells_per_ij1 = (int *) acc_malloc(ncells_input_grid*sizeof(int));
+      ij2_start = (int *) acc_malloc(ncells_input_grid*sizeof(int));
+      ij2_end = (int *) acc_malloc(ncells_input_grid*sizeof(int));
 
       upbound_nxcells = get_upbound_nxcells_2dx2d_gpu( nlon_input_cells, nlat_input_cells,
                                                        nlon_output_cells, nlat_output_cells,
@@ -126,13 +129,25 @@ void setup_conserve_interp_gpu(int ntiles_input_grid, Grid_config *input_grid, i
         else mpp_error("conserve_interp: interp_method should be CONSERVE_ORDER1 or CONSERVE_ORDER2");
       } //conserve_order methods
 
-      free_upbound_nxcells_arrays_gpu(ncells_input_grid, &approx_nxcells_per_ij1, &ij2_start, &ij2_end);
+      acc_free(approx_nxcells_per_ij1); approx_nxcells_per_ij1 = NULL;
+      acc_free(ij2_start); ij2_start = NULL;
+      acc_free(ij2_end); ij2_end = NULL;
+
       free_input_grid_mask_gpu(ncells_input_grid, &input_grid_mask);
       delete_grid_from_device_gpu(ngridpts_input_grid, input_grid[itile].lonc, input_grid[itile].latc);
 
     } //input tile
 
-    free_grid_cell_struct_gpu( ncells_output_grid, &output_grid_cells);
+  
+    acc_free(output_grid_cells.lon_min);  output_grid_cells.lon_min = NULL;
+    acc_free(output_grid_cells.lon_max);  output_grid_cells.lon_max = NULL;
+    acc_free(output_grid_cells.lon_cent); output_grid_cells.lon_cent = NULL;
+    acc_free(output_grid_cells.lat_min);  output_grid_cells.lat_min = NULL;
+    acc_free(output_grid_cells.lat_max);  output_grid_cells.lat_max = NULL;
+    acc_free(output_grid_cells.area);     output_grid_cells.area = NULL;
+    acc_free(output_grid_cells.nvertices); output_grid_cells.nvertices=NULL;
+    acc_free(output_grid_cells.lon_vertices); output_grid_cells.lon_vertices = NULL;
+    acc_free(output_grid_cells.lat_vertices); output_grid_cells.lat_vertices = NULL;
     delete_grid_from_device_gpu(ngridpts_output_grid, output_grid[otile].lonc, output_grid[otile].latc);
 
   }//output tile
@@ -479,16 +494,14 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
 
     int ncells_output_grid = output_grid[otile].nxc * output_grid[otile].nyc;
     double *p_fieldout_data = NULL; p_fieldout_data = field_out[otile].data;
-    int *out_miss    = NULL ; out_miss = (int *)malloc(ncells_output_grid*sizeof(int));
-    double *out_area = NULL ; out_area = (double *)malloc(ncells_output_grid*sizeof(double));
 
-#pragma acc enter data create(p_fieldout_data[:ncells_output_grid],    \
-                              out_area[:ncells_output_grid],           \
-                              out_miss[:ncells_output_grid])
+    int *out_miss    = NULL ; out_miss = (int *) acc_malloc(ncells_output_grid*sizeof(int));
+    double *out_area = NULL ; out_area = (double *) acc_malloc(ncells_output_grid*sizeof(double));
 
-#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid], \
-                                  out_area[:ncells_output_grid],        \
-                                  out_miss[:ncells_output_grid])
+#pragma acc enter data create(p_fieldout_data[:ncells_output_grid])
+
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid]) deviceptr(out_area, \
+                                                                                  out_miss)
     for(int i=0; i<ncells_output_grid; i++) {
       p_fieldout_data[i] = 0.0;
       out_area[i] = 0.0;
@@ -498,9 +511,8 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
     for(int itile=0 ; itile<ntiles_input_grid; itile++) {
 
       int ncells_input_grid = input_grid[itile].nxc * input_grid[itile].nyc;
-      double *input_area_weight = NULL; input_area_weight = (double *)malloc(ncells_input_grid*sizeof(double));
+      double *input_area_weight = NULL; input_area_weight = (double *) acc_malloc(ncells_input_grid*sizeof(double));
 
-#pragma acc enter data create(input_area_weight[:ncells_input_grid])
       get_input_area_weight(weights_exist, cell_measures, cell_methods, field_in+itile,
                             input_grid+itile, input_area_weight);
 
@@ -512,25 +524,23 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
                            input_area_weight, field_in[itile].data, p_fieldout_data, out_area, out_miss,
                            field_in[itile].grad_mask, field_in[itile].grad_y, field_in[itile].grad_x,  missing);
 
-#pragma acc exit data delete(input_area_weight[:ncells_input_grid])
-      free(input_area_weight) ; input_area_weight=NULL;
+      acc_free(input_area_weight) ; input_area_weight=NULL;
 
     } //itile
 
     if(opcode & CHECK_CONSERVE) {
 #pragma acc enter data copyin(gsum_out)
-#pragma acc parallel loop present(out_area[:ncells_output_grid],\
-                                  p_fieldout_data[:ncells_output_grid])\
-                          reduction(+:gsum_out)
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid])\
+                          reduction(+:gsum_out)\
+                          deviceptr(out_area)
       for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] > 0) gsum_out += p_fieldout_data[i];
       }
     }
 
     if ( cell_methods == CELL_METHODS_SUM ) {
-#pragma acc parallel loop present(out_area[:ncells_output_grid], \
-                                  out_miss[:ncells_output_grid], \
-                                  p_fieldout_data[:ncells_output_grid])
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid]) deviceptr(out_miss)
+
       for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] == 0) {
           p_fieldout_data[i] = 0.0;
@@ -539,9 +549,9 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
       }
     }
     else {
-#pragma acc parallel loop present(out_area[:ncells_output_grid], \
-                                  out_miss[:ncells_output_grid], \
-                                  p_fieldout_data[:ncells_output_grid])
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid])\
+                                  deviceptr(out_area, \
+                                            out_miss)
       for(int i=0; i<ncells_output_grid; i++) {
         if(out_area[i] > 0) {
           p_fieldout_data[i] /= out_area[i];
@@ -553,7 +563,7 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
       }
 
       if( (target_grid) ) {
-#pragma acc parallel loop present(out_area[:ncells_output_grid])
+#pragma acc parallel loop deviceptr(out_area)
         for(int i=0; i<ncells_output_grid; i++) out_area[i] = 0.0;
 
         for(int itile=0 ; itile<ntiles_input_grid; itile++) {
@@ -564,10 +574,10 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
           int ixcells = minterp_gpu->nxcells;
 #pragma acc parallel loop present(minterp_gpu->output_parent_cell_index[:ixcells], \
                                   minterp_gpu->input_parent_cell_index[:ixcells], \
-                                  minterp_gpu->xcell_area[:ixcells],         \
-                                  out_area[:ncells_output_grid])\
+                                  minterp_gpu->xcell_area[:ixcells])\
                            copyin(p_fieldin_area[:ncells_input_grid],\
-                                  p_gridin_area[:ncells_input_grid])
+                                  p_gridin_area[:ncells_input_grid])\
+                            deviceptr(out_area)
           for(int ix=0; ix<ixcells; ix++) {
             int ij2 = minterp_gpu->output_parent_cell_index[ix];
             int ij1 = minterp_gpu->input_parent_cell_index[ix];
@@ -575,8 +585,9 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
             if(cell_measures ) out_area[ij2] += (area*p_fieldin_area[ij1]/p_gridin_area[ij1]);
             else out_area[ij2] += area;
           }
-#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid], out_area[:ncells_output_grid], \
-                                  output_grid[otile].cell_area[:ncells_output_grid])
+#pragma acc parallel loop present(p_fieldout_data[:ncells_output_grid], \
+                                  output_grid[otile].cell_area[:ncells_output_grid])\
+                           deviceptr(out_area)
           for(int i=0; i<ncells_output_grid; i++) {
             if(p_fieldout_data[i] != missing)
               p_fieldout_data[i] *=  (out_area[i]/output_grid[otile].cell_area[i]);
@@ -586,11 +597,10 @@ void do_scalar_conserve_interp_gpu(Interp_config_gpu *interp_gpu, int varid, int
     }
 
 #pragma acc exit data copyout(p_fieldout_data[:ncells_output_grid])
-#pragma acc exit data delete(out_area[:ncells_output_grid],\
-                             out_miss[:ncells_output_grid])
 
-    free(out_area); out_area = NULL;
-    free(out_miss); out_miss = NULL;
+    acc_free(out_area); out_area = NULL;
+    acc_free(out_miss); out_miss = NULL;
+
   } // otile
 
   /* conservation check if needed */
@@ -646,24 +656,24 @@ void get_input_area_weight(const int weights_exist, const int cell_measures, con
   p_weight = input_grid->weight;
 
   if(cell_methods == CELL_METHODS_SUM) {
-#pragma acc parallel loop present(input_area_weight[:ncells_input_grid]) copyin(p_gridin_area[:ncells_input_grid])
+#pragma acc parallel loop deviceptr(input_area_weight) copyin(p_gridin_area[:ncells_input_grid])
     for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i] = 1.0/p_gridin_area[i];
   }
 
   else if(cell_measures) {
-#pragma acc parallel loop present(input_area_weight[:ncells_input_grid]) \
+#pragma acc parallel loop deviceptr(input_area_weight) \
                           copyin(p_gridin_area[:ncells_input_grid],     \
                                  p_fieldin_area[:ncells_input_grid])
     for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i] = p_fieldin_area[i]/p_gridin_area[i];
   }
 
   else {
-#pragma acc parallel loop present(input_area_weight[:ncells_input_grid])
+#pragma acc parallel loop deviceptr(input_area_weight)
     for(int i=0 ; i<ncells_input_grid ; i++) input_area_weight[i]=1.0;
   }
 
   if(weights_exist){
-#pragma acc parallel loop independent present(input_area_weight[:ncells_input_grid]) copyin(p_weight[:ncells_input_grid])
+#pragma acc parallel loop independent deviceptr(input_area_weight) copyin(p_weight[:ncells_input_grid])
     for(int i=0; i<ncells_input_grid; i++) input_area_weight[i] *= p_weight[i];
   }
 
@@ -682,12 +692,11 @@ void interp_data_order1( const Grid_config *output_grid, const Grid_config *inpu
                          minterp_gpu->input_parent_cell_index[:nxcells],   \
                          minterp_gpu->output_parent_cell_index[:nxcells],  \
                          minterp_gpu->xcell_area[:nxcells],                  \
-                         input_area_weight[:ncells_input_grid],              \
-                         fieldout_data[:ncells_output_grid],                 \
-                         out_area[:ncells_output_grid],                      \
-                         out_miss[:ncells_output_grid])                 \
+                         fieldout_data[:ncells_output_grid])                 \
   copyin(fieldin_data[:ncells_input_grid])
-#pragma acc parallel loop
+#pragma acc parallel loop deviceptr(input_area_weight, \
+				    out_area, \
+				    out_miss)
   for(int ix=0; ix<nxcells; ix++) {
     int ij1 = minterp_gpu->input_parent_cell_index[ix];
     int ij2 = minterp_gpu->output_parent_cell_index[ix];
@@ -725,14 +734,13 @@ void interp_data_order2( const Grid_config *output_grid, const Grid_config *inpu
                           minterp_gpu->input_parent_cell_index[:nxcells], \
                           minterp_gpu->output_parent_cell_index[:nxcells], \
                           minterp_gpu->xcell_area[:nxcells],            \
-                          input_area_weight[:ncells_input_grid],        \
-                          fieldout_data[:ncells_output_grid],           \
-                          out_area[:ncells_output_grid],                \
-                          out_miss[:ncells_output_grid])                \
+                          fieldout_data[:ncells_output_grid])           \
   copyin(fieldin_data[:input_data_ncells],                              \
          grad_mask[:ncells_input_grid],                                 \
          grad_x[:ncells_input_grid], grad_y[:ncells_input_grid])
-#pragma acc parallel loop
+#pragma acc parallel loop deviceptr(input_area_weight, \
+		         	    out_area, \
+				    out_miss) 
   for(int ix=0; ix<nxcells; ix++){
     int ij1 = minterp_gpu->input_parent_cell_index[ix];
     int ij2 = minterp_gpu->output_parent_cell_index[ix];
