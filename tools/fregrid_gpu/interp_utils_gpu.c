@@ -78,14 +78,12 @@ void get_input_grid_mask_gpu(const int mask_size, double **input_grid_mask)
 {
 
   double *p_input_grid_mask;
-
-  *input_grid_mask = (double *)malloc(mask_size*sizeof(double));
+  *input_grid_mask = (double*) acc_malloc(mask_size*sizeof(double));
   p_input_grid_mask = *input_grid_mask;
 
-
-#pragma acc enter data create(p_input_grid_mask[:mask_size])
-#pragma acc parallel loop independent present(p_input_grid_mask[:mask_size])
+#pragma acc parallel loop independent deviceptr(p_input_grid_mask)
   for( int i=0 ; i<mask_size; i++) p_input_grid_mask[i]=1.0;
+
 
 }
 
@@ -95,7 +93,6 @@ void free_input_grid_mask_gpu(const int mask_size, double **input_grid_mask)
 
   p_input_grid_mask = *input_grid_mask;
 
-#pragma acc exit data delete(p_input_grid_mask[:mask_size])
-  free(p_input_grid_mask);
+  acc_free(p_input_grid_mask);
   p_input_grid_mask = NULL;
 }

@@ -653,26 +653,26 @@ void get_grid_cell_struct_gpu( const int nlon, const int nlat, const Grid_config
   int ncells=nlon*nlat;
   int npts=(nlon+1)*(nlat+1);
 
-  grid_cells->lon_min   = (double *)malloc(ncells*sizeof(double));
-  grid_cells->lon_max   = (double *)malloc(ncells*sizeof(double));
-  grid_cells->lat_min   = (double *)malloc(ncells*sizeof(double));
-  grid_cells->lat_max   = (double *)malloc(ncells*sizeof(double));
-  grid_cells->lon_cent  = (double *)malloc(ncells*sizeof(double));
-  grid_cells->area      = (double *)malloc(ncells*sizeof(double));
-  grid_cells->nvertices = (int *)malloc(ncells*sizeof(int));
-  grid_cells->lon_vertices  = (double *)malloc(MAX_V*ncells*sizeof(double));
-  grid_cells->lat_vertices  = (double *)malloc(MAX_V*ncells*sizeof(double));
+  grid_cells->lon_min   = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->lon_max   = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->lat_min   = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->lat_max   = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->lon_cent  = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->area      = (double *) acc_malloc(ncells*sizeof(double));
+  grid_cells->nvertices = (int *) acc_malloc(ncells*sizeof(int));
+  grid_cells->lon_vertices  = (double *) acc_malloc(MAX_V*ncells*sizeof(double));
+  grid_cells->lat_vertices  = (double *) acc_malloc(MAX_V*ncells*sizeof(double));
 
-#pragma acc enter data create(grid_cells[:1])
-#pragma acc enter data create(grid_cells->lon_min[:ncells], grid_cells->lon_max[:ncells], \
-                              grid_cells->lat_min[:ncells], grid_cells->lat_max[:ncells], \
-                              grid_cells->lon_cent[:ncells], grid_cells->nvertices[:ncells],\
-                              grid_cells->area[:ncells])
-#pragma acc enter data create(grid_cells->lon_vertices[:MAX_V*ncells], \
-                              grid_cells->lat_vertices[:MAX_V*ncells])
-
-#pragma acc data present(grid_cells[:1], lon[:npts], lat[:npts])
-#pragma acc parallel loop independent
+#pragma acc data present(lon[:npts], lat[:npts])
+#pragma acc parallel loop independent deviceptr(grid_cells->lon_min, \
+                                                grid_cells->lon_max, \
+                                                grid_cells->lat_min, \
+                                                grid_cells->lat_max, \
+                                                grid_cells->lon_cent, \
+                                                grid_cells->area, \
+                                                grid_cells->nvertices, \
+                                                grid_cells->lon_vertices, \
+                                                grid_cells->lat_vertices)
   for(int icell=0; icell<ncells; icell++){
     int nvertices;
     double lon_vertices[MV], lat_vertices[MV];
@@ -700,32 +700,6 @@ void get_grid_cell_struct_gpu( const int nlon, const int nlat, const Grid_config
 
 }
 
-void free_grid_cell_struct_gpu( const int ncells, Grid_cells_struct_config *grid_cells)
-{
-
-#pragma acc exit data delete( grid_cells->lon_vertices,  \
-                              grid_cells->lat_vertices,  \
-                              grid_cells->lon_min,       \
-                              grid_cells->lon_max,       \
-                              grid_cells->lon_cent,      \
-                              grid_cells->lat_max,       \
-                              grid_cells->lat_min,       \
-                              grid_cells->nvertices,     \
-                              grid_cells->area)
-#pragma acc exit data delete(grid_cells)
-
-  free(grid_cells->lon_min);  grid_cells->lon_min = NULL;
-  free(grid_cells->lon_max);  grid_cells->lon_max = NULL;
-  free(grid_cells->lon_cent); grid_cells->lon_cent = NULL;
-  free(grid_cells->lat_min);  grid_cells->lat_min = NULL;
-  free(grid_cells->lat_max);  grid_cells->lat_max = NULL;
-  free(grid_cells->area);     grid_cells->area = NULL;
-  free(grid_cells->nvertices); grid_cells->nvertices=NULL;
-  free(grid_cells->lon_vertices); grid_cells->lon_vertices = NULL;
-  free(grid_cells->lat_vertices); grid_cells->lat_vertices = NULL;
-}
-
-
 void get_cell_vertices_gpu( const int icell, const int nlon, const double *lon, const double *lat, double *x, double *y )
 {
 
@@ -744,48 +718,6 @@ void get_cell_vertices_gpu( const int icell, const int nlon, const double *lon, 
   x[2] = lon[n2]; y[2] = lat[n2];
   x[3] = lon[n3]; y[3] = lat[n3];
 
-}
-
-void create_upbound_nxcells_arrays_on_device_gpu(const int n, int **approx_nxcells_per_ij1,
-                                                 int **ij2_start, int **ij2_end)
-{
-
-  int *p_approx_nxcells_per_ij1;
-  int *p_ij2_start;
-  int *p_ij2_end;
-
-  *approx_nxcells_per_ij1 = (int *)malloc(n*sizeof(int));
-  *ij2_start = (int *)malloc(n*sizeof(int));
-  *ij2_end = (int *)malloc(n*sizeof(int));
-
-  p_approx_nxcells_per_ij1 = *approx_nxcells_per_ij1;
-  p_ij2_start = *ij2_start;
-  p_ij2_end = *ij2_end;
-
-#pragma acc enter data copyin(p_approx_nxcells_per_ij1[:n],   \
-                              p_ij2_start[:n],                \
-                              p_ij2_end[:n])
-
-}
-
-void free_upbound_nxcells_arrays_gpu( const int n, int **approx_nxcells_per_ij1,
-                                      int **ij2_start, int **ij2_end)
-{
-  int *p_approx_nxcells_per_ij1;
-  int *p_ij2_start ;
-  int *p_ij2_end;
-
-  p_approx_nxcells_per_ij1 = *approx_nxcells_per_ij1;
-  p_ij2_start = *ij2_start;
-  p_ij2_end = *ij2_end;
-
-#pragma acc exit data delete(p_approx_nxcells_per_ij1[:n],  \
-                             p_ij2_start[:n],               \
-                             p_ij2_end[:n])
-
-  free(*approx_nxcells_per_ij1); *approx_nxcells_per_ij1 = NULL;
-  free(*ij2_start)             ; *ij2_start = NULL;
-  free(*ij2_end)               ; *ij2_end = NULL;
 }
 
 void copy_data_to_interp_on_device_gpu(const int nxcells, const int input_ncells, const int upbound_nxcells,
@@ -813,11 +745,12 @@ void copy_data_to_interp_on_device_gpu(const int nxcells, const int input_ncells
 #pragma acc enter data if(copy_xcentroid) create(interp_for_input_tile->dcentroid_lon[:nxcells], \
                                                  interp_for_input_tile->dcentroid_lat[:nxcells])
 
-#pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
-                         parent_input_index[:upbound_nxcells],        \
-                         parent_output_index[:upbound_nxcells],       \
-                         xcell_areas[:upbound_nxcells], interp_for_input_tile[:1])
-#pragma acc parallel loop independent async(0)
+#pragma acc data present(interp_for_input_tile[:1])
+#pragma acc parallel loop independent async(0) deviceptr(xcells_per_ij1, \
+		                                         approx_xcells_per_ij1, \
+							 parent_input_index, \
+							 parent_output_index, \
+							 xcell_areas)
     for(int ij1=0 ; ij1<input_ncells ; ij1++) {
       int xcells_before_ij1 = 0, approx_xcells=0 ;
 
@@ -836,12 +769,13 @@ void copy_data_to_interp_on_device_gpu(const int nxcells, const int input_ncells
     }
 
     if(copy_xcentroid==1) {
-#pragma acc data present(xcells_per_ij1[:input_ncells], approx_xcells_per_ij1[:input_ncells], \
-                         parent_input_index[:upbound_nxcells],        \
-                         parent_output_index[:upbound_nxcells],       \
-                         xcell_areas[:upbound_nxcells], interp_for_input_tile[:1], \
+#pragma acc data present(interp_for_input_tile[:1], \
                          xcell_dclon[:upbound_nxcells], xcell_dclat[:upbound_nxcells])
-#pragma acc parallel loop independent async(1)
+#pragma acc parallel loop independent async(1) deviceptr(xcells_per_ij1, \
+                                                         approx_xcells_per_ij1, \
+                                                         parent_input_index, \
+                                                         parent_output_index, \
+                                                         xcell_areas)
       for(int ij1=0 ; ij1<input_ncells ; ij1++) {
         int xcells_before_ij1 = 0, approx_xcells=0 ;
 
