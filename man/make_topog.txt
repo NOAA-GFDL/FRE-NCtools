@@ -1,3 +1,8 @@
+// Ignore these words with cspell
+// cspell:ignore topo
+// cspell:ignore --dont --dont_change_landmask
+// cspell:ignore ieast jeast iwest jwest
+
 make_topog(1)
 =============
 
@@ -18,7 +23,7 @@ make_topog can generate topography for any mosaic. The output file
 will contains the topography for each tile in the mosaic. The field name in
 the output topography file will be _depth_tile#_ and it is positive down.
 The topography data will be defined on model grid, the model grid size will be
-supergrid grid size divided by refinement (x_refine, y_refine, default is 2).
+super grid grid size divided by refinement (x_refine, y_refine, default is 2).
 *--mosaic* is a required option and all other options are optional, but
 some options are required depending on the choice of topog_type.
 Below specify the option (required or non-required) needed for every kind
@@ -37,7 +42,7 @@ Remap the topography onto the current grid from some source data file.
 
 _rectangular_basin_::
 
-Constructing a rectangular basin with a flat bottom. *--bottome_depth* are
+Constructing a rectangular basin with a flat bottom. *--bottom_depth* are
 optional arguments. Set bottom_depth to 0 to get all land topography.
 
 _gaussian_::
@@ -57,7 +62,7 @@ Generates an idealized not very realistic topography. *--bottom_depth*,
 
 _box_channel_::
 
-Generate a box_channel topography. The interiol of the grid box is a flot
+Generate a box_channel topography. The integral of the grid box is a float
 bottom. The boundary of the grid box is land except points
 [jwest_south:jwest_north] and [ieast_south:ieast_north]. *--jwest_south*,
 *--jwest_north*, *--ieast_south* and *--ieast_north* need to be specified.
@@ -81,15 +86,15 @@ Specify type of topography. Its value can be _realistic_, _rectangular_basin_,
 _gaussian_, _bowl_ or _idealized_. The default value is _realistic_.
 
 *--x_refine* _refinement_::
-Specify the refinement ratio of model grid vs supergrid ins x-direction. default
+Specify the refinement ratio of model grid vs super grid ins x-direction. default
 value 2.
 
 *--y_refine* _refinement_::
-Specify the refinement ratio of model grid vs supergrid ins y-direction. default
+Specify the refinement ratio of model grid vs super grid ins y-direction. default
 value 2.
 
 *--topog_file* _topog_file_::
-Specify name of topograhy file (e.g. scripps, navy_topo, ...)
+Specify name of topography file (e.g. scripps, navy_topo, ...)
 
 *--topog_field* _topog_field_::
 Specify name of topography field name in topog_file.
@@ -112,7 +117,7 @@ Specify height of gaussian bump as percentage of ocean depth. default value is
 0.5.
 
 *--gauss_scale* _width_::
-Specify width of gaussian bump as percentag e of basin width. Default value is
+Specify width of gaussian bump as percentage e of basin width. Default value is
 0.25.
 
 *--slope_x* _slope_::
@@ -123,16 +128,16 @@ is 0.
 Specify rise of the ocean floor to the north for the gaussian bump. Default
 value is 0.
 
-*--bowl_south* _boundry_::
+*--bowl_south* _boundary_::
 Specify southern boundary of Winton bowl. Default value is 60.
 
-*--bowl_north* _boundry_::
+*--bowl_north* _boundary_::
 Specify northern boundary of Winton bowl. Default value is 70.
 
-*--bowl_west* _boundry_::
+*--bowl_west* _boundary_::
 Specify western boundary of Winton bowl. Default value is 0.
 
-*--bowl_east* _boundry_::
+*--bowl_east* _boundary_::
 Specify eastern boundary of Winton bowl. Default value is 20.
 
 *--fill_first_row*::
@@ -142,7 +147,7 @@ Make first row of ocean model all land points for ice model.
 Apply filter to topography.
 
 *--round_shallow*::
-Make cells land if depth is less than 1/2 mimumim depth, otherwise make ocean.
+Make cells land if depth is less than 1/2 minimum depth, otherwise make ocean.
 
 *--fill_shallow*::
 Make cells less than minimum depth land.
@@ -189,7 +194,7 @@ Depth of the embayment. Default=600.0
 
 *--vgrid_file* _vgrid_file_::
 Specify the vertical grid file. When vgrid_file is specified, number of levels
-will be written out and topography could be ajusted when set
+will be written out and topography could be adjusted when set
 *--dont_adjust_topo* (remove_isolated_cells, restrict_partial_cells and
 enforce_min_depth) is not set.
 
@@ -259,7 +264,7 @@ $ make_topog --mosaic mosaic.nc --topog_type realistic \
 +
 ----
 $ make_topog --mosaic mosaic.nc --topog_type  rectangular_basin \
-    --bottome_depth 200
+    --bottom_depth 200
 ----
 
 . Generate 'box_channel' topography (with flat bottom topography 5000 meters).
