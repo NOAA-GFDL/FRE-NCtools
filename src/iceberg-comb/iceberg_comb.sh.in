@@ -321,6 +321,14 @@ then
     exit $EXIT_FAILURE
 fi
 
+# If all the iceberg files are empty, then there is no work to do.
+# Report this to the user and exit 0.
+if [ -z "$combine_files" ]
+then
+    echoerr "$script_name: Iceberg files are empty so no output file is written."
+    exit $EXIT_SUCCESS
+fi
+
 # Need to check if any files have no icebergs (the UNLIMITED dimension
 # has a zero length).  Remove these files from the list of files to
 # combine.
