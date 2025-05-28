@@ -27,10 +27,11 @@
 #include "mpp_domain.h"
 #include "mpp_io.h"
 #include "create_xgrid.h"
+#include "mosaic_util.h"
 
 char *usage[] = {
   "",
-  " transfer_to_mosaic_grid --input_file input_file                             ",
+  " transfer_to_mosaic_grid --input_file input_file --rotate_poly               ",
   "                                                                             ",
   " transfer_to_mosaic_grid transfers previous version grid file (The grid file ",
   " has field x_T.y_T ) into a mosaic grid. The input file could be a ocean     ",
@@ -42,6 +43,11 @@ char *usage[] = {
   "                                                                             ",
   "--input_file input_file  The file name of previous version grid.             ",
   "                                                                             ",
+  "OPTIONAL:                                                                    ",
+  "                                                                             ",
+  "--rotate_poly            Set to calculate polar polygon areas by calculating ",
+  "                         the area of a copy of the polygon, with the copy    ",
+  "                         being rotated far away from the pole.               ",
   NULL};  
 const int MAXBOUNDS = 100;
 const int STRINGLEN = 255;
@@ -81,11 +87,13 @@ int main(int argc, char* argv[])
 
   int is_coupled_grid = 0, is_ocean_only =1; 
   int interp_order=1;
+  int rotate_poly=0;
   
   int option_index;
   static struct option long_options[] = {
     {"input_file",       required_argument, NULL, 'o'},
     {"mosaic_dir",       required_argument, NULL, 'd'},    
+    {"rotate_poly",      no_argument,       NULL, 'n'},
     {NULL, 0, NULL, 0}
   };
 
@@ -103,6 +111,9 @@ int main(int argc, char* argv[])
       case 'd':
         strcpy(mosaic_dir, optarg);
 	break;
+      case 'n':
+        rotate_poly = 1;
+	break;
       case '?':
       errflg++;	
     }
@@ -117,7 +128,8 @@ int main(int argc, char* argv[])
     contact_tile1[n]=0; contact_tile2[n]=0;
   }
 			  
-  
+  if(rotate_poly) set_rotate_poly_true();
+
   if(mpp_field_exist(old_file, "AREA_ATMxOCN") ) is_coupled_grid = 1;
   if(mpp_field_exist(old_file, "AREA_ATM") ) is_ocean_only = 0;
   if(mpp_field_exist(old_file, "DI_ATMxOCN") ) interp_order= 2;
