@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - configure.ac 
+    branches:
+      - 'main'
 jobs:
   tag_release:
     runs-on: ubuntu-latest
