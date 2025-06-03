@@ -17,20 +17,39 @@
 # License along with FRE-NCTools.  If not, see
 # <http://www.gnu.org/licenses/>.
 #***********************************************************************
-ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib \
-          src \
-          tools/simple_hydrog \
-          tools/simple_hydrog/postp \
-          tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr
+noinst_LIBRARIES = \
+    libnfu/libnfu.a \
+	libfrencutils/libfrencutils.a
 
-SUBDIRS += man \
-           tests
+if WITH_MPI
+    noinst_LIBRARIES += \
+        libfrencutils/libfrencutils_mpi.a
+endif
 
-# Shortcut targets to make it easier to run (very) expensive tests.
-check-expensive:
-	$(MAKE) check RUN_EXPENSIVE_TESTS=yes
-check-very-expensive:
-	$(MAKE) check-expensive RUN_VERY_EXPENSIVE_TESTS=yes
+if ENABLE_GPU
+    noinst_LIBRARIES += \
+		libfrencutils_gpu/libfrencutils_gpu.a
+endif
+
+AM_CFLAGS = $(NETCDF_CFLAGS)
+AM_FCFLAGS =  $(FC_MODOUT)$(@D) $(FC_DEFAULT_REAL_KIND8_FLAG) $(NETCDF_FCFLAGS)
+LDADD = $(NETCDF_LDFLAGS) $(NETCDF_LIBS) $(RPATH_FLAGS)
+
+# Items to handle Fortran module files
+SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
+
+.F90_mod.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+
+.F90.$(FC_MODEXT):
+	@$(MKDIR_P) $(@D)
+	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
+
+clean-local:
+	$(RM) *.$(FC_MODEXT)
+
+include $(top_srcdir)/lib/libnfu/local.mk
+include $(top_srcdir)/lib/libfrencutils/local.mk
+include $(top_srcdir)/lib/libfrencutils_gpu/local.mk

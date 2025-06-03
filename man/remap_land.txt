@@ -1,0 +1,153 @@
+remap_land(1)
+=============
+
+NAME
+----
+
+remap_land - remap land restart file from between mosaic grids
+
+SYNOPSIS
+--------
+[verse]
+remap_land --src_mosaic src_mosaic --src_restart src_restart
+           --dst_mosaic dst_mosaic --dst_restart dst_restart
+           --dst_cold_restart dst_cold_restart
+           --land_src_restart land_src_restart
+           --land_dst_cold_restart land_dst_cold_restart
+           [--remap_file remap_file] [--print_memory]
+
+DESCRIPTION
+-----------
+
+remap_land remap land restart file from one mosaic grid to another
+mosaic grid.
+
+OPTIONS
+-------
+
+*--src_mosaic* _src_mosaic_::
+
+specify the source mosaic information. This file contains list of tile
+files which specify the grid information for each tile.
+
+*dst_mosaic* _dst_mosaic_::
+
+specify the destination mosaic information. This file contains list of
+tile files which specify the grid information for each tile.
+
+*src_restart* _src_restart_::
+
+specify the source restart file.
+
+*dst_restart* _dst_restart_::
+
+specify the restart file to be generated on destination grid.
+
+*dst_cold_restart* _file_::
+
+specify the cold restart file destination grid. This is the input
+file. The dst_cold_restart_file could be obtained by running the
+experiment for 1 day with --dst_mosaic using cold restart.
+
+*file_type* _file_type_::
+
+specify file type. Its value could be 'land', 'cana', 'snow', 'glac',
+'lake', 'soil' or 'vegn'. when file_type is 'cana' or 'snow', need to
+specify --land_src_restart and --land_cold_restart
+
+*land_src_restart* _file_::
+
+specify the source file of land.res.nc. It is required when the
+restart file is snow.res or cana.res
+
+*land_dst_cold_restart* _file_::
+
+specify the destination file of land.res.nc. It is required when the
+restart file is snow.res or cana.res
+
+*remap_file* _remap_file_::
+
+specify the file name that saves remapping information. If remap_file
+is specified and the file does not exist, remapping information will
+be calculated and stored in remap_file. If remap_file is specified and
+the file exists, remapping information will be read from remap_file.
+
+*--print_memory*::
+
+debug memory usage when it is set
+
+EXAMPLES
+--------
+
+In this example, we will remap land restart files from C192 mosaic
+onto C384 mosaic.
+
+. Run model with C384 grid using cold restart for land. This generates
+dst_cold_restart files.
+
+. Create remapping file and remap land.res file.
++
+----
+$ remap_land --file_type land --src_mosaic C192_mosaic.nc \
+   --dst_mosaic c384_mosaic.nc --src_restart src_restart/land.res \
+   --dst_restart dst_restart/land.res \
+   --dst_cold_restart dst_cold_restart/land.res \
+   --remap_file remap_file_C192_to_C384 --print_memory
+----
+
+. Remap soil, snow, cana, glac, lake, vegn1, vegn2.
++
+----
+for type in soil snow cana glac lake vegn1 vegn2
+do
+   if [ "$type" = "vegn1" -o "$type" = "vegn2" ]
+   then
+      filetype='vegn'
+   else
+      filetype=$type
+   fi
+   remap_land --file_type $filetype --src_mosaic C192_mosaic.nc \
+      --dst_mosaic c384_mosaic.nc --src_restart src_restart/$type.res \
+      --dst_restart dst_restart/$type.res \
+      --dst_cold_restart dst_cold_restart/$type.res \
+      --land_src_restart src_restart/land.res \
+      --land_cold_restart dst_cold_restart/land.res \
+      --remap_file remap_file_C192_to_C384 \
+      --print_memory
+done
+----
+
+. Remap static_vegn if needed
++
+----
+$ remap_land --file_type vegn --src_mosaic C192_mosaic.nc \
+      --dst_mosaic c384_mosaic.nc --src_restart src_restart/static_vegn \
+      --dst_restart dst_restart/static_vegn \
+      --dst_cold_restart dst_cold_restart/vegn1.res \
+      --land_src_restart src_restart/land.res \
+      --land_cold_restart dst_cold_restart/land.res \
+      --remap_file remap_file_C192_to_C384 \
+      --print_memory
+----
+
+BUGS
+----
+Open bug reports at {package_bugreport}.
+
+AUTHORS
+-------
+Zhi Liang
+
+COPYRIGHT AND LICENSE
+---------------------
+Copyright {copyright_year} Geophysical Fluid Dynamics Laboratory
+
+FRE-NCTools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FRE-NCTools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.

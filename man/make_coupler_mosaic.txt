@@ -14,18 +14,19 @@ make_coupler_mosaic --atmos_mosaic _file_name_ --ocean_mosaic _file_name_ --ocea
 DESCRIPTION
 -----------
 
-make_coupler_mosaic generates three exchange grids for the FMS coupler. The
-output file includes exchange grid files for fluxes between atmosphere and
-surface (sea ice and land), exchange grid files for runoff between land and sea
-ice. There might be more than one exchange grid files between two model solo
-mosaic because there might be multiple tiles in a solo mosaic. The exchange grid
-information is between model grid, not between supergrid. We assume the
-refinement ratio between model grid and supergrid is 2. Currently we only output
-the exchange grid on T-cell. Besides generating the exchange grid files,
-make_coupler_mosaic also generates the coupler mosaic file (the file name will
-be mosaic_name.nc) which contains the atmos, land and ocean mosaic path, ocean
-mosaic topog path and exchange grid file path. make_coupler_mosaic expects
-NetCDF format input.
+make_coupler_mosaic generates three exchange grids for the FMS
+coupler. The output file includes exchange grid files for fluxes
+between atmosphere and surface (sea ice and land), exchange grid files
+for runoff between land and sea ice. There might be more than one
+exchange grid files between two model solo mosaic because there might
+be multiple tiles in a solo mosaic. The exchange grid information is
+between model grid, not between super grid. We assume the refinement
+ratio between model grid and super grid is 2. Currently we only output
+the exchange grid on T-cell. Besides generating the exchange grid
+files, make_coupler_mosaic also generates the coupler mosaic file (the
+file name will be mosaic_name.nc) which contains the atmos, land and
+ocean mosaic path, ocean mosaic topog path and exchange grid file
+path. make_coupler_mosaic expects NetCDF format input.
 
 OPTIONS
 -------

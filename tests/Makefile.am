@@ -24,7 +24,7 @@ else
 skipflag=""
 endif
 
-AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/tools/libfrencutils
+AM_CFLAGS = $(NETCDF_CFLAGS) -I$(top_builddir)/src -I$(top_srcdir)/lib/libfrencutils
 AM_FCFLAGS = -I$(top_builddir)/src
 LDADD = -L$(top_builddir)/src -lver $(NETCDF_LDFLAGS) $(NETCDF_LIBS)
 
@@ -80,6 +80,12 @@ tools_tests = \
     make_regional_mosaic/make_regional_mosaic \
     make_quick_mosaic/coupled-model-quick \
     mppncscatter/xyt-decomp \
+    ncexists/a-without-v \
+    ncexists/global-attribute \
+    ncexists/no-g-or-v \
+    ncexists/nofile \
+    ncexists/variable \
+    ncexists/variable-attribute \
     fregrid/cubedsphere \
     fregrid/extrapolate \
     fregrid/latlon \
@@ -158,6 +164,7 @@ EXTRA_DIST = \
   make_hgrid/grid_spec.tile4.ncl \
   make_hgrid/grid_spec.tile5.ncl \
   make_hgrid/grid_spec.tile6.ncl \
+  ncexists/create-test-file.sh \
   simple_hydrology/river_regrid \
   $(TESTS)
 

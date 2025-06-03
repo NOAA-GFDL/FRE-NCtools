@@ -28,7 +28,9 @@ jobs:
         autoreconf -i ../configure.ac
         ../configure $MPI $QUAD_P || cat config.log
     - name: Build
-      run: make -C build -j
+      # Due to how some compilers handle the Fortran module files, we
+      # need to run the build twice
+      run: make -C build -j || make -C build -j
     - name: Run most tests (skip the slow ones)
       run: make -C build -j check
     - name: Save log file on failure

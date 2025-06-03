@@ -14,7 +14,7 @@ DESCRIPTION
 -----------
 list the variables from a set of netCDF files, based on the options
 provided.  Dimension variables are not printed.  The record dimension
-is not counted towards the dimension rank for non-static varibles.
+is not counted towards the dimension rank for non-static variables.
 
 Variables that end with "_T1", "_T2", and "_DT", and variables that
 contain only character arrays are skipped.

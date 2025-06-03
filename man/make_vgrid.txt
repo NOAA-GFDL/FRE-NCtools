@@ -1,10 +1,13 @@
+// Ignore these words with cspell
+// cspell:ignore nbnds bnds dbnds
+
 make_vgrid(1)
 =============
 
 NAME
 ----
 
-make_vgrid - make virtical grids for an FMS model
+make_vgrid - make vertical grids for an FMS model
 
 SYNOPSIS
 --------
@@ -17,13 +20,13 @@ DESCRIPTION
 make_vgrid is used to make a vertical grid for an FMS model.  It uses a
 piecewise monotonic shape preserving cubic-spline algorithm to calculate the
 grid cell location.  The output netCDF file contains information on the
-supergrid with grid size equal to the model grid size multiplied by a refinement
+super grid with grid size equal to the model grid size multiplied by a refinement
 factor of two.
 
 Two algorithms are provided for creating vertical grid: Monotonic cubic
 interpolation and the legacy algorithm that uses a cosine function to configure
 grid cell location. The monotonic cubic interpolation is developed by Russell
-Fiedler and the detail of the alrogithm is explained in
+Fiedler and the detail of the algorithm is explained in
 https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/moler/interp.pdf.
 More details of the algorithm is available in
 
@@ -54,7 +57,7 @@ Optional Flags
 ~~~~~~~~~~~~~~
 
 *--nz* _nz(1),...,nz(nbnds-1)_::
-Number of supergrid points (double number of model grid points) for each
+Number of super grid points (double number of model grid points) for each
 vertical regions of varying resolution.
 
 *--dbnds* _dbnds(1),...,dbnds(nbnds)_::
@@ -63,7 +66,7 @@ Nominal resolution of depth regions.
 *--stretch* _stretch_::
 stretching factor for last region. Default is 1 (no stretching)
 
-*--grid_name* _gridname_::
+*--grid_name* _grid_name_::
 Specify the grid name. The output grid file name will be grid_name.nc. The
 default value is vertical_grid.
 
@@ -77,14 +80,14 @@ used in MOM.
 EXAMPLES
 --------
 
-Example 1: Use monotoic cublic spline interpolation
+Example 1: Use monotonic cubic spline interpolation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----
 $ make_vgrid --nbnds 3 --bnds 10,200,1000 --nz 10,20
 ----
 
-will make a grid file with 60 supergrid cells, 30 model grid cells
+will make a grid file with 60 super grid cells, 30 model grid cells
 with refinement is 2.
 
 In order to generate regions of constant resolution the user should specify 3
@@ -111,11 +114,11 @@ Example 2: Use legacy algorithm
 make_vgrid --nbnds 3 --bnds 0.,220.,5500. --dbnds 10.,10.,367.14286 --center c_cell
 ----
 
-Will make a vertical grid similar to GFDL/CM2/ocn w/ 100 supergrid cells.
+Will make a vertical grid similar to GFDL/CM2/ocn w/ 100 super grid cells.
 
 SEE ALSO
 --------
-*make_hgrid*(1), *make_topo*(1)
+*make_hgrid*(1), *make_topog*(1)
 
 BUGS
 ----

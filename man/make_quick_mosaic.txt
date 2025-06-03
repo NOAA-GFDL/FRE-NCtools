@@ -4,7 +4,7 @@ make_quick_mosaic(1)
 NAME
 ----
 
-make_quick_mosaic - Generate a completel FMS coupled grid
+make_quick_mosaic - Generate a complete FMS coupled grid
 
 SYNOPSIS
 --------
