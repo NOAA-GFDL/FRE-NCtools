@@ -495,10 +495,15 @@ foreach my $file (@ifiles) {
     }    ### end of variable loop ###
 
     #--- extract fields for single file option ---
+    # Hard-code Netcdf-3 output format for single-file option
+    # FRE uses the single-file option exclusively for creating the static pp file, which does not work properly with Netcdf-4. This error results:
+    # ERROR NC_ELATEFILL (formerly NC_EFILLVALUE) Attempt to define fill value when data already exists
+    # HINT: NC_ELATEFILL errors can occur when NCO attempts to create, modify, or overwrite a _FillValue attribute
+    # for an existing variable in a netCDF4 file. The netCDF4 format (unlike netCDF3) does not permit this.
     if ( $Opt{onefile} ) {
         my $vlist = join ",", @vlist;
-        print "$ncks -h -A -v $vlist $file $Opt{onefile}\n" if $Opt{VERBOSE} > 0;
-        system("$ncks -h -A -v $vlist $file $Opt{onefile}");
+        print "$ncks -6 -h -A -v $vlist $file $Opt{onefile}\n" if $Opt{VERBOSE} > 0;
+        system("$ncks -6 -h -A -v $vlist $file $Opt{onefile}");
         $ncstatus += $?;
 
         my @ncatted_opts = set_ncatted_opts( $Opt{onefile}, tailname( $Opt{onefile} ) );
