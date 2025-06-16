@@ -145,6 +145,7 @@ TESTS = \
     split_ncvars/split_ncvars-i \
     split_ncvars/split_ncvars-l \
     split_ncvars/split_ncvars-o \
+    split_ncvars/split_ncvars-p \
     split_ncvars/split_ncvars-s \
     split_ncvars/split_ncvars-v \
     timeavg/timavg \
