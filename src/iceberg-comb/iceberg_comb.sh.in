@@ -330,17 +330,39 @@ do
     has_icebergs $f && combine_files="$combine_files $f"
 done
 
-# Run ncrcat on the files
-ncrcat_cmd="$ncrcat $combine_files $out_file"
-if [ $verbose -gt 0 ]
+# Normally, run ncrcat on the input files. However,
+# if all input files have no icebergs, then use one of the input files
+# as the output file, print a message, and exit normally.
+# This unambigously indicates that there are no icebergs,
+# and the iceberg model can read an iceberg restart with no icebergs.
+if [ -n "$combine_files" ]
 then
-    echoerr "debug1: Running '$ncrcat_cmd'"
-fi
-eval $ncrcat_cmd
-if [ $? -ne 0 ]
-then
-    echoerr "$script_name: Error during executing '$ncrcat_cmd'"
-    exit $EXIT_FAILURE
+    # Run ncrcat on the files
+    ncrcat_cmd="$ncrcat $combine_files $out_file"
+    if [ $verbose -gt 0 ]
+    then
+        echoerr "debug1: Running '$ncrcat_cmd'"
+    fi
+    eval $ncrcat_cmd
+    if [ $? -ne 0 ]
+    then
+        echoerr "$script_name: Error during executing '$ncrcat_cmd'"
+        exit $EXIT_FAILURE
+    fi
+else
+    # Copy first empty iceberg file to the output file
+    echoerr "debug1: Input files contain no icebergs; this is fine"
+    copy_cmd="cp ${in_files%% *} $out_file"
+    if [ $verbose -gt 0 ]
+    then
+        echoerr "debug1: Running '$copy_cmd'"
+    fi
+    $copy_cmd
+    if [ $? -ne 0 ]
+    then
+        echoerr "$script_name: Error during executing '$copy_cmd'"
+        exit $EXIT_FAILURE
+    fi
 fi
 
 ncatted_cmd="$ncatted -a NumFilesInSet,global,d,, $out_file"
