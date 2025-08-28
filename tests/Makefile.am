@@ -103,6 +103,7 @@ combine_tests = \
     combine_restarts/extra_options \
     iceberg_comb/check-valid-file \
     iceberg_comb/combine \
+    iceberg_comb/combine-mixed-icebergs \
     iceberg_comb/combine-no-icebergs \
     iceberg_comb/missing-file \
     iceberg_comb/outfile-exists \
