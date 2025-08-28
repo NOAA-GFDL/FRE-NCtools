@@ -139,7 +139,7 @@ checkIfIcebergs() {
 
 has_icebergs() {
     # This function will return 0 (true) if the file has icebergs,
-    # that is the UNLIMITED dimenion is >0.  The UNLIMITED dimension
+    # that is the UNLIMITED dimension is >0.  The UNLIMITED dimension
     # line, from ncdump:
     #    <var> = UNLIMITED ; //(<number> currently)
     #
