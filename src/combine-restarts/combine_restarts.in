@@ -54,7 +54,7 @@ verbose=0
 remove_files=0
 dryrun=0
 combineNccOpts=""
-mppCombOpts_default='-64 -h 16384 -m'
+mppCombOpts_default='-h 16384 -m'
 mppCombOpts="$mppCombOpts_default"
 
 while getopts :hC:M:nrvV OPT; do
@@ -119,7 +119,7 @@ do
     then
         echoerr "debug1: processing for combined file '${f}'"
     fi
-    inputFiles=$( ls -1 | @EGREP@ "${f}${patternGrepTail}" | xargs )
+    inputFiles=$( ls -1 | @EGREP@ "^${f}${patternGrepTail}" | xargs )
     if [ $( echo ${inputFiles} | wc -w ) -gt 0 ]
     then
         # Check if file is a compressed file
