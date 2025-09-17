@@ -24,17 +24,18 @@ requirements:
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::openmp
     - conda-forge::tcsh
+    - conda-forge::which
   run:
 
 test:
   commands:
     - echo 'yay! we made it!'
-    - pwd && ls
+    - echo "whereami? what is here...?" && pwd && ls
 #    - autoreconf -i
 #    - ./configure
-    - which timavg.csh
-    - timavg.csh --help
-    - make check RUN_EXPENSIVE_TESTS=no
+    - echo "which timavg is it...?  " && which timavg
+    - echo "timavg --help is...?" && timavg --help
+    - echo "make check RUN_EXPENSIVE_TESTS=no...?" && make check RUN_EXPENSIVE_TESTS=no
 #    - make check
 
 about:
