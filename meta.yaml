@@ -12,7 +12,7 @@ requirements:
   build:
     - conda-forge::nco
     - conda-forge::which
-    - conda-forge::netcdf4
+#   - conda-forge::netcdf4
     - conda-forge::libnetcdf
     - conda-forge::netcdf-fortran
     - conda-forge::mpich
