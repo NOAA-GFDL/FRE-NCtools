@@ -34,6 +34,7 @@ test:
 #    - ./configure
     - which timavg.csh
     - timavg.csh --help
+    - make check RUN_EXPENSIVE_TESTS=no
 #    - make check
 
 about:
