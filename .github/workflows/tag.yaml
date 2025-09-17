@@ -1,29 +1,30 @@
-name: Tag for release
-on:
-  push:
-    paths:
-      - configure.ac 
-    branches:
-      - 'main'
-jobs:
-  tag_release:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Get tag name
-      id: get-tag
-      run: echo "TAGNAME=`grep -o -E '?[0-9]{4}\.[0-9]{2}(\.[0-9]{2})?' configure.ac`" >> "$GITHUB_OUTPUT"
-    - name: Create tag
-      uses: actions/github-script@v5
-      env:
-        TAG: ${{ steps.get-tag.outputs.TAGNAME }}
-      with:
-        script: |
-          const title = process.env.TAG;
-          github.rest.git.createRef({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            ref: `refs/tags/${title}`,
-            sha: context.sha
-          })
+#name: Tag for release
+#on:
+#  push:
+#    paths:
+#      - configure.ac 
+#    branches:
+#      - 'main'
+#jobs:
+#  tag_release:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Checkout code
+#      uses: actions/checkout@v4
+#    - name: Get tag name
+#      id: get-tag
+#      run: echo "TAGNAME=`grep -o -E '?[0-9]{4}\.[0-9]{2}(\.[0-9]{2})?' configure.ac`" >> "$GITHUB_OUTPUT"
+#    - name: Create tag
+#      uses: actions/github-script@v5
+#      env:
+#        TAG: ${{ steps.get-tag.outputs.TAGNAME }}
+#      with:
+#        script: |
+#          const title = process.env.TAG;
+#          github.rest.git.createRef({
+#            owner: context.repo.owner,
+#            repo: context.repo.repo,
+#            ref: `refs/tags/${title}`,
+#            sha: context.sha
+#          })
+#
