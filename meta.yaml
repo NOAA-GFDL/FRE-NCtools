@@ -38,6 +38,7 @@ test:
     - echo "Testing combine-ncc program..." && which combine-ncc && (combine-ncc --help || echo "combine-ncc help command completed")
     - echo "Testing fregrid program..." && which fregrid && (fregrid --help || echo "fregrid help command completed")
     - echo "Testing make_hgrid program..." && which make_hgrid && (make_hgrid --help || echo "make_hgrid help command completed")
+    - echo "Testing check_mask program..." && which check_mask && (check_mask 2>&1 | grep -q "check_mask --grid_file" && echo "check_mask usage displayed correctly" || echo "check_mask found")
     
     # Test some key script utilities exist
     - echo "Testing list_ncvars.sh script..." && which list_ncvars.sh && echo "list_ncvars.sh found"
