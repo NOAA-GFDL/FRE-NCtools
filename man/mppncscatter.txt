@@ -1,3 +1,6 @@
+// Ignore these words in cspell
+// cspell:ignore xdims ydims
+
 mppncscatter(1)
 ===============
 

@@ -23,11 +23,11 @@ OPTIONS
 *-D debug-level*::
 Specifies level of debug output verbosity
 
-*-i ndiv_x*::
+*-i n_div_x*::
 Specifies number of divisions in x-direction (Same
 as io_layout(1))
 
-*-j ndiv_y*::
+*-j n_div_y*::
 Specifies number of divisions in y-direction (Same
 as io_layout(2))
 

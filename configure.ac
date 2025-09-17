@@ -22,7 +22,7 @@
 AC_PREREQ([2.63])
 AC_INIT(
   [FRE NCTools],
-  [2024.05],
+  [2024.05.02],
   [https://github.com/NOAA-GFDL/FRE-NCtools/issues],
   [fre-nctools],
   [https://github.com/NOAA-GFDL/FRE-NCtools])
@@ -199,6 +199,12 @@ AX_LIB_NETCDFF()
 if test "$with_netcdf_fortran" = "no"; then
   AC_MSG_ERROR([Unable to find NetCDF Fortran library.])
 fi
+
+# Check if using an external libFMS library
+GX_LIB_FMS()
+AS_IF([test "$with_fms" = "no"], [
+AC_MSG_NOTICE([Using the FRE-NCtools libfmslite])])
+AM_CONDITIONAL([WITHOUT_EXTERN_FMS], [test "$with_fms" = "no"])
 AC_LANG_POP([Fortran])
 
 # Check if Linux sched_getaffinity is available
@@ -233,6 +239,7 @@ AC_DEFINE([COPYRIGHT_YEAR], ["copyright_year"],
           [Year to place in Copyright notices printed with --version information])dnl
 AC_SUBST(COPYRIGHT_YEAR)dnl
 
+# cspell:ignore RPDIR RPATHFLAGS
 # Code for setting rpath based ncview's configure.in code.
 AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
   for word in $NETCDF_LDFLAGS $NETCDF_FCLDFLAGS
@@ -253,41 +260,14 @@ AC_SUBST(RPATH_FLAGS) dnl
 # Output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
-                 lib/libnfu/Makefile
+                 lib/Makefile
                  man/Makefile
                  src/Makefile
                  tests/Makefile
-                 tools/libfrencutils/Makefile
-                 tools/libfrencutils_gpu/Makefile
-                 tools/check_mask/Makefile
-                 tools/cubic_utils/Makefile
-                 tools/fregrid/Makefile
-                 tools/fregrid_gpu/Makefile
-                 tools/make_coupler_mosaic/Makefile
-                 tools/make_hgrid/Makefile
-                 tools/make_land_domain/Makefile
-                 tools/make_quick_mosaic/Makefile
-                 tools/make_regional_mosaic/Makefile
-                 tools/make_solo_mosaic/Makefile
-                 tools/make_topog/Makefile
-                 tools/make_vgrid/Makefile
-                 tools/mppncscatter/Makefile
-                 tools/ncexists/Makefile
-                 tools/nc_null_check/Makefile
-                 tools/remap_land/Makefile
-                 tools/river_regrid/Makefile
-                 tools/runoff_regrid/Makefile
-                 tools/transfer_to_mosaic_grid/Makefile
                  tools/simple_hydrog/Makefile
                  tools/simple_hydrog/postp/Makefile
                  tools/simple_hydrog/lakes/Makefile
                  tools/simple_hydrog/rmvpr/Makefile
-                 tools/simple_hydrog/libfmslite/Makefile
-                 t_gpu/Makefile
-                 t_gpu/test_read_remap_file/Makefile
-                 t_gpu/test_get_grid_cell_struct/Makefile
-                 t_gpu/test_get_upbound_nxcells_2dx2d/Makefile
-                 t_gpu/test_get_interp_order1/Makefile
 ])
 
 AC_OUTPUT

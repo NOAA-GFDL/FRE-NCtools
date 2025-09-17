@@ -1,3 +1,7 @@
+// Ignore these words in cspell
+// cspell:ignore hght sphum zsurf
+// cspell:ignore plevel.nc
+
 plevel.sh(1)
 ============
 
@@ -43,9 +47,9 @@ printed.
 *-o* _out_file_::
 The output file name. (Default: plevel.nc)
 
-*-p* _plevs_::
+*-p* _pressure_levels_::
 A list of output pressure levels in pascals (with no decimal point).
-The default is the 17 NCEP reananalysis levels (bottom to top). The
+The default is the 17 NCEP reanalysis levels (bottom to top). The
 list must be in quotes and values must be separated by a space.
 
 *-d* _value_::

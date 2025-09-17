@@ -19,41 +19,15 @@
 #***********************************************************************
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib/libnfu \
+SUBDIRS = lib \
           src \
-          tools/libfrencutils \
-          tools/check_mask \
-          tools/cubic_utils \
-          tools/fregrid \
-          tools/make_coupler_mosaic \
-          tools/make_hgrid \
-          tools/make_land_domain \
-          tools/make_quick_mosaic \
-          tools/make_regional_mosaic \
-          tools/make_solo_mosaic \
-          tools/make_topog \
-          tools/make_vgrid \
-          tools/mppncscatter \
-          tools/ncexists \
-          tools/remap_land \
-          tools/river_regrid \
-          tools/runoff_regrid \
-          tools/transfer_to_mosaic_grid \
           tools/simple_hydrog \
-          tools/simple_hydrog/libfmslite \
           tools/simple_hydrog/postp \
           tools/simple_hydrog/lakes \
-          tools/simple_hydrog/rmvpr \
-          tools/nc_null_check
+          tools/simple_hydrog/rmvpr
 
 SUBDIRS += man \
            tests
-
-if ENABLE_GPU
-SUBDIRS += tools/libfrencutils_gpu
-SUBDIRS += tools/fregrid_gpu
-SUBDIRS += t_gpu
-endif
 
 # Shortcut targets to make it easier to run (very) expensive tests.
 check-expensive:

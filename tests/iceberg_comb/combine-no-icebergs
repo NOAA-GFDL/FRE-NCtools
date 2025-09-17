@@ -35,7 +35,7 @@ fi
 ncgen -o iceberg_test.nc.0000 << EOF || framework_failure_
 netcdf iceberg_test.nc {
 dimensions:
-  i = UNLIMITED ; // (5 currently)
+  i = UNLIMITED ; // (0 currently)
 variables:
   double lon(i) ;
     lon:long_name = "longitude" ;
@@ -50,9 +50,7 @@ variables:
                 :file_format_minor_version = 1 ;
                 :time_axis = 0 ;
 data:
-  i = 5 ;
-  lon = 1, 2, 3, 4, 5 ;
-  lat = 13, 12, 11, 10, 9 ;
+  i = 0 ;
 }
 EOF
 
@@ -81,7 +79,7 @@ EOF
 ncgen -o iceberg_test.nc.0002 << EOF || framework_failure_
 netcdf iceberg_test.nc {
 dimensions:
-  i = UNLIMITED ; // (8 currently)
+  i = UNLIMITED ; // (0 currently)
 variables:
   double lon(i) ;
     lon:long_name = "longitude" ;
@@ -96,9 +94,7 @@ variables:
                 :file_format_minor_version = 1 ;
                 :time_axis = 0 ;
 data:
-  i = 5 ;
-  lon = 6, 7, 8, 9, 10, 11, 12, 13 ;
-  lat = 8, 7, 6, 5, 4, 3, 2, 1 ;
+  i = 0 ;
 }
 EOF
 

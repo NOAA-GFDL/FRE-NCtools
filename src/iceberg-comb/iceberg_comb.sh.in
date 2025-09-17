@@ -78,7 +78,7 @@ find_command() {
 get_NumFilesInSet() {
     # Check for the global attribute "NumFilesInSet". If that attribute is
     # found, the function will return the number of files in this set.  If not
-    # found, the funcation will return -1. Get the output from ncdump
+    # found, the function will return -1. Get the output from ncdump
     local output=$($ncdump -h $1)
     local rtn=-1 # Return value if NumFilesInSet not in file
     numFilesInSet=$(echo $output | sed -n 's/.*:NumFilesInSet *= *\([0-9][0-9]*\) *;.*/\1/p')
@@ -139,7 +139,7 @@ checkIfIcebergs() {
 
 has_icebergs() {
     # This function will return 0 (true) if the file has icebergs,
-    # that is the UNLIMITED dimenion is >0.  The UNLIMITED dimension
+    # that is the UNLIMITED dimension is >0.  The UNLIMITED dimension
     # line, from ncdump:
     #    <var> = UNLIMITED ; //(<number> currently)
     #
@@ -330,17 +330,39 @@ do
     has_icebergs $f && combine_files="$combine_files $f"
 done
 
-# Run ncrcat on the files
-ncrcat_cmd="$ncrcat $combine_files $out_file"
-if [ $verbose -gt 0 ]
+# Normally, run ncrcat on the input files. However,
+# if all input files have no icebergs, then use one of the input files
+# as the output file, print a message, and exit normally.
+# This unambiguously indicates that there are no icebergs,
+# and the iceberg model can read an iceberg restart with no icebergs.
+if [ -n "$combine_files" ]
 then
-    echoerr "debug1: Running '$ncrcat_cmd'"
-fi
-eval $ncrcat_cmd
-if [ $? -ne 0 ]
-then
-    echoerr "$script_name: Error during executing '$ncrcat_cmd'"
-    exit $EXIT_FAILURE
+    # Run ncrcat on the files
+    ncrcat_cmd="$ncrcat $combine_files $out_file"
+    if [ $verbose -gt 0 ]
+    then
+        echoerr "debug1: Running '$ncrcat_cmd'"
+    fi
+    eval $ncrcat_cmd
+    if [ $? -ne 0 ]
+    then
+        echoerr "$script_name: Error during executing '$ncrcat_cmd'"
+        exit $EXIT_FAILURE
+    fi
+else
+    # Copy first empty iceberg file to the output file
+    echoerr "debug1: Input files contain no icebergs; this is fine"
+    copy_cmd="cp ${in_files%% *} $out_file"
+    if [ $verbose -gt 0 ]
+    then
+        echoerr "debug1: Running '$copy_cmd'"
+    fi
+    eval $copy_cmd
+    if [ $? -ne 0 ]
+    then
+        echoerr "$script_name: Error during executing '$copy_cmd'"
+        exit $EXIT_FAILURE
+    fi
 fi
 
 ncatted_cmd="$ncatted -a NumFilesInSet,global,d,, $out_file"
