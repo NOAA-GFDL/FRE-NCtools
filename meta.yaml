@@ -11,12 +11,9 @@ build:
 requirements:
   build:
     - conda-forge::nco
-    - conda-forge::which
-#   - conda-forge::netcdf4
     - conda-forge::libnetcdf
     - conda-forge::netcdf-fortran
     - conda-forge::mpich
-    - conda-forge::gcc
     - conda-forge::gfortran
     - conda-forge::asciidoc
     - conda-forge::docbook-xsl
@@ -24,11 +21,9 @@ requirements:
     - conda-forge::python
     - conda-forge::numpy
     - conda-forge::pytest
-    - conda-forge::perl
-    - conda-forge::git
-    - conda-forge::make
     - conda-forge::libtool
     - conda-forge::autoconf
+    - conda-forge::automake
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::openmp
     - conda-forge::tcsh
@@ -38,10 +33,10 @@ test:
   commands:
     - echo 'yay! we made it!'
     - pwd && ls
-#    - autoreconf -i
-#    - ./configure --prefix=$PREFIX
+#   - autoreconf -i
+#   - ./configure --prefix=$PREFIX
     - which timavg.csh
-    - make check-expensive
+    - make check
 
 about:
   license: LGPL-3.0
