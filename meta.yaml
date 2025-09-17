@@ -30,7 +30,7 @@ test:
   commands:
     - echo 'yay! we made it!'
     - pwd && ls
-    - autoreconf -i
+#    - autoreconf -i
     - ./configure
     - which timavg.csh
     - make check
