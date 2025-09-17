@@ -34,7 +34,7 @@ test:
 #    - autoreconf -i
 #    - ./configure
     - echo "which timavg is it...?  " && which timavg
-    - echo "timavg --help is...?" && timavg --help
+    - echo "timavg -help is...?" && timavg -help
     - echo "make check RUN_EXPENSIVE_TESTS=no...?" && make check RUN_EXPENSIVE_TESTS=no
 #    - make check
 
