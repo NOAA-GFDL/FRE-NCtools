@@ -15,10 +15,7 @@ requirements:
     - conda-forge::netcdf-fortran
     - conda-forge::mpich
     - conda-forge::gfortran
-    - conda-forge::asciidoc
-    - conda-forge::docbook-xsl
-    - conda-forge::libxslt
-    - conda-forge::python
+    - conda-forge::python>2
     - conda-forge::numpy
     - conda-forge::pytest
     - conda-forge::libtool
