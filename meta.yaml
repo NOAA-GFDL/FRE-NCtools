@@ -30,8 +30,8 @@ test:
   commands:
     - echo 'yay! we made it!'
     - pwd && ls
-#   - autoreconf -i
-#   - ./configure --prefix=$PREFIX
+    - autoreconf -i
+    - ./configure
     - which timavg.csh
     - make check
 
