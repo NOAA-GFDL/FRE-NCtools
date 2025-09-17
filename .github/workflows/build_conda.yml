@@ -30,7 +30,7 @@ jobs:
           conda config --show channels
 
           # install conda-build and conda-verify
-          conda install conda-forge::conda-build conda-forge::conda-verify
+          conda install conda-build conda-verify
 
           # conda build
           conda build --no-anaconda-upload .
