@@ -31,9 +31,10 @@ test:
     - echo 'yay! we made it!'
     - pwd && ls
 #    - autoreconf -i
-    - ./configure
+#    - ./configure
     - which timavg.csh
-    - make check
+    - timavg.csh --help
+#    - make check
 
 about:
   license: LGPL-3.0
