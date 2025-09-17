@@ -22,8 +22,14 @@ jobs:
           conda config --append channels conda-forge
           conda config --append channels noaa-gfdl
 
+          # remove any default channels
+          conda config --remove channels defaults
+
+          # just in case
+          conda config --show channels
+
           # install conda-build and conda-verify
           conda install conda-build conda-verify
 
           # conda build
-          conda build .
+          conda build --no-anaconda-upload .
