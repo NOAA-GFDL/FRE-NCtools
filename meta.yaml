@@ -12,22 +12,33 @@ requirements:
   build:
     - conda-forge::autoconf
     - conda-forge::automake
-    - conda-forge::libnetcdf
+#    - conda-forge::libnetcdf
+    - conda-forge/label/libnetcdf_dev::libnetcdf
     - conda-forge::netcdf-fortran
     - conda-forge::nco
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::openmp
     - conda-forge::mpich
     - conda-forge::tcsh
+    - conda-forge::gcc
+    - conda-forge::gfortran
+    - conda-forge::make
+    - conda-forge::asciidoc
+    - conda-forge::docbook-xsl
+    - conda-forge::docbook-xml
+    - conda-forge::pytest
+    - conda-forge::python
+    - conda-forge::numpy
   run:
 
 test:
   commands:
     - echo 'yay! we made it!'
     - pwd && ls
-    - autoreconf -i
-    - ./configure --prefix=$PREFIX
-    - make check RUN_EXPENSIVE_TESTS=yes
+#    - autoreconf -i
+#    - ./configure --prefix=$PREFIX
+    - which timavg.csh
+    - make check-expensive
 
 about:
   license: LGPL-3.0

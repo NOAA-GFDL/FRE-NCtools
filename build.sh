@@ -1,4 +1,4 @@
 autoreconf -i
 ./configure --prefix=$PREFIX
-make -j
+make
 make install
