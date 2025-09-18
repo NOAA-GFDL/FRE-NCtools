@@ -29,7 +29,10 @@ requirements:
 
 test:
   source_files:
+    - man/**
     - tests/**
+    - tools/**
+    - lib/**
     - src/**
     - m4/**
     - configure.ac
