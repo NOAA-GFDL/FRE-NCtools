@@ -29,6 +29,7 @@ requirements:
 
 test:
   source_files:
+    - src/**
     - m4/**
     - configure.ac
     - tests/**
