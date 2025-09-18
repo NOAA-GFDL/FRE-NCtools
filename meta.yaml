@@ -9,6 +9,23 @@ build:
   number: 0
 
 requirements:
+  host:
+    - conda-forge::nco
+    - conda-forge::libnetcdf
+    - conda-forge::netcdf-fortran
+    - conda-forge::mpich
+    - conda-forge::gfortran
+    - conda-forge::python>2
+    - conda-forge::numpy
+    - conda-forge::pytest
+    - conda-forge::libtool
+    - conda-forge::autoconf
+    - conda-forge::automake
+    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::openmp
+    - conda-forge::tcsh
+    - conda-forge::which
+
   build:
     - conda-forge::nco
     - conda-forge::libnetcdf
@@ -25,8 +42,40 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
+
+  run:
+    - conda-forge::nco
+    - conda-forge::libnetcdf
+    - conda-forge::netcdf-fortran
+    - conda-forge::mpich
+    - conda-forge::gfortran
+    - conda-forge::python>2
+    - conda-forge::numpy
+    - conda-forge::pytest
+    - conda-forge::libtool
+    - conda-forge::autoconf
+    - conda-forge::automake
+    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::openmp
+    - conda-forge::tcsh
+    - conda-forge::which
+
   test:
     - conda-forge::nco
+    - conda-forge::libnetcdf
+    - conda-forge::netcdf-fortran
+    - conda-forge::mpich
+    - conda-forge::gfortran
+    - conda-forge::python>2
+    - conda-forge::numpy
+    - conda-forge::pytest
+    - conda-forge::libtool
+    - conda-forge::autoconf
+    - conda-forge::automake
+    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::openmp
+    - conda-forge::tcsh
+    - conda-forge::which  
 
 test:
   source_files:
