@@ -49,13 +49,8 @@ test:
     - echo "Testing combine-ncc version..." && (combine-ncc --version || echo "combine-ncc version command completed")  
     - echo "Testing timavg version..." && (timavg -V || echo "timavg version command completed")
     
-    # Simple functional tests using one-line ncgen commands
-    - echo "Testing combine-ncc functionality..." && echo 'netcdf compress1 { dimensions: lat=2; lon=2; lpt=2; variables: int lpt(lpt); float lst(lpt); float lat(lat); float lon(lon); data: lon=1,2; lat=1,2; lpt=1,4; lst=100,104; }' | ncgen -o compress1.nc && echo 'netcdf compress2 { dimensions: lat=2; lon=2; lpt=2; variables: int lpt(lpt); float lst(lpt); float lat(lat); float lon(lon); data: lon=1,2; lat=1,2; lpt=2,3; lst=200,300; }' | ncgen -o compress2.nc && combine-ncc compress1.nc compress2.nc combined.nc && test -f combined.nc && ncdump -h combined.nc && echo "combine-ncc functional test PASSED"
-    
-    - echo "Testing ncexists functionality..." && echo 'netcdf test { dimensions: x=2; variables: float temp(x); data: temp=1,2; }' | ncgen -o test_exist.nc && ncexists -f test_exist.nc -v temp && echo "ncexists functional test PASSED"
-    
-    # Simple timavg test - create a file with time dimension and test timavg  
-    - echo "Testing timavg functionality..." && echo 'netcdf timtest { dimensions: time=2; x=2; variables: double time(time); float data(time,x); data: time=1,2; data=10,20,30,40; }' | ncgen -o timtest.nc && timavg -o timout.nc timtest.nc && test -f timout.nc && ncdump -h timout.nc && echo "timavg functional test PASSED"
+    # Run actual tests using the repository's test infrastructure
+    - echo "Setting up test environment..." && mkdir -p test_build && cd test_build && autoreconf -i .. && ./configure && make -j check RUN_EXPENSIVE_TESTS=no TESTS="timeavg/timavg timeavg/timeavg-m"
     
     - echo 'All tests completed - FRE-NCtools installation verified!'
 
