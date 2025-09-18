@@ -1,3 +1,6 @@
+echo 'builindg FRE-NCtools conda package...'
+echo "Build directory:" && pwd
+echo "Contents of Build directory:" && ls
 autoreconf -i
 ./configure --prefix=$PREFIX
 make

@@ -30,7 +30,8 @@ requirements:
 test:
   commands:
     - echo 'Testing FRE-NCtools conda package installation...'
-    - echo "Installation directory:" && pwd && ls
+    - echo "Installation directory:" && pwd
+    - echo "Contents of Installation directory:" && ls
     
     # Test key installed programs with help flags (allow help commands to exit with any status)
     - echo "Testing timavg script..." && which timavg && (timavg -h || echo "timavg help command completed")
