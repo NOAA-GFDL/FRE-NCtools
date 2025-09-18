@@ -28,6 +28,9 @@ requirements:
   run:
 
 test:
+  source_files:
+    - configure.ac
+    - tests/**
   commands:
     - echo 'Testing FRE-NCtools conda package installation...'
     - echo "Installation directory:" && pwd
