@@ -9,7 +9,7 @@ build:
   number: 0
 
 requirements:
-  run:
+  build:
     - conda-forge::nco
     - conda-forge::libnetcdf
     - conda-forge::netcdf-fortran
@@ -25,7 +25,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
-
+  test:
+    - conda-forge::nco
 
 test:
   source_files:
