@@ -3,41 +3,41 @@
 ## CI testing for the FRE-NCtools repo, builds and runs unit tests
 ## image dockerfile is maintained here:
 ## https://gitlab.gfdl.noaa.gov/fre/hpc-me
-#name: FRE-NCtools CI
-#on: [push, pull_request]
-#jobs:
-#  CI:
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        with_mpi: ['','--with-mpi']
-#        enable_quad_precision: ['', '--enable-quad-precision']
-#    container:
-#      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
-#      env:
-#        MPI: ${{ matrix.with_mpi }}
-#        QUAD_P: ${{ matrix.enable_quad_precision }}
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v4
-#      with:
-#        submodules: recursive
-#    - name: Configure
-#      run: |
-#        mkdir build && cd build
-#        autoreconf -i ../configure.ac
-#        ../configure $MPI $QUAD_P || cat config.log
-#    - name: Build
-#      # Due to how some compilers handle the Fortran module files, we
-#      # need to run the build twice
-#      run: make -C build -j || make -C build -j
-#    - name: Run most tests (skip the slow ones)
-#      run: make -C build -j check
-#    - name: Save log file on failure
-#      uses: actions/upload-artifact@v4.4.0
-#      if: failure()
-#      with:
-#        name: test-suites
-#        path: |
-#          build/tests/test-suite.log
+name: FRE-NCtools CI
+on: [push, pull_request]
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        with_mpi: ['','--with-mpi']
+        enable_quad_precision: ['', '--enable-quad-precision']
+    container:
+      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
+      env:
+        MPI: ${{ matrix.with_mpi }}
+        QUAD_P: ${{ matrix.enable_quad_precision }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Configure
+      run: |
+        mkdir build && cd build
+        autoreconf -i ../configure.ac
+        ../configure $MPI $QUAD_P || cat config.log
+    - name: Build
+      # Due to how some compilers handle the Fortran module files, we
+      # need to run the build twice
+      run: make -C build -j || make -C build -j
+    - name: Run most tests (skip the slow ones)
+      run: make -C build -j check
+    - name: Save log file on failure
+      uses: actions/upload-artifact@v4.4.0
+      if: failure()
+      with:
+        name: test-suites
+        path: |
+          build/tests/test-suite.log
 #
