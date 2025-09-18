@@ -55,7 +55,7 @@ test:
     - echo "Testing timavg version..." && (timavg -V || echo "timavg version command completed")
     
     # Run actual tests using the repository's test infrastructure
-    - echo "Setting up test environment..." && mkdir -p test_build && cd test_build && autoreconf -i .. && ./configure && make -j check RUN_EXPENSIVE_TESTS=no TESTS="timeavg/timavg timeavg/timeavg-m"
+    - echo "Setting up test environment..." && autoreconf -i . && ./configure && make check RUN_EXPENSIVE_TESTS=no
     
     - echo 'All tests completed - FRE-NCtools installation verified!'
 
