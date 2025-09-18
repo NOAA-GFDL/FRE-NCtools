@@ -29,10 +29,11 @@ requirements:
 
 test:
   source_files:
+    - tests/**
     - src/**
     - m4/**
     - configure.ac
-    - tests/**
+    - Makefile.am
   commands:
     - echo 'Testing FRE-NCtools conda package installation...'
     - echo "Installation directory:" && pwd
