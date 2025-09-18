@@ -49,95 +49,14 @@ test:
     - echo "Testing combine-ncc version..." && (combine-ncc --version || echo "combine-ncc version command completed")  
     - echo "Testing timavg version..." && (timavg -V || echo "timavg version command completed")
     
-    # Functional test for timavg with simple data
-    - |
-      echo "Testing timavg functionality..."
-      # Create a simple test NetCDF file using ncgen
-      ncgen -o test_timavg_input.nc << 'EOF'
-      netcdf test_input {
-      dimensions:
-        time = 2 ;
-        lat = 3 ;
-        lon = 3 ;
-      variables:
-        double time(time) ;
-          time:units = "days since 2000-01-01" ;
-          time:bounds = "time_bounds" ;
-        double time_bounds(time, 2) ;
-        float lat(lat) ;
-          lat:units = "degrees_north" ;
-        float lon(lon) ;
-          lon:units = "degrees_east" ;
-        float temperature(time, lat, lon) ;
-          temperature:units = "K" ;
-          temperature:long_name = "temperature" ;
-      data:
-        time = 1, 2 ;
-        time_bounds = 0.5, 1.5, 1.5, 2.5 ;
-        lat = -1, 0, 1 ;
-        lon = -1, 0, 1 ;
-        temperature = 
-          273.15, 273.16, 273.17, 273.18, 273.19, 273.20, 273.21, 273.22, 273.23,
-          274.15, 274.16, 274.17, 274.18, 274.19, 274.20, 274.21, 274.22, 274.23 ;
-      }
-      EOF
-      
-      # Test timavg basic functionality  
-      timavg -o test_timavg_output.nc test_timavg_input.nc && echo "timavg basic functionality test PASSED" || echo "timavg basic functionality test FAILED"
-      
-      # Verify output file was created and can be dumped
-      test -f test_timavg_output.nc && ncdump -h test_timavg_output.nc > /dev/null && echo "timavg output verification PASSED" || echo "timavg output verification FAILED"
-
-    # Functional test for combine-ncc
-    - |
-      echo "Testing combine-ncc functionality..."
-      # Create simple test files for combine-ncc
-      ncgen -o combine_test1.nc << 'EOF'
-      netcdf test1 {
-      dimensions:
-        x = 2 ;
-        y = 2 ;
-        lnd_compressed = 2 ;
-      variables:
-        int lnd_compressed(lnd_compressed) ;
-          lnd_compressed:compress = "x y" ;
-        float data(lnd_compressed) ;
-        float x(x) ;
-        float y(y) ;
-      data:
-        x = 0, 1 ;
-        y = 0, 1 ;
-        lnd_compressed = 1, 4 ;
-        data = 10.0, 40.0 ;
-      }
-      EOF
-      
-      ncgen -o combine_test2.nc << 'EOF'
-      netcdf test2 {
-      dimensions:
-        x = 2 ;
-        y = 2 ;
-        lnd_compressed = 2 ;
-      variables:
-        int lnd_compressed(lnd_compressed) ;
-          lnd_compressed:compress = "x y" ;
-        float data(lnd_compressed) ;
-        float x(x) ;
-        float y(y) ;
-      data:
-        x = 0, 1 ;
-        y = 0, 1 ;
-        lnd_compressed = 2, 3 ;
-        data = 20.0, 30.0 ;
-      }
-      EOF
-      
-      # Test combine-ncc functionality
-      combine-ncc combine_test1.nc combine_test2.nc combine_output.nc && echo "combine-ncc functionality test PASSED" || echo "combine-ncc functionality test FAILED"
-      
-      # Verify output
-      test -f combine_output.nc && ncdump -h combine_output.nc > /dev/null && echo "combine-ncc output verification PASSED" || echo "combine-ncc output verification FAILED"
-
+    # Simple functional tests using one-line ncgen commands
+    - echo "Testing combine-ncc functionality..." && echo 'netcdf compress1 { dimensions: lat=2; lon=2; lpt=2; variables: int lpt(lpt); float lst(lpt); float lat(lat); float lon(lon); data: lon=1,2; lat=1,2; lpt=1,4; lst=100,104; }' | ncgen -o compress1.nc && echo 'netcdf compress2 { dimensions: lat=2; lon=2; lpt=2; variables: int lpt(lpt); float lst(lpt); float lat(lat); float lon(lon); data: lon=1,2; lat=1,2; lpt=2,3; lst=200,300; }' | ncgen -o compress2.nc && combine-ncc compress1.nc compress2.nc combined.nc && test -f combined.nc && ncdump -h combined.nc && echo "combine-ncc functional test PASSED"
+    
+    - echo "Testing ncexists functionality..." && echo 'netcdf test { dimensions: x=2; variables: float temp(x); data: temp=1,2; }' | ncgen -o test_exist.nc && ncexists -f test_exist.nc -v temp && echo "ncexists functional test PASSED"
+    
+    # Simple timavg test - create a file with time dimension and test timavg  
+    - echo "Testing timavg functionality..." && echo 'netcdf timtest { dimensions: time=2; x=2; variables: double time(time); float data(time,x); data: time=1,2; data=10,20,30,40; }' | ncgen -o timtest.nc && timavg -o timout.nc timtest.nc && test -f timout.nc && ncdump -h timout.nc && echo "timavg functional test PASSED"
+    
     - echo 'All tests completed - FRE-NCtools installation verified!'
 
 about:
