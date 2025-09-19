@@ -83,7 +83,7 @@ man_MANS += \
   river_regrid.1 \
   remap_land.1 \
   scatter-ncc.1 \
-  split_ncvars.pl.txt \
+  split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
   time_average.1 \
