@@ -3,23 +3,18 @@ channels:
   - conda-forge
   - noaa-gfdl
 dependencies:
- - conda-forge::autoconf
- - conda-forge::automake
-# - conda-forge::libnetcdf
- - conda-forge/label/libnetcdf_dev::libnetcdf
- - conda-forge::netcdf-fortran
- - conda-forge::nco
- - conda-forge::hdf5=1.14.*=mpi*
- - conda-forge::openmp
- - conda-forge::mpich
- - conda-forge::tcsh
- - conda-forge::gcc
- - conda-forge::gfortran
- - conda-forge::make
- - conda-forge::asciidoc
- - conda-forge::docbook-xsl
- - conda-forge::docbook-xml
- - conda-forge::pytest
- - conda-forge::python
- - conda-forge::numpy
- 
+  - conda-forge::nco
+  - conda-forge::libnetcdf
+  - conda-forge::netcdf-fortran
+  - conda-forge::mpich
+  - conda-forge::gfortran
+  - conda-forge::python>2
+  - conda-forge::numpy
+  - conda-forge::pytest
+  - conda-forge::libtool
+  - conda-forge::autoconf
+  - conda-forge::automake
+  - conda-forge::hdf5=1.14.*=mpi*
+  - conda-forge::openmp
+  - conda-forge::tcsh
+  - conda-forge::which
