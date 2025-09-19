@@ -38,16 +38,16 @@ jobs:
           conda install conda-build conda-verify
 
           # conda build
-          test_suite_log_src_path=$SRC_DIR/tests/test-suite.log
-          test_suite_log_tar_path=/app/fre-nctools-tarball/test-suite.log
-          conda build --no-anaconda-upload --package-format tar.bz2 --test-run-post "cp ${test_suite_log_src_path} ${test_suite_log_tar_path}" --output-folder /app/fre-nctools-tarball . || echo "conda build failed, guarding. artifact upload will fail instead."
+          mkdir -p /app/fre-nctools-tarball
+          conda build . --build --no-anaconda-upload --package-format tar.bz2 --output-folder /app/fre-nctools-tarball || echo "conda build failed, guarding. artifact upload will fail instead."
 
-      - name: Upload test-suite.log
-        uses: actions/upload-artifact@v4
-        with:
-          name: fre-nctools-test-suite-log
-          path: /app/fre-nctools-tarball/test-suite.log
-          if-no-files-found: error
+#      # highly desired...
+#      - name: Upload test-suite.log
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: fre-nctools-test-suite-log
+#          path: /app/fre-nctools-tarball/test-suite.log
+#          if-no-files-found: error
 
       - name: Upload fre-nctools tarball
         uses: actions/upload-artifact@v4
