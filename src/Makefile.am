@@ -446,4 +446,3 @@ runoff_regrid_parallel_LDADD = \
 # ********************************************************* #
 transfer_to_mosaic_grid_SOURCES = \
   transfer-mosaic-grid/transfer_to_mosaic.c
-

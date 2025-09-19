@@ -44,7 +44,6 @@ EXTRA_DIST = \
   remap_land.txt \
   scatter-ncc.txt \
   split_ncvars.pl.txt \
-  split_ncvars.pl.1 \
   timavg.txt \
   time_average.txt \
   transfer_to_mosaic_grid.txt \
@@ -85,7 +84,6 @@ man_MANS += \
   remap_land.1 \
   scatter-ncc.1 \
   split_ncvars.pl.txt \
-  split_ncvars.pl.1 \
   timavg.1 \
   timavg.csh.1 \
   time_average.1 \
