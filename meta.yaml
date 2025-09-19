@@ -79,7 +79,7 @@ requirements:
 
 test:
   source_files:
-    - ./**
+    - build/**
     - man/**
     - tests/**
     - tools/**
@@ -88,8 +88,7 @@ test:
     - m4/**
     - configure.ac
     - Makefile.am
-#    # if using build-dir option? needed?
-#    - build**
+
   commands:
     - echo 'Testing FRE-NCtools conda package installation...'
     - echo "Installation directory:"
@@ -128,7 +127,8 @@ test:
     # Run actual tests using the repository's test infrastructure
     # vanilla
     - echo "Setting up test environment..."
-    - autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "fail guard"
+    - autoreconf -i && cd build/ && ../configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "fail guard"
+    #- autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "fail guard"
 
     - echo "does test-suite.log exist?"
     - ls tests/test-suite.log && echo "yes it does exist!"
