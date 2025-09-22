@@ -25,8 +25,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
-	- conda-forge::libgcc
-	- conda-forge::libstdcxx-ng
+    - conda-forge::libgcc
+    - conda-forge::libstdcxx-ng
 
   build:
     - conda-forge::nco
