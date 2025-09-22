@@ -25,6 +25,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
+	- conda-forge::libgcc
+	- conda-forge::libstdcxx-ng
 
   build:
     - conda-forge::nco
@@ -42,6 +44,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
+    - conda-forge::libgcc
+    - conda-forge::libstdcxx-ng
 
   run:
     - conda-forge::nco
@@ -59,6 +63,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
+    - conda-forge::libgcc
+    - conda-forge::libstdcxx-ng
 
   test:
     - conda-forge::nco
@@ -76,6 +82,8 @@ requirements:
     - conda-forge::openmp
     - conda-forge::tcsh
     - conda-forge::which
+    - conda-forge::libgcc
+    - conda-forge::libstdcxx-ng
 
 test:
   source_files:
