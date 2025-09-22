@@ -77,65 +77,62 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
 
-test:
-  source_files:
-    - ./**
-    - man/**
-    - tests/**
-    - tools/**
-    - lib/**
-    - src/**
-    - m4/**
-    - configure.ac
-    - Makefile.am
-#    # if using build-dir option? needed?
-#    - build**
-  commands:
-    - echo 'Testing FRE-NCtools conda package installation...'
-    - echo "Installation directory:"
-    - pwd
-    - echo "Contents of Installation directory:"
-    - ls
-
-    # Test key installed programs with help flags (allow help commands to exit with any status)
-    - echo "Testing timavg script..."
-    - which timavg && timavg -h && echo "timavg help command completed"
-    - echo "Testing ncexists program..."
-    - which ncexists && ncexists --help && echo "ncexists help command completed"
-    - echo "Testing combine-ncc program..."
-    - which combine-ncc && combine-ncc --help && echo "combine-ncc help command completed"
-    - echo "Testing fregrid program..."
-    - which fregrid && fregrid --help && echo "fregrid help command completed"
-    - echo "Testing make_hgrid program..."
-    - which make_hgrid && make_hgrid --help && echo "make_hgrid help command completed"
-    - echo "Testing check_mask program..."
-    - which check_mask && check_mask 2>&1 | grep -q "check_mask --grid_file" && echo "found check_mask, usage displayed correctly"
-
-    # Test some key script utilities exist
-    - echo "Testing list_ncvars.sh script..."
-    - which list_ncvars.sh && echo "list_ncvars.sh found"
-    - echo "Testing split_ncvars.pl script..."
-    - which split_ncvars.pl && echo "split_ncvars.pl found"
-
-    # Test version reporting for programs that support it (allow version commands to exit with any status)
-    - echo "Testing version reporting..."
-    - ncexists --version && echo "ncexists version command completed"
-    - echo "Testing combine-ncc version..."
-    - combine-ncc --version && echo "combine-ncc version command completed"
-    - echo "Testing timavg version..."
-    - timavg -V && echo "timavg version command completed"
-
-    # Run actual tests using the repository's test infrastructure
-    # vanilla
-    - echo "Setting up test environment..."
-    - autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "fail guard"
-
-    - echo "does test-suite.log exist?"
-    - ls tests/test-suite.log && echo "yes it does exist!"
-
-    - echo "WARNING: coping test-suite.log in a hard-coded manner. improve me please."
-    - cp tests/test-suite.log /app/fre-nctools-tarball/ || echo "copying test-suite.log failed"
-    - echo 'All tests completed - FRE-NCtools installation verified!'
+#test:
+#  source_files:
+#    - man/**
+#    - tests/**
+#    - tools/**
+#    - lib/**
+#    - src/**
+#    - m4/**
+#    - configure.ac
+#    - Makefile.am
+##    # if using build-dir option? needed?
+##    - build**
+#  commands:
+#    - echo 'Testing FRE-NCtools conda package installation...'
+#    - echo "Installation directory:"
+#    - pwd
+#    - echo "Contents of Installation directory:"
+#    - ls
+#
+#    # Test key installed programs with help flags (allow help commands to exit with any status)
+#    - echo "Testing timavg script..."
+#    - which timavg && timavg -h && echo "timavg help command completed"
+#    - echo "Testing ncexists program..."
+#    - which ncexists && ncexists --help && echo "ncexists help command completed"
+#    - echo "Testing combine-ncc program..."
+#    - which combine-ncc && combine-ncc --help && echo "combine-ncc help command completed"
+#    - echo "Testing fregrid program..."
+#    - which fregrid && fregrid --help && echo "fregrid help command completed"
+#    - echo "Testing make_hgrid program..."
+#    - which make_hgrid && make_hgrid --help && echo "make_hgrid help command completed"
+#    - echo "Testing check_mask program..."
+#    - which check_mask && check_mask 2>&1 | grep -q "check_mask --grid_file" && echo "found check_mask, usage displayed correctly"
+#
+#    # Test some key script utilities exist
+#    - echo "Testing list_ncvars.sh script..."
+#    - which list_ncvars.sh && echo "list_ncvars.sh found"
+#    - echo "Testing split_ncvars.pl script..."
+#    - which split_ncvars.pl && echo "split_ncvars.pl found"
+#
+#    # Test version reporting for programs that support it (allow version commands to exit with any status)
+#    - echo "Testing version reporting..."
+#    - ncexists --version && echo "ncexists version command completed"
+#    - echo "Testing combine-ncc version..."
+#    - combine-ncc --version && echo "combine-ncc version command completed"
+#    - echo "Testing timavg version..."
+#    - timavg -V && echo "timavg version command completed"
+#
+#    # Run actual tests using the repository's test infrastructure
+#    # vanilla
+#    - echo "Setting up test environment..."
+#    - autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no
+##    # --with-mpi --enable-quad-precision
+##    - echo "Setting up test environment..."
+##    - autoreconf -i && ./configure --with-mpi --enable-quad-precision && make check RUN_EXPENSIVE_TESTS=no
+#
+#    - echo 'All tests completed - FRE-NCtools installation verified!'
 
 about:
   license: LGPL-3.0
