@@ -8,50 +8,52 @@ on: [push]
 
 jobs:
   build:
-	runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-	container:
-	  image: ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2
+    container:
+      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2
 #      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24.7.1_gcc14.2.0
 #      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
 
-	steps:
-	  - name: Checkout Files
-		uses: actions/checkout@v4
-		with:
-		  submodules: 'recursive'
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
-	  - name: Run Conda to Build
-		continue-on-error: true
-		run: |
-		  # append the reqd channels
-		  conda config --append channels conda-forge
-		  conda config --append channels noaa-gfdl
+      - name: Run Conda to Build
+        continue-on-error: true
+        run: |
+          # append the reqd channels
+          conda config --append channels conda-forge
+          conda config --append channels noaa-gfdl
 
-		  # remove any default channels
-		  conda config --remove channels defaults
+          # remove any default channels
+          conda config --remove channels defaults
 
-		  # just in case
-		  conda config --show channels
+          # just in case
+          conda config --show channels
 
-		  # install conda-build and conda-verify
-		  conda install conda-build conda-verify
+          # install conda-build and conda-verify
+          conda install conda-build conda-verify
 
-		  # conda build
-		  mkdir -p /app/fre-nctools-tarball
-		  conda build . --package-format tar.bz2 --output-folder /app/fre-nctools-tarball || echo "conda build failed, guarding. artifact upload will fail instead."
+          # conda build
+          mkdir -p /app/fre-nctools-tarball
+          conda build . --package-format tar.bz2 --output-folder /app/fre-nctools-tarball || echo "conda build failed, guarding. artifact upload will fail instead."
+          #conda build . --build-only --no-anaconda-upload --package-format tar.bz2 --output-folder /app/fre-nctools-tarball || echo "conda build failed, guarding. artifact upload will fail instead."
+          #conda build --test $(ls /app/fre-nctools-tarball/noarch/fre-nctools-*.tar.bz2)
 
-	  - name: Upload fre-nctools tarball
-		uses: actions/upload-artifact@v4
-		with:
-		  name: fre-nctools-tarball
-		  path: /app/fre-nctools-tarball/linux-64/fre-nctools-*.tar.bz2
-		  if-no-files-found: error
+      - name: Upload fre-nctools tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: fre-nctools-tarball
+          path: /app/fre-nctools-tarball/linux-64/fre-nctools-*.tar.bz2
+          if-no-files-found: error
 
-	  # highly desired...
-	  - name: Upload test-suite.log
-		uses: actions/upload-artifact@v4
-		with:
-		  name: fre-nctools-test-suite-log
-		  path: /app/fre-nctools-tarball/test-suite.log
-		  if-no-files-found: error
+#      # highly desired...
+#      - name: Upload test-suite.log
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: fre-nctools-test-suite-log
+#          path: /app/fre-nctools-tarball/test-suite.log
+#          if-no-files-found: error
