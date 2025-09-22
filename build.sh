@@ -22,7 +22,7 @@ autoreconf -i
 #./configure --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 
 export LD_LIBRARY_PATH=${PREFIX}/lib
-echo "PRE CONFIGURATION::"
+echo "POST CONFIGURATION::"
 echo ""
 echo ""
 echo "PATH is:"
