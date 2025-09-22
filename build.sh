@@ -22,12 +22,7 @@ mkdir build && cd build
 #../configure --prefix=$PREFIX --with-mpi || cat config.log
 #../configure --prefix=$PREFIX --enable-quad-precision || cat config.log
 #../configure --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.logecho "compiling/building"
-echo "pwd, is currently"
-pwd
-echo "contents are"
-ls
-echo "compiling/building now... (make)"
+echo "compiling/building at $PWD"
 make
-echo "installing into PREFIX... (make install)"
+echo "installing into $PREFIX"
 make install
-echo "done installing FRE-NCtools"
