@@ -27,6 +27,7 @@ requirements:
     - conda-forge::which
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
+    - conda-forge::gcc==13.2.0
 
   build:
     - conda-forge::nco
@@ -46,6 +47,7 @@ requirements:
     - conda-forge::which
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
+    - conda-forge::gcc==13.2.0
 
   run:
     - conda-forge::nco
@@ -65,6 +67,7 @@ requirements:
     - conda-forge::which
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
+    - conda-forge::gcc==13.2.0
 
   test:
     - conda-forge::nco
@@ -84,6 +87,7 @@ requirements:
     - conda-forge::which
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
+    - conda-forge::gcc==13.2.0
 
 test:
   source_files:
@@ -135,7 +139,8 @@ test:
     # Run actual tests using the repository's test infrastructure
     # vanilla
     - echo "Setting up test environment..."
-    - autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
+    - which gcc || echo "gcc not found!"
+    - export LD_LIBRARY_PATH=$PREFIX/lib && autoreconf -i && ./configure --prefix=$PREFIX && make check RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
 #    # --with-mpi --enable-quad-precision
 #    - echo "Setting up test environment..."
 #    - autoreconf -i && ./configure --with-mpi --enable-quad-precision && make check RUN_EXPENSIVE_TESTS=no
