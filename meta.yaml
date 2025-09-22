@@ -25,6 +25,7 @@ requirements:
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
+    - conda-forge::mpich
 
   build:
     - conda-forge::nco
@@ -42,6 +43,7 @@ requirements:
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
+    - conda-forge::mpich
 
   run:
     - conda-forge::nco
@@ -59,6 +61,7 @@ requirements:
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
+    - conda-forge::mpich
 
   test:
     - conda-forge::nco
@@ -76,6 +79,7 @@ requirements:
     - conda-forge::libgcc
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
+    - conda-forge::mpich
 
 test:
   source_files:
