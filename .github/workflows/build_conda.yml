@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fre-nctools-tarball
-          path: /app/fre-nctools-tarball/noarch/fre-nctools-*.tar.bz2
+          path: /app/fre-nctools-tarball/linux-64/fre-nctools-*.tar.bz2
           if-no-files-found: error
 
 #      # highly desired...
