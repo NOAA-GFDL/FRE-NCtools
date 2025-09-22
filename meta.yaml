@@ -26,7 +26,7 @@ requirements:
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
     - conda-forge::mpich
-    - conda-forge::hdf5
+    - conda-forge::hdf5=*=mpi*
 
   build:
     - conda-forge::nco
@@ -45,7 +45,7 @@ requirements:
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
     - conda-forge::mpich
-    - conda-forge::hdf5
+    - conda-forge::hdf5=*=mpi*
 
   run:
     - conda-forge::nco
@@ -64,7 +64,7 @@ requirements:
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
     - conda-forge::mpich
-    - conda-forge::hdf5
+    - conda-forge::hdf5=*=mpi*
 
   test:
     - conda-forge::nco
@@ -83,7 +83,7 @@ requirements:
     - conda-forge::libstdcxx-ng
     - conda-forge::gcc==13.2.0
     - conda-forge::mpich
-    - conda-forge::hdf5
+    - conda-forge::hdf5=*=mpi*
 
 test:
   source_files:
