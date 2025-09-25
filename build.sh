@@ -88,12 +88,12 @@ echo ""
 echo "installing no PREFIX"
 make install
 
-echo ""
-echo "trying a make check in the build process, not advisable but i want info"
-make check RUN_EXPENSIVE_TESTS=no \
-	|| echo "make check failed- see test-suite.log, guarding against the failure to not clobber helpful output"
+#echo ""
+#echo "trying a make check in the build process, not advisable but i want info"
+#make check RUN_EXPENSIVE_TESTS=no \
+#	|| echo "make check failed- see test-suite.log, guarding against the failure to not clobber helpful output"
 
-ls $SRC_DIR/tests/test-suite.log || echo "test-suite.log not found at $SRC_DIR/tests/test-suite.log"
-cp $SRC_DIR/tests/test-suite.log /app/fre-nctools/tarball || echo "copying test-suite log failed"
+#ls $SRC_DIR/tests/test-suite.log || echo "test-suite.log not found at $SRC_DIR/tests/test-suite.log"
+#cp $SRC_DIR/tests/test-suite.log /app/fre-nctools-tarball || echo "copying test-suite log failed"
 
 
