@@ -15,8 +15,8 @@ dependencies:
   - conda-forge::numpy<2
   - conda-forge::pytest
   - conda-forge::libtool
-  - conda-forge::autoconf
-  - conda-forge::automake
+  - conda-forge::autoconf=2.69.*
+  - conda-forge::automake==1.16.1
   - conda-forge::tcsh
   - conda-forge::which
   - conda-forge::make
