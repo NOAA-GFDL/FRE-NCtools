@@ -35,8 +35,10 @@ jobs:
           # just in case
           conda config --show channels
 
-          # install conda-build and conda-verify
-          conda install conda-build conda-verify
+          ## install conda-build and conda-verify
+          #conda install conda-build conda-verify
+
+          conda install conda-build
 
           # conda build
           mkdir -p /app/fre-nctools-tarball
