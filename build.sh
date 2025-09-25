@@ -90,4 +90,8 @@ make install
 
 echo ""
 echo "trying a make check in the build process, not advisable but i want info"
-make check RUN_EXPENSIVE_TESTS=no
+make check RUN_EXPENSIVE_TESTS=no \
+	|| echo "make check failed- see test-suite.log, guarding against the failure to not clobber helpful output"
+
+cp tests/test-suite.log /app/fre-nctools/tarball/test-suite.log || echo "copying test-suite log failed"
+
