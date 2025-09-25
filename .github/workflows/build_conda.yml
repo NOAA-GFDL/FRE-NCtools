@@ -9,12 +9,12 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2', 'condaforge/miniforge3:latest']
 
     container:
-      image: condaforge/miniforge3:latest
-#      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2
-#      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24.7.1_gcc14.2.0
-#      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
+      image: ${{ matrix.image }}
 
     steps:
       - name: Checkout Files
