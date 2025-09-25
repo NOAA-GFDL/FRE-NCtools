@@ -5,8 +5,8 @@ channels:
 dependencies:
   - conda-forge::zlib-ng==2.2.1
   - conda-forge::mpich==4.2.3
-  - conda-forge::gls==2.8
-  - conda-forge::udunits==2.2.28
+  - conda-forge::gsl==2.8
+  - conda-forge::udunits=2.*
   - conda-forge::netcdf-fortran==4.6.1
   - conda-forge::gcc==13.3.0
   - conda-forge::hdf5=1.14.*=mpi*
