@@ -13,7 +13,6 @@ requirements:
     - conda-forge::zlib-ng==2.2.1
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-#    - conda-forge::udunits=2.*
     - conda-forge::netcdf-fortran==4.6.1
     - conda-forge::gcc==13.3.0
     - conda-forge::hdf5=1.14.*=mpi*
@@ -33,7 +32,6 @@ requirements:
     - conda-forge::zlib-ng==2.2.1
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-#    - conda-forge::udunits=2.*
     - conda-forge::netcdf-fortran==4.6.1
     - conda-forge::gcc==13.3.0
     - conda-forge::hdf5=1.14.*=mpi*
@@ -54,7 +52,6 @@ requirements:
     - conda-forge::zlib-ng==2.2.1
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-#    - conda-forge::udunits=2.*
     - conda-forge::netcdf-fortran==4.6.1
     - conda-forge::gcc==13.3.0
     - conda-forge::hdf5=1.14.*=mpi*
@@ -75,7 +72,6 @@ requirements:
     - conda-forge::zlib-ng==2.2.1
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-#    - conda-forge::udunits=2.*
     - conda-forge::netcdf-fortran==4.6.1
     - conda-forge::gcc==13.3.0
     - conda-forge::hdf5=1.14.*=mpi*
@@ -92,7 +88,11 @@ requirements:
     - conda-forge::make
 
 
+about:
+  license: LGPL-3.0
+  summary: Tools for manipulating and creating netCDF inputs for FMS managed models
 
+#    - conda-forge::udunits=2.*
 #test:
 #  source_files:
 #    - man/**
@@ -152,6 +152,3 @@ requirements:
 #    - cp tests/test-suite.log /app/fre-nctools-tarball/test-suite.log || echo "copying test-suite log failed, guarding"
 #    - echo 'All tests completed - FRE-NCtools installation verified!'
 
-about:
-  license: LGPL-3.0
-  summary: Tools for manipulating and creating netCDF inputs for FMS managed models

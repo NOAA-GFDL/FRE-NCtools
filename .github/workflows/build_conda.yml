@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2', 'condaforge/miniforge3:latest']
 
