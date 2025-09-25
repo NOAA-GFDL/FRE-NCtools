@@ -3,13 +3,16 @@
 set -ex
 
 which nc-config
+echo "we have nc-config"
 which nf-config
+echo "we have nf-config"
 
-echo 'building FRE-NCtools conda package...'
-echo "SRC_DIR / Build directory is:"
-pwd
-echo "Contents of SRC_DIR / Build directory are:"
-ls
+#CC=
+#FC=
+#CFLAGS=
+#FCFLAGS=
+#LDFLAGS=#
+#LD_LIBRARY_PATH=${PREFIX}/lib
 
 echo "PRE CONFIGURATION::"
 echo ""
@@ -34,12 +37,12 @@ echo $FCFLAGS
 echo "LDFLAGS is:"
 echo $LDFLAGS
 
-#CC=
-#FC=
-#CFLAGS=
-#FCFLAGS=
-#LDFLAGS=#
-#LD_LIBRARY_PATH=${PREFIX}/lib
+
+echo 'building FRE-NCtools conda package...'
+echo "SRC_DIR / Build directory is:"
+pwd
+echo "Contents of SRC_DIR / Build directory are:"
+ls
 
 ## this is sufficient
 autoreconf -iv
@@ -48,21 +51,16 @@ autoreconf -iv
 #./configure --prefix=$PREFIX --enable-quad-precision || cat config.log
 #./configure --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 
-echo "POST CONFIGURATION::"
-echo ""
-echo ""
-echo "PATH is:"
-echo $PATH
-echo "LD_LIBRARY_PATH is:"
-echo $LD_LIBRARY_PATH
-echo ""
-
 echo "compiling/building"
 make
 
 echo "installing into $PREFIX"
 make install
 
+
+
+
+####################################################
 ### to test, build-dir option, ala README
 #autoreconf -iv
 #mkdir build && cd build
