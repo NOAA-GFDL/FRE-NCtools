@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: conda-forge/miniforge3:latest
+      image: condaforge/miniforge3:latest
 #      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2
 #      image: ghcr.io/noaa-gfdl/fre-cli:miniconda24.7.1_gcc14.2.0
 #      image: ghcr.io/noaa-gfdl/fre-nctools-ci-rocky-gnu:14.2.0_v2
