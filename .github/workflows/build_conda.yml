@@ -30,7 +30,7 @@ jobs:
           conda config --append channels noaa-gfdl
 
           # remove any default channels
-          conda config --remove channels defaults
+          conda config --remove channels defaults || echo "no defaults to remove"
 
           # just in case
           conda config --show channels
