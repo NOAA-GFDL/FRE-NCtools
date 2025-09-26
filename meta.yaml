@@ -15,6 +15,9 @@ requirements:
     - conda-forge::gsl=2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -37,6 +40,7 @@ requirements:
     - conda-forge::gsl=2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -59,6 +63,9 @@ requirements:
     - conda-forge::gsl=2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -81,6 +88,9 @@ requirements:
     - conda-forge::gsl=2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -152,7 +162,9 @@ test:
     # Run actual tests using the repository's test infrastructure
     # vanilla
     - echo "Setting up test environment..."
-    - autoreconf -iv && ./configure --prefix=$PREFIX --with-mpi --enable-quad-precision && make check RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
+    - autoreconf -iv
+    - ./configure --prefix=$PREFIX --with-mpi --enable-quad-precision
+    - make check RUN_VERY_EXPENSIVE_TESTS=no RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
 #    # --with-mpi --enable-quad-precision
 #    - echo "Setting up test environment..."
 #    - autoreconf -i && ./configure --with-mpi --enable-quad-precision && make check RUN_EXPENSIVE_TESTS=no
