@@ -34,7 +34,6 @@ requirements:
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::perl=5.*
-    - conda-forge::asciidoc
 
   build:
     - conda-forge::zlib-ng=2.2.*
@@ -59,7 +58,6 @@ requirements:
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::perl=5.*
-    - conda-forge::asciidoc
 
   run:
     - conda-forge::zlib-ng=2.2.*
@@ -86,7 +84,6 @@ requirements:
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::perl=5.*
-    - conda-forge::asciidoc
 
   test:
     - conda-forge::zlib-ng=2.2.*
@@ -112,8 +109,7 @@ requirements:
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
-    - conda-forge::perl=5.
-    - conda-forge::asciidoc
+    - conda-forge::perl=5.*
 
 
 about:
