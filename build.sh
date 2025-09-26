@@ -122,7 +122,7 @@ make install
 cp -r lib/ $PREFIX
 cp -r src/ $PREFIX
 cp -r tests/ $PREFIX
-cp -r tools/ $PREFIX
+#cp -r tools/ $PREFIX
 cp -r man/ $PREFIX
 cp -r m4/ $PREFIX
 cp -r docs/ $PREFIX
