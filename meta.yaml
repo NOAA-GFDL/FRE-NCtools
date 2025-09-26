@@ -10,11 +10,11 @@ build:
 
 requirements:
   host:
-    - conda-forge::zlib-ng==2.2.1
+    - conda-forge::zlib-ng=2.2.*
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-    - conda-forge::netcdf-fortran==4.6.1
-    - conda-forge::gcc==13.3.0
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::gcc=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -23,19 +23,19 @@ requirements:
     - conda-forge::pytest
     - conda-forge::libtool
     - conda-forge::autoconf=2.69.*
-    - conda-forge::automake==1.16.1
+    - conda-forge::automake=1.16.*
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make==4.2.1
+    - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-
+    - conda-forge::tempest-remap!=2.2.0
   build:
-    - conda-forge::zlib-ng==2.2.1
+    - conda-forge::zlib-ng=2.2.*
     - conda-forge::mpich==4.2.3
     - conda-forge::gsl=2.*
-    - conda-forge::netcdf-fortran==4.6.1
-    - conda-forge::gcc==13.3.0
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::gcc=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -44,54 +44,18 @@ requirements:
     - conda-forge::pytest
     - conda-forge::libtool
     - conda-forge::autoconf=2.69.*
-    - conda-forge::automake==1.16.1
+    - conda-forge::automake=1.16.*
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make==4.2.1
+    - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
+    - conda-forge::tempest-remap!=2.2.0
 
   run:
-    - conda-forge::zlib-ng==2.2.1
-    - conda-forge::mpich==4.2.3
-    - conda-forge::gsl=2.*
-    - conda-forge::netcdf-fortran==4.6.1
-    - conda-forge::gcc==13.3.0
-    - conda-forge::hdf5=1.14.*=mpi*
-    - conda-forge::libnetcdf==4.9.2
-    - conda-forge::nco=5.2.*
-    - conda-forge::python>2
-    - conda-forge::numpy<2
-    - conda-forge::pytest
-    - conda-forge::libtool
-    - conda-forge::autoconf=2.69.*
-    - conda-forge::automake==1.16.1
-    - conda-forge::tcsh
-    - conda-forge::which
-    - conda-forge::make==4.2.1
-    - conda-forge::coreutils
-    - conda-forge::c-compiler
 
   test:
-    - conda-forge::zlib-ng==2.2.1
-    - conda-forge::mpich==4.2.3
-    - conda-forge::gsl=2.*
-    - conda-forge::netcdf-fortran==4.6.1
-    - conda-forge::gcc==13.3.0
-    - conda-forge::hdf5=1.14.*=mpi*
-    - conda-forge::libnetcdf==4.9.2
-    - conda-forge::nco=5.2.*
-    - conda-forge::python>2
-    - conda-forge::numpy<2
-    - conda-forge::pytest
-    - conda-forge::libtool
-    - conda-forge::autoconf=2.69.*
-    - conda-forge::automake==1.16.1
-    - conda-forge::tcsh
-    - conda-forge::which
-    - conda-forge::make==4.2.1
-    - conda-forge::coreutils
-    - conda-forge::c-compiler
+
 
 
 about:
@@ -133,8 +97,8 @@ test:
     - stamp-h1
     - tap-driver.sh
     - test-driver
-    - tests/*
-    - tools/*
+    - tests/**
+    - tools/**
     
 #    # if using build-dir option? needed?
 #    - build**
