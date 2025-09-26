@@ -152,7 +152,7 @@ cp -r man/* $PREFIX               || echo "oops couldnt do it"
 cp -r site-configs/* $PREFIX   || echo "oops couldnt do it"
 cp -r src/* $PREFIX               || echo "oops couldnt do it"
 cp -r tests/* $PREFIX           || echo "oops couldnt do it"
-cp -r tools/* $PREFIX          || echo "oops couldnt do it"
+#cp -r tools/* $PREFIX          || echo "oops couldnt do it"
 
 #echo ""
 #echo "trying a make check in the build process, not advisable but i want info"
