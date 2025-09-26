@@ -26,7 +26,9 @@ requirements:
     - conda-forge::automake==1.16.1
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make
+    - conda-forge::make==4.2.1
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
 
   build:
     - conda-forge::zlib-ng==2.2.1
@@ -45,7 +47,9 @@ requirements:
     - conda-forge::automake==1.16.1
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make
+    - conda-forge::make==4.2.1
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
 
   run:
     - conda-forge::zlib-ng==2.2.1
@@ -64,7 +68,9 @@ requirements:
     - conda-forge::automake==1.16.1
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make
+    - conda-forge::make==4.2.1
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
 
   test:
     - conda-forge::zlib-ng==2.2.1
@@ -83,7 +89,9 @@ requirements:
     - conda-forge::automake==1.16.1
     - conda-forge::tcsh
     - conda-forge::which
-    - conda-forge::make
+    - conda-forge::make==4.2.1
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
 
 
 about:
@@ -93,16 +101,41 @@ about:
 test:
   skip: true
   source_files:
-    - docs/**
-    - site-configs/**
-    - man/**
-    - tests/**
-    - tools/**
-    - lib/**
-    - src/**
-    - m4/**
+    - aclocal.m4
+    - ar-lib
+    - autom4te.cache/**
+    - build.sh
+    - CODE_OF_CONDUCT.md
+    - compile
+    - config.h
+    - config.h.in
+    - config.log
+    - config.status
+    - configure
     - configure.ac
+    - CONTRIBUTING.md
+    - depcomp
+    - docs/**
+    - environment.yml
+    - install-sh
+    - lib/**
+    - LICENSE.md
+    - m4/**
+    - Makefile
     - Makefile.am
+    - Makefile.in
+    - man/**
+    - meta.yaml
+    - missing
+    - README.md
+    - site-configs/**
+    - src/**
+    - stamp-h1
+    - tap-driver.sh
+    - test-driver
+    - tests/*
+    - tools/*
+    
 #    # if using build-dir option? needed?
 #    - build**
   commands:

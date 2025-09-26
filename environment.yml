@@ -19,4 +19,6 @@ dependencies:
   - conda-forge::automake==1.16.1
   - conda-forge::tcsh
   - conda-forge::which
-  - conda-forge::make
+  - conda-forge::make==4.2.1
+  - conda-forge::coreutils
+  - conda-forge::c-compiler

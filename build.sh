@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+#set -e
 
 ## testing locally on ppan/ workstation
 #module load gcc
@@ -23,6 +23,24 @@ which nf-config
 echo "we have nf-config"
 echo ""
 
+echo ""
+echo "BUILD_PREFIX/bin"
+ls $BUILD_PREFIX/bin
+echo ""
+echo "BUILD_PREFIX/include"
+ls $BUILD_PREFIX/include
+echo ""
+
+
+echo ""
+echo "PREFIX/bin"
+ls $PREFIX/bin
+echo ""
+echo "PREFIX/include"
+ls $PREFIX/include
+echo ""
+
+#echo ""
 #echo ""
 #PATH=
 #echo "PATH is:"
@@ -85,8 +103,9 @@ echo 'building FRE-NCtools conda package...'
 
 ## this is sufficient
 #PREFIX=/home/inl/Working/fre-nctools/FRENCTOOLS
-autoreconf -iv
-./configure --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
+#PREFIX=/home/inl/FOO_BUILD/FRENCTOOLS
+autoreconf -iv --include $BUILD_DIR/include
+./configure --includedir $BUILD_DIR/include --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 #./configure --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
