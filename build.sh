@@ -104,8 +104,8 @@ echo 'building FRE-NCtools conda package...'
 ## this is sufficient
 #PREFIX=/home/inl/Working/fre-nctools/FRENCTOOLS
 #PREFIX=/home/inl/FOO_BUILD/FRENCTOOLS
-autoreconf -iv --include $BUILD_DIR/include
-./configure --includedir $BUILD_DIR/include --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
+autoreconf -iv --include $BUILD_PREFIX/include
+./configure --includedir $BUILD_PREFIX/include --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 #./configure --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
