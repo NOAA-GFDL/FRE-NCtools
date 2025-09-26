@@ -33,6 +33,7 @@ requirements:
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::perl=5.*
 
   build:
     - conda-forge::zlib-ng=2.2.*
@@ -56,6 +57,7 @@ requirements:
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::perl=5.*
 
   run:
     - conda-forge::zlib-ng=2.2.*
@@ -81,6 +83,7 @@ requirements:
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::perl=5.*
 
   test:
     - conda-forge::zlib-ng=2.2.*
@@ -106,6 +109,7 @@ requirements:
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::perl=5.*
 
 
 about:
