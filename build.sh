@@ -2,6 +2,17 @@
 
 set -ex
 
+## testing locally on ppan/ workstation
+#module load gcc
+#module load hdf5
+#module load mpich
+#module load hdf5
+#module load netcdf-c
+#module load nco
+#module load netcdf-fortran/
+#module list
+
+
 echo ""
 which nc-config
 echo "we have nc-config"
@@ -73,6 +84,7 @@ echo ""
 echo 'building FRE-NCtools conda package...'
 
 ## this is sufficient
+#PREFIX=/home/inl/Working/fre-nctools/FRENCTOOLS
 autoreconf -iv
 ./configure --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 #./configure --with-mpi || cat config.log
