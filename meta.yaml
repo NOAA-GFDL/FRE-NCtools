@@ -6,7 +6,7 @@ source:
   path: .
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   host:
@@ -117,11 +117,9 @@ about:
   summary: Tools for manipulating and creating netCDF inputs for FMS managed models
 
 test:
-  skip: true
   source_files:
     - aclocal.m4
     - ar-lib
-    - autom4te.cache/**
     - build.sh
     - CODE_OF_CONDUCT.md
     - compile
@@ -133,24 +131,25 @@ test:
     - configure.ac
     - CONTRIBUTING.md
     - depcomp
-    - docs/**
     - environment.yml
     - install-sh
-    - lib/**
     - LICENSE.md
-    - m4/**
     - Makefile
     - Makefile.am
     - Makefile.in
-    - man/**
     - meta.yaml
     - missing
     - README.md
-    - site-configs/**
-    - src/**
     - stamp-h1
     - tap-driver.sh
     - test-driver
+    - autom4te.cache/**
+    - docs/**
+    - lib/**
+    - m4/** 
+    - man/**
+    - site-configs/**
+    - src/**
     - tests/**
     - tools/**
     
@@ -166,6 +165,11 @@ test:
     # Run actual tests using the repository's test infrastructure
     # vanilla
     - echo "Setting up test environment..."
+#    - CC=`nc-config --cc`
+#    - FC=`nf-config --fc`
+#    - CFLAGS=`nc-config --cflags`
+#    - FCFLAGS=`nf-config --fflags`
+#    - LDFLAGS=`nc-config --libs`
     - autoreconf -iv
     - ./configure --prefix=$PREFIX --with-mpi --enable-quad-precision
     - make check RUN_VERY_EXPENSIVE_TESTS=no RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"

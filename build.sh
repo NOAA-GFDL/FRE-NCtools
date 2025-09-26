@@ -61,32 +61,32 @@ echo ""
 
 echo ""
 #CC=mpicc
-CC=`nc-config --cc`
+export CC=`nc-config --cc`
 echo "CC is:"
 echo $CC
 echo ""
 
 echo ""
 #FC=mpifc
-FC=`nf-config --fc`
+export FC=`nf-config --fc`
 echo "FC is:"
 echo $FC
 echo ""
 
 echo ""
-CFLAGS=`nc-config --cflags`
+export CFLAGS=`nc-config --cflags`
 echo "CFLAGS is:"
 echo $CFLAGS
 echo ""
 
 echo ""
-FCFLAGS=`nf-config --fflags`
+export FCFLAGS=`nf-config --fflags`
 echo "FCFLAGS is:"
 echo $FCFLAGS
 echo ""
 
 echo ""
-LDFLAGS=`nc-config --libs`
+export LDFLAGS=`nc-config --libs`
 echo "LDFLAGS is:"
 echo $LDFLAGS
 echo ""
@@ -119,20 +119,45 @@ echo ""
 echo "installing no PREFIX"
 make install
 
-cp -r lib/ $PREFIX
-cp -r src/ $PREFIX
-cp -r tests/ $PREFIX
-#cp -r tools/ $PREFIX
-cp -r man/ $PREFIX
-cp -r m4/ $PREFIX
-cp -r docs/ $PREFIX
+cp aclocal.m4 $PREFIX          || echo "oops couldnt do it"
+cp ar-lib $PREFIX               || echo "oops couldnt do it"
+cp build.sh $PREFIX               || echo "oops couldnt do it"
+cp CODE_OF_CONDUCT.md $PREFIX  || echo "oops couldnt do it"
+cp compile $PREFIX               || echo "oops couldnt do it"
+cp config.h $PREFIX               || echo "oops couldnt do it"
+cp config.h.in $PREFIX           || echo "oops couldnt do it"
+cp config.log $PREFIX           || echo "oops couldnt do it"
+cp config.status $PREFIX       || echo "oops couldnt do it"
+cp configure $PREFIX           || echo "oops couldnt do it"
+cp configure.ac $PREFIX           || echo "oops couldnt do it"
+cp CONTRIBUTING.md $PREFIX       || echo "oops couldnt do it"
+cp depcomp $PREFIX               || echo "oops couldnt do it"
+cp environment.yml $PREFIX       || echo "oops couldnt do it"
+cp install-sh $PREFIX           || echo "oops couldnt do it"
+cp LICENSE.md $PREFIX           || echo "oops couldnt do it"
+cp Makefile $PREFIX               || echo "oops couldnt do it"
+cp Makefile.am $PREFIX           || echo "oops couldnt do it"
+cp Makefile.in $PREFIX           || echo "oops couldnt do it"
+cp meta.yaml $PREFIX           || echo "oops couldnt do it"
+cp missing $PREFIX               || echo "oops couldnt do it"
+cp README.md $PREFIX           || echo "oops couldnt do it"
+cp stamp-h1 $PREFIX               || echo "oops couldnt do it"
+cp tap-driver.sh $PREFIX       || echo "oops couldnt do it"
+cp test-driver $PREFIX           || echo "oops couldnt do it"
+cp autom4te.cache/** $PREFIX   || echo "oops couldnt do it"
+cp -r docs/* $PREFIX           || echo "oops couldnt do it"
+cp -r lib/* $PREFIX               || echo "oops couldnt do it"
+cp -r m4/*  $PREFIX               || echo "oops couldnt do it"
+cp -r man/* $PREFIX               || echo "oops couldnt do it"
+cp -r site-configs/* $PREFIX   || echo "oops couldnt do it"
+cp -r src/* $PREFIX               || echo "oops couldnt do it"
+cp -r tests/* $PREFIX           || echo "oops couldnt do it"
+cp -r tools/* $PREFIX          || echo "oops couldnt do it"
 
 #echo ""
 #echo "trying a make check in the build process, not advisable but i want info"
 #make check RUN_EXPENSIVE_TESTS=no \
-#	|| echo "make check failed- see test-suite.log, guarding against the failure to not clobber helpful output"
+#    || echo "make check failed- see test-suite.log, guarding against the failure to not clobber helpful output"
 
 #ls $SRC_DIR/tests/test-suite.log || echo "test-suite.log not found at $SRC_DIR/tests/test-suite.log"
 #cp $SRC_DIR/tests/test-suite.log /app/fre-nctools-tarball || echo "copying test-suite log failed"
-
-
