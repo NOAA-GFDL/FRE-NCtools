@@ -61,32 +61,32 @@ echo ""
 
 echo ""
 #CC=mpicc
-export CC=`nc-config --cc`
+CC=`nc-config --cc`
 echo "CC is:"
 echo $CC
 echo ""
 
 echo ""
 #FC=mpifc
-export FC=`nf-config --fc`
+FC=`nf-config --fc`
 echo "FC is:"
 echo $FC
 echo ""
 
 echo ""
-export CFLAGS=`nc-config --cflags`
+CFLAGS=`nc-config --cflags`
 echo "CFLAGS is:"
 echo $CFLAGS
 echo ""
 
 echo ""
-export FCFLAGS=`nf-config --fflags`
+FCFLAGS=`nf-config --fflags`
 echo "FCFLAGS is:"
 echo $FCFLAGS
 echo ""
 
 echo ""
-export LDFLAGS=`nc-config --libs`
+LDFLAGS=`nc-config --libs`
 echo "LDFLAGS is:"
 echo $LDFLAGS
 echo ""
