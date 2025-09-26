@@ -27,7 +27,6 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
     - conda-forge::make
-    - conda-forge::coreutils
 
   build:
     - conda-forge::zlib-ng==2.2.1
@@ -47,7 +46,6 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
     - conda-forge::make
-    - conda-forge::coreutils
 
   run:
     - conda-forge::zlib-ng==2.2.1
@@ -67,7 +65,6 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
     - conda-forge::make
-    - conda-forge::coreutils
 
   test:
     - conda-forge::zlib-ng==2.2.1
@@ -87,7 +84,6 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
     - conda-forge::make
-    - conda-forge::coreutils
 
 
 about:
