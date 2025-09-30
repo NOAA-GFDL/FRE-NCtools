@@ -23,5 +23,3 @@ dependencies:
   - conda-forge::coreutils
   - conda-forge::c-compiler
   - conda-forge::tempest-remap!=2.2.0
-  - conda-forge::perl=5.
-  - conda-forge::asciidoc
