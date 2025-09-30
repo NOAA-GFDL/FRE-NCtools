@@ -62,7 +62,7 @@ echo ""
 echo ""
 #CC=mpicc
 #CC=`nc-config --cc`
-export CC=`nc-config --cc`
+#export CC=`nc-config --cc`
 echo "CC is:"
 echo $CC
 echo ""
@@ -70,7 +70,7 @@ echo ""
 echo ""
 #FC=mpifc
 #FC=`nf-config --fc`
-export FC=`nf-config --fc`
+#export FC=`nf-config --fc`
 echo "FC is:"
 echo $FC
 echo ""
@@ -78,7 +78,7 @@ echo ""
 echo ""
 #CFLAGS=`nc-config --cflags`
 CFLAGS="-I${PREFIX}/include"
-export CFLAGS=`nc-config --cflags`
+#export CFLAGS=`nc-config --cflags`
 echo "CFLAGS is:"
 echo $CFLAGS
 echo ""
