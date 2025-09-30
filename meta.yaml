@@ -42,6 +42,8 @@ requirements:
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
     - conda-forge::hdf5=1.14.*=mpi*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
@@ -110,6 +112,7 @@ requirements:
     - conda-forge::c-compiler
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::perl=5.*
+
 
 
 about:
