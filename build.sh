@@ -61,32 +61,35 @@ echo ""
 
 echo ""
 #CC=mpicc
-CC=`nc-config --cc`
+#CC=`nc-config --cc`
 echo "CC is:"
 echo $CC
 echo ""
 
 echo ""
 #FC=mpifc
-FC=`nf-config --fc`
+#FC=`nf-config --fc`
 echo "FC is:"
 echo $FC
 echo ""
 
 echo ""
-CFLAGS=`nc-config --cflags`
+#CFLAGS=`nc-config --cflags`
+CFLAGS="-I${PREFIX}/include"
 echo "CFLAGS is:"
 echo $CFLAGS
 echo ""
 
 echo ""
-FCFLAGS=`nf-config --fflags`
+#FCFLAGS=`nf-config --fflags`
+FCFLAGS="-I${PREFIX}/include"
 echo "FCFLAGS is:"
 echo $FCFLAGS
 echo ""
 
 echo ""
-LDFLAGS=`nc-config --libs`
+#LDFLAGS=`nc-config --libs`
+LDFLAGS="-L${PREFIX}/lib"
 echo "LDFLAGS is:"
 echo $LDFLAGS
 echo ""
@@ -104,8 +107,8 @@ echo 'building FRE-NCtools conda package...'
 ## this is sufficient
 #PREFIX=/home/inl/Working/fre-nctools/FRENCTOOLS
 #PREFIX=/home/inl/FOO_BUILD/FRENCTOOLS
-autoreconf -iv --include $BUILD_PREFIX/include
-./configure --includedir $BUILD_PREFIX/include --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
+autoreconf -iv --include $PREFIX/include
+./configure --includedir $PREFIX/include --prefix=$PREFIX --enable-quad-precision --with-mpi || cat config.log
 #./configure --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
 #./configure --prefix=$PREFIX --with-mpi || cat config.log
@@ -119,39 +122,39 @@ echo ""
 echo "installing no PREFIX"
 make install
 
-cp aclocal.m4 $PREFIX          || echo "oops couldnt do it"
-cp ar-lib $PREFIX               || echo "oops couldnt do it"
-cp build.sh $PREFIX               || echo "oops couldnt do it"
-cp CODE_OF_CONDUCT.md $PREFIX  || echo "oops couldnt do it"
-cp compile $PREFIX               || echo "oops couldnt do it"
-cp config.h $PREFIX               || echo "oops couldnt do it"
-cp config.h.in $PREFIX           || echo "oops couldnt do it"
-cp config.log $PREFIX           || echo "oops couldnt do it"
-cp config.status $PREFIX       || echo "oops couldnt do it"
-cp configure $PREFIX           || echo "oops couldnt do it"
-cp configure.ac $PREFIX           || echo "oops couldnt do it"
-cp CONTRIBUTING.md $PREFIX       || echo "oops couldnt do it"
-cp depcomp $PREFIX               || echo "oops couldnt do it"
-cp environment.yml $PREFIX       || echo "oops couldnt do it"
-cp install-sh $PREFIX           || echo "oops couldnt do it"
-cp LICENSE.md $PREFIX           || echo "oops couldnt do it"
-cp Makefile $PREFIX               || echo "oops couldnt do it"
-cp Makefile.am $PREFIX           || echo "oops couldnt do it"
-cp Makefile.in $PREFIX           || echo "oops couldnt do it"
-cp meta.yaml $PREFIX           || echo "oops couldnt do it"
-cp missing $PREFIX               || echo "oops couldnt do it"
-cp README.md $PREFIX           || echo "oops couldnt do it"
-cp stamp-h1 $PREFIX               || echo "oops couldnt do it"
-cp tap-driver.sh $PREFIX       || echo "oops couldnt do it"
-cp test-driver $PREFIX           || echo "oops couldnt do it"
-cp autom4te.cache/** $PREFIX   || echo "oops couldnt do it"
-cp -r docs/* $PREFIX           || echo "oops couldnt do it"
-cp -r lib/* $PREFIX               || echo "oops couldnt do it"
-cp -r m4/*  $PREFIX               || echo "oops couldnt do it"
-cp -r man/* $PREFIX               || echo "oops couldnt do it"
-cp -r site-configs/* $PREFIX   || echo "oops couldnt do it"
-cp -r src/* $PREFIX               || echo "oops couldnt do it"
-cp -r tests/* $PREFIX           || echo "oops couldnt do it"
+#cp aclocal.m4 $PREFIX          || echo "oops couldnt do it"
+#cp ar-lib $PREFIX               || echo "oops couldnt do it"
+#cp build.sh $PREFIX               || echo "oops couldnt do it"
+#cp CODE_OF_CONDUCT.md $PREFIX  || echo "oops couldnt do it"
+#cp compile $PREFIX               || echo "oops couldnt do it"
+#cp config.h $PREFIX               || echo "oops couldnt do it"
+#cp config.h.in $PREFIX           || echo "oops couldnt do it"
+#cp config.log $PREFIX           || echo "oops couldnt do it"
+#cp config.status $PREFIX       || echo "oops couldnt do it"
+#cp configure $PREFIX           || echo "oops couldnt do it"
+#cp configure.ac $PREFIX           || echo "oops couldnt do it"
+#cp CONTRIBUTING.md $PREFIX       || echo "oops couldnt do it"
+#cp depcomp $PREFIX               || echo "oops couldnt do it"
+#cp environment.yml $PREFIX       || echo "oops couldnt do it"
+#cp install-sh $PREFIX           || echo "oops couldnt do it"
+#cp LICENSE.md $PREFIX           || echo "oops couldnt do it"
+#cp Makefile $PREFIX               || echo "oops couldnt do it"
+#cp Makefile.am $PREFIX           || echo "oops couldnt do it"
+#cp Makefile.in $PREFIX           || echo "oops couldnt do it"
+#cp meta.yaml $PREFIX           || echo "oops couldnt do it"
+#cp missing $PREFIX               || echo "oops couldnt do it"
+#cp README.md $PREFIX           || echo "oops couldnt do it"
+#cp stamp-h1 $PREFIX               || echo "oops couldnt do it"
+#cp tap-driver.sh $PREFIX       || echo "oops couldnt do it"
+#cp test-driver $PREFIX           || echo "oops couldnt do it"
+#cp autom4te.cache/** $PREFIX   || echo "oops couldnt do it"
+#cp -r docs/* $PREFIX           || echo "oops couldnt do it"
+#cp -r lib/* $PREFIX               || echo "oops couldnt do it"
+#cp -r m4/*  $PREFIX               || echo "oops couldnt do it"
+#cp -r man/* $PREFIX               || echo "oops couldnt do it"
+#cp -r site-configs/* $PREFIX   || echo "oops couldnt do it"
+#cp -r src/* $PREFIX               || echo "oops couldnt do it"
+#cp -r tests/* $PREFIX           || echo "oops couldnt do it"
 #cp -r tools/* $PREFIX          || echo "oops couldnt do it"
 
 #echo ""
