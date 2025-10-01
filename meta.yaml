@@ -32,7 +32,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap[build!=h1819be2]
+    - conda-forge::tempest-remap[build!=h1819be2_5]
     - conda-forge::perl=5.*
 
   build:
@@ -58,7 +58,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap[build!=h1819be2]
+    - conda-forge::tempest-remap[build!=h1819be2_5]
     - conda-forge::perl=5.*
 
   test:
@@ -84,7 +84,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap[build!=h1819be2]
+    - conda-forge::tempest-remap[build!=h1819be2_5]
     - conda-forge::perl=5.*
 
   run:
@@ -107,7 +107,7 @@ requirements:
     - conda-forge::which
     - conda-forge::make=4.2.*
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap[build!=h1819be2]
+    - conda-forge::tempest-remap[build!=h1819be2_5]
     - conda-forge::perl=5.*
 
 
