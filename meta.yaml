@@ -18,7 +18,7 @@ requirements:
     - conda-forge::gfortran=13.3.*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::hdf5>=1.14.*,=*mpich*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
     - conda-forge::python=3.11.*
@@ -32,7 +32,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap=2.2.0=h397758c_8
+    - conda-forge::tempest-remap=2.2.0
     - conda-forge::perl=5.*
 
   build:
@@ -44,7 +44,7 @@ requirements:
     - conda-forge::gfortran=13.3.*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::hdf5>=1.14.*,=*mpich*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
     - conda-forge::python=3.11.*
@@ -58,7 +58,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap=2.2.0=h397758c_8
+    - conda-forge::tempest-remap=2.2.0
     - conda-forge::perl=5.*
 
   test:
@@ -70,7 +70,7 @@ requirements:
     - conda-forge::gfortran=13.3.*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::hdf5>=1.14.*,=*mpich*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
     - conda-forge::python=3.11.*
@@ -84,7 +84,7 @@ requirements:
     - conda-forge::make=4.2.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap=2.2.0=h397758c_8
+    - conda-forge::tempest-remap=2.2.0
     - conda-forge::perl=5.*
 
   run:
@@ -96,7 +96,7 @@ requirements:
     - conda-forge::gfortran=13.3.*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::hdf5=1.14.*=mpi*
+    - conda-forge::hdf5>=1.14.*,=*mpich*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::nco=5.2.*
     - conda-forge::python=3.11.*
@@ -107,7 +107,7 @@ requirements:
     - conda-forge::which
     - conda-forge::make=4.2.*
     - conda-forge::c-compiler
-    - conda-forge::tempest-remap=2.2.0=h397758c_8
+    - conda-forge::tempest-remap=2.2.0
     - conda-forge::perl=5.*
 
 about:
