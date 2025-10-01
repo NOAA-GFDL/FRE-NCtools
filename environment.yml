@@ -23,7 +23,7 @@ dependencies:
   - conda-forge::perl=5.*
   - conda-forge::python=3.11.*
   - conda-forge::pytest 
-  - conda-forge::tempest-remap=2.2.0
+  - conda-forge::tempest-remap!=2.2.0
   - conda-forge::tcsh
   - conda-forge::which
   - conda-forge::zlib-ng=2.2.*
