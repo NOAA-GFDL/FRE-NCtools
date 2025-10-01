@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: 'ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2'
+        image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2']
 #        image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2', 'condaforge/miniforge3:latest']
 
     container:
