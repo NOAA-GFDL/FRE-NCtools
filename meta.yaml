@@ -14,7 +14,6 @@ requirements:
     - conda-forge::automake=1.16.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
-    - conda-forge::diffutils
     - conda-forge::gsl=2.*
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
