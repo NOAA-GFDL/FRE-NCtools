@@ -16,15 +16,13 @@ requirements:
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
-    - conda-forge::python=3.*
-    - conda-forge::coreutils
-    - conda-forge::diffutils
-    
     
   build:  
     - conda-forge::autoconf=2.69
     - conda-forge::automake=1.16.*
+    - conda-forge::coreutils
     - conda-forge::c-compiler
+    - conda-forge::diffutils
     - conda-forge::gsl=2.*
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
@@ -32,8 +30,8 @@ requirements:
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::nco=5.2.*
     - conda-forge::numpy<2
-    - conda-forge::perl=5.* 
-    - conda-forge::python=3.*
+    - conda-forge::perl=5.*
+    - conda-forge::python
     - conda-forge::pytest 
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::tcsh
@@ -46,7 +44,7 @@ requirements:
     - conda-forge::nco=5.2.*
     - conda-forge::numpy<2
     - conda-forge::perl=5.*
-    - conda-forge::python=3.*
+    - conda-forge::python
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::tcsh
     - conda-forge::which
