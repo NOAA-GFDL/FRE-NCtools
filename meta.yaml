@@ -20,11 +20,12 @@ requirements:
     - conda-forge::hdf5=1.14.3=*mpich*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libnetcdf==4.9.2=*mpich*
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
     - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::netcdf4=*=*mpich*
     - conda-forge::nco=5.2.*
     - conda-forge::numpy=1.26.*
     - conda-forge::perl=5.*
@@ -46,11 +47,12 @@ requirements:
     - conda-forge::hdf5=1.14.3=*mpich*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libnetcdf==4.9.2=*mpich*
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
     - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::netcdf4=*=*mpich*
     - conda-forge::nco=5.2.*
     - conda-forge::numpy=1.26.*
     - conda-forge::perl=5.*
@@ -72,11 +74,12 @@ requirements:
     - conda-forge::hdf5=1.14.3=*mpich*
     - conda-forge::libgcc=13.3.*
     - conda-forge::libgfortran=13.3.*
-    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libnetcdf==4.9.2=*mpich*
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
     - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::netcdf4=*=*mpich*
     - conda-forge::nco=5.2.*
     - conda-forge::numpy=1.26.*
     - conda-forge::perl=5.*
