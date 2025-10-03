@@ -10,8 +10,6 @@ build:
 
 requirements:
   host:
-    - conda-forge::autoconf=2.69
-    - conda-forge::automake=1.16.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::gsl=2.*
@@ -23,7 +21,6 @@ requirements:
     - conda-forge::libnetcdf==4.9.2=*mpich*
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
-    - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::netcdf4=*=*mpich*
     - conda-forge::nco=5.2.*
@@ -64,8 +61,6 @@ requirements:
     - conda-forge::zlib-ng=2.2.*
 
   run:
-    - conda-forge::autoconf=2.69
-    - conda-forge::automake=1.16.*
     - conda-forge::coreutils
     - conda-forge::c-compiler
     - conda-forge::gsl=2.*
@@ -77,7 +72,6 @@ requirements:
     - conda-forge::libnetcdf==4.9.2=*mpich*
     - conda-forge::libtool
     - conda-forge::mpich==4.2.3
-    - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::netcdf4=*=*mpich*
     - conda-forge::nco=5.2.*
@@ -96,6 +90,11 @@ about:
   summary: Tools for manipulating and creating netCDF inputs for FMS managed models
 
 test:
+  requires:
+    - conda-forge::autoconf=2.69
+    - conda-forge::automake=1.16.*
+    - conda-forge::make=4.2.*
+
   source_files:
     - aclocal.m4
     - ar-lib
