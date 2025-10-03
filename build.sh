@@ -77,7 +77,7 @@ echo ""
 
 echo ""
 #CFLAGS=`nc-config --cflags`
-CFLAGS="-I${PREFIX}/include"
+CFLAGS="-fPIC -I${PREFIX}/include"
 #export CFLAGS=`nc-config --cflags`
 echo "CFLAGS is:"
 echo $CFLAGS
@@ -85,7 +85,7 @@ echo ""
 
 echo ""
 #FCFLAGS=`nf-config --fflags`
-FCFLAGS="-I${PREFIX}/include"
+FCFLAGS="-fPIC -I${PREFIX}/include"
 #export FCFLAGS=`nf-config --fflags`
 echo "FCFLAGS is:"
 echo $FCFLAGS
