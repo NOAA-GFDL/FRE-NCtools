@@ -35,6 +35,85 @@ requirements:
     - conda-forge::which
     - conda-forge::zlib-ng=2.2.*
 
+  build:
+    - conda-forge::autoconf=2.69
+    - conda-forge::automake=1.16.*
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
+    - conda-forge::gsl=2.*
+    - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::hdf5=1.14.3=*mpich*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
+    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libtool
+    - conda-forge::mpich==4.2.3
+    - conda-forge::make=4.2.*
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::nco=5.2.*
+    - conda-forge::numpy<2
+    - conda-forge::perl=5.*
+    - conda-forge::python=3.11.*
+    - conda-forge::pytest 
+    - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::tcsh
+    - conda-forge::which
+    - conda-forge::zlib-ng=2.2.*
+
+  test:
+    - conda-forge::autoconf=2.69
+    - conda-forge::automake=1.16.*
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
+    - conda-forge::gsl=2.*
+    - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::hdf5=1.14.3=*mpich*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
+    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libtool
+    - conda-forge::mpich==4.2.3
+    - conda-forge::make=4.2.*
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::nco=5.2.*
+    - conda-forge::numpy<2
+    - conda-forge::perl=5.*
+    - conda-forge::python=3.11.*
+    - conda-forge::pytest 
+    - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::tcsh
+    - conda-forge::which
+    - conda-forge::zlib-ng=2.2.*
+
+  run:
+    - conda-forge::autoconf=2.69
+    - conda-forge::automake=1.16.*
+    - conda-forge::coreutils
+    - conda-forge::c-compiler
+    - conda-forge::gsl=2.*
+    - conda-forge::gcc=13.3.*
+    - conda-forge::gfortran=13.3.*
+    - conda-forge::hdf5=1.14.3=*mpich*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
+    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libtool
+    - conda-forge::mpich==4.2.3
+    - conda-forge::make=4.2.*
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::nco=5.2.*
+    - conda-forge::numpy<2
+    - conda-forge::perl=5.*
+    - conda-forge::python=3.11.*
+    - conda-forge::pytest 
+    - conda-forge::tempest-remap!=2.2.0
+    - conda-forge::tcsh
+    - conda-forge::which
+    - conda-forge::zlib-ng=2.2.*
+
+
 about:
   license: LGPL-3.0
   summary: Tools for manipulating and creating netCDF inputs for FMS managed models
@@ -93,8 +172,8 @@ test:
 #    - CFLAGS=`nc-config --cflags`
 #    - FCFLAGS=`nf-config --fflags`
 #    - LDFLAGS=`nc-config --libs`
-#    - autoreconf -iv
-#    - ./configure --prefix=$PREFIX --with-mpi --enable-quad-precision
+    - autoreconf -iv
+    - ./configure --prefix=$PREFIX --with-mpi --enable-quad-precision
     - make check RUN_VERY_EXPENSIVE_TESTS=no RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
 #    # --with-mpi --enable-quad-precision
 #    - echo "Setting up test environment..."
