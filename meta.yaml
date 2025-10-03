@@ -15,17 +15,13 @@ requirements:
     - conda-forge::libgfortran=13.3.*
     - conda-forge::libnetcdf==4.9.2
     - conda-forge::libtool
-    - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::mpich==4.2.3
     - conda-forge::python=3.*
     - conda-forge::coreutils
     - conda-forge::diffutils
-    - conda-forge::gsl=2.* 
-    - conda-forge::nco=5.2.*
-    - conda-forge::numpy<2
-    - conda-forge::zlib-ng=2.2.*
-
-
+    - conda-forge::gsl=2.*
+    
+    
   build:  
     - conda-forge::autoconf=2.69
     - conda-forge::automake=1.16.*
@@ -33,14 +29,20 @@ requirements:
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
     - conda-forge::make=4.2.*
+    - conda-forge::netcdf-fortran=4.6.*
+    - conda-forge::nco=5.2.*
+    - conda-forge::numpy<2
     - conda-forge::perl=5.* 
     - conda-forge::python=3.*
     - conda-forge::pytest 
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::tcsh
     - conda-forge::which
+    - conda-forge::zlib-ng=2.2.*
 
   run:
+    - conda-forge::gsl=2.*
+    - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::nco=5.2.*
     - conda-forge::numpy<2
     - conda-forge::perl=5.*
@@ -48,14 +50,14 @@ requirements:
     - conda-forge::tempest-remap!=2.2.0
     - conda-forge::tcsh
     - conda-forge::which
+    - conda-forge::zlib-ng=2.2.*
 
 about:
   license: LGPL-3.0
   summary: Tools for manipulating and creating netCDF inputs for FMS managed models
 
 test:
-  requires:
-    - conda-forge::make=4.2.*
+#  requires:
   source_files:
     - aclocal.m4
     - ar-lib
@@ -90,7 +92,8 @@ test:
     - site-configs/**
     - src/**
     - tests/**
-    - tools/**    
+    - tools/**
+    
 #    # if using build-dir option? needed?
 #    - build**
   commands:
