@@ -10,14 +10,6 @@ build:
 
 requirements:
   host:
-    - conda-forge::hdf5=1.14.3=*mpich*
-    - conda-forge::libgcc=13.3.*
-    - conda-forge::libgfortran=13.3.*
-    - conda-forge::libnetcdf==4.9.2
-    - conda-forge::libtool
-    - conda-forge::mpich==4.2.3
-    
-  build:
     - conda-forge::autoconf=2.69
     - conda-forge::automake=1.16.*
     - conda-forge::coreutils
@@ -26,6 +18,12 @@ requirements:
     - conda-forge::gsl=2.*
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
+    - conda-forge::hdf5=1.14.3=*mpich*
+    - conda-forge::libgcc=13.3.*
+    - conda-forge::libgfortran=13.3.*
+    - conda-forge::libnetcdf==4.9.2
+    - conda-forge::libtool
+    - conda-forge::mpich==4.2.3
     - conda-forge::make=4.2.*
     - conda-forge::netcdf-fortran=4.6.*
     - conda-forge::nco=5.2.*
@@ -37,16 +35,6 @@ requirements:
     - conda-forge::tcsh
     - conda-forge::which
     - conda-forge::zlib-ng=2.2.*
-
-  run: 
-    - conda-forge::numpy<2
-    - conda-forge::perl=5.*
-    - conda-forge::python=3.11.*
-    - conda-forge::pytest 
-    - conda-forge::which
-    - conda-forge::nco=5.2.*
-    - conda-forge::xarray
-   
 
 about:
   license: LGPL-3.0
