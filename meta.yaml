@@ -19,13 +19,13 @@ requirements:
     - conda-forge::python=3.*
     - conda-forge::coreutils
     - conda-forge::diffutils
+    - conda-forge::gsl=2.*
     
     
   build:  
     - conda-forge::autoconf=2.69
     - conda-forge::automake=1.16.*
     - conda-forge::c-compiler
-    - conda-forge::gsl=2.*
     - conda-forge::gcc=13.3.*
     - conda-forge::gfortran=13.3.*
     - conda-forge::make=4.2.*
