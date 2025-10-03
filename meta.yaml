@@ -143,8 +143,11 @@ test:
     # Run actual tests using the repository's test infrastructure
     # vanilla
     - echo "Setting up test environment..."
-#    - autoreconf -iv --include $PREFIX/include
-#    - ./configure --includedir $PREFIX/include --prefix=$PREFIX --with-mpi --enable-quad-precision
+    - CFLAGS="-fPIC -I${PREFIX}/include"
+    - FCFLAGS="-fPIC -I${PREFIX}/include"
+    - LDFLAGS="-L${PREFIX}/lib"
+    - echo "${CFLAGS}" && echo "${FCFLAGS}" && echo "${LDFLAGS}" && autoreconf -iv --include $PREFIX/include
+    - ./configure --includedir $PREFIX/include --prefix=$PREFIX --with-mpi --enable-quad-precision
     - make check RUN_VERY_EXPENSIVE_TESTS=no RUN_EXPENSIVE_TESTS=no || echo "make check failed in conda build. guarding against that failure so the tarball still gets put out!"
 
     # Test key installed programs with help flags (allow help commands to exit with any status)
