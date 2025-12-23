@@ -1662,7 +1662,15 @@ int main (int argc, char *argv[])
 	    if(lnd_frac > MIN_AREA_FRAC) { /* over land */
 	      /* find the overlap of atmxlnd and ocean cell */
 	      for(l=0; l<count; l++) {
-		if( clip_method == GREAT_CIRCLE_CLIP )
+            /*Apply a longitude fix to ocean cell xo based on the center of the atmxlnd cell
+            Otherwise, when lnd and atm grids are not the same some exchange grids may be missed, particularly around the Prime Meridian lon=0 
+            */
+            if(!lnd_same_as_atm){
+              no_in = fix_lon (xo, yo, 4, atmxlnd_x[l][0]); //Shifts xo so the center to be within atmxlnd_x[l][0]-pi to atmxlnd_x[l][0]+pi, 
+              xo_min = minval_double (no_in, xo);
+              xo_max = maxval_double (no_in, xo);		
+           }
+    if( clip_method == GREAT_CIRCLE_CLIP )
 		  n_out = clip_2dx2d_great_circle(atmxlnd_x[l], atmxlnd_y[l], atmxlnd_z[l], num_v[l], xo, yo, zo, 4,
 						  x_out, y_out, z_out);
 		else {
