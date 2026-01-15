@@ -363,9 +363,9 @@ foreach my $file (@ifiles) {
         print "   var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
         my $appendopt = "";
         $appendopt = "-A" if ( -f "$cwd/$tmp_var_filename" );
-        print "$ncks -h $appendopt -v $vlist $file $tmp_var_filename\n" if $Opt{VERBOSE};
+        print "$ncks -C -h $appendopt -v $vlist $file $tmp_var_filename\n" if $Opt{VERBOSE};
         next                                                            if $TEST;
-        system("$ncks -h $appendopt -v $vlist $file $tmp_var_filename");
+        system("$ncks -C -h $appendopt -v $vlist $file $tmp_var_filename");
         $ncstatus += $?;
 
         # remove dimensions called "scalar_axis" (i.e., length = 1)
@@ -502,8 +502,8 @@ foreach my $file (@ifiles) {
     # for an existing variable in a netCDF4 file. The netCDF4 format (unlike netCDF3) does not permit this.
     if ( $Opt{onefile} ) {
         my $vlist = join ",", @vlist;
-        print "$ncks -6 -h -A -v $vlist $file $Opt{onefile}\n" if $Opt{VERBOSE} > 0;
-        system("$ncks -6 -h -A -v $vlist $file $Opt{onefile}");
+        print "$ncks -C -6 -h -A -v $vlist $file $Opt{onefile}\n" if $Opt{VERBOSE} > 0;
+        system("$ncks -C -6 -h -A -v $vlist $file $Opt{onefile}");
         $ncstatus += $?;
 
         my @ncatted_opts = set_ncatted_opts( $Opt{onefile}, tailname( $Opt{onefile} ) );
