@@ -1,0 +1,75 @@
+name: build_conda
+
+on: [push]
+
+#  pull_request:
+#    branches:
+#      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2']
+#        image: ['ghcr.io/noaa-gfdl/fre-cli:miniconda24_gcc14_v2', 'condaforge/miniforge3:latest']
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Configure Conda
+        run: |
+          echo "removing defaults, appending reqd channels"
+          conda config --append channels conda-forge
+          conda config --append channels noaa-gfdl
+          conda config --remove channels defaults
+
+          echo "setting strict channel priority"
+          conda config --set channel_priority strict
+
+          echo "setting anaconda_upload to no"
+          conda config --set anaconda_upload no
+
+          echo "printing conda config just in case"
+          conda config --show
+
+      - name: Update Conda and Conda Package Indices
+        run: |
+          echo "updating conda and package channel indices for conda-forge, noaa-gfdl"
+          conda update -y conda
+          conda update -y --all --override-channels -c conda-forge
+          conda update -y --all --override-channels -c noaa-gfdl
+
+      - name: Conda install conda-build
+        run: |
+          echo "conda install conda-build"
+          conda install conda-forge::conda-build
+
+      - name: Run Conda to Build
+        continue-on-error: true
+        run: |
+          # conda build
+          mkdir -p /app/fre-nctools-tarball
+          conda build . --package-format tar.bz2 --output-folder /app/fre-nctools-tarball || echo "conda build failed, guarding. artifact upload will fail instead."
+
+      - name: Upload fre-nctools tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: fre-nctools-tarball
+          path: /app/fre-nctools-tarball/linux-64/fre-nctools-*.tar.bz2
+          if-no-files-found: error
+
+      - name: Upload test-suite.log
+        uses: actions/upload-artifact@v4
+        with:
+          name: fre-nctools-test-suite-log
+          path: /app/fre-nctools-tarball/test-suite.log
+          if-no-files-found: error
+
