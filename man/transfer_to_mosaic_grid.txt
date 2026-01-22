@@ -25,6 +25,11 @@ OPTIONS
 
 The file name of previous version grid.
 
+*--rotate_poly*::
+
+Set to calculate polar polygon areas by calculating the area of a copy of the
+polygon, with the copy being rotated far away from the pole.
+
 BUGS
 ----
 Open bug reports at {package_bugreport}.
