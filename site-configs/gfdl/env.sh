@@ -32,18 +32,17 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Variables to control versions used
-env_version=2024.02
-gcc_version=13.2.0
+env_version=2025.01
+gcc_version=13.3.0
 ncc_version=4.9.2
 ncf_version=4.6.1
-mpi_version=4.2.1
+mpi_version=4.2.3
 
 # Ensure the base spack modules are first in MODULEPATH
 module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
 
-# bats, and python are needed for tests
-module load bats
+# python is needed for tests
 module load python
 module load nco
 

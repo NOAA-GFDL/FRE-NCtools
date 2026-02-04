@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
     check_err(nc_put_att_text(ncid, pfull_id, "long_name", 23, "ref full pressure level"), __LINE__);
     check_err(nc_put_att_text(ncid, pfull_id, "cartesian_axis", 1, "Z"), __LINE__);
     check_err(nc_put_att_text(ncid, pfull_id, "positive", 4, "down"), __LINE__);
+    check_err(nc_put_att_text(ncid, pfull_id, "formula_terms", 6, "ps: ps"), __LINE__);
 
     check_err(nc_def_var(ncid, "pk", NC_FLOAT, 1, &phalf_dim, &pk_id), __LINE__);
     check_err(nc_put_att_text(ncid, pk_id, "units", 6, "pascal"), __LINE__);
