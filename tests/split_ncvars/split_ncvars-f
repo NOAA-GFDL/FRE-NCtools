@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# Copyright (C) 2024 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCTools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+    command -v split_ncvars.pl --version
+fi
+
+. ${srcdir=.}/init.sh; path_prepend_ ../../src
+
+# Need to use the included list_ncvars.sh script.  Otherwise,
+# split_ncvars will look for list_ncvars.sh in the installed bin
+# directory.
+export LIST_NCVARS=$(readlink -f ../../src/list_ncvars.sh)
+
+# list_ncvars.sh needs to know where to find the built list_ncvars
+# executable.
+export PKGLIBEXECDIR=$(readlink -f ../../src)
+
+# Use the test netCDF files from plevel
+${builddir=..}/create_plevel_test_ncfile || framework_failure_ "failed to create plevel test files"
+mkdir idir || framework_failure_ "failed to create idir"
+mv test_input.nc idir || framework_failure_ "failed to move test_input.nc to idir"
+
+# Extract a static variable whose formula_terms contains a variable that contains time.
+# The output file should NOT contain time.
+split_ncvars.pl -v pfull -i idir test_input.nc -f output.nc || fail_ split_ncvars.pl test_input.nc failed
+
+# Check that the output.nc file was created, that it has pfull in it, and does not have time in it
+test -f output.nc || fail_ output.nc not created
+if ncdump -v time output.nc
+then
+    # Expected failure
+    fail_ "output.nc incorrectly contains time"
+fi
+ncdump -v pfull output.nc || fail_ "output.nc does not contain output variable pfull"

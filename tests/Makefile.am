@@ -143,6 +143,7 @@ TESTS = \
     plevel/plevel-nctypes \
     plevel/plevel-t \
     split_ncvars/split_ncvars \
+    split_ncvars/split_ncvars-f \
     split_ncvars/split_ncvars-i \
     split_ncvars/split_ncvars-l \
     split_ncvars/split_ncvars-o \

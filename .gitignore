@@ -3,7 +3,7 @@
 *.tar
 *.gz
 build.fre-nctools*
-build
+build*
 _build
 *.exe
 *.1
