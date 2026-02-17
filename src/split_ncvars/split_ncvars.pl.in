@@ -363,9 +363,9 @@ foreach my $file (@ifiles) {
         print "   var=$var; timename=$timename; vlist=$vlist\n" if $Opt{VERBOSE} > 2;
         my $appendopt = "";
         $appendopt = "-A" if ( -f "$cwd/$tmp_var_filename" );
-        print "$ncks -C -h $appendopt -v $vlist $file $tmp_var_filename\n" if $Opt{VERBOSE};
+        print "$ncks -h $appendopt -v $vlist $file $tmp_var_filename\n" if $Opt{VERBOSE};
         next                                                            if $TEST;
-        system("$ncks -C -h $appendopt -v $vlist $file $tmp_var_filename");
+        system("$ncks -h $appendopt -v $vlist $file $tmp_var_filename");
         $ncstatus += $?;
 
         # remove dimensions called "scalar_axis" (i.e., length = 1)
