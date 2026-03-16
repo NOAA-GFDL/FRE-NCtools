@@ -132,6 +132,11 @@ char *usage[] = {
   " ",
   "--verbose                      Set --verbose to print out messages during running.        ",
   "",
+  "--maxxgrid #                   Set maximum exchange grid size. Controls memory allocation ",
+  "                               for remapping operations. Default: 1e6 (1 million). Increase ",
+  "                               if you encounter 'exceeds MAXXGRID' errors with high-resolution ",
+  "                               grids. Valid range: 1e3 to 1e10.                             ",
+  "",
 
   "A sample call to make_coupler_mosaic that makes exchange grids for atmosphere, land and ocean ",
   "mosaic (atmosphere and land are coincident) is: ",
@@ -420,6 +425,7 @@ int main (int argc, char *argv[])
     {"verbose",              no_argument,       NULL, 'v'},
     {"print_memory",         no_argument,       NULL, 'p'},
     {"rotate_poly",          no_argument,       NULL, 'u'},
+    {"maxxgrid",             required_argument, NULL, 'x'},
     {NULL, 0, NULL, 0}
   };
 
@@ -469,6 +475,15 @@ int main (int argc, char *argv[])
       break;
     case 'u':
       rotate_poly = 1;
+      break;
+    case 'x':
+      {
+        size_t maxxgrid_val = (size_t)atof(optarg);
+        if(maxxgrid_val < 1e3 || maxxgrid_val > 1e10) {
+          mpp_error("make_coupler_mosaic: --maxxgrid value must be between 1e3 and 1e10");
+        }
+        set_maxxgrid(maxxgrid_val);
+      }
       break;
     case '?':
       errflg++;
@@ -1163,34 +1178,34 @@ int main (int argc, char *argv[])
       }
 
       for(nl=0; nl<ntile_lnd; nl++) {
-	atmxlnd_area[na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	atmxlnd_ia  [na][nl] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxlnd_ja  [na][nl] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxlnd_il  [na][nl] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxlnd_jl  [na][nl] = (int    *)malloc(MAXXGRID*sizeof(int   ));
+	atmxlnd_area[na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	atmxlnd_ia  [na][nl] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxlnd_ja  [na][nl] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxlnd_il  [na][nl] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxlnd_jl  [na][nl] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
 	if(interp_order == 2 ) {
-	  atmxlnd_clon[na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxlnd_clat[na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxlnd_dia [na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxlnd_dja [na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxlnd_dil [na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxlnd_djl [na][nl] = (double *)malloc(MAXXGRID*sizeof(double));
+	  atmxlnd_clon[na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxlnd_clat[na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxlnd_dia [na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxlnd_dja [na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxlnd_dil [na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxlnd_djl [na][nl] = (double *)malloc(get_maxxgrid()*sizeof(double));
 	}
       }
 
       for(no=0; no<ntile_ocn; no++) {
-	atmxocn_area[na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	atmxocn_ia  [na][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxocn_ja  [na][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxocn_io  [na][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	atmxocn_jo  [na][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
+	atmxocn_area[na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	atmxocn_ia  [na][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxocn_ja  [na][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxocn_io  [na][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	atmxocn_jo  [na][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
 	if(interp_order == 2 ) {
-	  atmxocn_clon[na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxocn_clat[na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxocn_dia [na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxocn_dja [na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxocn_dio [na][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  atmxocn_djo [na][no] = (double *)malloc(MAXXGRID*sizeof(double));
+	  atmxocn_clon[na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxocn_clat[na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxocn_dia [na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxocn_dja [na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxocn_dio [na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  atmxocn_djo [na][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
 	}
       }
     }
@@ -1655,7 +1670,7 @@ int main (int argc, char *argv[])
 		    atmxocn_clat[na][no][naxo[na][no]] = poly_ctrlat ( x_out, y_out, n_out )*ocn_frac;
 		  }
 		  ++(naxo[na][no]);
-		  if(naxo[na][no] > MAXXGRID) mpp_error("naxo is greater than MAXXGRID, increase MAXXGRID");
+		  if(naxo[na][no] > get_maxxgrid()) mpp_error("naxo exceeds MAXXGRID limit; increase the value using --maxxgrid flag");
 		}
 	      }
 	    }
@@ -1722,7 +1737,7 @@ int main (int argc, char *argv[])
 	      atmxlnd_clat[na][nl][naxl[na][nl]] = axl_clat[l];
 	    }
 	    ++(naxl[na][nl]);
-	    if(naxl[na][nl] > MAXXGRID) mpp_error("naxl is greater than MAXXGRID, increase MAXXGRID");
+	    if(naxl[na][nl] > get_maxxgrid()) mpp_error("naxl exceeds MAXXGRID limit; increase the value using --maxxgrid flag");
 	  }
 	}
 
@@ -2513,18 +2528,18 @@ int main (int argc, char *argv[])
 	lndxocn_clat[nl] = (double **)malloc(ntile_ocn*sizeof(double *));
       }
       for(no=0; no<ntile_ocn; no++) {
-	lndxocn_area[nl][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	lndxocn_il  [nl][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	lndxocn_jl  [nl][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	lndxocn_io  [nl][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	lndxocn_jo  [nl][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
+	lndxocn_area[nl][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	lndxocn_il  [nl][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	lndxocn_jl  [nl][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	lndxocn_io  [nl][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	lndxocn_jo  [nl][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
 	if(interp_order == 2 ) {
-	  lndxocn_dil[nl][no]  = (double *)malloc(MAXXGRID*sizeof(double));
-	  lndxocn_djl[nl][no]  = (double *)malloc(MAXXGRID*sizeof(double));
-	  lndxocn_dio[nl][no]  = (double *)malloc(MAXXGRID*sizeof(double));
-	  lndxocn_djo[nl][no]  = (double *)malloc(MAXXGRID*sizeof(double));
-	  lndxocn_clon[nl][no] = (double *)malloc(MAXXGRID*sizeof(double *));
-	  lndxocn_clat[nl][no] = (double *)malloc(MAXXGRID*sizeof(double *));
+	  lndxocn_dil[nl][no]  = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  lndxocn_djl[nl][no]  = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  lndxocn_dio[nl][no]  = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  lndxocn_djo[nl][no]  = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  lndxocn_clon[nl][no] = (double *)malloc(get_maxxgrid()*sizeof(double *));
+	  lndxocn_clat[nl][no] = (double *)malloc(get_maxxgrid()*sizeof(double *));
 	}
       }
     }
@@ -2690,7 +2705,7 @@ int main (int argc, char *argv[])
 		  lndxocn_clat[nl][no][nlxo[nl][no]] = poly_ctrlat ( x_out, y_out, n_out )*ocn_frac;
 		}
 		++(nlxo[nl][no]);
-		if(nlxo[nl][no] > MAXXGRID) mpp_error("nlxo is greater than MAXXGRID, increase MAXXGRID");
+		if(nlxo[nl][no] > get_maxxgrid()) mpp_error("nlxo exceeds MAXXGRID limit; increase the value using --maxxgrid flag");
 	      }
 	    }
 	  } /* end of io, jo loop */
@@ -3031,18 +3046,18 @@ int main (int argc, char *argv[])
       }
 
       for(no=0; no<ntile_ocn; no++) {
-	wavxocn_area[nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	wavxocn_iw  [nw][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	wavxocn_jw  [nw][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	wavxocn_io  [nw][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
-	wavxocn_jo  [nw][no] = (int    *)malloc(MAXXGRID*sizeof(int   ));
+	wavxocn_area[nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	wavxocn_iw  [nw][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	wavxocn_jw  [nw][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	wavxocn_io  [nw][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
+	wavxocn_jo  [nw][no] = (int    *)malloc(get_maxxgrid()*sizeof(int   ));
 	if(interp_order == 2 ) {
-	  wavxocn_clon[nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  wavxocn_clat[nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  wavxocn_diw [nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  wavxocn_djw [nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  wavxocn_dio [nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
-	  wavxocn_djo [nw][no] = (double *)malloc(MAXXGRID*sizeof(double));
+	  wavxocn_clon[nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  wavxocn_clat[nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  wavxocn_diw [nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  wavxocn_djw [nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  wavxocn_dio [nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
+	  wavxocn_djo [nw][no] = (double *)malloc(get_maxxgrid()*sizeof(double));
 	}
       }
     }
@@ -3222,7 +3237,7 @@ int main (int argc, char *argv[])
 		    wavxocn_clat[nw][no][nwxo[nw][no]] = poly_ctrlat ( x_out, y_out, n_out )*ocn_frac;
 		  }
 		  ++(nwxo[nw][no]);
-		  if(nwxo[nw][no] > MAXXGRID) mpp_error("nwxo is greater than MAXXGRID, increase MAXXGRID");
+		  if(nwxo[nw][no] > get_maxxgrid()) mpp_error("nwxo exceeds MAXXGRID limit; increase the value using --maxxgrid flag");
 		}
 	      }
 	    }

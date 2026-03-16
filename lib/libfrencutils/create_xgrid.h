@@ -36,6 +36,7 @@ double poly_ctrlon(const double lon[], const double lat[], int n, double clon);
 double poly_ctrlat(const double lon[], const double lat[], int n);
 double box_ctrlon(double ll_lon, double ll_lat, double ur_lon, double ur_lat, double clon);
 double box_ctrlat(double ll_lon, double ll_lat, double ur_lon, double ur_lat);
+void set_maxxgrid(size_t value);
 int get_maxxgrid(void);
 void get_grid_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);
 void get_grid_great_circle_area(const int *nlon, const int *nlat, const double *lon, const double *lat, double *area);

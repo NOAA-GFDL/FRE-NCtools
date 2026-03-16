@@ -54,6 +54,7 @@
 #include "conserve_interp.h"
 #include "bilinear_interp.h"
 #include "fregrid_util.h"
+#include "create_xgrid.h"
 
 char *usage[] = {
   "",
@@ -266,6 +267,11 @@ char *usage[] = {
   "--shuffle #                   If using NetCDF4 , use shuffle if 1 and don't use if 0  ",
   "                              Defaults to input file settings.                        ",
   "                                                                                      ",
+  "--maxxgrid #                  Set maximum exchange grid size. Controls memory          ",
+  "                              allocation for remapping operations. Default: 1e6       ",
+  "                              (1 million). Increase if you encounter 'nxgrid exceeds  ",
+  "                              MAXXGRID' errors with high-resolution grids.            ",
+  "                                                                                      ",
   "  Example 1: Remap C48 data onto N45 grid.                                            ",
   "             (use GFDL-CM3 data as example)                                           ",
   "   fregrid --input_mosaic C48_mosaic.nc --input_dir input_dir --input_file input_file ",
@@ -406,6 +412,7 @@ int main(int argc, char* argv[])
     {"deflation",        required_argument, NULL, 'S'},
     {"shuffle",          required_argument, NULL, 'T'},
     {"format",           required_argument, NULL, 'U'},
+    {"maxxgrid",         required_argument, NULL, 'V'},
     {"help",             no_argument,       NULL, 'h'},
     {0, 0, 0, 0},
   };
@@ -557,6 +564,15 @@ int main(int argc, char* argv[])
 	break;
     case 'U':
       format = optarg;
+      break;
+    case 'V':
+      {
+        size_t maxxgrid_val = (size_t)atof(optarg);
+        if(maxxgrid_val < 1e3 || maxxgrid_val > 1e10) {
+          mpp_error("fregrid: --maxxgrid value must be between 1e3 and 1e10");
+        }
+        set_maxxgrid(maxxgrid_val);
+      }
       break;
     case '?':
       errflg++;

@@ -37,14 +37,30 @@ int inside_edge(double x0, double y0, double x1, double y1, double x, double y);
 int line_intersect_2D_3D(double *a1, double *a2, double *q1, double *q2, double *q3,
 		         double *intersect, double *u_a, double *u_q, int *inbound);
 
+/* Global variable to store runtime MAXXGRID value */
+static size_t g_maxxgrid = 1e6;  /* Default: 1 million */
+
+/*******************************************************************************
+  void set_maxxgrid
+  Set the maximum exchange grid size at runtime.
+*******************************************************************************/
+void set_maxxgrid(size_t value)
+{
+  g_maxxgrid = value;
+}
+
+void set_maxxgrid_(size_t *value)
+{
+  set_maxxgrid(*value);
+}
 
 /*******************************************************************************
   int get_maxxgrid
-  return constants MAXXGRID.
+  Return the current MAXXGRID value (runtime configurable).
 *******************************************************************************/
 int get_maxxgrid(void)
 {
-  return MAXXGRID;
+  return (int)g_maxxgrid;
 }
 
 int get_maxxgrid_(void)
@@ -278,7 +294,7 @@ int create_xgrid_1dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_maxxgrid()) error_handler("nxgrid exceeds MAXXGRID limit; increase the value using --maxxgrid flag or reduce grid resolution");
 	}
       }
     }
@@ -379,7 +395,7 @@ int create_xgrid_1dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_maxxgrid()) error_handler("nxgrid exceeds MAXXGRID limit; increase the value using --maxxgrid flag or reduce grid resolution");
 	}
       }
     }
@@ -478,7 +494,7 @@ int create_xgrid_2dx1d_order1(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid]   = i2;
 	  j_out[nxgrid]   = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_maxxgrid()) error_handler("nxgrid exceeds MAXXGRID limit; increase the value using --maxxgrid flag or reduce grid resolution");
 	}
       }
     }
@@ -584,7 +600,7 @@ int create_xgrid_2dx1d_order2(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid] = i2;
 	  j_out[nxgrid] = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_maxxgrid()) error_handler("nxgrid exceeds MAXXGRID limit; increase the value using --maxxgrid flag or reduce grid resolution");
 	}
       }
     }
@@ -664,7 +680,7 @@ int create_xgrid_2dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
   pstart = (int *)malloc(nblocks*sizeof(int));
   pnxgrid = (int *)malloc(nblocks*sizeof(int));
 
-  nxgrid_block_max = MAXXGRID/nblocks;
+  nxgrid_block_max = get_maxxgrid()/nblocks;
 
   for(m=0; m<nblocks; m++) {
     pnxgrid[m] = 0;
@@ -679,11 +695,11 @@ int create_xgrid_2dx2d_order1(const int *nlon_in, const int *nlat_in, const int 
     pxgrid_area = xgrid_area;
   }
   else {
-    pi_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
+    pi_in = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pj_in = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pi_out = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pj_out = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pxgrid_area = (double *)malloc(get_maxxgrid()*sizeof(double));
   }
 
   npts_left = nx2*ny2;
@@ -806,9 +822,9 @@ nxgrid = 0;
 	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
+            if(pnxgrid[m]>= get_maxxgrid()/nthreads)
 	      error_handler("The xgrid size is too large for resources.\n"
-        " nxgrid is greater than MAXXGRID/nthreads; increase MAXXGRID,\n"
+        " nxgrid exceeds MAXXGRID/nthreads limit; increase MAXXGRID using --maxxgrid flag,\n"
         " decrease nthreads, or increase number of MPI ranks.");
 	    nn = pstart[m] + pnxgrid[m]-1;
 
@@ -937,7 +953,7 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
   pstart = (int *)malloc(nblocks*sizeof(int));
   pnxgrid = (int *)malloc(nblocks*sizeof(int));
 
-  nxgrid_block_max = MAXXGRID/nblocks;
+  nxgrid_block_max = get_maxxgrid()/nblocks;
 
   for(m=0; m<nblocks; m++) {
     pnxgrid[m] = 0;
@@ -954,13 +970,13 @@ int create_xgrid_2dx2d_order2(const int *nlon_in, const int *nlat_in, const int 
     pxgrid_clat = xgrid_clat;
   }
   else {
-    pi_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_in = (int *)malloc(MAXXGRID*sizeof(int));
-    pi_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pj_out = (int *)malloc(MAXXGRID*sizeof(int));
-    pxgrid_area = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clon = (double *)malloc(MAXXGRID*sizeof(double));
-    pxgrid_clat = (double *)malloc(MAXXGRID*sizeof(double));
+    pi_in = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pj_in = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pi_out = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pj_out = (int *)malloc(get_maxxgrid()*sizeof(int));
+    pxgrid_area = (double *)malloc(get_maxxgrid()*sizeof(double));
+    pxgrid_clon = (double *)malloc(get_maxxgrid()*sizeof(double));
+    pxgrid_clat = (double *)malloc(get_maxxgrid()*sizeof(double));
   }
 
   npts_left = nx2*ny2;
@@ -1084,8 +1100,8 @@ nxgrid = 0;
 	  min_area = min(area_in[j1*nx1+i1], area_out[j2*nx2+i2]);
 	  if( xarea/min_area > AREA_RATIO_THRESH ) {
 	    pnxgrid[m]++;
-            if(pnxgrid[m]>= MAXXGRID/nthreads)
-	      error_handler("nxgrid is greater than MAXXGRID/nthreads, increase MAXXGRID, decrease nthreads, or increase number of MPI ranks");
+            if(pnxgrid[m]>= get_maxxgrid()/nthreads)
+	      error_handler("nxgrid exceeds MAXXGRID/nthreads limit; increase MAXXGRID using --maxxgrid flag, decrease nthreads, or increase number of MPI ranks");
 	    nn = pstart[m] + pnxgrid[m]-1;
 	    pxgrid_area[nn] = xarea;
 	    pxgrid_clon[nn] = poly_ctrlon(x_out, y_out, n_out, lon_in_avg);
@@ -1444,7 +1460,7 @@ int create_xgrid_great_circle(const int *nlon_in, const int *nlat_in, const int 
 	  i_out[nxgrid]      = i2;
 	  j_out[nxgrid]      = j2;
 	  ++nxgrid;
-	  if(nxgrid > MAXXGRID) error_handler("nxgrid is greater than MAXXGRID, increase MAXXGRID");
+	  if(nxgrid > get_maxxgrid()) error_handler("nxgrid exceeds MAXXGRID limit; increase the value using --maxxgrid flag or reduce grid resolution");
 	}
       }
     }
@@ -3036,13 +3052,13 @@ int main(int argc, char* argv[])
       double *xarea, *xclon, *xclat, *mask1;
 
       mask1 = (double *)malloc(nlon1*nlat1*sizeof(double));
-      i1    = (int    *)malloc(MAXXGRID*sizeof(int));
-      j1    = (int    *)malloc(MAXXGRID*sizeof(int));
-      i2    = (int    *)malloc(MAXXGRID*sizeof(int));
-      j2    = (int    *)malloc(MAXXGRID*sizeof(int));
-      xarea = (double *)malloc(MAXXGRID*sizeof(double));
-      xclon = (double *)malloc(MAXXGRID*sizeof(double));
-      xclat = (double *)malloc(MAXXGRID*sizeof(double));
+      i1    = (int    *)malloc(get_maxxgrid()*sizeof(int));
+      j1    = (int    *)malloc(get_maxxgrid()*sizeof(int));
+      i2    = (int    *)malloc(get_maxxgrid()*sizeof(int));
+      j2    = (int    *)malloc(get_maxxgrid()*sizeof(int));
+      xarea = (double *)malloc(get_maxxgrid()*sizeof(double));
+      xclon = (double *)malloc(get_maxxgrid()*sizeof(double));
+      xclat = (double *)malloc(get_maxxgrid()*sizeof(double));
 
       for(i=0; i<nlon1*nlat1; i++) mask1[i] = 1.0;
 

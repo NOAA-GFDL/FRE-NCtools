@@ -125,13 +125,13 @@ void setup_conserve_interp(int ntiles_in, const Grid_config *grid_in, int ntiles
     if(mpp_pe() == mpp_root_pe())printf("NOTE: Finish reading index and weight for conservative interpolation from file.\n");
   }
   else {
-    i_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    j_in       = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    i_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    j_out      = (int    *)malloc(MAXXGRID   * sizeof(int   ));
-    xgrid_area = (double *)malloc(MAXXGRID   * sizeof(double));
-    xgrid_clon = (double *)malloc(MAXXGRID   * sizeof(double));
-    xgrid_clat = (double *)malloc(MAXXGRID   * sizeof(double));;
+    i_in       = (int    *)malloc(get_maxxgrid()   * sizeof(int   ));
+    j_in       = (int    *)malloc(get_maxxgrid()   * sizeof(int   ));
+    i_out      = (int    *)malloc(get_maxxgrid()   * sizeof(int   ));
+    j_out      = (int    *)malloc(get_maxxgrid()   * sizeof(int   ));
+    xgrid_area = (double *)malloc(get_maxxgrid()   * sizeof(double));
+    xgrid_clon = (double *)malloc(get_maxxgrid()   * sizeof(double));
+    xgrid_clat = (double *)malloc(get_maxxgrid()   * sizeof(double));;
     cell_in    = (CellStruct *)malloc(ntiles_in * sizeof(CellStruct));
     for(m=0; m<ntiles_in; m++) {
       nx_in = grid_in[m].nx;
