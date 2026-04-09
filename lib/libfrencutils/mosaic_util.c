@@ -1687,17 +1687,15 @@ int crosses_pole(const double x[] , int n) {
   rotation away from the pole if what is being rotaed is near a pole.
   For rotation matricies formulas and examples, see F.S.Hill, Computer
   Graphics Using OpenGL, @nd ed., Chapter 5.3.
+
+  Note: M_SQRT1_2 is a compile-time constant availble in math.h
 */
 void set_the_rotation_matrix() {
-  static const double is2 = 1.0 /M_SQRT2;
-
-  static const double m00 = 0;
-  static const double m01 = - is2;
-  static const double m02 = is2;
-  static const double m11 = 1.0/2;
-  static const double m12 = 0.5;
-
-  static const double m[3][3] = { {m00, m01, m02}, {m02, m11, m12},{m01, m12, m11} };
+  static const double m[3][3] = {
+      {  0.0,       -M_SQRT1_2, M_SQRT1_2 },
+      {  M_SQRT1_2, 0.5,        0.5       },
+      { -M_SQRT1_2, 0.5,        0.5       }
+  };
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
