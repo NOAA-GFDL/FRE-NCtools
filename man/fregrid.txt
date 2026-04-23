@@ -1,6 +1,6 @@
 // These are words to have cspell ignore in this file
 // cspell:ignore --nlon --nlat --Klevel --Lstep
-// cspell:ignore --dst_vgrid --nthreads
+// cspell:ignore --dst_vgrid --nthreads --maxxgrid
 
 fregrid(1)
 ==========
@@ -268,6 +268,13 @@ input file settings.
 
 If using NetCDF4 , use shuffle if 1 and don't use if 0 Defaults to
 input file settings.
+
+*--maxxgrid* _size_::
+
+Set maximum exchange grid size. Controls memory allocation for remapping
+operations. Default: 1e6 (1 million). Increase this value if you encounter
+'nxgrid exceeds MAXXGRID' errors when working with high-resolution grids.
+Valid range: 1e3 to 1e10.
 
 EXAMPLES
 --------
