@@ -43,7 +43,8 @@ split_ncvars.pl -l test_input_1.nc || fail_ split_ncvars.pl test_input.nc failed
 # Check that the README file was created
 test -f README || fail_ README not created
 
-expected_output="           time_bnds = time axis boundaries (days)
+expected_output="                time =  ()
+           time_bnds = time axis boundaries (days)
                 var1 = variable 1 (s)
                 var2 =  ()"
 test x"$(cat README)" = x"$expected_output" || fail_ README does not contain expected output
