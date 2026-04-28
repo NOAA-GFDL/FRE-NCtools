@@ -32,15 +32,15 @@
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Variables to control versions used
-env_version=2025.01
-gcc_version=13.3.0
+env_version=2026.01
+gcc_version=14.3.0
 ncc_version=4.9.2
 ncf_version=4.6.1
-mpi_version=4.2.3
+mpi_version=4.3.0
 
 # Ensure the base spack modules are first in MODULEPATH
-module remove-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
-module prepend-path MODULEPATH /app/spack/${env_version}/modulefiles/linux-rhel8-x86_64
+module remove-path MODULEPATH /app/spack/${env_version}/lmod/linux-rhel8-x86_64/Core
+module prepend-path MODULEPATH /app/spack/${env_version}/lmod/linux-rhel8-x86_64/Core
 
 # python is needed for tests
 module load python
