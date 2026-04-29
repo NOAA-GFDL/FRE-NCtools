@@ -71,10 +71,6 @@ program list_ncvars
       !--- skip if character fields ---
       if (xtype == NF90_CHAR) cycle
 
-      !--- skip dimensions ---
-      istat = NF90_INQ_DIMID (ncid, trim(name), dimid)
-      if (istat == NF90_NOERR) cycle
-
       !--- skip names ending in _T1, _T2, _DT  ---
       nc = len_trim(name)
       if (name(nc-2:nc) == '_T1' .or. name(nc-2:nc) == '_T2' .or. &

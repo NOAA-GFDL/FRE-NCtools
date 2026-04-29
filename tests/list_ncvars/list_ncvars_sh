@@ -117,5 +117,5 @@ test $nvars -eq 0 || \
 vars=$(list_ncvars.sh -s -14 file1.nc) || \
     fail_ list_ncvars.sh failed printing 2 static vars "\n***n$vars\n****"
 nvars=$(echo $vars | wc -w) || framework_failure_
-test $nvars -eq 2 || \
-    fail_ list_ncvars should have printed 2 vars, but printed $nvars "\n*****$vars\n*****"
+test $nvars -eq 6 || \
+    fail_ list_ncvars should have printed 6 vars, but printed $nvars "\n*****$vars\n*****"
