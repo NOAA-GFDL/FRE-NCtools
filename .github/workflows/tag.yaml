@@ -52,7 +52,7 @@ jobs:
     - name: Run tests
       run: |
         cd build
-        make distcheck
+        make distcheck VERBOSE=1
     - name: Upload test logs on failure
       if: failure()
       uses: actions/upload-artifact@v4
