@@ -45,11 +45,23 @@ jobs:
         mkdir build && cd build
         autoreconf -if ../configure.ac
         ../configure
-    - name: Build and create distribution file
+    - name: Build
       run: |
         cd build
         make
-        make distcheck
+    - name: Run tests
+      run: |
+        cd build
+        make distcheck VERBOSE=1
+    - name: Upload test logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-logs
+        path: build/tests/test-suite.log
+    - name: Create distribution file
+      run: |
+        cd build
         make dist
     - name: Create release draft and upload file
       uses: softprops/action-gh-release@v2
