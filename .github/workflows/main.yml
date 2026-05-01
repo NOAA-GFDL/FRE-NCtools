@@ -4,7 +4,13 @@
 # image dockerfile is maintained here:
 # https://gitlab.gfdl.noaa.gov/fre/hpc-me
 name: FRE-NCtools CI
-on: [push, pull_request]
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
 jobs:
   CI:
     runs-on: ubuntu-latest
