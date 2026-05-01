@@ -1,5 +1,6 @@
 # appends -dev to the version upon release and opens pr
 # CI won't run on generated PR, easiest workaround is to close + reopen
+name: Post-release dev package update
 on:
   release:
     types: [published]

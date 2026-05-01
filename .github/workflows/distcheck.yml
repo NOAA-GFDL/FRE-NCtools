@@ -3,7 +3,7 @@
 # CI testing for the FRE-NCtools repo, builds and runs unit tests
 # image dockerfile is maintained here:
 # https://gitlab.gfdl.noaa.gov/fre/hpc-me
-name: FRE-NCtools CI
+name: End-to-end distribution check
 on:
   workflow_run:
     workflows: ["FRE-NCtools Check Expensive"]
