@@ -1,8 +1,9 @@
 name: Tag for release
 on:
+  workflow_dispatch:
   push:
     paths:
-      - configure.ac 
+      - configure.ac
     branches:
       - 'main'
 jobs:
