@@ -84,7 +84,6 @@ AC_SEARCH_LIBS([ceil],[m])
 
 # Check for the MPI compilers
 # Default MPI build is off
-build_mpi=no
 LX_FIND_MPI()
 AS_IF([test x"$with_mpi" = x"yes" && test x"$have_C_mpi" = x"no"], [
   AC_MSG_ERROR([MPI build requested but no MPI compiler found.])
@@ -109,10 +108,9 @@ AC_CHECK_FUNCS(gettid, [], [])
 # Check if Fortran compiler has Cray pointer support
 GX_FC_CRAY_POINTER_FLAG()
 
- # Add Cray Pointer support flag
-if test ! -z "$FC_CRAY_POINTER_FLAG"; then
-   FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"
-fi
+# Add Cray Pointer support flag
+AS_IF([test -n "$FC_CRAY_POINTER_FLAG"],
+  [FCFLAGS="$FCFLAGS $FC_CRAY_POINTER_FLAG"])
 
 # Check for programs
 AC_PROG_GREP
@@ -120,7 +118,7 @@ AC_PROG_EGREP
 AC_PROG_SED
 
 AC_CHECK_PROGS(ASCIIDOC, [asciidoc])
-if test -n "$ASCIIDOC"; then
+AS_IF([test -n "$ASCIIDOC"], [
   AC_MSG_CHECKING([for asciidoc version])
   asciidoc_version=`$ASCIIDOC --version 2>/dev/null`
   case "${asciidoc_version}" in
@@ -131,7 +129,7 @@ if test -n "$ASCIIDOC"; then
     AC_MSG_RESULT([${asciidoc_version} (unknown)])
     ;;
   esac
-fi
+])
 AM_CONDITIONAL([WITH_ASCIIDOC], [test -n "$ASCIIDOC"])
 
 # Although these are supplied with the NetCDF C library, we'll double
@@ -165,11 +163,7 @@ AC_ARG_VAR([PERL], [Path to perl])
 AC_PATH_PROG(PERL, [perl])
 
 AX_PYTHON_MODULE([xarray],[],[python3])
-if test ${HAVE_PYMOD_XARRAY} = yes; then
-  AM_CONDITIONAL([SKIP_XARRAY_TESTS], false )
-else
-  AM_CONDITIONAL([SKIP_XARRAY_TESTS], true )
-fi
+AM_CONDITIONAL([SKIP_XARRAY_TESTS], [test "${HAVE_PYMOD_XARRAY}" != yes])
 
 # Look for mpirun, mpiexec, srun application
 AC_ARG_VAR([MPIRUN], [Path to mpirun])
@@ -180,30 +174,28 @@ AS_IF([test x"$with_mpi" = x"yes"], [
 ])
 
 # Check if openacc.h exists
-if test "$enable_gpu" = yes ; then
-   AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR(["Cannot find OpenACC header file"])] )
-   AC_MSG_WARN(Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS)
-fi
+AS_IF([test "$enable_gpu" = yes], [
+  AC_CHECK_HEADERS([openacc.h], [], [AC_MSG_ERROR([Cannot find OpenACC header file])])
+  AC_MSG_WARN([Currently only NVIDIA compilers are supported to compile with OpenACC in FRE-NCTOOLS])
+])
 
 # Check for getrusage.
 AC_CHECK_FUNCS([getrusage])
 
 # Check for library
 AX_LIB_NETCDF()
-if test "$with_netcdf" = "no"; then
-  AC_MSG_ERROR([Unable to find NetCDF c library.])
-fi
+AS_IF([test "$with_netcdf" = "no"],
+  [AC_MSG_ERROR([Unable to find NetCDF c library.])])
 
 AC_LANG_PUSH([Fortran])
 AX_LIB_NETCDFF()
-if test "$with_netcdf_fortran" = "no"; then
-  AC_MSG_ERROR([Unable to find NetCDF Fortran library.])
-fi
+AS_IF([test "$with_netcdf_fortran" = "no"],
+  [AC_MSG_ERROR([Unable to find NetCDF Fortran library.])])
 
 # Check if using an external libFMS library
 GX_LIB_FMS()
-AS_IF([test "$with_fms" = "no"], [
-AC_MSG_NOTICE([Using the FRE-NCtools libfmslite])])
+AS_IF([test "$with_fms" = "no"],
+  [AC_MSG_NOTICE([Using the FRE-NCtools libfmslite])])
 AM_CONDITIONAL([WITHOUT_EXTERN_FMS], [test "$with_fms" = "no"])
 AC_LANG_POP([Fortran])
 
@@ -214,10 +206,9 @@ AC_CHECK_FUNCS([sched_getaffinity], [], [])
 # Check if the C compiler supports a working `long double` with more range
 # or precision than `double`.
 AS_IF([test ${enable_quad_precision:-no} = yes], [
-AC_TYPE_LONG_DOUBLE_WIDER
-AS_IF([test $ac_cv_type_long_double_wider = no],
-  [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])
-  ])
+  AC_TYPE_LONG_DOUBLE_WIDER
+  AS_IF([test $ac_cv_type_long_double_wider = no],
+    [AC_MSG_ERROR([system does not support quad precision.  Try setting --enable-mixed-precision=no])])
 ])
 
 # Check for library functions
@@ -251,11 +242,11 @@ AS_IF([test x$ac_compiler_gnu = xyes], [RPATH_FLAGS=""
       if test `expr "$RPATH_FLAGS" : $regex` -eq 0
       then
         # RPDIR not in RPATH_FLAGS
-        RPATH_FLAGS="$RPATHFLAGS -Wl,-rpath,$RPDIR"
+        RPATH_FLAGS="$RPATH_FLAGS -Wl,-rpath,$RPDIR"
       fi
     fi
   done])
-AC_SUBST(RPATH_FLAGS) dnl
+AC_SUBST(RPATH_FLAGS)dnl
 
 # Output files
 AC_CONFIG_HEADERS([config.h])
