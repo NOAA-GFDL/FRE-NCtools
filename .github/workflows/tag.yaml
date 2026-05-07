@@ -38,6 +38,7 @@ jobs:
         submodules: recursive
     - name: Install dependencies
       run: |
+        sudo apt update
         sudo apt-get install -y nco which netcdf-bin libnetcdf-dev \
           libnetcdff-dev mpich gcc gfortran asciidoc docbook-xsl docbook-xml \
           python3 python3-numpy python3-pytest perl git make libtool autoconf 
