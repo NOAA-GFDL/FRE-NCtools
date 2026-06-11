@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <math.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -169,7 +170,30 @@ static int mpp_process_vars(fileinfo_t *inf, fileinfo_t *outf,
 
     /* Allocate varbuf on first call. */
     if (!varbuf) {
-        int nbytes = (*bf) * sizeof(void**) + (*bf) * NC_MAX_VARS * sizeof(void*);
+        /* Validate buffer factor to prevent overflow */
+        if (*bf <= 0 || *bf > MAX_BF) {
+            fprintf(stderr, "Invalid buffer factor: %d\n", *bf);
+            return 1;
+        }
+        /* Check for overflow: bf * sizeof(void**) */
+        if ((size_t)(*bf) > SIZE_MAX / sizeof(void**)) {
+            fprintf(stderr, "Buffer allocation size overflow\n");
+            return 1;
+        }
+        size_t ptr_array_size = (size_t)(*bf) * sizeof(void**);
+        /* Check for overflow: bf * NC_MAX_VARS * sizeof(void*) */
+        if ((size_t)(*bf) > SIZE_MAX / NC_MAX_VARS ||
+            (size_t)(*bf) * NC_MAX_VARS > SIZE_MAX / sizeof(void*)) {
+            fprintf(stderr, "Buffer allocation size overflow\n");
+            return 1;
+        }
+        size_t data_array_size = (size_t)(*bf) * NC_MAX_VARS * sizeof(void*);
+        /* Check for overflow when adding the two sizes */
+        if (ptr_array_size > SIZE_MAX - data_array_size) {
+            fprintf(stderr, "Buffer allocation size overflow\n");
+            return 1;
+        }
+        size_t nbytes = ptr_array_size + data_array_size;
         if (g_mem_dry_run) estimated_maxrss += nbytes;
         varbuf = (void***)calloc(nbytes, 1);
         if (!varbuf) { fprintf(stderr,"Cannot allocate varbuf.\n"); exit(1); }
@@ -212,7 +236,10 @@ static int mpp_process_vars(fileinfo_t *inf, fileinfo_t *outf,
         }
 
         void *values = malloc(nc_type_sz(inf->datatype[v]) * recsize);
-        if (!values) { fprintf(stderr,"Cannot allocate values.\n"); return 1; }
+        if (!values) {
+            fprintf(stderr, "Cannot allocate values buffer.\n");
+            return 1;
+        }
 
         if (varrecdim >= 0) instart[varrecdim] = outstart[varrecdim] = (size_t)r;
 

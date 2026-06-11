@@ -86,8 +86,16 @@ scatter_mpp(scatter_opts_t *opts)
         if (opts->verbose) printf("Info: Creating '%s'\n", output);
 
         if (!opts->dryrun) {
-            if (nc_create(output, NC_CLOBBER | create_flags, &ncids[i]) != NC_NOERR) {
-                fprintf(stderr,"scatter: cannot create '%s'\n", output);
+            int nc_err = nc_create(output, NC_CLOBBER | create_flags, &ncids[i]);
+            if (nc_err != NC_NOERR) {
+                fprintf(stderr, "scatter: cannot create '%s': %s\n",
+                        output, nc_strerror(nc_err));
+                /* Clean up already-created files */
+                for (int j = 0; j < i; j++) {
+                    nc_close(ncids[j]);
+                }
+                free(ncids);
+                nc_close(nc);
                 return -1;
             }
             int dummy;
@@ -173,15 +181,27 @@ scatter_land(const char *infile, int npex, int npey)
 
     /* Create output files. */
     int *out_ncids = XMALLOC(int, nfiles_out);
+    int *dimlen_list = XMALLOC(int, nfiles_out);
     size_t blksz = 65536;
     for (int n = 0; n < nfiles_out; n++) {
         char outname[2048];
         snprintf(outname, sizeof(outname), "%s.%04d", infile, n);
-        nc__create(outname, cmode, 0, &blksz, &out_ncids[n]);
+        int nc_err = nc__create(outname, cmode, 0, &blksz, &out_ncids[n]);
+        if (nc_err != NC_NOERR) {
+            fprintf(stderr, "scatter --land: cannot create '%s': %s\n",
+                    outname, nc_strerror(nc_err));
+            /* Clean up already-created files */
+            for (int j = 0; j < n; j++) {
+                nc_close(out_ncids[j]);
+            }
+            free(out_ncids);
+            free(dimlen_list);
+            nc_close(in_ncid);
+            return 1;
+        }
     }
 
     /* Count compressed dimension sizes per output tile. */
-    int *dimlen_list = XMALLOC(int, nfiles_out);
 
     for (int d = 0; d < ndims; d++) {
         char dname[NC_MAX_NAME + 1]; size_t dlen; bool is_unlim;

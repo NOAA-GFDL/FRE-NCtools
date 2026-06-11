@@ -18,6 +18,7 @@
  * <http://www.gnu.org/licenses/>.
  **********************************************************************/
 #include "xmalloc.h"
+#include <stdint.h>
 
 void *
 xmalloc(size_t num)
@@ -47,6 +48,11 @@ xrealloc(void *p, size_t num)
 void *
 xcalloc(size_t num, size_t size)
 {
+    /* Check for multiplication overflow before allocating */
+    if (num > 0 && size > 0 && size > SIZE_MAX / num) {
+        fprintf(stderr, "Memory allocation overflow prevented\n");
+        exit(EXIT_FATAL);
+    }
     void *p = xmalloc(num * size);
     memset(p, 0, num * size);
     return p;

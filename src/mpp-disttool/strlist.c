@@ -46,19 +46,22 @@ void getstringlist(char *optarg, char ***list, int *nitems)
 {
     char *p;
     int i = 0;
+    char *saveptr = NULL;
     p = optarg;
     *nitems = 1;
     while (*p++) { if (*p == ',') ++(*nitems); }
     if (*list == NULL) return;
-    for (p = (char *)strtok(optarg, ",");
+    for (p = strtok_r(optarg, ",", &saveptr);
          p != NULL;
-         p = (char *)strtok(NULL, ",")) {
-        (*list)[i] = XMALLOC(char, strlen(p) + 1);
+         p = strtok_r(NULL, ",", &saveptr)) {
+        size_t plen = strlen(p);
+        (*list)[i] = XMALLOC(char, plen + 1);
         if ((*list)[i] == NULL) {
             fprintf(stderr, "ERROR: Failed to allocate memory for string.\n");
             exit(1);
         }
-        strcpy((*list)[i], p);
+        memcpy((*list)[i], p, plen);
+        (*list)[i][plen] = '\0';
         ++i;
     }
 }
@@ -98,8 +101,10 @@ int addstringtolist(char **list, char *string, int nitems)
     if (list == NULL) return EXIT_FAILED;
     for (i = 0; i < nitems; ++i) {
         if (list[i] == NULL) {
-            list[i] = XMALLOC(char, strlen(string) + 1);
-            strcpy(list[i], string);
+            size_t slen = strlen(string);
+            list[i] = XMALLOC(char, slen + 1);
+            memcpy(list[i], string, slen);
+            list[i][slen] = '\0';
             break;
         }
     }
@@ -115,8 +120,14 @@ int appendstringtolist(char ***list, char *string, int *nitems)
     if (*list == NULL) return EXIT_FAILED;
     newstringlist(&newlist, &newsize, *nitems + 1);
     copystrlist(*list, newlist, *nitems, newsize);
-    newlist[newsize - 1] = (char *)malloc(sizeof(char) * (strlen(string) + 1));
-    strcpy(newlist[newsize - 1], string);
+    size_t slen = strlen(string);
+    newlist[newsize - 1] = (char *)malloc(sizeof(char) * (slen + 1));
+    if (newlist[newsize - 1] == NULL) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for string.\n");
+        exit(1);
+    }
+    memcpy(newlist[newsize - 1], string, slen);
+    newlist[newsize - 1][slen] = '\0';
     freestringlist(list, *nitems);
     *list = newlist;
     *nitems = newsize;
@@ -167,8 +178,10 @@ int copystrlist(char **listsrc, char **listdst, int nsrc, int ndst)
     }
     for (i = 0; i < nsrc; ++i) {
         if (listsrc[i] == NULL) continue;
-        listdst[i] = XMALLOC(char, strlen(listsrc[i]) + 1);
-        strcpy(listdst[i], listsrc[i]);
+        size_t slen = strlen(listsrc[i]);
+        listdst[i] = XMALLOC(char, slen + 1);
+        memcpy(listdst[i], listsrc[i], slen);
+        listdst[i][slen] = '\0';
     }
     return EXIT_SUCCESS;
 }

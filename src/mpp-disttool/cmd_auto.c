@@ -93,7 +93,12 @@ find_base_names(int verbose)
         /* Strip trailing .[0-9]{4} to get base name. */
         char base[4096];
         size_t blen = strlen(name);
-        strncpy(base, name, blen);
+        if (blen < 5) continue;  /* Need at least ".NNNN" */
+        if (blen - 5 >= sizeof(base)) {
+            fprintf(stderr, "Warning: filename too long, skipping: %s\n", name);
+            continue;
+        }
+        memcpy(base, name, blen - 5);
         base[blen - 5] = '\0'; /* remove ".NNNN" */
 
         if (!sa_contains(&bases, base)) {

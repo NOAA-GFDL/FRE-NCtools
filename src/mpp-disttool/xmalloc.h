@@ -37,7 +37,7 @@
     ((type*) xrealloc((p), (size_t)((num) * sizeof(type))))
 
 #define XFREE(stale) \
-    do { if (stale) { free(stale); stale = 0; } } while (0)
+    do { if (stale) { free(stale); stale = NULL; } } while (0)
 
 extern void *xcalloc(size_t num, size_t size);
 extern void *xmalloc(size_t num);

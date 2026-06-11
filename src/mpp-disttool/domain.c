@@ -40,8 +40,11 @@ ScatterDim_new(int id, size_t len, const char *name,
     ScatterDim *p = XMALLOC(ScatterDim, 1);
     p->id           = id;
     p->len          = len;
-    strncpy(p->name, name, NC_MAX_NAME);
-    p->name[NC_MAX_NAME] = '\0';
+    /* Safe string copy with explicit null termination */
+    size_t name_len = strlen(name);
+    if (name_len > NC_MAX_NAME) name_len = NC_MAX_NAME;
+    memcpy(p->name, name, name_len);
+    p->name[name_len] = '\0';
     p->scatter_type = scatter_type;
     p->scatter_ndiv = (size_t)ndiv;
     p->scatter_start = XMALLOC(size_t, ndiv > 0 ? ndiv : 1);

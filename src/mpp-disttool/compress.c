@@ -46,7 +46,7 @@ compress_inq_dim(int ncid, int dimid,
                  size_t *dimlens_out)
 {
     char dimname[NC_MAX_NAME + 1];
-    char compress_att[2048];
+    char *compress_att = NULL;
     int varid;
     size_t att_len;
     nc_type att_type;
@@ -60,33 +60,53 @@ compress_inq_dim(int ncid, int dimid,
         return NC_ENOTATT;
     if (att_type != NC_CHAR || att_len == 0)
         return NC_ENOTATT;
-    if (att_len >= sizeof(compress_att))
-        att_len = sizeof(compress_att) - 1;
-    NC_CHECK(nc_get_att_text(ncid, varid, "compress", compress_att));
+
+    /* Dynamically allocate buffer based on actual attribute length */
+    compress_att = (char *)malloc(att_len + 1);
+    if (!compress_att) {
+        fprintf(stderr, "Cannot allocate memory for compress attribute\n");
+        return NC_ENOMEM;
+    }
+    
+    int err = nc_get_att_text(ncid, varid, "compress", compress_att);
+    if (err != NC_NOERR) {
+        free(compress_att);
+        return err;
+    }
     compress_att[att_len] = '\0';
 
     /* Parse space-separated dimension names in compress_att.
        The Fortran code scans from the end, producing them in reverse order.
        We do forward scanning, which gives the same set. */
     int n = 0;
-    char *tok = strtok(compress_att, " \t");
+    char *saveptr = NULL;
+    char *tok = strtok_r(compress_att, " \t", &saveptr);
     while (tok) {
         if (ndims_out || dimids_out || dimlens_out) {
             if (dimids_out || dimlens_out) {
                 int did;
-                NC_CHECK(nc_inq_dimid(ncid, tok, &did));
+                int nc_err = nc_inq_dimid(ncid, tok, &did);
+                if (nc_err != NC_NOERR) {
+                    free(compress_att);
+                    return nc_err;
+                }
                 if (dimids_out)  dimids_out[n]  = did;
                 if (dimlens_out) {
                     size_t dlen;
-                    NC_CHECK(nc_inq_dimlen(ncid, did, &dlen));
+                    nc_err = nc_inq_dimlen(ncid, did, &dlen);
+                    if (nc_err != NC_NOERR) {
+                        free(compress_att);
+                        return nc_err;
+                    }
                     dimlens_out[n] = dlen;
                 }
             }
             n++;
         }
-        tok = strtok(NULL, " \t");
+        tok = strtok_r(NULL, " \t", &saveptr);
     }
     if (ndims_out) *ndims_out = n;
+    free(compress_att);
     return NC_NOERR;
 }
 
