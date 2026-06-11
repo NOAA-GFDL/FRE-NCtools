@@ -32,17 +32,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Display fre-nctools remote, branch
+        run: |
+          # fre-workflows repo and branch
+          echo "fre-nctools remote: $(git remote -v)"
+          echo "fre-nctools branch: $(git branch)"
+
       - name: Configure
         run: |
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
+
       - name: Build
         # Due to how some compilers handle the Fortran module files, we
         # need to run the build twice
         run: make -C build -j || make -C build -j
+
       - name: Run most tests (skip the slow ones)
         run: make -C build -j check
+
       - name: Save log file on failure
         uses: actions/upload-artifact@v4.4.0
         if: failure()
@@ -72,15 +82,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Display fre-nctools remote, branch
+        run: |
+          # fre-workflows repo and branch
+          echo "fre-nctools remote: $(git remote -v)"
+          echo "fre-nctools branch: $(git branch)"
+
       - name: Configure
         run: |
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
+
       - name: Build
         run: make -C build -j
+
       - name: Run most tests (skip the slow ones)
         run: make -C build check-very-expensive
+
       - name: Save log file on failure
         uses: actions/upload-artifact@v4.4.0
         if: failure()
@@ -110,13 +130,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Display fre-nctools remote, branch
+        run: |
+          # fre-workflows repo and branch
+          echo "fre-nctools remote: $(git remote -v)"
+          echo "fre-nctools branch: $(git branch)"
+
       - name: Configure
         run: |
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
+
       - name: Build distribution with check
         run: make DISTCHECK_CONFIGURE_FLAGS="$MPI $QUAD_P" -C build -j
+
       - name: Save log file on failure
         uses: actions/upload-artifact@v4.4.0
         if: failure()
