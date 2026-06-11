@@ -33,14 +33,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Display fre-nctools remote, branch
-        run: |
-          # fre-workflows repo and branch
-          echo "fre-nctools remote: $(git remote -v)"
-          echo "fre-nctools branch: $(git branch)"
-
       - name: Configure
         run: |
+          ls
+          pwd
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
@@ -83,14 +79,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Display fre-nctools remote, branch
-        run: |
-          # fre-workflows repo and branch
-          echo "fre-nctools remote: $(git remote -v)"
-          echo "fre-nctools branch: $(git branch)"
-
       - name: Configure
         run: |
+          ls
+          pwd
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
@@ -131,14 +123,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Display fre-nctools remote, branch
-        run: |
-          # fre-workflows repo and branch
-          echo "fre-nctools remote: $(git remote -v)"
-          echo "fre-nctools branch: $(git branch)"
-
       - name: Configure
         run: |
+          ls
+          pwd
           mkdir build && cd build
           autoreconf -i ../configure.ac
           ../configure $MPI $QUAD_P || cat config.log
