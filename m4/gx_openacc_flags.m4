@@ -40,35 +40,44 @@
 #  Mainly for nvhpc, offloading with gcc is not currently supported,
 #  although the build will still work.
 #
+#
+#  Will set OPENACC_CFLAGS to OpenACC flags for a given compiler if accepted.
+#
 AC_DEFUN([GX_OPENACC_FLAGS],[
-AC_CACHE_CHECK([whether C compiler accepts OpenACC flags], [gx_cv_openacc_flags],[
+AC_CACHE_CHECK([for C compiler OpenACC flags], [gx_cv_openacc_flags], [
 
-AC_LANG_ASSERT(C)
-gx_cv_openacc_flags=unknown
-gx_openacc_flags_CFLAGS_save=$CFLAGS
+  AC_LANG_PUSH([C])
+  gx_cv_openacc_flags=unknown
+  gx_openacc_flags_CFLAGS_save=$CFLAGS
 
-dnl check for base openacc flag
-for ac_flag in '-acc' \
-               '-fopenacc'; do
-  AC_LINK_IFELSE([AC_LANG_SOURCE(
-          extern int acc_get_device_type();
-          int main(int argc, char** argv){
-              acc_get_device_type();
-              return 0;
-          })],
-     [gx_cv_openacc_flags="$gx_openacc_flags_CFLAGS_save ${ac_flag}"]; break)
-done
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+  # Try common OpenACC flags (-acc for NVHPC/PGI, -fopenacc for GCC/Clang)
+  for ac_flag in '-acc' '-fopenacc'; do
+    CFLAGS="$gx_openacc_flags_CFLAGS_save $ac_flag"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+      [[
+#ifdef HAVE_OPENACC_H
+# include <openacc.h>
+#else
+  extern int acc_get_device_type(void);
+#endif
+      ]],
+      [[
+        int dev = acc_get_device_type();
+        (void)dev;
+      ]])],
+      [gx_cv_openacc_flags="$ac_flag"; break])
+  done
 
-CFLAGS="$gx_openacc_flags_CFLAGS_save"
+  CFLAGS="$gx_openacc_flags_CFLAGS_save"
+  AC_LANG_POP([C])
+])
 
-if test "x$gx_cv_openacc_flags" = xunknown; then
-  m4_default([$2],
-              [AC_MSG_ERROR([no])])
+if test "x$gx_cv_openacc_flags" = "xunknown"; then
+  OPENACC_CFLAGS=""
+  m4_default([$2], [AC_MSG_WARN([OpenACC flags not found or not supported by compiler])])
 else
-  OPENACC_CFLAGS="${gx_cv_openacc_flags}"
-  AC_MSG_RESULT([yes])
+  OPENACC_CFLAGS="$gx_cv_openacc_flags"
 fi
-],
+
 AC_SUBST([OPENACC_CFLAGS])
-)])
+])

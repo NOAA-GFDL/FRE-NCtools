@@ -62,4 +62,9 @@ void copy_data_to_xgrid_on_device_gpu(const int nxcells, const int input_ncells,
                                       int *xcells_per_ij1, double *xcell_clon, double *xcell_clat,
                                       int *approx_xcells_per_ij1, int *parent_input_indices, int *parent_output_indices,
                                       double *xcell_areas, Interp_per_input_tile *interp_for_input_tile);
+
+void copy_data_to_interp_on_device_gpu(const int nxcells, const int input_ncells, const int upbound_nxcells,
+                                      int *xcells_per_ij1, double *xcell_dclon, double *xcell_dclat,
+                                      int *approx_xcells_per_ij1, int *parent_input_index, int *parent_output_index,
+                                      double *xcell_areas, Interp_per_input_tile *interp_for_input_tile);
 #endif
