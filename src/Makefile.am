@@ -289,6 +289,8 @@ fregrid_parallel_SOURCES = \
 
 fregrid_gpu_CFLAGS = \
   -I$(top_srcdir)/lib/libfrencutils_gpu \
+  -I$(top_srcdir)/src/fregrid-gpu \
+  -I$(top_srcdir)/src/fre-grid \
   $(AM_CFLAGS) \
   $(OPENACC_CFLAGS)
 
@@ -299,7 +301,8 @@ fregrid_gpu_SOURCES = \
   fregrid-gpu/interp_utils_gpu.h \
   fregrid-gpu/fregrid_utils_gpu.c \
   fregrid-gpu/fregrid_utils_gpu.h \
-  fregrid-gpu/fregrid_gpu.c
+  fregrid-gpu/fregrid_gpu.c \
+  fre-grid/fregrid_util.c
 
 fregrid_gpu_LDADD = \
   $(top_builddir)/lib/libfrencutils_gpu/libfrencutils_gpu.a \
