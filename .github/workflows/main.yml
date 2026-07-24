@@ -6,9 +6,6 @@
 
 name: FRE-NCtools CI Pipeline
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on: [push, pull_request]
 
 jobs:
@@ -29,7 +26,7 @@ jobs:
       QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -50,7 +47,7 @@ jobs:
         run: make -C build -j check
 
       - name: Save log file on failure
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-suites-ci
@@ -75,7 +72,7 @@ jobs:
       QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -94,7 +91,7 @@ jobs:
         run: make -C build check-very-expensive
 
       - name: Save log file on failure
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-suites-expensive
@@ -119,7 +116,7 @@ jobs:
       QUAD_P: ${{ matrix.enable_quad_precision }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -135,7 +132,7 @@ jobs:
         run: make distcheck  -C build -j DISTCHECK_CONFIGURE_FLAGS="$MPI $QUAD_P"
 
       - name: Save log file on failure
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-suites-distcheck
