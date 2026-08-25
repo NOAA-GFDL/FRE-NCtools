@@ -126,6 +126,7 @@ EXTRA_DIST = \
 CLEANFILES = *.$(FC_MODEXT)
 clean-local:
 	$(RM) $(bin_SCRIPTS) $(BUILT_SOURCES)
+	$(RM) -r .mods plevel/.mods
 
 # Perform several substitutions
 do_subst = $(SED) -e 's,[@]prefix[@],$(prefix),g' \

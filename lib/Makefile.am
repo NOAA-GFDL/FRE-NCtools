@@ -47,6 +47,8 @@ SUFFIXES = _mod.$(FC_MODEXT) .$(FC_MODEXT)
 	@$(MKDIR_P) $(@D)
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $(@D)/$(<F:.F90=.o) $<
 
+CLEANFILES =
+
 clean-local:
 	$(RM) *.$(FC_MODEXT)
 
