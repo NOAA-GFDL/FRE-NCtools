@@ -27,4 +27,5 @@ libfrencutils_gpu_libfrencutils_gpu_a_SOURCES = \
     libfrencutils_gpu/general_utils_gpu.h
 
 libfrencutils_gpu_libfrencutils_gpu_a_CFLAGS = \
-    $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils
+    $(AM_CFLAGS) $(OPENACC_CFLAGS) -I$(top_srcdir)/lib/libfrencutils \
+    -I$(top_srcdir)/lib/libfrencutils_gpu

@@ -1318,7 +1318,7 @@ void set_the_rotation_matrix_gpu() {
       the_rotation_matrix_gpu[i][j] = m[i][j];
     }
   }
-#pragma acc data update device(the_rotation_matrix_gpu[:3][:3])
+#pragma acc update device(the_rotation_matrix_gpu[:3][:3])
 }
 
 /* Rotate point given the passed in rotation matrix  */
