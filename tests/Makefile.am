@@ -72,6 +72,7 @@ tools_tests = \
     make_vgrid/ocean-vgrid \
     make_solo_mosaic/ocean-mosaic \
     make_solo_mosaic/c48-mosaic \
+    make_solo_mosaic/mismatched-grid-vars \
     make_topog/ocean-topog \
     make_topog/ocean-topog-mpi \
     make_coupler_mosaic/coupled-model \
