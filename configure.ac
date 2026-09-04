@@ -61,6 +61,7 @@ AC_ARG_ENABLE([quad-precision],
 
 AC_PROG_CC([icc gcc nvc])
 AM_PROG_CC_C_O
+AC_PROG_LN_S
 ## When autoconf v2.70 is more available, this can be replaced with:
 ##AC_C__GENERIC
 GX_C__GENERIC
