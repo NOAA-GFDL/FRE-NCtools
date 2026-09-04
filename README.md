@@ -13,6 +13,7 @@ work of the
 (GFDL).
 
 [![Actions](https://github.com/NOAA-GFDL/FRE-NCtools/workflows/FRE-NCtools%20CI/badge.svg)](https://github.com/NOAA-GFDL/FRE-NCtools/actions)
+[![Release](https://img.shields.io/github/v/release/NOAA-GFDL/FRE-NCtools)](https://github.com/NOAA-GFDL/FRE-NCtools/releases)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 ## Tools
