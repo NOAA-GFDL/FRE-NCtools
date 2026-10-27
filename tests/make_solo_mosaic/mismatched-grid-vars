@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Geophysical Fluid Dynamics Laboratory
+
+# This file is part of the GFDL FRE NetCDF tools package (FRE-NCTools).
+
+# FRE-NCtools is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+
+# FRE-NCtools is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with FRE-NCtools.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+if test "$VERBOSE" = yes
+then
+    set -x
+fi
+
+. "${srcdir=.}/init.sh"
+
+# make_solo_mosaic sizes its x and y buffers from the nxp and nyp dimensions, so a
+# tile file whose x and y are declared over other dimensions has to be rejected
+# before the read rather than read into buffers that are too small for it.
+ncgen -o mismatched_hgrid.nc << EOF || framework_failure_
+netcdf mismatched_hgrid {
+dimensions:
+  nyp = 2 ;
+  nxp = 2 ;
+  ny = 1 ;
+  nx = 1 ;
+  string = 255 ;
+  big = 512 ;
+variables:
+  char tile(string) ;
+  double x(big, big) ;
+    x:units = "degrees" ;
+  double y(big, big) ;
+    y:units = "degrees" ;
+data:
+  tile = "tile1" ;
+}
+EOF
+
+make_solo_mosaic \
+    --num_tiles 1 \
+    --dir . \
+    --mosaic_name mismatched_mosaic \
+    --tile_file mismatched_hgrid.nc > msm.out 2>&1 \
+    && fail_ make_solo_mosaic should exit with an error code when x and y do not match nxp and nyp
+# it should say what was wrong rather than die reading past the buffer
+grep 'variable x in file mismatched_hgrid.nc' msm.out \
+    || fail_ make_solo_mosaic did not report the size mismatch in x
+test -f mismatched_mosaic.nc && fail_ mismatched_mosaic.nc should not have been created || :

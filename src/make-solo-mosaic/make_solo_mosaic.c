@@ -82,6 +82,33 @@ const int SHORTSTRING = 32;
 char grid_version[] = "0.2";
 char tagname[] = "$Name: fre-nctools-bronx-10 $";
 
+/* mpp_get_var_value() reads a whole variable and takes no destination size, so the
+   number of elements the variable declares has to be checked against the space the
+   caller allocated before the read.  */
+static void check_var_size(int fid, int vid, const char *varname, int ndim_expect,
+                           size_t nelems_expect, const char *file)
+{
+  char dimname[STRING], errmsg[512];
+  size_t nelems = 1;
+  int ndim, i;
+
+  ndim = mpp_get_var_ndim(fid, vid);
+  if(ndim != ndim_expect) {
+    sprintf(errmsg, "make_solo_mosaic: variable %s in file %s has %d dimensions, "
+            "expected %d", varname, file, ndim, ndim_expect);
+    mpp_error(errmsg);
+  }
+  for(i=0; i<ndim; i++) {
+    mpp_get_var_dimname(fid, vid, i, dimname);
+    nelems *= mpp_get_dimlen(fid, dimname);
+  }
+  if(nelems > nelems_expect) {
+    sprintf(errmsg, "make_solo_mosaic: variable %s in file %s has %zu elements, but only "
+            "%zu were allocated for it", varname, file, nelems, nelems_expect);
+    mpp_error(errmsg);
+  }
+}
+
 int main (int argc, char *argv[])
 {
 
@@ -206,10 +233,13 @@ int main (int argc, char *argv[])
     x[n] = (double *)malloc(nxp[n]*nyp[n]*sizeof(double));
     y[n] = (double *)malloc(nxp[n]*nyp[n]*sizeof(double));
     vid = mpp_get_varid(fid, "tile");
+    check_var_size(fid, vid, "tile", 1, STRING, tilefile[n]);
     mpp_get_var_value(fid, vid, tile_name[n]);
     vid = mpp_get_varid(fid, "x");
+    check_var_size(fid, vid, "x", 2, (size_t)nxp[n]*nyp[n], tilefile[n]);
     mpp_get_var_value(fid, vid, x[n]);
     vid = mpp_get_varid(fid, "y");
+    check_var_size(fid, vid, "y", 2, (size_t)nxp[n]*nyp[n], tilefile[n]);
     mpp_get_var_value(fid, vid, y[n]);
     mpp_close(fid);
   }
