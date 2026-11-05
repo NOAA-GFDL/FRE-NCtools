@@ -46,7 +46,7 @@ int get_upbound_nxcells_2dx2d_gpu(const int nlon_input_cells,  const int nlat_in
   int input_grid_npts    = (nlon_input_cells+1)*(nlat_input_cells+1);
   int output_grid_npts   = (nlon_output_cells+1)*(nlat_output_cells+1);
 
-  int ij1_start = jlat_overlap_starts*nlon_input_cells;
+  int ij1_start = 0; // TODO, this is not the most efficent but will prevent missing any cells from the input grid
   int ij1_end = (jlat_overlap_ends+1)*nlon_input_cells;
   int upbound_nxcells=0;
 
