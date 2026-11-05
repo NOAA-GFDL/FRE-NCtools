@@ -39,6 +39,7 @@ bin_PROGRAMS = \
   decompress-ncc \
   check_mask \
   mppncscatter \
+  mppdisttool \
   ncexists \
   $(combine_programs) \
   $(grid_programs)
@@ -450,3 +451,30 @@ runoff_regrid_parallel_LDADD = \
 # ********************************************************* #
 transfer_to_mosaic_grid_SOURCES = \
   transfer-mosaic-grid/transfer_to_mosaic.c
+
+# ********************************************************* #
+# mppdisttool                                               #
+# ********************************************************* #
+mppdisttool_SOURCES = \
+  mpp-disttool/main.c \
+  mpp-disttool/cmd_combine.c  mpp-disttool/cmd_combine.h \
+  mpp-disttool/cmd_scatter.c  mpp-disttool/cmd_scatter.h \
+  mpp-disttool/cmd_decompress.c mpp-disttool/cmd_decompress.h \
+  mpp-disttool/cmd_check.c    mpp-disttool/cmd_check.h \
+  mpp-disttool/cmd_auto.c     mpp-disttool/cmd_auto.h \
+  mpp-disttool/compress.c     mpp-disttool/compress.h \
+  mpp-disttool/nc_utils.c     mpp-disttool/nc_utils.h \
+  mpp-disttool/domain.c       mpp-disttool/domain.h \
+  mpp-disttool/strlist.c      mpp-disttool/strlist.h \
+  mpp-disttool/xmalloc.c      mpp-disttool/xmalloc.h
+
+mppdisttool_CFLAGS  = $(NETCDF_CFLAGS) -I$(top_srcdir)/lib/libfrencutils \
+  -std=c11 -D_POSIX_C_SOURCE=200809L
+mppdisttool_LDADD   = libver.a \
+  $(top_builddir)/lib/libfrencutils/libfrencutils.a \
+  $(NETCDF_LDFLAGS) $(NETCDF_LIBS) -lm $(RPATH_FLAGS)
+
+install-exec-hook:
+	for name in mppncscatter mppnccombine combine-ncc scatter-ncc decompress-ncc is-compressed; do \
+	  $(LN_S) -f mppdisttool $(DESTDIR)$(bindir)/$$name; \
+	done
