@@ -43,4 +43,6 @@ ${builddir=..}/create_plevel_test_ncfile || framework_failure_ "failed to create
 # Run split_ncvars.pl
 output=$(split_ncvars.pl -p -VVV test_input.nc) || fail_ split_ncvars.pl test_input.nc failed
 # Check for expected output
-grep -q 'var=temp; timename=time; vlist=temp,ps,pk,bk' <<< "$output" || fail_ output does not contain expected output
+printf '%s\n' "$output" | \
+    grep -q 'var=temp; timename=time; vlist=temp,ps,pk,bk' || \
+    fail_ output does not contain expected output
