@@ -60,7 +60,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-logs
-        path: build/tests/test-suite.log
+        path: |
+          build/**/test-suite.log
+          build/**/tests/**/*.log
+          build/**/tests/**/*.trs
+          build/**/config.log
     - name: Create distribution file
       run: |
         cd build
